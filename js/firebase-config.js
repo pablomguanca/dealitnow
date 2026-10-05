@@ -57,13 +57,11 @@
   };
 
   auth.onAuthStateChanged(user => {
-    console.log('[AUTH] onAuthStateChanged:', user ? user.email : 'NULL (no user)');
     if (user) _crearPerfilSiNoExiste(user);
   });
 
   const signInGoogle = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    console.log('[AUTH] Intentando signInWithPopup...');
     return auth.signInWithPopup(provider);
   };
 

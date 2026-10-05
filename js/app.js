@@ -1422,44 +1422,29 @@
 
   const esClienteLink = location.hash.startsWith(PREFIJO);
 
-  if (!esClienteLink && window.AteneaDB) {
-  }
-
   if (esClienteLink) {
     iniciarCliente();
   } else if (window.AteneaDB) {
-    authPantalla.hidden = false;
-    document.body.classList.add('auth-activo');
     let editorIniciado = false;
-    console.log('[APP] Registrando onAuthChange listener...');
     AteneaDB.auth.onAuthChange(user => {
-      console.log('[APP] onAuthChange callback:', user ? user.email : 'NULL (no user)');
       if (user) {
         authPantalla.hidden = true;
-        authPantalla.classList.add('auth--oculta');
         document.body.classList.remove('auth-activo');
         if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
         if (!editorIniciado) {
           editorIniciado = true;
-          try {
-            iniciarEditor();
-          } catch (e) {
-            console.error('[Editor] error al iniciar:', e);
-            mostrarErrorAuth(authErrorG, e);
-          }
+          iniciarEditor();
         }
       } else {
-        console.log('[APP] Sin usuario, mostrando auth pantalla');
         authPantalla.hidden = false;
-        authPantalla.classList.remove('auth--oculta');
         document.body.classList.add('auth-activo');
       }
     });
   } else if (window.AteneaDBError) {
-    authPantalla.hidden = false;
-    document.body.classList.add('auth-activo');
     mostrarErrorAuth(authErrorG, window.AteneaDBError);
   } else {
+    authPantalla.hidden = true;
+    document.body.classList.remove('auth-activo');
     iniciarEditor();
   }
 
