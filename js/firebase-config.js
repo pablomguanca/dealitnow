@@ -57,10 +57,16 @@
   };
 
   auth.onAuthStateChanged(user => {
+    console.log('[AUTH] onAuthStateChanged:', user ? user.email : 'NULL (no user)');
     if (user) _crearPerfilSiNoExiste(user);
   });
 
-  auth.getRedirectResult().catch(() => {});
+  console.log('[AUTH] Llamando getRedirectResult...');
+  auth.getRedirectResult().then(result => {
+    console.log('[AUTH] getRedirectResult OK:', result.user ? result.user.email : 'sin usuario en result');
+  }).catch(e => {
+    console.error('[AUTH] getRedirectResult ERROR:', e.code, e.message);
+  });
 
   const signInGoogle = () => {
     const provider = new firebase.auth.GoogleAuthProvider();

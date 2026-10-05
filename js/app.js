@@ -1424,7 +1424,9 @@
     authPantalla.hidden = false;
     document.body.classList.add('auth-activo');
     let editorIniciado = false;
+    console.log('[APP] Registrando onAuthChange listener...');
     AteneaDB.auth.onAuthChange(user => {
+      console.log('[APP] onAuthChange callback:', user ? user.email : 'NULL (no user)');
       if (user) {
         authPantalla.hidden = true;
         authPantalla.classList.add('auth--oculta');
@@ -1440,6 +1442,7 @@
           }
         }
       } else {
+        console.log('[APP] Sin usuario, mostrando auth pantalla');
         authPantalla.hidden = false;
         authPantalla.classList.remove('auth--oculta');
         document.body.classList.add('auth-activo');
