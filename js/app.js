@@ -1379,10 +1379,17 @@
       });
     });
 
-    authGoogle.addEventListener('click', () => {
+    authGoogle.addEventListener('click', async () => {
       setAuthCargando(true);
       if (authErrorG) authErrorG.hidden = true;
-      AteneaDB.auth.signInGoogle();
+      try {
+        await AteneaDB.auth.signInGoogle();
+      } catch (e) {
+        console.error('[APP] signInGoogle ERROR:', e.code, e.message);
+        mostrarErrorAuth(authErrorG, e);
+      } finally {
+        setAuthCargando(false);
+      }
     });
 
     authForm.addEventListener('submit', async (e) => {

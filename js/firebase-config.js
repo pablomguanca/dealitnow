@@ -61,16 +61,10 @@
     if (user) _crearPerfilSiNoExiste(user);
   });
 
-  console.log('[AUTH] Llamando getRedirectResult...');
-  auth.getRedirectResult().then(result => {
-    console.log('[AUTH] getRedirectResult OK:', result.user ? result.user.email : 'sin usuario en result');
-  }).catch(e => {
-    console.error('[AUTH] getRedirectResult ERROR:', e.code, e.message);
-  });
-
   const signInGoogle = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    return auth.signInWithRedirect(provider);
+    console.log('[AUTH] Intentando signInWithPopup...');
+    return auth.signInWithPopup(provider);
   };
 
   const signIn = (email, password) => auth.signInWithEmailAndPassword(email, password);
