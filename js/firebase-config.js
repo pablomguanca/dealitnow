@@ -60,6 +60,8 @@
     if (user) _crearPerfilSiNoExiste(user);
   });
 
+  auth.getRedirectResult().catch(() => {});
+
   const signInGoogle = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
     return auth.signInWithRedirect(provider);
