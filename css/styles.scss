@@ -2752,6 +2752,27 @@ body.modo-cliente {
 
 .auth-activo .barra,
 .auth-activo .pestanas,
-.auth-activo .app {
+.auth-activo .app,
+.auth-cargando .barra,
+.auth-cargando .pestanas,
+.auth-cargando .app {
   display: none;
+}
+
+/* Mientras Firebase verifica la sesión: ni login ni app. El logo aparece
+   solo si la verificación tarda, así una recarga rápida no muestra nada. */
+.auth-cargando::after {
+  content: "Dealit";
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--fuente-display);
+  font-size: 2.8rem;
+  color: var(--marfil);
+  letter-spacing: 0.02em;
+  opacity: 0;
+  animation: authEntrar 0.4s 0.4s var(--ease-out-expo) forwards;
+  pointer-events: none;
 }

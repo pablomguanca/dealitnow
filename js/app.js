@@ -1422,11 +1422,14 @@
 
   const esClienteLink = location.hash.startsWith(PREFIJO);
 
+  if (!window.AteneaDB || esClienteLink) document.body.classList.remove('auth-cargando');
+
   if (esClienteLink) {
     iniciarCliente();
   } else if (window.AteneaDB) {
     let editorIniciado = false;
     AteneaDB.auth.onAuthChange(user => {
+      document.body.classList.remove('auth-cargando');
       if (user) {
         authPantalla.hidden = true;
         document.body.classList.remove('auth-activo');
@@ -1441,6 +1444,8 @@
       }
     });
   } else if (window.AteneaDBError) {
+    authPantalla.hidden = false;
+    document.body.classList.add('auth-activo');
     mostrarErrorAuth(authErrorG, window.AteneaDBError);
   } else {
     authPantalla.hidden = true;
