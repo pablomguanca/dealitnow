@@ -1,1 +1,7 @@
-{}
+{
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/__/auth/:path*", "destination": "https://dealit-7f735.firebaseapp.com/__/auth/:path*" },
+    { "source": "/__/firebase/:path*", "destination": "https://dealit-7f735.firebaseapp.com/__/firebase/:path*" }
+  ]
+}

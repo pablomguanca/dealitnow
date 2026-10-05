@@ -1,0 +1,76 @@
+:root {
+  --fondo: #F4F7F6;
+  --hoja: #FFFFFF;
+  --texto: #333333;
+  --texto-suave: #666666;
+  --borde: #E2E8F0;
+  --acento: #00A076;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: 'Montserrat', 'Helvetica Neue', Arial, sans-serif;
+  line-height: 1.65;
+}
+
+.legal {
+  max-width: 46rem;
+  margin: 2rem auto;
+  padding: 2rem 1.5rem 2.5rem;
+  background: var(--hoja);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+}
+
+.legal__marca {
+  font-weight: 700;
+  font-size: 1.1rem;
+  letter-spacing: 0.04em;
+  color: var(--acento);
+  text-decoration: none;
+}
+
+h1 {
+  margin: 1rem 0 0.25rem;
+  font-size: 1.8rem;
+  line-height: 1.2;
+}
+
+h2 {
+  margin: 2rem 0 0.5rem;
+  font-size: 1.1rem;
+}
+
+.legal__fecha,
+.legal__pie {
+  color: var(--texto-suave);
+  font-size: 0.9rem;
+}
+
+.legal__pie {
+  margin-top: 2.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--borde);
+}
+
+a {
+  color: var(--acento);
+}
+
+ul {
+  padding-left: 1.2rem;
+}
+
+@media (max-width: 600px) {
+  .legal {
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+  }
+}
