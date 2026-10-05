@@ -2419,6 +2419,10 @@ body.modo-cliente {
   justify-content: center;
   padding: 1rem;
   animation: authEntrar 0.4s var(--ease-out-expo);
+
+  &[hidden] {
+    display: none;
+  }
 }
 
 .auth__fondo {

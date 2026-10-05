@@ -2222,6 +2222,9 @@ body.modo-cliente .doc--web .portada {
   padding: 1rem;
   animation: authEntrar 0.4s var(--ease-out-expo);
 }
+.auth[hidden] {
+  display: none;
+}
 
 .auth__fondo {
   position: absolute;
