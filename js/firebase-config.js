@@ -42,7 +42,6 @@
   const getUid  = () => { const u = getUser(); if (!u) throw new Error('No autenticado'); return u.uid; };
 
   const onAuthChange = callback => auth.onAuthStateChanged(callback);
-  const getRedirectResult = () => auth.getRedirectResult();
 
   const _crearPerfilSiNoExiste = async (user) => {
     const userRef = db.collection('users').doc(user.uid);
@@ -61,10 +60,9 @@
     if (user) _crearPerfilSiNoExiste(user);
   });
 
-  const signInGoogle = async () => {
-    await persistenceReady;
+  const signInGoogle = () => {
     const provider = new firebase.auth.GoogleAuthProvider();
-    return auth.signInWithPopup(provider);
+    return auth.signInWithRedirect(provider);
   };
 
   const signIn = (email, password) => auth.signInWithEmailAndPassword(email, password);
@@ -170,7 +168,7 @@
   };
 
   window.AteneaDB = {
-    auth: { getUser, getUid, onAuthChange, getRedirectResult, signInGoogle, signIn, signUp, signOut },
+    auth: { getUser, getUid, onAuthChange, signInGoogle, signIn, signUp, signOut },
     proposals: {
       crear:      crearPropuesta,
       obtener:    obtenerPropuesta,
