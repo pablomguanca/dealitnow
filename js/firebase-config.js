@@ -1,7 +1,7 @@
 (() => {
   const firebaseConfig = {
     apiKey:            'AIzaSyA4fAtms8k5hOEvtFiTnf6B2ijg2jiWDtg',
-    authDomain:        'dealit-7f735.firebaseapp.com',
+    authDomain:        'gdealit.vercel.app',
     projectId:         'dealit-7f735',
     storageBucket:     'dealit-7f735.firebasestorage.app',
     messagingSenderId: '837213426465',
