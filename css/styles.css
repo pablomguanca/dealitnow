@@ -132,9 +132,6 @@ textarea {
   align-items: center;
   gap: 0.5rem;
 }
-.menu__panel[hidden] {
-  display: none;
-}
 
 .boton {
   display: inline-flex;
@@ -1504,6 +1501,9 @@ body.modo-cliente .doc--web .portada {
     border-radius: var(--radio-m);
     background: var(--negro-2);
     box-shadow: var(--sombra-menu);
+  }
+  .menu .menu__panel[hidden] {
+    display: none;
   }
   .menu__opcion {
     justify-content: flex-start;

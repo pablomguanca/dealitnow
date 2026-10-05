@@ -141,10 +141,6 @@ textarea {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-
-    &[hidden] {
-      display: none;
-    }
   }
 }
 .boton {
@@ -1686,6 +1682,10 @@ body.modo-cliente {
       border-radius: var(--radio-m);
       background: var(--negro-2);
       box-shadow: var(--sombra-menu);
+
+      &[hidden] {
+        display: none;
+      }
     }
   }
 
