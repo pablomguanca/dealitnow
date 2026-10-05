@@ -1379,16 +1379,10 @@
       });
     });
 
-    authGoogle.addEventListener('click', async () => {
+    authGoogle.addEventListener('click', () => {
       setAuthCargando(true);
       if (authErrorG) authErrorG.hidden = true;
-      try {
-        await AteneaDB.auth.signInGoogle();
-      } catch (e) {
-        mostrarErrorAuth(authErrorG, e);
-      } finally {
-        setAuthCargando(false);
-      }
+      AteneaDB.auth.signInGoogle();
     });
 
     authForm.addEventListener('submit', async (e) => {
@@ -1422,10 +1416,6 @@
   const esClienteLink = location.hash.startsWith(PREFIJO);
 
   if (!esClienteLink && window.AteneaDB) {
-    AteneaDB.auth.getRedirectResult().catch(e => {
-      mostrarErrorAuth(authErrorG, e);
-      setAuthCargando(false);
-    });
   }
 
   if (esClienteLink) {
