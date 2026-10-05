@@ -2571,6 +2571,23 @@ body.modo-cliente .doc--web .portada {
   color: var(--marfil);
   letter-spacing: 0.02em;
   opacity: 0;
+  padding-bottom: 4.5rem;
   animation: authEntrar 0.4s 0.4s var(--ease-out-expo) forwards;
   pointer-events: none;
+}
+.auth-cargando::before {
+  content: "";
+  position: fixed;
+  top: calc(50% + 0.5rem);
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  border: 2.5px solid var(--dorado-tenue);
+  border-top-color: var(--dorado);
+  border-radius: 50%;
+  opacity: 0;
+  animation: authEntrar 0.4s 0.4s var(--ease-out-expo) forwards, authSpin 0.8s linear infinite;
+  pointer-events: none;
+  z-index: 1;
 }
