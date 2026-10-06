@@ -265,6 +265,10 @@ const crearAteneaDB = () => {
   const eliminarCuenta = async (password) => {
     await _reautenticar(password);
     const uid = getUid();
+
+    // El perfil va primero: si las reglas no permiten borrar, falla antes de tocar
+    // las propuestas. Y si algo falla después, el perfil se vuelve a crear al iniciar sesión.
+    await db.collection('users').doc(uid).delete();
     _limpiarSuscripciones();
 
     const propuestas = await _colProposals().where('userId', '==', uid).get();
@@ -283,7 +287,6 @@ const crearAteneaDB = () => {
       }
     }
 
-    await db.collection('users').doc(uid).delete();
     await auth.currentUser.delete();
     try {
       await db.terminate();
