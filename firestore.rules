@@ -1,0 +1,53 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function autenticado() { return request.auth != null; }
+    function esDueno(uid)   { return autenticado() && request.auth.uid == uid; }
+
+    match /users/{uid} {
+      allow read: if esDueno(uid);
+      allow create, update: if esDueno(uid)
+        && request.resource.data.keys().hasOnly(['email', 'displayName', 'photoURL', 'createdAt'])
+        && request.resource.data.email == request.auth.token.email;
+      allow delete: if false;
+    }
+
+    match /proposals/{proposalId} {
+      function datosValidos() {
+        let d = request.resource.data;
+        return d.keys().hasOnly(['userId', 'title', 'clientName', 'amount', 'status',
+                                 'theme', 'payload', 'publico', 'createdAt', 'updatedAt'])
+          && d.title is string      && d.title.size() <= 200
+          && d.clientName is string && d.clientName.size() <= 200
+          && d.amount is number
+          && d.theme is string
+          && d.payload is map
+          && d.status in ['draft', 'sent', 'accepted', 'rejected']
+          && d.get('publico', false) is bool
+          && d.updatedAt == request.time;
+      }
+
+      // get = abrir una sola por ID (link del cliente); list = consultas del panel
+      allow get:  if esDueno(resource.data.userId)
+                  || resource.data.get('publico', false) == true;
+      allow list: if esDueno(resource.data.userId);
+
+      allow create: if esDueno(request.resource.data.userId)
+        && datosValidos()
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if esDueno(resource.data.userId)
+        && request.resource.data.userId    == resource.data.userId
+        && request.resource.data.createdAt == resource.data.createdAt
+        && datosValidos();
+
+      allow delete: if esDueno(resource.data.userId);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
