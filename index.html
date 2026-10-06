@@ -85,18 +85,18 @@
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h10"/></svg>
       </button>
       <div class="menu__panel" id="menu-panel" hidden>
-        <button type="button" class="boton boton--texto menu__opcion" data-accion="ejemplo">Cargar ejemplo</button>
-        <button type="button" class="boton boton--texto menu__opcion" data-accion="vaciar">Empezar en blanco</button>
-        <span class="barra__separador" aria-hidden="true"></span>
+        <button type="button" class="boton boton--texto menu__opcion solo-editor solo-cuenta" data-accion="ir-panel">Mis propuestas</button>
+        <button type="button" class="boton boton--texto menu__opcion solo-cuenta" data-accion="nueva">Nueva propuesta</button>
+        <span class="barra__separador solo-cuenta" aria-hidden="true"></span>
         <button type="button" class="boton boton--secundario menu__opcion" data-accion="abrir-borrador">Abrir borrador</button>
-        <button type="button" class="boton boton--secundario menu__opcion" data-accion="guardar-borrador">Guardar borrador</button>
-        <button type="button" class="boton boton--secundario menu__opcion" data-accion="pdf">Descargar PDF</button>
+        <button type="button" class="boton boton--secundario menu__opcion solo-editor" data-accion="guardar-borrador">Guardar borrador</button>
+        <button type="button" class="boton boton--secundario menu__opcion solo-editor" data-accion="pdf">Descargar PDF</button>
         <span class="barra__separador" aria-hidden="true"></span>
         <span class="menu__usuario" id="menu-usuario"></span>
         <button type="button" class="boton boton--texto menu__opcion menu__opcion--salir" data-accion="cerrar-sesion">Cerrar sesión</button>
       </div>
     </div>
-    <button type="button" class="boton boton--primario" data-accion="compartir">
+    <button type="button" class="boton boton--primario solo-editor" data-accion="compartir">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.3 0l2-2a3 3 0 0 0-4.3-4.3l-.9.9M9.2 6.8a3 3 0 0 0-4.3 0l-2 2a3 3 0 0 0 4.3 4.3l.9-.9"/></svg>
       <span class="boton__extra">Compartir</span><span>link</span>
     </button>
@@ -111,6 +111,10 @@
 <main class="app" id="app">
   <section class="editor" aria-label="Editor de la propuesta">
     <div class="editor__intro">
+      <a class="editor__volver solo-cuenta" href="./" data-accion="ir-panel">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg>
+        Mis propuestas
+      </a>
       <h1 class="editor__titulo">Armá tu propuesta</h1>
       <p class="editor__bajada">Completala y mandala como link: tu cliente la abre en el celular, suma los opcionales que quiera y la acepta ahí mismo.</p>
     </div>
@@ -420,6 +424,41 @@
       <article class="doc doc--web" id="documento"></article>
     </div>
   </section>
+</main>
+
+<main class="panel" id="panel" aria-labelledby="panel-titulo" hidden>
+  <div class="panel__contenido">
+    <div class="panel__cabecera">
+      <div>
+        <h1 class="panel__titulo" id="panel-titulo">Mis propuestas</h1>
+        <p class="panel__bajada" id="panel-resumen"></p>
+      </div>
+      <div class="panel__acciones">
+        <button type="button" class="boton boton--secundario" data-accion="nueva-ejemplo">Usar un ejemplo</button>
+        <button type="button" class="boton boton--primario" data-accion="nueva">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>
+          Nueva propuesta
+        </button>
+      </div>
+    </div>
+
+    <div class="panel__herramientas" id="panel-herramientas" hidden>
+      <label class="visualmente-oculto" for="panel-buscar">Buscar propuestas</label>
+      <input class="control panel__buscar" id="panel-buscar" type="search" placeholder="Buscar por título o cliente" autocomplete="off">
+    </div>
+
+    <p class="panel__estado" id="panel-estado" role="status" aria-live="polite"></p>
+    <ul class="propuestas" id="lista-propuestas" aria-label="Propuestas"></ul>
+
+    <div class="panel__vacio" id="panel-vacio" hidden>
+      <h2 class="panel__vacio-titulo">Todavía no tenés propuestas</h2>
+      <p>Creá la primera desde cero o partí de un ejemplo completo y cambiá los datos por los de tu proyecto.</p>
+      <div class="panel__acciones">
+        <button type="button" class="boton boton--secundario" data-accion="nueva-ejemplo">Usar un ejemplo</button>
+        <button type="button" class="boton boton--primario" data-accion="nueva">Crear mi primera propuesta</button>
+      </div>
+    </div>
+  </div>
 </main>
 
 <dialog class="dialogo" id="dialogo" aria-labelledby="dialogo-titulo">

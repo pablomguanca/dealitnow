@@ -171,12 +171,15 @@
 
   const borrarPropuesta = (id) => _colProposals().doc(id).delete();
 
-  const escucharPropuestas = (callback) => {
-    const unsub = _baseQuery().onSnapshot(snap => {
-      const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Escucha en tiempo real (y desde la caché sin conexión). Las fechas que todavía
+  // no confirmó el servidor llegan estimadas en vez de null.
+  const escucharPropuestas = (callback, alFallar, limite = 100) => {
+    const unsub = _baseQuery().limit(limite).onSnapshot(snap => {
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
       callback(docs);
     }, err => {
       console.error('Error en snapshot de propuestas:', err);
+      if (alFallar) alFallar(err);
     });
     _unsubSnapshots.push(unsub);
     return unsub;

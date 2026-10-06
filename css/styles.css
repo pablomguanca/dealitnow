@@ -2591,3 +2591,315 @@ body.modo-cliente .doc--web .portada {
   pointer-events: none;
   z-index: 1;
 }
+
+/* ---------- Vistas: panel «Mis propuestas» y editor ---------- */
+
+.app[hidden],
+.panel[hidden] {
+  display: none;
+}
+
+body.vista-panel {
+  grid-template-rows: auto 1fr;
+}
+
+body.vista-panel .pestanas,
+body.vista-panel .solo-editor,
+body.sin-cuenta .solo-cuenta {
+  display: none;
+}
+
+.auth-activo .panel,
+.auth-cargando .panel {
+  display: none;
+}
+
+.editor__volver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin: 0 0 0.9rem -0.2rem;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--marfil-apagado);
+  text-decoration: none;
+  transition: color var(--transicion);
+}
+
+.editor__volver:hover {
+  color: var(--dorado-papel);
+}
+
+.editor__volver svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.panel {
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--negro);
+  scrollbar-color: var(--superficie-borde) transparent;
+}
+
+.panel__contenido {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2.4rem 1.5rem 4rem;
+}
+
+.panel__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1.6rem;
+}
+
+.panel__titulo {
+  margin: 0;
+  font-family: var(--fuente-display);
+  font-size: 2.4rem;
+  font-weight: 500;
+  line-height: 1.05;
+}
+
+.panel__bajada {
+  margin: 0.3rem 0 0;
+  font-size: 0.86rem;
+  color: var(--marfil-apagado);
+}
+
+.panel__bajada:empty {
+  display: none;
+}
+
+.panel__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.panel__herramientas {
+  margin-bottom: 1rem;
+}
+
+.panel__herramientas[hidden] {
+  display: none;
+}
+
+.panel__buscar {
+  max-width: 22rem;
+}
+
+.panel__estado {
+  margin: 0 0 1rem;
+  font-size: 0.88rem;
+  color: var(--marfil-apagado);
+}
+
+.panel__estado:empty {
+  display: none;
+}
+
+.panel__vacio {
+  padding: 3.2rem 1.5rem;
+  border: 1px dashed var(--superficie-borde);
+  border-radius: var(--radio-m);
+  background: var(--superficie);
+  text-align: center;
+}
+
+.panel__vacio[hidden] {
+  display: none;
+}
+
+.panel__vacio p {
+  max-width: 44ch;
+  margin: 0 auto 1.4rem;
+  font-size: 0.9rem;
+  color: var(--marfil-apagado);
+}
+
+.panel__vacio .panel__acciones {
+  justify-content: center;
+}
+
+.panel__vacio-titulo {
+  margin: 0 0 0.5rem;
+  font-family: var(--fuente-display);
+  font-size: 1.8rem;
+  font-weight: 500;
+}
+
+.propuestas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--superficie-borde);
+  border-radius: var(--radio-m);
+  background: var(--superficie);
+  overflow: hidden;
+}
+
+.propuestas:empty {
+  display: none;
+}
+
+/* La fila entera abre la propuesta (el enlace cubre la fila con ::after);
+   los botones de acción quedan por encima. */
+.propuesta {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8.5rem 6.5rem 9.5rem auto;
+  grid-template-areas: "abrir monto estado fecha acciones";
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 0.8rem 0.85rem 1.1rem;
+  border-top: 1px solid var(--superficie-borde);
+  transition: background-color var(--transicion);
+}
+
+.propuesta:first-child {
+  border-top: 0;
+}
+
+.propuesta:hover {
+  background: var(--dorado-fondo);
+}
+
+.propuesta__abrir {
+  grid-area: abrir;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.propuesta__abrir::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+
+.propuesta__abrir:focus-visible {
+  outline: none;
+}
+
+.propuesta__abrir:focus-visible::after {
+  outline: 2px solid var(--dorado);
+  outline-offset: -2px;
+}
+
+.propuesta__titulo,
+.propuesta__cliente {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.propuesta__titulo {
+  font-weight: 500;
+  color: var(--marfil);
+}
+
+.propuesta__cliente {
+  font-size: 0.82rem;
+  color: var(--marfil-apagado);
+}
+
+.propuesta__monto {
+  grid-area: monto;
+  text-align: right;
+  font-size: 0.9rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.propuesta__estado {
+  grid-area: estado;
+  justify-self: start;
+  padding: 0.22rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.propuesta__estado--draft {
+  background: var(--negro);
+  color: var(--marfil-apagado);
+}
+
+.propuesta__estado--sent {
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
+}
+
+.propuesta__estado--accepted {
+  background: var(--dorado-tenue);
+  color: var(--dorado-papel);
+}
+
+.propuesta__estado--rejected {
+  background: rgba(220, 38, 38, 0.08);
+  color: #b91c1c;
+}
+
+.propuesta__fecha {
+  grid-area: fecha;
+  font-size: 0.8rem;
+  color: var(--marfil-tenue);
+  white-space: nowrap;
+}
+
+.propuesta__acciones {
+  grid-area: acciones;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  gap: 0.1rem;
+}
+
+.icono-boton--peligro:hover:not(:disabled) {
+  color: #dc2626;
+}
+
+@media (max-width: 720px) {
+  .panel__contenido {
+    padding: 1.6rem 1rem 3rem;
+  }
+
+  .panel__titulo {
+    font-size: 2rem;
+  }
+
+  .panel__buscar {
+    max-width: none;
+  }
+
+  .propuesta {
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "abrir abrir abrir acciones"
+      "estado monto fecha fecha";
+    gap: 0.45rem 0.75rem;
+    padding: 0.85rem 0.6rem 0.85rem 1rem;
+  }
+
+  .propuesta__monto {
+    text-align: left;
+  }
+
+  .propuesta__fecha {
+    text-align: right;
+  }
+}

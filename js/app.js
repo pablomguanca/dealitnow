@@ -214,10 +214,6 @@
     return n;
   };
 
-  // Con sesión, el respaldo local va por usuario para no mezclar cuentas en una compu compartida.
-  // CLAVE sola es el formato anterior, de cuando todo se guardaba en el navegador.
-  const claveLocal = () => (window.AteneaDB?.auth.getUser() ? `${CLAVE}:borrador:${AteneaDB.auth.getUid()}` : CLAVE);
-
   const leerLocal = clave => {
     try {
       const crudo = localStorage.getItem(clave);
@@ -227,7 +223,8 @@
     }
   };
 
-  const cargarGuardado = () => leerLocal(claveLocal()) || leerLocal(CLAVE);
+  // Sin cuenta, la propuesta vive solo en este navegador.
+  const cargarGuardado = () => leerLocal(CLAVE);
 
   let estado = vacio();
   let seleccion = new Set();
@@ -237,18 +234,17 @@
 
   const totalServicio = s => numero(s.cantidad) * numero(s.precio);
   const servicioConContenido = s => s.nombre.trim() || numero(s.precio) > 0;
-  const cuenta = s => !s.opcional || seleccion.has(s.id);
 
-  const calcular = () => {
+  const calcular = (e = estado, sumados = seleccion) => {
     let inicial = 0;
     let mensual = 0;
-    estado.servicios.forEach(s => {
-      if (!cuenta(s)) return;
+    e.servicios.forEach(s => {
+      if (s.opcional && !sumados.has(s.id)) return;
       if (s.modalidad === 'mensual') mensual += totalServicio(s);
       else inicial += totalServicio(s);
     });
-    const descuento = Math.min(Math.max(numero(estado.inversion.descuento), 0), 100) / 100;
-    const impuesto = Math.max(numero(estado.inversion.impuesto), 0) / 100;
+    const descuento = Math.min(Math.max(numero(e.inversion.descuento), 0), 100) / 100;
+    const impuesto = Math.max(numero(e.inversion.impuesto), 0) / 100;
     const bloque = base => {
       const desc = base * descuento;
       const neto = base - desc;
@@ -297,27 +293,26 @@
     temporizadorAviso = setTimeout(() => elAviso.classList.remove('aviso--visible'), ms);
   };
 
-  // Guardado en la cuenta: la propuesta abierta vive en Firestore (proposals/{propuestaId}).
-  // localStorage queda solo como respaldo si no hay conexión con la cuenta.
+  // Guardado en la cuenta: cada propuesta es un documento en Firestore (proposals/{id}).
+  // Sin cuenta (Firebase no disponible), la propuesta queda en este navegador.
   const GUARDADO_ESPERA = 800;
   const PAYLOAD_MAX = 900000; // Firestore admite hasta 1 MiB por documento
+  const AVISO_PESADA = 'La propuesta es demasiado pesada para guardarse (probá con un logo más liviano). Usá «Guardar borrador» para no perder los cambios.';
   const elEstado = $('#estado-guardado');
   let propuestaId = null;
-  let sinNube = false;
+  let editando = false;
   let temporizadorGuardado = null;
   let escriturasPendientes = 0;
-  let ultimaEscritura = Promise.resolve();
+  let ultimaEscritura = Promise.resolve(true);
   let errorGuardado = '';
   let avisoError = false;
 
-  const nube = () => (!sinNube && window.AteneaDB && AteneaDB.auth.getUser() ? AteneaDB : null);
-  const claveActual = () => `${CLAVE}:actual:${AteneaDB.auth.getUid()}`;
-  const recordarActual = id => { try { localStorage.setItem(claveActual(), id); } catch {} };
+  const nube = () => (window.AteneaDB && AteneaDB.auth.getUser() ? AteneaDB : null);
 
   const mostrarEstadoGuardado = () => {
     if (!elEstado || esCliente) return;
     if (errorGuardado) elEstado.textContent = errorGuardado;
-    else if (!nube()) elEstado.textContent = 'Sin conexión con tu cuenta: los cambios se guardan en este navegador y se suben cuando vuelvas a entrar.';
+    else if (!nube()) elEstado.textContent = 'Los cambios se guardan en este navegador.';
     else if (escriturasPendientes && !navigator.onLine) elEstado.textContent = 'Sin conexión: los cambios se suben a tu cuenta cuando vuelva.';
     else if (temporizadorGuardado || escriturasPendientes) elEstado.textContent = 'Guardando…';
     else elEstado.textContent = 'Cambios guardados en tu cuenta.';
@@ -333,18 +328,47 @@
     }
   };
 
-  // Monto sin opcionales: lo que el cliente ve antes de sumar extras.
-  const montoBase = () => {
-    const previa = seleccion;
-    seleccion = new Set();
-    const total = calcular().inicial.total;
-    seleccion = previa;
-    return total;
+  // Resumen que se guarda junto al contenido para poder listar sin abrir cada propuesta.
+  // Devuelve null si la propuesta no entra en un documento de Firestore.
+  const datosParaGuardar = e => {
+    const payload = JSON.stringify(e);
+    if (payload.length > PAYLOAD_MAX) return null;
+    return {
+      title: e.propuesta.titulo.trim(),
+      clientName: e.cliente.empresa.trim() || e.cliente.nombre.trim(),
+      amount: calcular(e, new Set()).inicial.total, // sin opcionales
+      theme: e.tema.preset,
+      payload: JSON.parse(payload)
+    };
+  };
+
+  // Todas las escrituras pasan por acá: así el estado de guardado y el cierre de
+  // sesión saben si queda algo por llegar al servidor.
+  const registrarEscritura = (promesa, mensajeError) => {
+    escriturasPendientes++;
+    mostrarEstadoGuardado();
+    const resultado = promesa
+      .then(() => {
+        errorGuardado = '';
+        avisoError = false;
+        return true;
+      })
+      .catch(e => {
+        console.error(mensajeError, e);
+        fallarGuardado(mensajeError);
+        return false;
+      })
+      .finally(() => {
+        escriturasPendientes--;
+        mostrarEstadoGuardado();
+      });
+    ultimaEscritura = resultado;
+    return resultado;
   };
 
   const guardarLocal = () => {
     try {
-      localStorage.setItem(claveLocal(), JSON.stringify(estado));
+      localStorage.setItem(CLAVE, JSON.stringify(estado));
       errorGuardado = '';
     } catch {
       fallarGuardado('No se pudo guardar en este navegador. Usá «Guardar borrador» para no perder los cambios.');
@@ -355,49 +379,24 @@
   const guardarAhora = () => {
     clearTimeout(temporizadorGuardado);
     temporizadorGuardado = null;
+    if (!editando) return;
     const db = nube();
     if (!db) return guardarLocal();
-    const payload = JSON.stringify(estado);
-    if (payload.length > PAYLOAD_MAX) {
-      fallarGuardado('La propuesta es demasiado pesada para guardarse (probá con un logo más liviano). Usá «Guardar borrador» para no perder los cambios.');
+    if (!propuestaId) return;
+    const datos = datosParaGuardar(estado);
+    if (!datos) {
+      fallarGuardado(AVISO_PESADA);
       mostrarEstadoGuardado();
       return;
     }
-    const datos = {
-      title: estado.propuesta.titulo.trim(),
-      clientName: estado.cliente.empresa.trim() || estado.cliente.nombre.trim(),
-      amount: montoBase(),
-      theme: estado.tema.preset,
-      payload: JSON.parse(payload)
-    };
-    const esNueva = !propuestaId;
-    if (esNueva) {
-      propuestaId = db.proposals.nuevoId();
-      recordarActual(propuestaId);
-    }
-    const id = propuestaId;
-    const escritura = esNueva ? db.proposals.crear(datos, id) : db.proposals.actualizar(id, datos);
-    escriturasPendientes++;
-    mostrarEstadoGuardado();
-    ultimaEscritura = escritura
-      .then(() => {
-        errorGuardado = '';
-        avisoError = false;
-      })
-      .catch(e => {
-        console.error('No se pudo guardar la propuesta:', e);
-        if (esNueva && propuestaId === id) propuestaId = null;
-        fallarGuardado('No se pudieron guardar los últimos cambios en tu cuenta. Usá «Guardar borrador» para no perderlos.');
-      })
-      .finally(() => {
-        escriturasPendientes--;
-        mostrarEstadoGuardado();
-      });
-    return ultimaEscritura;
+    return registrarEscritura(
+      db.proposals.actualizar(propuestaId, datos),
+      'No se pudieron guardar los últimos cambios en tu cuenta. Usá «Guardar borrador» para no perderlos.'
+    );
   };
 
   const guardarLuego = () => {
-    if (esCliente) return;
+    if (esCliente || !editando) return;
     clearTimeout(temporizadorGuardado);
     temporizadorGuardado = setTimeout(guardarAhora, nube() ? GUARDADO_ESPERA : 400);
     mostrarEstadoGuardado();
@@ -405,7 +404,7 @@
 
   // Si la pestaña se oculta o se cierra, no esperar al temporizador ni al próximo
   // cuadro de animación (en pestañas ocultas no llega nunca).
-  const hayCambiosSinEnviar = () => !esCliente && (temporizadorGuardado || renderPendiente);
+  const hayCambiosSinEnviar = () => editando && !esCliente && (temporizadorGuardado || renderPendiente);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden' && hayCambiosSinEnviar()) guardarAhora();
   });
@@ -417,33 +416,31 @@
     }
   });
 
-  // Abre la última propuesta del usuario. La primera vez, migra a la cuenta
-  // lo que hubiera quedado guardado en este navegador.
-  const cargarDeLaNube = async () => {
-    const db = AteneaDB;
-    const claveMigrada = [claveLocal(), CLAVE].find(clave => leerLocal(clave));
-    if (claveMigrada) {
-      estado = leerLocal(claveMigrada);
-      propuestaId = null;
-      const escritura = guardarAhora();
-      if (escritura) {
-        // Se borra del navegador recién cuando el servidor confirmó la copia.
-        escritura.then(() => {
-          if (!errorGuardado) try { localStorage.removeItem(claveMigrada); } catch {}
-        });
-      }
-      avisar('Pasamos a tu cuenta la propuesta que tenías guardada en este navegador.', 6000);
-      return estado;
+  // Crea una propuesta en la cuenta. El ID sale del cliente, así se puede abrir
+  // y seguir editando sin esperar al servidor (y sin conexión).
+  const crearEnCuenta = e => {
+    const datos = datosParaGuardar(e);
+    if (!datos) {
+      avisar(AVISO_PESADA, 7000);
+      return null;
     }
-    let guardada = null;
-    let idActual = null;
-    try { idActual = localStorage.getItem(claveActual()); } catch {}
-    if (idActual) guardada = await db.proposals.obtener(idActual).catch(() => null);
-    if (!guardada) [guardada] = await db.proposals.listar(1);
-    if (!guardada) return ejemplo();
-    propuestaId = guardada.id;
-    recordarActual(guardada.id);
-    return normalizar(guardada.payload);
+    const id = AteneaDB.proposals.nuevoId();
+    const listo = registrarEscritura(AteneaDB.proposals.crear(datos, id), 'No se pudo crear la propuesta en tu cuenta.');
+    return { id, listo };
+  };
+
+  // Migración única: lo que la versión anterior guardaba en el navegador pasa a la
+  // cuenta, y se borra del navegador recién cuando el servidor confirmó la copia.
+  const migrarLocal = () => {
+    const claves = [`${CLAVE}:borrador:${AteneaDB.auth.getUid()}`, CLAVE];
+    const clave = claves.find(c => leerLocal(c));
+    if (!clave) return;
+    const creada = crearEnCuenta(leerLocal(clave));
+    if (!creada) return;
+    creada.listo.then(ok => {
+      if (ok) try { localStorage.removeItem(clave); } catch {}
+    });
+    avisar('Pasamos a tu cuenta la propuesta que tenías guardada en este navegador.', 6000);
   };
 
   const plantillaControles = $('#tpl-controles');
@@ -1051,8 +1048,15 @@
     const lector = new FileReader();
     lector.onload = () => {
       try {
-        reemplazarEstado(normalizar(JSON.parse(lector.result)));
-        avisar('Borrador abierto.');
+        const abierto = normalizar(JSON.parse(lector.result));
+        if (nube()) {
+          // Con cuenta, el borrador entra como propuesta nueva: no pisa ninguna existente.
+          nuevaPropuesta(abierto);
+          avisar('Borrador abierto como propuesta nueva.');
+        } else {
+          reemplazarEstado(abierto);
+          avisar('Borrador abierto.');
+        }
       } catch {
         avisar('Ese archivo no es un borrador válido. Elegí un .json guardado desde este generador.');
       }
@@ -1169,7 +1173,7 @@
     }
     const { datos, logoOmitido } = datosParaLink();
     try {
-      linkActual = `${location.href.split('#')[0]}${PREFIJO}${await comprimir(JSON.stringify(datos))}`;
+      linkActual = `${location.origin}${location.pathname}${PREFIJO}${await comprimir(JSON.stringify(datos))}`;
     } catch {
       avisar('No se pudo generar el link. Probá de nuevo.');
       return;
@@ -1393,19 +1397,33 @@
         actualizarLogo();
         actualizar();
         break;
-      case 'ejemplo':
-        if (await confirmar({ titulo: '¿Cargar la propuesta de ejemplo?', texto: 'Reemplaza lo que cargaste. Si querés conservarlo, guardá un borrador antes.', aceptar: 'Cargar ejemplo' })) {
-          reemplazarEstado(ejemplo());
-          avisar('Ejemplo cargado. Cambiá los datos por los de tu proyecto.');
+      case 'ir-panel':
+        if (!nube()) break;
+        if (boton.tagName === 'A') {
+          if (!clicComun(ev)) break;
+          ev.preventDefault();
         }
+        irAlPanel();
         break;
-      case 'vaciar':
-        if (await confirmar({ titulo: '¿Empezar una propuesta en blanco?', texto: 'Se borra lo que cargaste. Si querés conservarlo, guardá un borrador antes.', aceptar: 'Empezar en blanco' })) {
-          const nuevo = vacio();
-          nuevo.emisor = { ...estado.emisor };
-          reemplazarEstado(nuevo);
-          avisar('Propuesta en blanco. Tus datos de contacto se mantienen.');
-        }
+      case 'abrir-propuesta':
+        if (!clicComun(ev)) break;
+        ev.preventDefault();
+        abrirPropuesta(boton.dataset.id);
+        break;
+      case 'nueva':
+        if (nube()) nuevaPropuesta();
+        break;
+      case 'nueva-ejemplo':
+        if (nube()) nuevaPropuesta(ejemplo());
+        break;
+      case 'duplicar-propuesta':
+        duplicarPropuesta(boton.dataset.id);
+        break;
+      case 'borrar-propuesta':
+        borrarPropuesta(boton.dataset.id);
+        break;
+      case 'reintentar-panel':
+        escucharPropuestas();
         break;
       case 'guardar-borrador':
         guardarBorrador();
@@ -1424,6 +1442,207 @@
         break;
     }
   });
+
+  // Panel «Mis propuestas». La lista se escucha en tiempo real toda la sesión:
+  // refleja al instante lo que se edita, se duplica o se borra, también sin conexión.
+  const elPanel = $('#panel');
+  const elLista = $('#lista-propuestas');
+  const elPanelEstado = $('#panel-estado');
+  const elPanelVacio = $('#panel-vacio');
+  const elPanelResumen = $('#panel-resumen');
+  const elHerramientas = $('#panel-herramientas');
+  const campoBuscar = $('#panel-buscar');
+  const TITULO_EDITOR = document.title;
+  const ESTADOS_PROPUESTA = { draft: 'Borrador', sent: 'Enviada', accepted: 'Aceptada', rejected: 'Rechazada' };
+
+  let propuestas = [];
+  let panelCargando = true;
+  let panelError = false;
+  let dejarDeEscuchar = null;
+
+  const fechaDe = ts => (ts && typeof ts.toDate === 'function' ? ts.toDate() : null);
+  const sinAcentos = t => texto(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+
+  const haceCuanto = fecha => {
+    if (!fecha) return '';
+    const segundos = Math.round((fecha - Date.now()) / 1000);
+    const rtf = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
+    const unidades = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]];
+    for (const [unidad, s] of unidades) {
+      if (Math.abs(segundos) >= s) return rtf.format(Math.round(segundos / s), unidad);
+    }
+    return 'recién';
+  };
+
+  const propuestaHTML = p => {
+    const titulo = texto(p.title).trim() || 'Sin título';
+    const cliente = texto(p.clientName).trim();
+    const monto = Number(p.amount) > 0 ? dinero(Number(p.amount), p.payload?.inversion?.moneda || 'USD') : '';
+    const estadoP = ESTADOS_PROPUESTA[p.status] ? p.status : 'draft';
+    const editada = fechaDe(p.updatedAt);
+    return `
+      <li class="propuesta">
+        <a class="propuesta__abrir" href="?propuesta=${encodeURIComponent(p.id)}" data-accion="abrir-propuesta" data-id="${esc(p.id)}">
+          <span class="propuesta__titulo">${esc(titulo)}</span>
+          <span class="propuesta__cliente">${cliente ? esc(cliente) : 'Sin cliente'}</span>
+        </a>
+        <span class="propuesta__monto">${esc(monto)}</span>
+        <span class="propuesta__estado propuesta__estado--${estadoP}">${ESTADOS_PROPUESTA[estadoP]}</span>
+        <span class="propuesta__fecha">${editada ? `<time datetime="${editada.toISOString()}" title="${esc(editada.toLocaleString('es-AR'))}">Editada ${esc(haceCuanto(editada))}</time>` : ''}</span>
+        <span class="propuesta__acciones">
+          <button type="button" class="icono-boton" data-accion="duplicar-propuesta" data-id="${esc(p.id)}" aria-label="Duplicar «${esc(titulo)}»" title="Duplicar">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.2"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
+          </button>
+          <button type="button" class="icono-boton icono-boton--peligro" data-accion="borrar-propuesta" data-id="${esc(p.id)}" aria-label="Borrar «${esc(titulo)}»" title="Borrar">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>
+          </button>
+        </span>
+      </li>`;
+  };
+
+  const renderPanel = () => {
+    if (elPanel.hidden) return;
+    const filtro = sinAcentos(campoBuscar.value.trim());
+    const visibles = filtro
+      ? propuestas.filter(p => sinAcentos(`${p.title} ${p.clientName}`).includes(filtro))
+      : propuestas;
+    const hay = propuestas.length > 0;
+
+    elPanelResumen.textContent = hay ? `${propuestas.length} ${propuestas.length === 1 ? 'propuesta' : 'propuestas'}` : '';
+    elHerramientas.hidden = propuestas.length < 4;
+    elPanelVacio.hidden = panelCargando || panelError || hay;
+
+    if (panelError) {
+      elPanelEstado.innerHTML = 'No pudimos cargar tus propuestas. Revisá tu conexión. <button type="button" class="boton boton--texto boton--chico" data-accion="reintentar-panel">Reintentar</button>';
+    } else if (panelCargando) {
+      elPanelEstado.textContent = 'Cargando tus propuestas…';
+    } else if (filtro && !visibles.length) {
+      elPanelEstado.textContent = `No hay propuestas que coincidan con «${campoBuscar.value.trim()}».`;
+    } else {
+      elPanelEstado.textContent = '';
+    }
+    elLista.innerHTML = visibles.map(propuestaHTML).join('');
+  };
+
+  campoBuscar.addEventListener('input', renderPanel);
+
+  const escucharPropuestas = () => {
+    if (dejarDeEscuchar) dejarDeEscuchar();
+    panelCargando = true;
+    panelError = false;
+    renderPanel();
+    dejarDeEscuchar = AteneaDB.proposals.escuchar(docs => {
+      // Más recientes primero; las que tienen cambios sin confirmar traen fecha estimada.
+      propuestas = docs.sort((a, b) => (fechaDe(b.updatedAt) || 0) - (fechaDe(a.updatedAt) || 0));
+      panelCargando = false;
+      panelError = false;
+      renderPanel();
+    }, () => {
+      panelCargando = false;
+      panelError = true;
+      renderPanel();
+    });
+  };
+
+  const idEnUrl = () => new URLSearchParams(location.search).get('propuesta');
+
+  const mostrarVista = enPanel => {
+    document.body.classList.toggle('vista-panel', enPanel);
+    elPanel.hidden = !enPanel;
+    app.hidden = enPanel;
+    abrirMenu(false);
+    if (enPanel) document.title = 'Mis propuestas | Dealit';
+  };
+
+  // Antes de cambiar de propuesta o de vista, lo pendiente se manda a la cuenta.
+  const cerrarEdicion = () => {
+    if (hayCambiosSinEnviar()) guardarAhora();
+    editando = false;
+    propuestaId = null;
+  };
+
+  const irAlPanel = ({ historial = true } = {}) => {
+    cerrarEdicion();
+    if (historial && location.search) history.pushState(null, '', location.pathname);
+    mostrarVista(true);
+    renderPanel();
+    elPanel.scrollTop = 0;
+  };
+
+  const mostrarEditor = (id, contenido, { historial = true } = {}) => {
+    propuestaId = id;
+    estado = contenido;
+    seleccion = new Set();
+    errorGuardado = '';
+    avisoError = false;
+    if (historial) history.pushState(null, '', `${location.pathname}?propuesta=${encodeURIComponent(id)}`);
+    mostrarVista(false);
+    cambiarPestana(false);
+    llenarFormulario();
+    renderDocumento();
+    actualizarAvisoPagos();
+    document.title = `${estado.propuesta.titulo.trim() || 'Propuesta sin título'} | Dealit`;
+    $('.editor').scrollTop = 0;
+    editando = true;
+    mostrarEstadoGuardado();
+  };
+
+  const abrirPropuesta = async (id, opciones) => {
+    cerrarEdicion();
+    let doc = propuestas.find(p => p.id === id);
+    if (!doc) doc = await AteneaDB.proposals.obtener(id).catch(e => {
+      console.error('No se pudo abrir la propuesta:', e);
+      return null;
+    });
+    if (!doc) {
+      avisar('No encontramos esa propuesta. Puede que se haya borrado.');
+      history.replaceState(null, '', location.pathname);
+      irAlPanel({ historial: false });
+      return;
+    }
+    mostrarEditor(id, normalizar(doc.payload), opciones);
+  };
+
+  // Tus datos de contacto se repiten en cada propuesta: la nueva los toma de la última editada.
+  const nuevaPropuesta = base => {
+    cerrarEdicion();
+    const nueva = base || vacio();
+    const ultima = propuestas[0];
+    if (!base && ultima?.payload?.emisor) nueva.emisor = normalizar(ultima.payload).emisor;
+    const creada = crearEnCuenta(nueva);
+    if (creada) mostrarEditor(creada.id, nueva);
+  };
+
+  const duplicarPropuesta = id => {
+    const original = propuestas.find(p => p.id === id);
+    if (!original) return;
+    const copia = normalizar(original.payload);
+    copia.propuesta.titulo = `${copia.propuesta.titulo.trim() || 'Sin título'} (copia)`;
+    if (crearEnCuenta(copia)) avisar('Propuesta duplicada.');
+  };
+
+  const borrarPropuesta = async id => {
+    const p = propuestas.find(x => x.id === id);
+    const titulo = texto(p?.title).trim();
+    const ok = await confirmar({
+      titulo: '¿Borrar la propuesta?',
+      texto: `Se borra ${titulo ? `«${titulo}»` : 'esta propuesta'} de tu cuenta y no se puede recuperar. Los links que ya mandaste siguen funcionando.`,
+      aceptar: 'Borrar'
+    });
+    if (!ok) return;
+    registrarEscritura(AteneaDB.proposals.borrar(id), 'No se pudo borrar la propuesta.')
+      .then(borrada => { if (borrada) avisar('Propuesta borrada.'); });
+  };
+
+  window.addEventListener('popstate', () => {
+    if (esCliente || !nube()) return;
+    const id = idEnUrl();
+    if (!id) irAlPanel({ historial: false });
+    else if (id !== propuestaId) abrirPropuesta(id, { historial: false });
+  });
+
+  // Un clic común abre en esta pestaña; con Ctrl, Cmd o la rueda, el navegador abre una nueva.
+  const clicComun = ev => ev.button === 0 && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey && !ev.altKey;
 
   const iniciarCliente = async () => {
     esCliente = true;
@@ -1445,23 +1664,24 @@
     }
   };
 
-  const iniciarEditor = async () => {
-    if (nube()) {
-      try {
-        estado = await cargarDeLaNube();
-      } catch (e) {
-        console.error('No se pudo cargar la propuesta desde la cuenta:', e);
-        sinNube = true;
-        estado = cargarGuardado() || ejemplo();
-        avisar('No pudimos conectar con tu cuenta. Podés seguir editando: los cambios quedan en este navegador hasta que recargues la página.', 8000);
-      }
-    } else {
-      estado = cargarGuardado() || ejemplo();
-    }
+  // Sin Firebase: un solo editor que guarda en el navegador, como antes de las cuentas.
+  const iniciarSinCuenta = () => {
+    document.body.classList.add('sin-cuenta');
+    estado = cargarGuardado() || ejemplo();
     llenarFormulario();
     renderDocumento();
     actualizarAvisoPagos();
+    editando = true;
     mostrarEstadoGuardado();
+  };
+
+  // Con cuenta: se entra al panel, o directo a la propuesta si la URL la indica.
+  const iniciarConCuenta = async () => {
+    migrarLocal();
+    escucharPropuestas();
+    const id = idEnUrl();
+    if (id) await abrirPropuesta(id, { historial: false });
+    else irAlPanel({ historial: false });
   };
 
   const authPantalla   = $('#auth-pantalla');
@@ -1592,9 +1812,9 @@
         if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
         if (!editorIniciado) {
           editorIniciado = true;
-          // El spinner sigue visible hasta tener la propuesta, así no se ve un editor vacío.
+          // El spinner sigue visible hasta saber qué mostrar, así no se ve un editor vacío.
           document.body.classList.add('auth-cargando');
-          await iniciarEditor();
+          await iniciarConCuenta();
         }
         document.body.classList.remove('auth-cargando');
       } else {
@@ -1610,7 +1830,7 @@
   } else {
     authPantalla.hidden = true;
     document.body.classList.remove('auth-activo');
-    iniciarEditor();
+    iniciarSinCuenta();
   }
 
   window.addEventListener('hashchange', () => {
