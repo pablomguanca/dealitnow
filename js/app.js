@@ -1541,6 +1541,9 @@
       case 'borrar-propuesta':
         borrarPropuesta(boton.dataset.id);
         break;
+      case 'eliminar-cuenta':
+        if (nube()) abrirEliminarCuenta();
+        break;
       case 'reintentar-panel':
         escucharPropuestas();
         break;
@@ -1850,7 +1853,19 @@
   const authEmail      = $('#auth-email');
   const authPass       = $('#auth-pass');
   const menuUsuario    = $('#menu-usuario');
+  const authOlvido     = $('#auth-olvido');
+  const authMensaje    = $('#auth-mensaje');
+  const elIngreso      = $('#auth-ingreso');
+  const elVerificar    = $('#auth-verificar');
+  const verificarError = $('#auth-verificar-error');
+  const verificarMensaje = $('#auth-verificar-mensaje');
   let authModo = 'login';
+  let entrar = () => {};
+
+  const mostrarMensaje = (el, texto) => {
+    el.textContent = texto;
+    el.hidden = false;
+  };
 
   const mostrarErrorAuth = (el, msg) => {
     if (!el) return;
@@ -1888,6 +1903,8 @@
         if (authSubmitText) authSubmitText.textContent = authModo === 'login' ? 'Iniciar sesión' : 'Crear cuenta';
         if (authPass) authPass.autocomplete = authModo === 'login' ? 'current-password' : 'new-password';
         if (authError) authError.hidden = true;
+        authOlvido.hidden = authModo !== 'login';
+        authMensaje.hidden = true;
       });
     });
 
@@ -1932,7 +1949,127 @@
         setAuthCargando(false);
       }
     });
+
+    // El mensaje es el mismo exista o no la cuenta, para no revelar qué emails están registrados.
+    authOlvido.addEventListener('click', async () => {
+      const email = authEmail.value.trim();
+      authError.hidden = true;
+      authMensaje.hidden = true;
+      if (!email) {
+        mostrarErrorAuth(authError, 'Escribí tu email arriba y volvé a tocar «¿Olvidaste tu contraseña?».');
+        authEmail.focus();
+        return;
+      }
+      authOlvido.disabled = true;
+      try {
+        await AteneaDB.auth.recuperarPassword(email);
+        mostrarMensaje(authMensaje, `Si hay una cuenta con ${email}, te mandamos un link para crear una contraseña nueva.`);
+      } catch (e) {
+        if (e.code === 'auth/user-not-found') mostrarMensaje(authMensaje, `Si hay una cuenta con ${email}, te mandamos un link para crear una contraseña nueva.`);
+        else mostrarErrorAuth(authError, e);
+      } finally {
+        authOlvido.disabled = false;
+      }
+    });
+
+    $('#auth-verificar-listo').addEventListener('click', async ev => {
+      const boton = ev.currentTarget;
+      boton.disabled = true;
+      verificarError.hidden = true;
+      verificarMensaje.hidden = true;
+      try {
+        if (await AteneaDB.auth.comprobarVerificacion()) entrar(AteneaDB.auth.getUser());
+        else mostrarErrorAuth(verificarError, 'Tu email todavía no figura como verificado. Tocá el link del email que te mandamos y probá de nuevo.');
+      } catch (e) {
+        mostrarErrorAuth(verificarError, e);
+      } finally {
+        boton.disabled = false;
+      }
+    });
+
+    $('#auth-verificar-reenviar').addEventListener('click', async ev => {
+      const boton = ev.currentTarget;
+      boton.disabled = true;
+      verificarError.hidden = true;
+      try {
+        await AteneaDB.auth.enviarVerificacion();
+        mostrarMensaje(verificarMensaje, 'Te reenviamos el email. Puede tardar unos minutos en llegar.');
+      } catch (e) {
+        mostrarErrorAuth(verificarError, e.code === 'auth/too-many-requests'
+          ? 'Ya te mandamos varios emails. Esperá unos minutos antes de pedir otro.'
+          : e);
+      } finally {
+        boton.disabled = false;
+      }
+    });
+
+    $('#auth-verificar-salir').addEventListener('click', async () => {
+      await AteneaDB.auth.signOut();
+      location.reload();
+    });
+
+    // Si verificó en otra pestaña (o en el celular), al volver entra solo.
+    document.addEventListener('visibilitychange', async () => {
+      if (document.visibilityState !== 'visible' || elVerificar.hidden || !AteneaDB.auth.getUser()) return;
+      try {
+        if (await AteneaDB.auth.comprobarVerificacion()) entrar(AteneaDB.auth.getUser());
+      } catch {}
+    });
   }
+
+  const dialogoEliminar = $('#dialogo-eliminar');
+  const eliminarConfirmacion = $('#eliminar-confirmacion');
+  const eliminarPass = $('#eliminar-pass');
+  const eliminarBoton = $('#eliminar-confirmar');
+  const eliminarError = $('#eliminar-error');
+
+  const actualizarBotonEliminar = () => {
+    eliminarBoton.disabled = eliminarConfirmacion.value.trim().toUpperCase() !== 'ELIMINAR'
+      || (AteneaDB.auth.usaPassword() && !eliminarPass.value);
+  };
+  eliminarConfirmacion.addEventListener('input', actualizarBotonEliminar);
+  eliminarPass.addEventListener('input', actualizarBotonEliminar);
+
+  const abrirEliminarCuenta = () => {
+    const conPassword = AteneaDB.auth.usaPassword();
+    $('#eliminar-form').reset();
+    $('#eliminar-campo-pass').hidden = !conPassword;
+    $('#eliminar-ayuda-google').hidden = conPassword;
+    eliminarError.hidden = true;
+    eliminarBoton.textContent = 'Eliminar cuenta';
+    actualizarBotonEliminar();
+    dialogoEliminar.showModal();
+    eliminarConfirmacion.focus();
+  };
+
+  eliminarBoton.addEventListener('click', async () => {
+    eliminarBoton.disabled = true;
+    eliminarBoton.textContent = 'Eliminando…';
+    eliminarError.hidden = true;
+    try {
+      await AteneaDB.auth.eliminarCuenta(eliminarPass.value);
+      try {
+        Object.keys(localStorage).filter(k => k.startsWith(CLAVE)).forEach(k => localStorage.removeItem(k));
+        sessionStorage.setItem(`${CLAVE}:cuenta-eliminada`, '1');
+      } catch {}
+      location.replace('/');
+    } catch (e) {
+      console.error('No se pudo eliminar la cuenta:', e);
+      const MENSAJES = {
+        'auth/wrong-password': 'La contraseña no es correcta.',
+        'auth/invalid-credential': 'La contraseña no es correcta.',
+        'auth/popup-closed-by-user': 'Cerraste la ventana de Google antes de confirmar. Probá de nuevo.',
+        'auth/cancelled-popup-request': 'Cerraste la ventana de Google antes de confirmar. Probá de nuevo.',
+        'auth/popup-blocked': 'El navegador bloqueó la ventana de Google. Permitila y probá de nuevo.',
+        'auth/user-mismatch': 'Elegiste otra cuenta de Google. Confirmá con la cuenta con la que iniciaste sesión.',
+        'auth/too-many-requests': 'Demasiados intentos. Esperá un momento.'
+      };
+      eliminarError.textContent = MENSAJES[e.code] || 'No se pudo eliminar la cuenta. Revisá tu conexión y probá de nuevo.';
+      eliminarError.hidden = false;
+      eliminarBoton.textContent = 'Eliminar cuenta';
+      actualizarBotonEliminar();
+    }
+  });
 
   document.querySelector('[data-accion="cerrar-sesion"]')?.addEventListener('click', async () => {
     if (!window.AteneaDB) return;
@@ -1962,23 +2099,58 @@
     iniciarCliente();
   } else if (window.AteneaDB) {
     let editorIniciado = false;
-    AteneaDB.auth.onAuthChange(async user => {
-      if (user) {
-        authPantalla.hidden = true;
-        document.body.classList.remove('auth-activo');
-        if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
-        if (!editorIniciado) {
-          editorIniciado = true;
-          // El spinner sigue visible hasta saber qué mostrar, así no se ve un editor vacío.
-          document.body.classList.add('auth-cargando');
-          await iniciarConCuenta();
-        }
-        document.body.classList.remove('auth-cargando');
-      } else {
-        document.body.classList.remove('auth-cargando');
-        authPantalla.hidden = false;
-        document.body.classList.add('auth-activo');
+
+    const mostrarAuth = () => {
+      document.body.classList.remove('auth-cargando');
+      authPantalla.hidden = false;
+      document.body.classList.add('auth-activo');
+    };
+
+    // Cuentas con email y contraseña: hasta verificar el email no entran a la app
+    // (las reglas de Firestore y Storage tampoco les permiten escribir).
+    const mostrarVerificacion = user => {
+      $('#auth-verificar-email').textContent = user.email;
+      elIngreso.hidden = true;
+      elVerificar.hidden = false;
+      mostrarAuth();
+    };
+
+    entrar = async user => {
+      elVerificar.hidden = true;
+      elIngreso.hidden = false;
+      authPantalla.hidden = true;
+      document.body.classList.remove('auth-activo');
+      if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
+      $('#panel-usuario').textContent = user.email || user.displayName || '';
+      if (!editorIniciado) {
+        editorIniciado = true;
+        // El spinner sigue visible hasta saber qué mostrar, así no se ve un editor vacío.
+        document.body.classList.add('auth-cargando');
+        await iniciarConCuenta();
       }
+      document.body.classList.remove('auth-cargando');
+    };
+
+    AteneaDB.auth.onAuthChange(async user => {
+      if (!user) {
+        mostrarAuth();
+        try {
+          if (sessionStorage.getItem(`${CLAVE}:cuenta-eliminada`)) {
+            sessionStorage.removeItem(`${CLAVE}:cuenta-eliminada`);
+            avisar('Tu cuenta y todos tus datos se eliminaron.', 6000);
+          }
+        } catch {}
+        return;
+      }
+      // Al volver desde el link del email, el usuario en memoria puede estar desactualizado.
+      if (!user.emailVerified) {
+        const verificado = await AteneaDB.auth.comprobarVerificacion().catch(() => false);
+        if (!verificado) {
+          mostrarVerificacion(user);
+          return;
+        }
+      }
+      entrar(user);
     });
   } else if (window.AteneaDBError) {
     authPantalla.hidden = false;

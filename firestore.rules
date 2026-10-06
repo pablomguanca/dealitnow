@@ -5,13 +5,15 @@ service cloud.firestore {
 
     function autenticado() { return request.auth != null; }
     function esDueno(uid)   { return autenticado() && request.auth.uid == uid; }
+    // Google ya verifica el email; las cuentas con email y contraseña, al tocar el link.
+    function verificado()   { return request.auth.token.email_verified == true; }
 
     match /users/{uid} {
       allow read: if esDueno(uid);
       allow create, update: if esDueno(uid)
         && request.resource.data.keys().hasOnly(['email', 'displayName', 'photoURL', 'createdAt'])
         && request.resource.data.email == request.auth.token.email;
-      allow delete: if false;
+      allow delete: if esDueno(uid);
     }
 
     match /proposals/{proposalId} {
@@ -35,10 +37,12 @@ service cloud.firestore {
       allow list: if esDueno(resource.data.userId);
 
       allow create: if esDueno(request.resource.data.userId)
+        && verificado()
         && datosValidos()
         && request.resource.data.createdAt == request.time;
 
       allow update: if esDueno(resource.data.userId)
+        && verificado()
         && request.resource.data.userId    == resource.data.userId
         && request.resource.data.createdAt == resource.data.createdAt
         && datosValidos();

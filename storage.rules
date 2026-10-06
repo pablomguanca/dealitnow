@@ -9,6 +9,7 @@ service firebase.storage {
     match /users/{uid}/logos/{archivo} {
       allow read: if request.auth != null && request.auth.uid == uid;
       allow create, update: if request.auth != null && request.auth.uid == uid
+        && request.auth.token.email_verified == true
         && archivo.matches('[a-f0-9]{64}[.](png|jpg|webp)')
         && request.resource.size < 1024 * 1024
         && request.resource.contentType.matches('image/(png|jpeg|webp)');

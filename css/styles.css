@@ -2921,3 +2921,99 @@ body.sin-cuenta .solo-cuenta {
 .icono-boton--activo {
   color: var(--dorado-papel);
 }
+
+/* ---------- Cuenta: contraseña, verificación y eliminación ---------- */
+
+.auth__olvido {
+  align-self: flex-start;
+  padding: 0.2rem 0;
+  border: 0;
+  background: none;
+  color: var(--marfil-apagado);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color var(--transicion);
+}
+
+.auth__olvido:hover {
+  color: var(--dorado-papel);
+}
+
+.auth__olvido[hidden] {
+  display: none;
+}
+
+.auth__mensaje {
+  margin: 0;
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radio-s);
+  background: var(--dorado-fondo);
+  border: 1px solid var(--dorado-tenue);
+  color: var(--dorado-papel);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.auth__mensaje[hidden],
+.auth__verificar[hidden],
+#auth-ingreso[hidden] {
+  display: none;
+}
+
+.auth__verificar {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.auth__verificar-titulo {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.auth__verificar-texto {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--marfil-apagado);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.auth__verificar-acciones {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.panel__cuenta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-top: 3rem;
+  padding-top: 1.2rem;
+  border-top: 1px solid var(--superficie-borde);
+  font-size: 0.8rem;
+  color: var(--marfil-tenue);
+  overflow-wrap: anywhere;
+}
+
+.boton--destructivo,
+.boton--destructivo:hover {
+  background: #dc2626;
+  color: #fff;
+  box-shadow: none;
+}
+
+.boton--destructivo:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
+.auth__spinner[hidden] {
+  display: none;
+}

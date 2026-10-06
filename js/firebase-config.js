@@ -31,7 +31,17 @@
     return;
   }
 
+  // App Check: certifica que las llamadas a Firestore y Storage salen de esta web y no
+  // de un script ajeno. Se activa al completar la clave del sitio de reCAPTCHA Enterprise
+  // (Firebase → App Check). En localhost usa un token de depuración que se registra en la consola.
+  const APP_CHECK_SITE_KEY = '';
+  if (APP_CHECK_SITE_KEY && typeof firebase.appCheck === 'function') {
+    if (['localhost', '127.0.0.1'].includes(location.hostname)) self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+    firebase.appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY), true);
+  }
+
   const auth = firebase.auth();
+  auth.languageCode = 'es'; // emails de verificación y de contraseña en español
   const db   = firebase.firestore();
 
   // Caché local en IndexedDB: el editor funciona sin conexión y sincroniza al volver.
@@ -74,8 +84,29 @@
 
   const signIn = (email, password) => auth.signInWithEmailAndPassword(email, password);
 
+  // Al volver desde el link del email, Firebase redirige a la web.
+  const _ajustesEmail = () => ({ url: `${location.origin}/` });
+
+  const enviarVerificacion = () => auth.currentUser.sendEmailVerification(_ajustesEmail());
+
+  // Después de tocar el link del email hay que recargar el usuario y renovar el
+  // token: las reglas de Firestore leen email_verified del token.
+  const comprobarVerificacion = async () => {
+    await auth.currentUser.reload();
+    if (!auth.currentUser.emailVerified) return false;
+    await auth.currentUser.getIdToken(true);
+    return true;
+  };
+
+  const recuperarPassword = email => auth.sendPasswordResetEmail(email, _ajustesEmail());
+
   const signUp = async (email, password, displayName) => {
     const cred = await auth.createUserWithEmailAndPassword(email, password);
+    try {
+      await cred.user.sendEmailVerification(_ajustesEmail());
+    } catch (e) {
+      console.warn('No se pudo enviar el email de verificación:', e); // se puede reenviar desde la app
+    }
     if (displayName) await cred.user.updateProfile({ displayName });
     await db.collection('users').doc(cred.user.uid).set({
       email,
@@ -228,8 +259,58 @@
     return ref.getDownloadURL();
   };
 
+  const usaPassword = () => !!auth.currentUser?.providerData.some(p => p.providerId === 'password');
+
+  // Firebase exige un inicio de sesión reciente para borrar una cuenta.
+  const _reautenticar = async (password) => {
+    const user = auth.currentUser;
+    if (usaPassword()) {
+      await user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, password));
+      return;
+    }
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ login_hint: user.email });
+    await user.reauthenticateWithPopup(provider);
+  };
+
+  // Borra todo lo del usuario y después la cuenta. El orden importa: sin la cuenta,
+  // las reglas ya no permitirían borrar sus datos.
+  const eliminarCuenta = async (password) => {
+    await _reautenticar(password);
+    const uid = getUid();
+    _limpiarSuscripciones();
+
+    const propuestas = await _colProposals().where('userId', '==', uid).get();
+    for (let i = 0; i < propuestas.docs.length; i += 400) {
+      const lote = db.batch();
+      propuestas.docs.slice(i, i + 400).forEach(d => lote.delete(d.ref));
+      await lote.commit();
+    }
+
+    if (storage) {
+      try {
+        const logos = await storage.ref(`users/${uid}/logos`).listAll();
+        await Promise.all(logos.items.map(ref => ref.delete()));
+      } catch (e) {
+        console.warn('No se pudieron borrar los logos:', e);
+      }
+    }
+
+    await db.collection('users').doc(uid).delete();
+    await auth.currentUser.delete();
+    try {
+      await db.terminate();
+      await db.clearPersistence();
+    } catch (e) {
+      console.warn('No se pudo limpiar la caché local de Firestore:', e);
+    }
+  };
+
   window.AteneaDB = {
-    auth: { getUser, getUid, onAuthChange, signInGoogle, signIn, signUp, signOut },
+    auth: {
+      getUser, getUid, onAuthChange, signInGoogle, signIn, signUp, signOut,
+      enviarVerificacion, comprobarVerificacion, recuperarPassword, usaPassword, eliminarCuenta
+    },
     logos: { subir: subirLogo, prefijoURL: PREFIJO_URL_LOGO },
     proposals: {
       nuevoId:    nuevoIdPropuesta,
