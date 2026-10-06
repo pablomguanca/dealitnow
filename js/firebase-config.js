@@ -146,6 +146,18 @@
     return { id: snap.id, ...data };
   };
 
+  // Lectura para el link del cliente: no requiere sesión. Las reglas solo la
+  // permiten si la propuesta está marcada como pública (o si la pide su dueño).
+  const obtenerPublica = async (id) => {
+    try {
+      const snap = await _colProposals().doc(id).get();
+      return snap.exists ? snap.data().payload || null : null;
+    } catch (e) {
+      if (e.code === 'permission-denied') return null;
+      throw e;
+    }
+  };
+
   const listarPropuestas = async (limite = 50) => {
     const snap = await _baseQuery().limit(limite).get();
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -196,6 +208,7 @@
       nuevoId:    nuevoIdPropuesta,
       crear:      crearPropuesta,
       obtener:    obtenerPropuesta,
+      obtenerPublica,
       listar:     listarPropuestas,
       listarPor:  listarPorEstado,
       actualizar: actualizarPropuesta,

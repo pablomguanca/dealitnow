@@ -3,6 +3,7 @@
   const LOGO_MAX_ARCHIVO = 5 * 1024 * 1024;
   const LOGO_MAX_LINK = 40000;
   const PREFIJO = '#p=';
+  const RUTA_LINK = /^\/p\/([A-Za-z0-9]{20})\/?$/; // IDs de Firestore: 20 caracteres
 
   const MODALIDADES = {
     unico: { cantidad: 'Cantidad', precio: 'Precio' },
@@ -1165,18 +1166,47 @@
 
   let linkActual = '';
 
+  const linkCorto = id => `${location.origin}/p/${id}`;
+
+  // Activa el link corto: la propuesta pasa a ser legible por quien tenga el link
+  // y, si era un borrador, queda como enviada. Devuelve true si el servidor lo
+  // confirmó, false si falló y null si todavía no hay respuesta (sin conexión).
+  const activarLink = async () => {
+    if (hayCambiosSinEnviar()) guardarAhora();
+    const actual = propuestas.find(p => p.id === propuestaId);
+    const cambios = { publico: true };
+    if (!actual || !actual.status || actual.status === 'draft') cambios.status = 'sent';
+    if (actual?.publico && !cambios.status) return true;
+    const escritura = registrarEscritura(
+      AteneaDB.proposals.actualizar(propuestaId, cambios),
+      'No se pudo activar el link de la propuesta. Revisá tu conexión y probá de nuevo.'
+    );
+    return Promise.race([escritura, new Promise(res => setTimeout(() => res(null), 4000))]);
+  };
+
   const abrirCompartir = async () => {
     const tieneContenido = estado.propuesta.titulo.trim() || estado.servicios.some(servicioConContenido);
     if (!tieneContenido) {
       avisar('Cargá al menos el título y un servicio antes de compartir la propuesta.');
       return;
     }
-    const { datos, logoOmitido } = datosParaLink();
-    try {
-      linkActual = `${location.origin}${location.pathname}${PREFIJO}${await comprimir(JSON.stringify(datos))}`;
-    } catch {
-      avisar('No se pudo generar el link. Probá de nuevo.');
-      return;
+    const conCuenta = !!(nube() && propuestaId);
+    const avisos = [];
+    if (conCuenta) {
+      const activado = await activarLink();
+      if (activado === false) return;
+      if (activado === null) avisos.push('Estás sin conexión: el link empieza a funcionar en cuanto vuelva.');
+      linkActual = linkCorto(propuestaId);
+    } else {
+      const { datos, logoOmitido } = datosParaLink();
+      try {
+        linkActual = `${location.origin}${location.pathname}${PREFIJO}${await comprimir(JSON.stringify(datos))}`;
+      } catch {
+        avisar('No se pudo generar el link. Probá de nuevo.');
+        return;
+      }
+      if (location.protocol === 'file:') avisos.push('Estás usando el generador desde un archivo de tu compu, así que este link solo abre acá. Publicá el generador en una web (Vercel, Netlify, tu hosting) y el link le va a funcionar a cualquiera.');
+      if (logoOmitido) avisos.push('Tu logo es demasiado pesado para viajar en el link, así que no se incluye. Probá con un SVG o un PNG más simple.');
     }
     $('#enlace-propuesta').value = linkActual;
     $('#compartir-abrir').href = linkActual;
@@ -1184,14 +1214,32 @@
     const mensaje = `${saludo} Te comparto la propuesta${estado.propuesta.titulo.trim() ? ` «${estado.propuesta.titulo.trim()}»` : ''}. Desde el link podés ver todo el detalle, sumar opcionales y aceptarla: ${linkActual}`;
     $('#compartir-whatsapp').href = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
     $('#compartir-nativo').hidden = typeof navigator.share !== 'function';
-    const avisos = [];
-    if (location.protocol === 'file:') avisos.push('Estás usando el generador desde un archivo de tu compu, así que este link solo abre acá. Publicá el generador en una web (Vercel, Netlify, tu hosting) y el link le va a funcionar a cualquiera.');
-    if (logoOmitido) avisos.push('Tu logo es demasiado pesado para viajar en el link, así que no se incluye. Probá con un SVG o un PNG más simple.');
+    $('#compartir-desactivar').hidden = !conCuenta;
+    $('#compartir-nota').textContent = conCuenta
+      ? 'El link muestra siempre la última versión: si cambiás algo, tu cliente lo ve la próxima vez que lo abra.'
+      : 'Cada link guarda la propuesta tal como está ahora. Si después cambiás algo, generá uno nuevo y mandá ese.';
     if (!digitosWhatsApp() && !estado.emisor.email.trim()) avisos.push('No cargaste WhatsApp ni email: tu cliente va a poder aceptar, pero solo copiando el mensaje de confirmación.');
     const elAvisoCompartir = $('#compartir-aviso');
     elAvisoCompartir.hidden = !avisos.length;
     elAvisoCompartir.textContent = avisos.join(' ');
     $('#dialogo-compartir').showModal();
+  };
+
+  const desactivarLink = async () => {
+    const id = propuestaId;
+    if (!id) return;
+    const ok = await confirmar({
+      titulo: '¿Desactivar el link?',
+      texto: 'Quien tenga el link ya no va a poder ver la propuesta. Si más adelante la volvés a compartir, se reactiva el mismo link.',
+      aceptar: 'Desactivar link'
+    });
+    if (!ok) return;
+    $('#dialogo-compartir').close();
+    const desactivado = await registrarEscritura(
+      AteneaDB.proposals.actualizar(id, { publico: false }),
+      'No se pudo desactivar el link. Revisá tu conexión y probá de nuevo.'
+    );
+    if (desactivado) avisar('Link desactivado.');
   };
 
   const copiar = async contenido => {
@@ -1384,6 +1432,13 @@
           avisar('No se pudo copiar automáticamente. El link quedó seleccionado para que lo copies.');
         }
         break;
+      case 'desactivar-link':
+        desactivarLink();
+        break;
+      case 'copiar-link-propuesta':
+        if (await copiar(linkCorto(boton.dataset.id))) avisar('Link copiado.');
+        else avisar('No se pudo copiar el link. Abrí la propuesta y copialo desde «Compartir».');
+        break;
       case 'compartir-nativo':
         try {
           await navigator.share({ title: estado.propuesta.titulo.trim() || 'Propuesta', url: linkActual });
@@ -1490,6 +1545,9 @@
         <span class="propuesta__estado propuesta__estado--${estadoP}">${ESTADOS_PROPUESTA[estadoP]}</span>
         <span class="propuesta__fecha">${editada ? `<time datetime="${editada.toISOString()}" title="${esc(editada.toLocaleString('es-AR'))}">Editada ${esc(haceCuanto(editada))}</time>` : ''}</span>
         <span class="propuesta__acciones">
+          ${p.publico === true ? `<button type="button" class="icono-boton icono-boton--activo" data-accion="copiar-link-propuesta" data-id="${esc(p.id)}" aria-label="Copiar el link de «${esc(titulo)}»" title="Link activo: copiar">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.3 0l2-2a3 3 0 0 0-4.3-4.3l-.9.9M9.2 6.8a3 3 0 0 0-4.3 0l-2 2a3 3 0 0 0 4.3 4.3l.9-.9"/></svg>
+          </button>` : ''}
           <button type="button" class="icono-boton" data-accion="duplicar-propuesta" data-id="${esc(p.id)}" aria-label="Duplicar «${esc(titulo)}»" title="Duplicar">
             <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.2"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
           </button>
@@ -1626,7 +1684,7 @@
     const titulo = texto(p?.title).trim();
     const ok = await confirmar({
       titulo: '¿Borrar la propuesta?',
-      texto: `Se borra ${titulo ? `«${titulo}»` : 'esta propuesta'} de tu cuenta y no se puede recuperar. Los links que ya mandaste siguen funcionando.`,
+      texto: `Se borra ${titulo ? `«${titulo}»` : 'esta propuesta'} de tu cuenta y no se puede recuperar.${p?.publico ? ' El link que compartiste deja de funcionar.' : ''}`,
       aceptar: 'Borrar'
     });
     if (!ok) return;
@@ -1644,23 +1702,54 @@
   // Un clic común abre en esta pestaña; con Ctrl, Cmd o la rueda, el navegador abre una nueva.
   const clicComun = ev => ev.button === 0 && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey && !ev.altKey;
 
+  const errorCliente = (titulo, mensaje) => {
+    $('#documento').innerHTML = `
+      <div class="doc-error">
+        <div>
+          <h1>${esc(titulo)}</h1>
+          <p>${esc(mensaje)}</p>
+        </div>
+      </div>`;
+  };
+
+  const mostrarCliente = datos => {
+    estado = normalizar(datos);
+    const destinatario = estado.cliente.empresa.trim() || estado.cliente.nombre.trim();
+    document.title = [estado.propuesta.titulo.trim() || 'Propuesta', destinatario ? `para ${destinatario}` : ''].filter(Boolean).join(' ');
+    renderDocumento();
+  };
+
+  // Link largo (#p=…): la propuesta viaja comprimida dentro del propio link.
   const iniciarCliente = async () => {
     esCliente = true;
     document.body.classList.add('modo-cliente');
     try {
-      const datos = JSON.parse(await descomprimir(location.hash.slice(PREFIJO.length)));
-      estado = normalizar(datos);
-      const destinatario = estado.cliente.empresa.trim() || estado.cliente.nombre.trim();
-      document.title = [estado.propuesta.titulo.trim() || 'Propuesta', destinatario ? `para ${destinatario}` : ''].filter(Boolean).join(' ');
-      renderDocumento();
+      mostrarCliente(JSON.parse(await descomprimir(location.hash.slice(PREFIJO.length))));
     } catch {
-      $('#documento').innerHTML = `
-        <div class="doc-error">
-          <div>
-            <h1>No pudimos abrir esta propuesta</h1>
-            <p>El link llegó incompleto o se cortó al copiarlo. Pedile a quien te lo mandó que lo comparta de nuevo.</p>
-          </div>
-        </div>`;
+      errorCliente('No pudimos abrir esta propuesta', 'El link llegó incompleto o se cortó al copiarlo. Pedile a quien te lo mandó que lo comparta de nuevo.');
+    }
+  };
+
+  // Link corto (/p/<id>): la propuesta se lee de la cuenta de quien la mandó,
+  // siempre en su última versión, mientras el link esté activo.
+  const iniciarClienteCorto = async id => {
+    esCliente = true;
+    document.body.classList.add('modo-cliente');
+    if (!id) {
+      errorCliente('No pudimos abrir esta propuesta', 'El link llegó incompleto o se cortó al copiarlo. Pedile a quien te lo mandó que lo comparta de nuevo.');
+      return;
+    }
+    if (!window.AteneaDB) {
+      errorCliente('No pudimos abrir esta propuesta', 'Hubo un problema al conectar. Revisá tu conexión y recargá la página.');
+      return;
+    }
+    try {
+      const datos = await AteneaDB.proposals.obtenerPublica(id);
+      if (datos) mostrarCliente(datos);
+      else errorCliente('Esta propuesta ya no está disponible', 'Puede que el link se haya desactivado. Pedile a quien te la mandó que te comparta uno nuevo.');
+    } catch (e) {
+      console.error('No se pudo abrir la propuesta compartida:', e);
+      errorCliente('No pudimos abrir esta propuesta', 'Hubo un problema al conectar. Revisá tu conexión y recargá la página.');
     }
   };
 
@@ -1797,11 +1886,14 @@
     location.reload();
   });
 
-  const esClienteLink = location.hash.startsWith(PREFIJO);
+  const esLinkCorto = location.pathname.startsWith('/p/');
+  const esClienteLink = location.hash.startsWith(PREFIJO) || esLinkCorto;
 
   if (!window.AteneaDB || esClienteLink) document.body.classList.remove('auth-cargando');
 
-  if (esClienteLink) {
+  if (esLinkCorto) {
+    iniciarClienteCorto((location.pathname.match(RUTA_LINK) || [])[1]);
+  } else if (esClienteLink) {
     iniciarCliente();
   } else if (window.AteneaDB) {
     let editorIniciado = false;

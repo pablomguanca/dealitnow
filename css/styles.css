@@ -2903,3 +2903,21 @@ body.sin-cuenta .solo-cuenta {
     text-align: right;
   }
 }
+
+/* ---------- Links cortos ---------- */
+
+.boton--peligro {
+  color: #dc2626;
+}
+
+.boton--peligro:hover {
+  color: #b91c1c;
+}
+
+#compartir-desactivar {
+  margin-right: auto;
+}
+
+.icono-boton--activo {
+  color: var(--dorado-papel);
+}
