@@ -202,8 +202,35 @@
     _unsubSnapshots = [];
   };
 
+  // Logos en Firebase Storage: users/{uid}/logos/{sha256}.{ext}. El nombre es el hash
+  // del contenido, así el mismo logo se sube una sola vez aunque esté en muchas propuestas.
+  // Se muestran con su URL de descarga (lleva un token), que funciona sin sesión.
+  const storage = typeof firebase.storage === 'function' ? firebase.storage() : null;
+  const EXTENSIONES_LOGO = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
+  const PREFIJO_URL_LOGO = `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/`;
+
+  const _hashHex = async (blob) => {
+    const digest = await crypto.subtle.digest('SHA-256', await blob.arrayBuffer());
+    return [...new Uint8Array(digest)].map(b => b.toString(16).padStart(2, '0')).join('');
+  };
+
+  const subirLogo = async (blob) => {
+    if (!storage) throw new Error('Firebase Storage no está disponible');
+    const ext = EXTENSIONES_LOGO[blob.type];
+    if (!ext) throw new Error(`Formato de logo no admitido: ${blob.type}`);
+    const ref = storage.ref(`users/${getUid()}/logos/${await _hashHex(blob)}.${ext}`);
+    try {
+      return await ref.getDownloadURL();
+    } catch (e) {
+      if (e.code !== 'storage/object-not-found') throw e;
+    }
+    await ref.put(blob, { contentType: blob.type, cacheControl: 'public, max-age=31536000, immutable' });
+    return ref.getDownloadURL();
+  };
+
   window.AteneaDB = {
     auth: { getUser, getUid, onAuthChange, signInGoogle, signIn, signUp, signOut },
+    logos: { subir: subirLogo, prefijoURL: PREFIJO_URL_LOGO },
     proposals: {
       nuevoId:    nuevoIdPropuesta,
       crear:      crearPropuesta,

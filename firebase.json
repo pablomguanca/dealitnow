@@ -3,9 +3,12 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
+  "storage": {
+    "rules": "storage.rules"
+  },
   "hosting": {
     "public": ".",
-    "ignore": ["firebase.json", "firestore.rules", "firestore.indexes.json", ".firebaserc", "node_modules", ".claude"],
+    "ignore": ["firebase.json", "firestore.rules", "firestore.indexes.json", "storage.rules", ".firebaserc", "node_modules", ".claude"],
     "rewrites": [
       { "source": "**", "destination": "/index.html" }
     ]

@@ -211,7 +211,7 @@
     n.objetivos.forEach(o => { o.texto = texto(o.texto); });
     n.etapas.forEach(e => ['nombre', 'duracion', 'descripcion'].forEach(k => { e[k] = texto(e[k]); }));
     n.inversion.pagos.forEach(p => { p.concepto = texto(p.concepto); });
-    if (!/^data:image\//.test(n.emisor.logo)) n.emisor.logo = '';
+    if (!esLogoValido(n.emisor.logo)) n.emisor.logo = '';
     return n;
   };
 
@@ -1073,25 +1073,50 @@
     lector.readAsDataURL(archivo);
   });
 
-  const reducirLogo = async archivo => {
+  // Dibuja el logo en un lienzo de hasta 360×140 px por la densidad pedida.
+  const lienzoLogo = async (archivo, densidad) => {
     const original = await leerComoDataURL(archivo);
-    if (archivo.type === 'image/svg+xml' && original.length < 20000) return original;
     const img = await new Promise((res, rej) => {
       const i = new Image();
       i.onload = () => res(i);
       i.onerror = rej;
       i.src = original;
     });
-    const anchoMax = 360;
-    const altoMax = 140;
+    const anchoMax = 360 * densidad;
+    const altoMax = 140 * densidad;
     const escala = Math.min(1, anchoMax / (img.naturalWidth || anchoMax), altoMax / (img.naturalHeight || altoMax));
     const lienzo = document.createElement('canvas');
     lienzo.width = Math.max(1, Math.round((img.naturalWidth || anchoMax) * escala));
     lienzo.height = Math.max(1, Math.round((img.naturalHeight || altoMax) * escala));
     lienzo.getContext('2d').drawImage(img, 0, 0, lienzo.width, lienzo.height);
+    return { lienzo, original };
+  };
+
+  // Sin cuenta: el logo viaja dentro de la propuesta, así que se guarda lo más liviano posible.
+  const reducirLogo = async archivo => {
+    const { lienzo, original } = await lienzoLogo(archivo, 1);
+    if (archivo.type === 'image/svg+xml' && original.length < 20000) return original;
     const png = lienzo.toDataURL('image/png');
     const webp = lienzo.toDataURL('image/webp', 0.86);
     return webp.startsWith('data:image/webp') && webp.length < png.length ? webp : png;
+  };
+
+  // Con cuenta: se sube a Storage al doble de resolución para que se vea nítido en pantallas
+  // de alta densidad. Los SVG también se rasterizan: un SVG servido como archivo puede
+  // ejecutar scripts si alguien abre su URL directo.
+  const logoParaSubir = async archivo => {
+    const { lienzo } = await lienzoLogo(archivo, 2);
+    const aBlob = (tipo, calidad) => new Promise(res => lienzo.toBlob(res, tipo, calidad));
+    const webp = await aBlob('image/webp', 0.9);
+    return webp && webp.type === 'image/webp' ? webp : aBlob('image/png');
+  };
+
+  const esLogoValido = logo => /^data:image\//.test(logo)
+    || (!!window.AteneaDB?.logos && logo.startsWith(AteneaDB.logos.prefijoURL));
+
+  const subiendoLogo = estaSubiendo => {
+    $('#logo-texto').textContent = estaSubiendo ? 'Subiendo logo…' : (estado.emisor.logo ? 'Cambiar logo' : 'Subir logo');
+    campoLogo.disabled = estaSubiendo;
   };
 
   const campoLogo = $('#campo-logo');
@@ -1107,14 +1132,53 @@
       avisar('El logo pesa más de 5 MB. Usá una versión más liviana.');
       return;
     }
+    const db = nube();
+    const id = propuestaId;
+    let logo;
+    subiendoLogo(true);
     try {
-      estado.emisor.logo = await reducirLogo(archivo);
-      actualizarLogo();
-      actualizar();
+      if (db) {
+        try {
+          logo = await db.logos.subir(await logoParaSubir(archivo));
+        } catch (e) {
+          // Sin conexión o sin Storage: el logo queda dentro de la propuesta y
+          // se sube solo la próxima vez que se abra.
+          console.error('No se pudo subir el logo:', e);
+          logo = await reducirLogo(archivo);
+          avisar('No se pudo subir el logo a tu cuenta, así que quedó guardado dentro de la propuesta.', 6000);
+        }
+      } else {
+        logo = await reducirLogo(archivo);
+      }
     } catch {
       avisar('No se pudo leer la imagen. Probá con otra.');
     }
+    // Si mientras subía se cambió de propuesta, el logo no se aplica a la otra.
+    if (logo && propuestaId === id) {
+      estado.emisor.logo = logo;
+      actualizarLogo();
+      actualizar();
+    }
+    subiendoLogo(false);
   });
+
+  // Logos guardados dentro de la propuesta (versiones anteriores o subidas fallidas)
+  // se pasan a Storage al abrirla. Si falla, se reintenta la próxima vez.
+  const migrarLogo = async () => {
+    const id = propuestaId;
+    const logo = estado.emisor.logo;
+    if (!nube() || !id || !logo.startsWith('data:')) return;
+    try {
+      const blob = await (await fetch(logo)).blob();
+      const url = await AteneaDB.logos.subir(/^image\/(png|jpeg|webp)$/.test(blob.type) ? blob : await logoParaSubir(blob));
+      if (propuestaId !== id || estado.emisor.logo !== logo) return;
+      estado.emisor.logo = url;
+      actualizarLogo();
+      actualizar();
+    } catch (e) {
+      console.warn('No se pudo pasar el logo a Storage:', e);
+    }
+  };
 
   const aBase64Url = bytes => {
     let binario = '';
@@ -1643,6 +1707,7 @@
     $('.editor').scrollTop = 0;
     editando = true;
     mostrarEstadoGuardado();
+    migrarLogo();
   };
 
   const abrirPropuesta = async (id, opciones) => {

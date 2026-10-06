@@ -5,6 +5,7 @@
 firebase.json
 firestore.rules
 firestore.indexes.json
+storage.rules
 *.log
 .gitignore
 .vercelignore
