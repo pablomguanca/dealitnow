@@ -169,7 +169,9 @@ const crearAteneaDB = () => {
   const obtenerPublica = async (id) => {
     try {
       const snap = await _colProposals().doc(id).get();
-      return snap.exists ? snap.data().payload || null : null;
+      if (!snap.exists || !snap.data().payload) return null;
+      const { payload, aceptacion } = snap.data();
+      return { payload, aceptacion: aceptacion || null };
     } catch (e) {
       if (e.code === 'permission-denied') return null;
       throw e;
@@ -246,6 +248,16 @@ const crearAteneaDB = () => {
     return ref.getDownloadURL();
   };
 
+  // Token de la sesión para identificarse ante /api (null si no hay sesión). Espera a
+  // que Firebase recupere la sesión guardada, que al cargar la página llega un instante después.
+  const sesionRecuperada = new Promise(res => {
+    const dejar = auth.onAuthStateChanged(() => { dejar(); res(); });
+  });
+  const tokenDeSesion = async () => {
+    await sesionRecuperada;
+    return auth.currentUser ? auth.currentUser.getIdToken() : null;
+  };
+
   const usaPassword = () => !!auth.currentUser?.providerData.some(p => p.providerId === 'password');
 
   // Firebase exige un inicio de sesión reciente para borrar una cuenta.
@@ -299,7 +311,7 @@ const crearAteneaDB = () => {
   return {
     auth: {
       getUser, getUid, onAuthChange, signInGoogle, signIn, signUp, signOut,
-      enviarVerificacion, comprobarVerificacion, recuperarPassword, usaPassword, eliminarCuenta
+      enviarVerificacion, comprobarVerificacion, recuperarPassword, usaPassword, eliminarCuenta, tokenDeSesion
     },
     logos: { subir: subirLogo, prefijoURL: PREFIJO_URL_LOGO },
     proposals: {

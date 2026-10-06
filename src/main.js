@@ -29,6 +29,7 @@ import {
   comprimir,
   descomprimir
 } from './link.js';
+import { MENSAJES_ACEPTACION, NOMBRE_MIN, limpiarNombre } from './aceptacion.js';
 
 const CLAVE = 'generador-propuestas-v1';
 const LOGO_MAX_ARCHIVO = 5 * 1024 * 1024;
@@ -56,6 +57,9 @@ const cargarGuardado = () => leerLocal(CLAVE);
 let estado = vacio();
 let seleccion = new Set();
 let esCliente = false;
+// Link corto abierto por el cliente: { id, aceptacion }. aceptacion es null hasta que acepta.
+let compartida = null;
+const aceptada = () => !!compartida?.aceptacion;
 let vista = 'escritorio';
 let imprimiendo = false;
 
@@ -342,7 +346,9 @@ const servicioHTML = (s, moneda, web) => {
   const sumado = s.opcional && seleccion.has(s.id);
   if (sumado && !web) modo += ', sumado por el cliente';
   const entregables = lineas(s.entregables);
-  const boton = web && s.opcional
+  const boton = web && s.opcional && aceptada()
+    ? (sumado ? `<span class="servicio__incluido">${ICONO_SUMADO} Incluido en la aceptación</span>` : '')
+    : web && s.opcional
     ? `<button type="button" class="servicio__sumar" data-accion="sumar" data-id="${esc(s.id)}" aria-pressed="${sumado}">${sumado ? `${ICONO_SUMADO} Sumado a la propuesta` : `${ICONO_SUMAR} Sumar a la propuesta`}</button>`
     : '';
   return `
@@ -388,7 +394,9 @@ const barraClienteHTML = (c, vig) => {
     extra = 'por mes';
   }
   const consulta = enlaceConsulta();
-  const accion = vig.vencida
+  const accion = aceptada()
+    ? '<span class="barra-cliente__aceptada">Propuesta aceptada</span>'
+    : vig.vencida
     ? (consulta ? `<a class="boton boton--primario" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a>` : '')
     : `<button type="button" class="boton boton--primario" data-accion="aceptar">Aceptar propuesta</button>`;
   return `
@@ -402,9 +410,25 @@ const barraClienteHTML = (c, vig) => {
     </div>`;
 };
 
+const fechaDeAceptacion = a => {
+  const f = a?.fecha;
+  const d = f && typeof f.toDate === 'function' ? f.toDate() : f ? new Date(f) : null;
+  return d && !Number.isNaN(d.getTime()) ? d : null;
+};
+
 const cierreHTML = vig => {
   const consulta = enlaceConsulta();
   const emisor = nombreEmisor();
+  if (aceptada()) {
+    const a = compartida.aceptacion;
+    const fecha = fechaDeAceptacion(a);
+    return `
+      <div class="cierre cierre--aceptada">
+        <p class="cierre__titulo">Propuesta aceptada</p>
+        <p class="cierre__texto">Aceptada por ${esc(a.nombre)}${fecha ? ` el ${esc(fechaLarga(fecha))}` : ''}. Esta es la versión que se aceptó.</p>
+        ${consulta ? `<div class="cierre__acciones"><a class="boton boton--secundario boton--grande" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a></div>` : ''}
+      </div>`;
+  }
   if (vig.vencida) {
     return `
       <div class="cierre">
@@ -413,10 +437,13 @@ const cierreHTML = vig => {
         ${consulta ? `<div class="cierre__acciones"><a class="boton boton--primario boton--grande" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a></div>` : ''}
       </div>`;
   }
+  const textoCierre = compartida
+    ? `Al aceptar, ${emisor ? esc(emisor) : 'quien te la mandó'} recibe tu confirmación con lo que elegiste.`
+    : `Al aceptar se abre un mensaje con el resumen de lo que elegiste${emisor ? `, listo para mandárselo a ${esc(emisor)}` : ''}.`;
   return `
     <div class="cierre">
       <p class="cierre__titulo">¿Avanzamos?</p>
-      <p class="cierre__texto">Al aceptar se abre un mensaje con el resumen de lo que elegiste${emisor ? `, listo para mandárselo a ${esc(emisor)}` : ''}.</p>
+      <p class="cierre__texto">${textoCierre}</p>
       <div class="cierre__acciones">
         <button type="button" class="boton boton--primario boton--grande" data-accion="aceptar">Aceptar propuesta</button>
         ${consulta ? `<a class="boton boton--secundario boton--grande" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a>` : ''}
@@ -1100,7 +1127,7 @@ const copiar = async contenido => {
   }
 };
 
-const mensajeAceptacion = () => {
+const mensajeAceptacion = (firma = estado.cliente.nombre.trim()) => {
   const c = calcular();
   const m = estado.inversion.moneda;
   const sumados = estado.servicios.filter(s => s.opcional && seleccion.has(s.id) && servicioConContenido(s)).map(s => s.nombre.trim());
@@ -1109,16 +1136,46 @@ const mensajeAceptacion = () => {
   if (c.inicial.total > 0) lineasMsg.push(`${c.mensual.base > 0 ? 'Inversión inicial' : 'Inversión total'}: ${dinero(c.inicial.total, m)}`);
   if (c.mensual.total > 0) lineasMsg.push(`Servicio mensual: ${dinero(c.mensual.total, m)} por mes`);
   if (sumados.length) lineasMsg.push(`Sumé: ${sumados.join(', ')}.`);
-  if (estado.cliente.nombre.trim()) lineasMsg.push(estado.cliente.nombre.trim());
+  if (firma) lineasMsg.push(firma);
   return { texto: lineasMsg.join('\n'), c, sumados };
 };
 
-const abrirAceptar = () => {
-  if (!esCliente) {
-    avisar('Así lo ve tu cliente. En el link, este botón le abre un mensaje para confirmarte la propuesta.');
-    return;
+// Llama a una función de /api. Si hay sesión, se identifica (así no cuentan las visitas
+// propias ni se puede aceptar la propuesta de uno mismo).
+const llamarApi = async (ruta, cuerpo, { keepalive = false } = {}) => {
+  const token = AteneaDB ? await AteneaDB.auth.tokenDeSesion().catch(() => null) : null;
+  const respuesta = await fetch(ruta, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify(cuerpo),
+    keepalive
+  });
+  if (!respuesta.ok) {
+    const codigo = await respuesta.json().then(r => r.error).catch(() => null);
+    throw Object.assign(new Error(codigo || `HTTP ${respuesta.status}`), { codigo, estado: respuesta.status });
   }
-  const { texto: mensaje, c, sumados } = mensajeAceptacion();
+  return respuesta.status === 204 ? null : respuesta.json();
+};
+
+// Una visita cada media hora por navegador: recargar la página no suma visitas.
+const VISITA_INTERVALO = 30 * 60 * 1000;
+const registrarVisita = id => {
+  const clave = `${CLAVE}:visto:${id}`;
+  try {
+    if (Date.now() - Number(localStorage.getItem(clave) || 0) < VISITA_INTERVALO) return;
+    localStorage.setItem(clave, String(Date.now()));
+  } catch {}
+  llamarApi('/api/visto', { id }, { keepalive: true }).catch(e => console.warn('No se pudo registrar la visita:', e));
+};
+
+const dialogoAceptar = $('#dialogo-aceptar');
+const campoAceptarNombre = $('#aceptar-nombre');
+const casillaConformidad = $('#aceptar-conformidad');
+const botonConfirmarAceptacion = $('#aceptar-confirmar');
+const errorAceptacion = $('#aceptar-error');
+
+const llenarResumenAceptacion = () => {
+  const { c, sumados } = mensajeAceptacion();
   const m = estado.inversion.moneda;
   const filas = [];
   if (c.inicial.total > 0) filas.push([c.mensual.base > 0 ? 'Inversión inicial' : 'Inversión total', dinero(c.inicial.total, m)]);
@@ -1126,6 +1183,10 @@ const abrirAceptar = () => {
   if (sumados.length) filas.push(['Sumaste', sumados.join(', ')]);
   $('#aceptar-resumen').innerHTML = filas.map(([a, b]) => `<div><dt>${esc(a)}</dt><dd>${esc(b)}</dd></div>`).join('');
   $('#aceptar-resumen').hidden = !filas.length;
+};
+
+// Configura los botones que abren WhatsApp o el email con el mensaje. Devuelve si hay alguno.
+const prepararMensajeria = (mensaje, { whatsapp, email }) => {
   const wa = enlaceWhatsApp(mensaje);
   const mail = enlaceEmail(`Acepto la propuesta ${estado.propuesta.numero.trim() || tituloPropuesta()}`.trim(), mensaje);
   const elWa = $('#aceptar-whatsapp');
@@ -1134,13 +1195,75 @@ const abrirAceptar = () => {
   elMail.hidden = !mail;
   if (wa) elWa.href = wa;
   if (mail) elMail.href = mail;
-  $('#aceptar-copiar').hidden = !!(wa || mail);
-  const emisor = nombreEmisor();
-  $('#aceptar-texto').textContent = wa || mail
-    ? `Se abre un mensaje${emisor ? ` para ${emisor}` : ''} con este resumen, listo para enviar.`
-    : `Copiá el mensaje y mandáselo${emisor ? ` a ${emisor}` : ''} por donde suelan hablar.`;
-  $('#dialogo-aceptar').showModal();
+  elWa.textContent = whatsapp;
+  elMail.textContent = email;
+  return !!(wa || mail);
 };
+
+// 'mensaje': link largo, se confirma por WhatsApp o email. 'formulario': link corto,
+// se acepta con nombre y casilla. 'listo': aceptación registrada.
+const modoAceptar = modo => {
+  $('#aceptar-formulario').hidden = modo !== 'formulario';
+  botonConfirmarAceptacion.hidden = modo !== 'formulario';
+  if (modo === 'formulario') ['#aceptar-whatsapp', '#aceptar-email', '#aceptar-copiar'].forEach(sel => { $(sel).hidden = true; });
+  $('#aceptar-titulo').textContent = modo === 'listo' ? '¡Propuesta aceptada!' : 'Confirmar la propuesta';
+  $('#aceptar-cerrar').textContent = modo === 'listo' ? 'Cerrar' : 'Volver a la propuesta';
+};
+
+const actualizarBotonAceptar = () => {
+  botonConfirmarAceptacion.disabled = limpiarNombre(campoAceptarNombre.value).length < NOMBRE_MIN || !casillaConformidad.checked;
+};
+campoAceptarNombre.addEventListener('input', actualizarBotonAceptar);
+casillaConformidad.addEventListener('change', actualizarBotonAceptar);
+
+const abrirAceptar = () => {
+  if (!esCliente) {
+    avisar('Así lo ve tu cliente. En el link, este botón le permite aceptar la propuesta.');
+    return;
+  }
+  if (aceptada()) return;
+  llenarResumenAceptacion();
+  const emisor = nombreEmisor();
+  if (compartida) {
+    modoAceptar('formulario');
+    errorAceptacion.hidden = true;
+    if (!campoAceptarNombre.value) campoAceptarNombre.value = estado.cliente.nombre.trim();
+    casillaConformidad.checked = false;
+    actualizarBotonAceptar();
+    $('#aceptar-texto').textContent = `${emisor || 'Quien te mandó la propuesta'} va a ver tu aceptación al instante. Queda registrado tu nombre, la fecha y lo que elegiste.`;
+  } else {
+    modoAceptar('mensaje');
+    const hay = prepararMensajeria(mensajeAceptacion().texto, { whatsapp: 'Confirmar por WhatsApp', email: 'Confirmar por email' });
+    $('#aceptar-copiar').hidden = hay;
+    $('#aceptar-texto').textContent = hay
+      ? `Se abre un mensaje${emisor ? ` para ${emisor}` : ''} con este resumen, listo para enviar.`
+      : `Copiá el mensaje y mandáselo${emisor ? ` a ${emisor}` : ''} por donde suelan hablar.`;
+  }
+  dialogoAceptar.showModal();
+};
+
+botonConfirmarAceptacion.addEventListener('click', async () => {
+  const nombre = limpiarNombre(campoAceptarNombre.value);
+  botonConfirmarAceptacion.disabled = true;
+  botonConfirmarAceptacion.textContent = 'Aceptando…';
+  errorAceptacion.hidden = true;
+  try {
+    const { aceptacion } = await llamarApi('/api/aceptar', { id: compartida.id, nombre, acepto: true, opcionales: [...seleccion] });
+    compartida.aceptacion = aceptacion;
+    renderDocumento();
+    modoAceptar('listo');
+    const emisor = nombreEmisor();
+    const hay = prepararMensajeria(mensajeAceptacion(nombre).texto, { whatsapp: 'Avisar por WhatsApp', email: 'Avisar por email' });
+    $('#aceptar-texto').textContent = `Listo, ${nombre.split(' ')[0]}. ${emisor || 'Quien te mandó la propuesta'} ya puede ver tu aceptación.${hay ? ' Si querés, avisale también por mensaje.' : ''}`;
+  } catch (e) {
+    console.error('No se pudo aceptar la propuesta:', e);
+    errorAceptacion.textContent = MENSAJES_ACEPTACION[e.codigo] || 'No pudimos registrar tu aceptación. Revisá tu conexión y probá de nuevo.';
+    errorAceptacion.hidden = false;
+  } finally {
+    botonConfirmarAceptacion.textContent = 'Aceptar propuesta';
+    actualizarBotonAceptar();
+  }
+});
 
 const app = $('#app');
 const cambiarPestana = previa => {
@@ -1247,6 +1370,7 @@ document.addEventListener('click', async ev => {
       break;
     }
     case 'sumar': {
+      if (aceptada()) break;
       const id = boton.dataset.id;
       if (seleccion.has(id)) seleccion.delete(id);
       else seleccion.add(id);
@@ -1372,12 +1496,30 @@ const haceCuanto = fecha => {
   return 'recién';
 };
 
+const tiempoHTML = (fecha, etiqueta) => `<time datetime="${fecha.toISOString()}" title="${esc(fecha.toLocaleString('es-AR'))}">${esc(etiqueta)}</time>`;
+
+// Qué pasó con la propuesta, en una línea: aceptada, vista, sin abrir o solo editada.
+const seguimientoHTML = p => {
+  if (p.aceptacion) {
+    const fecha = fechaDeAceptacion(p.aceptacion);
+    const nombre = texto(p.aceptacion.nombre).split(' ')[0];
+    return `<strong class="propuesta__hito">${fecha ? tiempoHTML(fecha, `Aceptada por ${nombre} ${haceCuanto(fecha)}`) : `Aceptada por ${esc(nombre)}`}</strong>`;
+  }
+  const vistas = Number(p.vistas) || 0;
+  const vista = fechaDe(p.vistoUltimo);
+  if (vistas > 0 && vista) return tiempoHTML(vista, `${vistas === 1 ? 'Vista 1 vez' : `Vista ${vistas} veces`} · ${haceCuanto(vista)}`);
+  if (p.publico === true) return 'Sin abrir todavía';
+  const editada = fechaDe(p.updatedAt);
+  return editada ? tiempoHTML(editada, `Editada ${haceCuanto(editada)}`) : '';
+};
+
 const propuestaHTML = p => {
   const titulo = texto(p.title).trim() || 'Sin título';
   const cliente = texto(p.clientName).trim();
-  const monto = Number(p.amount) > 0 ? dinero(Number(p.amount), p.payload?.inversion?.moneda || 'USD') : '';
+  const moneda = p.aceptacion?.moneda || p.payload?.inversion?.moneda || 'USD';
+  const importe = p.aceptacion ? Number(p.aceptacion.inicial) : Number(p.amount);
+  const monto = importe > 0 ? dinero(importe, moneda) : '';
   const estadoP = ESTADOS_PROPUESTA[p.status] ? p.status : 'draft';
-  const editada = fechaDe(p.updatedAt);
   return `
     <li class="propuesta">
       <a class="propuesta__abrir" href="?propuesta=${encodeURIComponent(p.id)}" data-accion="abrir-propuesta" data-id="${esc(p.id)}">
@@ -1386,7 +1528,7 @@ const propuestaHTML = p => {
       </a>
       <span class="propuesta__monto">${esc(monto)}</span>
       <span class="propuesta__estado propuesta__estado--${estadoP}">${ESTADOS_PROPUESTA[estadoP]}</span>
-      <span class="propuesta__fecha">${editada ? `<time datetime="${editada.toISOString()}" title="${esc(editada.toLocaleString('es-AR'))}">Editada ${esc(haceCuanto(editada))}</time>` : ''}</span>
+      <span class="propuesta__fecha">${seguimientoHTML(p)}</span>
       <span class="propuesta__acciones">
         ${p.publico === true ? `<button type="button" class="icono-boton icono-boton--activo" data-accion="copiar-link-propuesta" data-id="${esc(p.id)}" aria-label="Copiar el link de «${esc(titulo)}»" title="Link activo: copiar">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.3 0l2-2a3 3 0 0 0-4.3-4.3l-.9.9M9.2 6.8a3 3 0 0 0-4.3 0l-2 2a3 3 0 0 0 4.3 4.3l.9-.9"/></svg>
@@ -1427,6 +1569,33 @@ const renderPanel = () => {
 
 campoBuscar.addEventListener('input', renderPanel);
 
+// Avisa en el momento cuando un cliente abre o acepta una propuesta. La primera
+// carga solo registra cómo estaba todo, sin avisar.
+let seguimientoAnterior = null;
+const avisarNovedades = docs => {
+  const actual = new Map(docs.map(p => [p.id, { aceptada: !!p.aceptacion, vistas: Number(p.vistas) || 0 }]));
+  if (seguimientoAnterior) {
+    for (const p of docs) {
+      const antes = seguimientoAnterior.get(p.id);
+      if (!antes) continue;
+      const titulo = texto(p.title).trim() || 'tu propuesta';
+      if (p.aceptacion && !antes.aceptada) avisar(`🎉 ${texto(p.aceptacion.nombre)} aceptó «${titulo}».`, 8000);
+      else if ((Number(p.vistas) || 0) > antes.vistas) avisar(`Tu cliente está viendo «${titulo}».`, 6000);
+    }
+  }
+  seguimientoAnterior = actual;
+};
+
+const elAvisoAceptada = $('#editor-aceptada');
+// En el editor: si ya la aceptaron, el cliente sigue viendo la versión aceptada.
+const actualizarAvisoAceptada = () => {
+  const a = propuestaId ? propuestas.find(p => p.id === propuestaId)?.aceptacion : null;
+  elAvisoAceptada.hidden = !a;
+  if (!a) return;
+  const fecha = fechaDeAceptacion(a);
+  elAvisoAceptada.textContent = `${texto(a.nombre)} aceptó esta propuesta${fecha ? ` el ${fechaLarga(fecha)}` : ''}. Tu cliente sigue viendo la versión que aceptó: los cambios que hagas acá no le llegan.`;
+};
+
 const escucharPropuestas = () => {
   if (dejarDeEscuchar) dejarDeEscuchar();
   panelCargando = true;
@@ -1437,7 +1606,9 @@ const escucharPropuestas = () => {
     propuestas = docs.sort((a, b) => (fechaDe(b.updatedAt) || 0) - (fechaDe(a.updatedAt) || 0));
     panelCargando = false;
     panelError = false;
+    avisarNovedades(docs);
     renderPanel();
+    actualizarAvisoAceptada();
   }, () => {
     panelCargando = false;
     panelError = true;
@@ -1486,6 +1657,7 @@ const mostrarEditor = (id, contenido, { historial = true } = {}) => {
   $('.editor').scrollTop = 0;
   editando = true;
   mostrarEstadoGuardado();
+  actualizarAvisoAceptada();
   migrarLogo();
 };
 
@@ -1589,8 +1761,13 @@ const iniciarClienteCorto = async id => {
   }
   try {
     const datos = await AteneaDB.proposals.obtenerPublica(id);
-    if (datos) mostrarCliente(datos);
-    else errorCliente('Esta propuesta ya no está disponible', 'Puede que el link se haya desactivado. Pedile a quien te la mandó que te comparta uno nuevo.');
+    if (datos) {
+      compartida = { id, aceptacion: datos.aceptacion };
+      // Aceptada: se muestra la versión que se aceptó, con los opcionales elegidos.
+      if (datos.aceptacion) seleccion = new Set((datos.aceptacion.opcionales || []).map(o => o.id));
+      mostrarCliente(datos.aceptacion?.contenido || datos.payload);
+      registrarVisita(id);
+    } else errorCliente('Esta propuesta ya no está disponible', 'Puede que el link se haya desactivado. Pedile a quien te la mandó que te comparta uno nuevo.');
   } catch (e) {
     console.error('No se pudo abrir la propuesta compartida:', e);
     errorCliente('No pudimos abrir esta propuesta', 'Hubo un problema al conectar. Revisá tu conexión y recargá la página.');

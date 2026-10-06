@@ -17,6 +17,10 @@ export default [
     languageOptions: { globals: globals.browser }
   },
   {
+    files: ['api/**/*.js'],
+    languageOptions: { globals: globals.node }
+  },
+  {
     files: ['tests/**/*.js', '*.config.js'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } }
   }

@@ -131,6 +131,7 @@
         Mis propuestas
       </a>
       <h1 class="editor__titulo">Armá tu propuesta</h1>
+      <p class="editor__aceptada" id="editor-aceptada" role="status" hidden></p>
       <p class="editor__bajada">Completala y mandala como link: tu cliente la abre en el celular, suma los opcionales que quiera y la acepta ahí mismo.</p>
     </div>
 
@@ -541,11 +542,23 @@
     <h2 class="dialogo__titulo" id="aceptar-titulo">Confirmar la propuesta</h2>
     <dl class="dialogo__resumen" id="aceptar-resumen"></dl>
     <p class="dialogo__texto" id="aceptar-texto"></p>
+    <div class="aceptar__formulario" id="aceptar-formulario" hidden>
+      <label class="campo">
+        <span class="campo__etiqueta">Tu nombre completo</span>
+        <input class="control" id="aceptar-nombre" type="text" autocomplete="name" maxlength="120">
+      </label>
+      <label class="casilla">
+        <input type="checkbox" id="aceptar-conformidad">
+        <span>Acepto la propuesta y sus condiciones.</span>
+      </label>
+      <p class="auth__error" id="aceptar-error" role="alert" hidden></p>
+    </div>
     <div class="dialogo__acciones dialogo__acciones--apiladas">
+      <button type="button" class="boton boton--primario boton--grande" id="aceptar-confirmar" hidden disabled>Aceptar propuesta</button>
       <a class="boton boton--primario boton--grande" id="aceptar-whatsapp" target="_blank" rel="noopener" hidden>Confirmar por WhatsApp</a>
       <a class="boton boton--secundario boton--grande" id="aceptar-email" hidden>Confirmar por email</a>
       <button type="button" class="boton boton--secundario boton--grande" data-accion="copiar-aceptacion" id="aceptar-copiar" hidden>Copiar mensaje de confirmación</button>
-      <button class="boton boton--texto" value="cancelar">Volver a la propuesta</button>
+      <button class="boton boton--texto" value="cancelar" id="aceptar-cerrar">Volver a la propuesta</button>
     </div>
   </form>
 </dialog>
