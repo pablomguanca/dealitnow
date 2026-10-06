@@ -1,4 +1,4 @@
-# Archivos del repo que no tienen que servirse en el sitio
+# Archivos que Vercel no necesita para construir el sitio
 .claude
 .firebase
 .firebaserc
@@ -7,6 +7,3 @@ firestore.rules
 firestore.indexes.json
 storage.rules
 *.log
-.gitignore
-.vercelignore
-css/styles.scss

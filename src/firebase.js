@@ -1,35 +1,22 @@
-(() => {
-  const firebaseConfig = {
-    apiKey:            'AIzaSyA4fAtms8k5hOEvtFiTnf6B2ijg2jiWDtg',
-    authDomain:        'dealitnow.vercel.app',
-    projectId:         'dealit-7f735',
-    storageBucket:     'dealit-7f735.firebasestorage.app',
-    messagingSenderId: '837213426465',
-    appId:             '1:837213426465:web:91f1c863f453efe950e460'
-  };
+// Acceso a Firebase (Auth, Firestore, Storage y App Check) para el resto de la app.
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/app-check';
+import 'firebase/compat/auth';
+import 'firebase/compat/firestore';
+import 'firebase/compat/storage';
 
-  const PLACEHOLDER = firebaseConfig.apiKey === 'TU_API_KEY';
+const firebaseConfig = {
+  apiKey:            'AIzaSyA4fAtms8k5hOEvtFiTnf6B2ijg2jiWDtg',
+  authDomain:        'dealitnow.vercel.app',
+  projectId:         'dealit-7f735',
+  storageBucket:     'dealit-7f735.firebasestorage.app',
+  messagingSenderId: '837213426465',
+  appId:             '1:837213426465:web:91f1c863f453efe950e460'
+};
 
-  if (PLACEHOLDER) {
-    window.AteneaDB = null;
-    window.AteneaDBError = new Error('Firebase no está configurado: falta la API key.');
-    return;
-  }
-
-  if (typeof firebase === 'undefined') {
-    window.AteneaDB = null;
-    window.AteneaDBError = new Error('El SDK de Firebase no pudo cargarse.');
-    return;
-  }
-
-  try {
-    firebase.initializeApp(firebaseConfig);
-  } catch (e) {
-    console.error('Firebase no pudo inicializarse:', e);
-    window.AteneaDB = null;
-    window.AteneaDBError = e;
-    return;
-  }
+const crearAteneaDB = () => {
+  if (firebaseConfig.apiKey === 'TU_API_KEY') throw new Error('Firebase no está configurado: falta la API key.');
+  firebase.initializeApp(firebaseConfig);
 
   // App Check: certifica que las llamadas a Firestore y Storage salen de esta web y no
   // de un script ajeno. Se activa al completar la clave del sitio de reCAPTCHA Enterprise
@@ -50,7 +37,7 @@
     console.warn('Firestore sin caché local:', e.code || e);
   });
 
-  const persistenceReady = auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
   let _unsubSnapshots = [];
 
@@ -306,7 +293,7 @@
     }
   };
 
-  window.AteneaDB = {
+  return {
     auth: {
       getUser, getUid, onAuthChange, signInGoogle, signIn, signUp, signOut,
       enviarVerificacion, comprobarVerificacion, recuperarPassword, usaPassword, eliminarCuenta
@@ -324,4 +311,15 @@
       escuchar:   escucharPropuestas
     }
   };
-})();
+};
+
+let AteneaDB = null;
+let AteneaDBError = null;
+try {
+  AteneaDB = crearAteneaDB();
+} catch (e) {
+  console.error('Firebase no pudo inicializarse:', e);
+  AteneaDBError = e;
+}
+
+export { AteneaDB, AteneaDBError };
