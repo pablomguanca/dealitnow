@@ -214,14 +214,20 @@
     return n;
   };
 
-  const cargarGuardado = () => {
+  // Con sesión, el respaldo local va por usuario para no mezclar cuentas en una compu compartida.
+  // CLAVE sola es el formato anterior, de cuando todo se guardaba en el navegador.
+  const claveLocal = () => (window.AteneaDB?.auth.getUser() ? `${CLAVE}:borrador:${AteneaDB.auth.getUid()}` : CLAVE);
+
+  const leerLocal = clave => {
     try {
-      const crudo = localStorage.getItem(CLAVE);
+      const crudo = localStorage.getItem(clave);
       return crudo ? normalizar(JSON.parse(crudo)) : null;
     } catch {
       return null;
     }
   };
+
+  const cargarGuardado = () => leerLocal(claveLocal()) || leerLocal(CLAVE);
 
   let estado = vacio();
   let seleccion = new Set();
@@ -291,24 +297,153 @@
     temporizadorAviso = setTimeout(() => elAviso.classList.remove('aviso--visible'), ms);
   };
 
-  let temporizadorGuardado;
-  let avisoCupo = false;
+  // Guardado en la cuenta: la propuesta abierta vive en Firestore (proposals/{propuestaId}).
+  // localStorage queda solo como respaldo si no hay conexión con la cuenta.
+  const GUARDADO_ESPERA = 800;
+  const PAYLOAD_MAX = 900000; // Firestore admite hasta 1 MiB por documento
+  const elEstado = $('#estado-guardado');
+  let propuestaId = null;
+  let sinNube = false;
+  let temporizadorGuardado = null;
+  let escriturasPendientes = 0;
+  let ultimaEscritura = Promise.resolve();
+  let errorGuardado = '';
+  let avisoError = false;
+
+  const nube = () => (!sinNube && window.AteneaDB && AteneaDB.auth.getUser() ? AteneaDB : null);
+  const claveActual = () => `${CLAVE}:actual:${AteneaDB.auth.getUid()}`;
+  const recordarActual = id => { try { localStorage.setItem(claveActual(), id); } catch {} };
+
+  const mostrarEstadoGuardado = () => {
+    if (!elEstado || esCliente) return;
+    if (errorGuardado) elEstado.textContent = errorGuardado;
+    else if (!nube()) elEstado.textContent = 'Sin conexión con tu cuenta: los cambios se guardan en este navegador y se suben cuando vuelvas a entrar.';
+    else if (escriturasPendientes && !navigator.onLine) elEstado.textContent = 'Sin conexión: los cambios se suben a tu cuenta cuando vuelva.';
+    else if (temporizadorGuardado || escriturasPendientes) elEstado.textContent = 'Guardando…';
+    else elEstado.textContent = 'Cambios guardados en tu cuenta.';
+  };
+  window.addEventListener('online', mostrarEstadoGuardado);
+  window.addEventListener('offline', mostrarEstadoGuardado);
+
+  const fallarGuardado = mensaje => {
+    errorGuardado = mensaje;
+    if (!avisoError) {
+      avisoError = true;
+      avisar(mensaje, 7000);
+    }
+  };
+
+  // Monto sin opcionales: lo que el cliente ve antes de sumar extras.
+  const montoBase = () => {
+    const previa = seleccion;
+    seleccion = new Set();
+    const total = calcular().inicial.total;
+    seleccion = previa;
+    return total;
+  };
+
+  const guardarLocal = () => {
+    try {
+      localStorage.setItem(claveLocal(), JSON.stringify(estado));
+      errorGuardado = '';
+    } catch {
+      fallarGuardado('No se pudo guardar en este navegador. Usá «Guardar borrador» para no perder los cambios.');
+    }
+    mostrarEstadoGuardado();
+  };
+
+  const guardarAhora = () => {
+    clearTimeout(temporizadorGuardado);
+    temporizadorGuardado = null;
+    const db = nube();
+    if (!db) return guardarLocal();
+    const payload = JSON.stringify(estado);
+    if (payload.length > PAYLOAD_MAX) {
+      fallarGuardado('La propuesta es demasiado pesada para guardarse (probá con un logo más liviano). Usá «Guardar borrador» para no perder los cambios.');
+      mostrarEstadoGuardado();
+      return;
+    }
+    const datos = {
+      title: estado.propuesta.titulo.trim(),
+      clientName: estado.cliente.empresa.trim() || estado.cliente.nombre.trim(),
+      amount: montoBase(),
+      theme: estado.tema.preset,
+      payload: JSON.parse(payload)
+    };
+    const esNueva = !propuestaId;
+    if (esNueva) {
+      propuestaId = db.proposals.nuevoId();
+      recordarActual(propuestaId);
+    }
+    const id = propuestaId;
+    const escritura = esNueva ? db.proposals.crear(datos, id) : db.proposals.actualizar(id, datos);
+    escriturasPendientes++;
+    mostrarEstadoGuardado();
+    ultimaEscritura = escritura
+      .then(() => {
+        errorGuardado = '';
+        avisoError = false;
+      })
+      .catch(e => {
+        console.error('No se pudo guardar la propuesta:', e);
+        if (esNueva && propuestaId === id) propuestaId = null;
+        fallarGuardado('No se pudieron guardar los últimos cambios en tu cuenta. Usá «Guardar borrador» para no perderlos.');
+      })
+      .finally(() => {
+        escriturasPendientes--;
+        mostrarEstadoGuardado();
+      });
+    return ultimaEscritura;
+  };
+
   const guardarLuego = () => {
     if (esCliente) return;
     clearTimeout(temporizadorGuardado);
-    temporizadorGuardado = setTimeout(() => {
-      const elEstado = $('#estado-guardado');
-      try {
-        localStorage.setItem(CLAVE, JSON.stringify(estado));
-        elEstado.textContent = 'Cambios guardados en este navegador.';
-      } catch {
-        elEstado.textContent = 'No se pudo guardar en este navegador. Usá «Guardar borrador» para no perder los cambios.';
-        if (!avisoCupo) {
-          avisoCupo = true;
-          avisar('No se pudo guardar en este navegador. Descargá el borrador para no perder los cambios.');
-        }
+    temporizadorGuardado = setTimeout(guardarAhora, nube() ? GUARDADO_ESPERA : 400);
+    mostrarEstadoGuardado();
+  };
+
+  // Si la pestaña se oculta o se cierra, no esperar al temporizador ni al próximo
+  // cuadro de animación (en pestañas ocultas no llega nunca).
+  const hayCambiosSinEnviar = () => !esCliente && (temporizadorGuardado || renderPendiente);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && hayCambiosSinEnviar()) guardarAhora();
+  });
+  window.addEventListener('beforeunload', ev => {
+    if (hayCambiosSinEnviar()) guardarAhora();
+    if (escriturasPendientes && navigator.onLine) {
+      ev.preventDefault();
+      ev.returnValue = '';
+    }
+  });
+
+  // Abre la última propuesta del usuario. La primera vez, migra a la cuenta
+  // lo que hubiera quedado guardado en este navegador.
+  const cargarDeLaNube = async () => {
+    const db = AteneaDB;
+    const claveMigrada = [claveLocal(), CLAVE].find(clave => leerLocal(clave));
+    if (claveMigrada) {
+      estado = leerLocal(claveMigrada);
+      propuestaId = null;
+      const escritura = guardarAhora();
+      if (escritura) {
+        // Se borra del navegador recién cuando el servidor confirmó la copia.
+        escritura.then(() => {
+          if (!errorGuardado) try { localStorage.removeItem(claveMigrada); } catch {}
+        });
       }
-    }, 400);
+      avisar('Pasamos a tu cuenta la propuesta que tenías guardada en este navegador.', 6000);
+      return estado;
+    }
+    let guardada = null;
+    let idActual = null;
+    try { idActual = localStorage.getItem(claveActual()); } catch {}
+    if (idActual) guardada = await db.proposals.obtener(idActual).catch(() => null);
+    if (!guardada) [guardada] = await db.proposals.listar(1);
+    if (!guardada) return ejemplo();
+    propuestaId = guardada.id;
+    recordarActual(guardada.id);
+    return normalizar(guardada.payload);
   };
 
   const plantillaControles = $('#tpl-controles');
@@ -1310,11 +1445,23 @@
     }
   };
 
-  const iniciarEditor = () => {
-    estado = cargarGuardado() || ejemplo();
+  const iniciarEditor = async () => {
+    if (nube()) {
+      try {
+        estado = await cargarDeLaNube();
+      } catch (e) {
+        console.error('No se pudo cargar la propuesta desde la cuenta:', e);
+        sinNube = true;
+        estado = cargarGuardado() || ejemplo();
+        avisar('No pudimos conectar con tu cuenta. Podés seguir editando: los cambios quedan en este navegador hasta que recargues la página.', 8000);
+      }
+    } else {
+      estado = cargarGuardado() || ejemplo();
+    }
     llenarFormulario();
     renderDocumento();
     actualizarAvisoPagos();
+    mostrarEstadoGuardado();
   };
 
   const authPantalla   = $('#auth-pantalla');
@@ -1414,10 +1561,20 @@
   }
 
   document.querySelector('[data-accion="cerrar-sesion"]')?.addEventListener('click', async () => {
-    if (window.AteneaDB) {
-      await AteneaDB.auth.signOut();
-      location.reload();
-    }
+    if (!window.AteneaDB) return;
+    if (hayCambiosSinEnviar()) guardarAhora();
+    // Cerrar sesión borra la caché local: antes hay que asegurar que todo llegó a la cuenta.
+    const sincronizado = await Promise.race([
+      ultimaEscritura.then(() => !escriturasPendientes),
+      new Promise(res => setTimeout(() => res(false), 4000))
+    ]);
+    if (!sincronizado && nube() && !await confirmar({
+      titulo: 'Hay cambios sin sincronizar',
+      texto: 'Los últimos cambios todavía no llegaron a tu cuenta, probablemente por falta de conexión. Si cerrás sesión ahora, se pierden.',
+      aceptar: 'Cerrar sesión igual'
+    })) return;
+    await AteneaDB.auth.signOut();
+    location.reload();
   });
 
   const esClienteLink = location.hash.startsWith(PREFIJO);
@@ -1428,17 +1585,20 @@
     iniciarCliente();
   } else if (window.AteneaDB) {
     let editorIniciado = false;
-    AteneaDB.auth.onAuthChange(user => {
-      document.body.classList.remove('auth-cargando');
+    AteneaDB.auth.onAuthChange(async user => {
       if (user) {
         authPantalla.hidden = true;
         document.body.classList.remove('auth-activo');
         if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
         if (!editorIniciado) {
           editorIniciado = true;
-          iniciarEditor();
+          // El spinner sigue visible hasta tener la propuesta, así no se ve un editor vacío.
+          document.body.classList.add('auth-cargando');
+          await iniciarEditor();
         }
+        document.body.classList.remove('auth-cargando');
       } else {
+        document.body.classList.remove('auth-cargando');
         authPantalla.hidden = false;
         document.body.classList.add('auth-activo');
       }

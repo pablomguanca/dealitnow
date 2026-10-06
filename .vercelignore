@@ -1,0 +1,11 @@
+# Archivos del repo que no tienen que servirse en el sitio
+.claude
+.firebase
+.firebaserc
+firebase.json
+firestore.rules
+firestore.indexes.json
+*.log
+.gitignore
+.vercelignore
+css/styles.scss

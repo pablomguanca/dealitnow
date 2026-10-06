@@ -34,6 +34,12 @@
   const auth = firebase.auth();
   const db   = firebase.firestore();
 
+  // Caché local en IndexedDB: el editor funciona sin conexión y sincroniza al volver.
+  // Tiene que pedirse antes de cualquier otra operación sobre Firestore.
+  db.enablePersistence({ synchronizeTabs: true }).catch(e => {
+    console.warn('Firestore sin caché local:', e.code || e);
+  });
+
   const persistenceReady = auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
   let _unsubSnapshots = [];
@@ -79,9 +85,17 @@
     return cred;
   };
 
+  // Al cerrar sesión se borra la caché local para no dejar propuestas en
+  // computadoras compartidas. Quien llama debe esperar antes las escrituras pendientes.
   const signOut = async () => {
     _limpiarSuscripciones();
     await auth.signOut();
+    try {
+      await db.terminate();
+      await db.clearPersistence();
+    } catch (e) {
+      console.warn('No se pudo limpiar la caché local de Firestore:', e);
+    }
   };
 
   const _colProposals = () => db.collection('proposals');
@@ -91,21 +105,37 @@
       .where('userId', '==', getUid())
       .orderBy('createdAt', 'desc');
 
-  const crearPropuesta = async (data) => {
-    const uid = getUid();
-    const doc = {
-      userId:     uid,
-      title:      data.title      || '',
-      clientName: data.clientName || '',
-      amount:     data.amount     || 0,
-      status:     'draft',
-      theme:      data.theme      || 'elegante-oscuro',
-      payload:    data.payload    || {},
-      createdAt:  firebase.firestore.FieldValue.serverTimestamp(),
-      updatedAt:  firebase.firestore.FieldValue.serverTimestamp()
-    };
-    const ref = await _colProposals().add(doc);
-    return ref.id;
+  const ESTADOS = ['draft', 'sent', 'accepted', 'rejected'];
+  const LARGO_MAX = 200;
+
+  // Solo estos campos se escriben; userId y createdAt nunca vienen de quien llama.
+  const _camposEditables = (data) => {
+    const limpio = {};
+    if ('title' in data)      limpio.title      = String(data.title ?? '').slice(0, LARGO_MAX);
+    if ('clientName' in data) limpio.clientName = String(data.clientName ?? '').slice(0, LARGO_MAX);
+    if ('amount' in data)     limpio.amount     = Number.isFinite(data.amount) ? data.amount : 0;
+    if ('theme' in data)      limpio.theme      = String(data.theme ?? '');
+    if ('payload' in data)    limpio.payload    = data.payload && typeof data.payload === 'object' ? data.payload : {};
+    if ('publico' in data)    limpio.publico    = data.publico === true;
+    if ('status' in data && ESTADOS.includes(data.status)) limpio.status = data.status;
+    return limpio;
+  };
+
+  const nuevoIdPropuesta = () => _colProposals().doc().id;
+
+  // El ID se genera en el cliente para poder encolar escrituras antes de que
+  // el servidor confirme la creación, incluso sin conexión.
+  const crearPropuesta = async (data, id = nuevoIdPropuesta()) => {
+    const ahora = firebase.firestore.FieldValue.serverTimestamp();
+    await _colProposals().doc(id).set({
+      title: '', clientName: '', amount: 0, theme: 'elegante-oscuro', payload: {},
+      ..._camposEditables(data),
+      status:    'draft',
+      userId:    getUid(),
+      createdAt: ahora,
+      updatedAt: ahora
+    });
+    return id;
   };
 
   const obtenerPropuesta = async (id) => {
@@ -131,26 +161,15 @@
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
   };
 
-  const actualizarPropuesta = async (id, cambios) => {
-    const ref = _colProposals().doc(id);
-    const snap = await ref.get();
-    if (!snap.exists || snap.data().userId !== getUid()) {
-      throw new Error('Propuesta no encontrada o sin permisos');
-    }
-    delete cambios.userId;
-    delete cambios.createdAt;
-    cambios.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-    await ref.update(cambios);
-  };
+  // La propiedad la verifican las reglas de Firestore: leer antes de escribir
+  // duplicaría el costo y no funcionaría sin conexión.
+  const actualizarPropuesta = (id, cambios) =>
+    _colProposals().doc(id).update({
+      ..._camposEditables(cambios),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
 
-  const borrarPropuesta = async (id) => {
-    const ref = _colProposals().doc(id);
-    const snap = await ref.get();
-    if (!snap.exists || snap.data().userId !== getUid()) {
-      throw new Error('Propuesta no encontrada o sin permisos');
-    }
-    await ref.delete();
-  };
+  const borrarPropuesta = (id) => _colProposals().doc(id).delete();
 
   const escucharPropuestas = (callback) => {
     const unsub = _baseQuery().onSnapshot(snap => {
@@ -171,6 +190,7 @@
   window.AteneaDB = {
     auth: { getUser, getUid, onAuthChange, signInGoogle, signIn, signUp, signOut },
     proposals: {
+      nuevoId:    nuevoIdPropuesta,
       crear:      crearPropuesta,
       obtener:    obtenerPropuesta,
       listar:     listarPropuestas,
