@@ -4,7 +4,7 @@ Propuestas comerciales que se comparten como link: el cliente las abre en el cel
 
 ## Desarrollo
 
-Requiere Node 22 o superior (Vercel usa 22.x: firebase-admin necesita poder cargar módulos ES con require).
+Requiere Node 22 o superior (Vercel usa 22.x).
 
 ```bash
 npm install
