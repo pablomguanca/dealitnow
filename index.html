@@ -18,10 +18,14 @@
 
 <div id="auth-pantalla" class="auth" hidden>
   <div class="auth__fondo"></div>
-  <div class="auth__card">
+  <div class="auth__card" role="dialog" aria-modal="true" aria-labelledby="auth-titulo">
+    <button type="button" class="auth__cerrar" id="auth-cerrar" aria-label="Volver a mi propuesta" hidden>
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg>
+    </button>
     <div class="auth__marca">
-      <span class="auth__logo">Dealit</span>
+      <span class="auth__logo" id="auth-titulo">Dealit</span>
       <p class="auth__eslogan">Armá propuestas profesionales y cerralas con un link.</p>
+      <p class="auth__motivo" id="auth-motivo" hidden></p>
     </div>
 
     <div id="auth-ingreso">
@@ -99,6 +103,7 @@
     <a class="barra__nav-link" href="/?seccion=cuenta" data-accion="ir-cuenta" data-seccion="cuenta">Mi cuenta</a>
   </nav>
   <div class="barra__acciones">
+    <button type="button" class="boton boton--secundario solo-invitado" data-accion="ingresar">Iniciar sesión</button>
     <div class="menu" id="menu">
       <button type="button" class="boton boton--secundario menu__alternar" data-accion="menu" aria-expanded="false" aria-controls="menu-panel" aria-label="Más opciones">
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M3 8h10M3 11.5h10"/></svg>
@@ -111,11 +116,12 @@
         <button type="button" class="boton boton--secundario menu__opcion solo-editor" data-accion="guardar-borrador">Guardar borrador</button>
         <button type="button" class="boton boton--secundario menu__opcion solo-editor" data-accion="pdf">Descargar PDF</button>
         <span class="barra__separador" aria-hidden="true"></span>
-        <span class="menu__usuario" id="menu-usuario"></span>
+        <span class="menu__usuario solo-cuenta" id="menu-usuario"></span>
         <button type="button" class="boton boton--texto menu__opcion solo-editor solo-cuenta" data-accion="ir-cuenta">Mi cuenta</button>
-        <button type="button" class="boton boton--texto menu__opcion menu__opcion--salir" data-accion="cerrar-sesion">Cerrar sesión</button>
+        <button type="button" class="boton boton--texto menu__opcion menu__opcion--salir solo-cuenta" data-accion="cerrar-sesion">Cerrar sesión</button>
       </div>
     </div>
+    <a class="barra__avatar solo-cuenta" id="barra-avatar" href="/?seccion=cuenta" data-accion="ir-cuenta" aria-label="Mi cuenta" title="Mi cuenta"></a>
     <button type="button" class="boton boton--primario solo-editor" data-accion="compartir">
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.3 0l2-2a3 3 0 0 0-4.3-4.3l-.9.9M9.2 6.8a3 3 0 0 0-4.3 0l-2 2a3 3 0 0 0 4.3 4.3l.9-.9"/></svg>
       <span class="boton__extra">Compartir</span><span>link</span>
@@ -136,6 +142,10 @@
         Mis propuestas
       </a>
       <h1 class="editor__titulo">Armá tu propuesta</h1>
+      <div class="editor__invitado solo-invitado">
+        <p>Estás probando Dealit sin cuenta: lo que armes se guarda en este navegador.</p>
+        <button type="button" class="boton boton--primario boton--chico" data-accion="registrarse">Crear cuenta gratis</button>
+      </div>
       <p class="editor__aceptada" id="editor-aceptada" role="status" hidden></p>
       <p class="editor__bajada">Completala y mandala como link: tu cliente la abre en el celular, suma los opcionales que quiera y la acepta ahí mismo.</p>
     </div>
@@ -516,6 +526,17 @@
         <p class="tarjeta__ayuda">Se completan solos en cada propuesta nueva. Podés cambiarlos en cada propuesta.</p>
       </div>
       <div class="grilla">
+        <div class="campo campo--ancho">
+          <span class="campo__etiqueta">Logo</span>
+          <div class="logo">
+            <img class="logo__vista" id="cuenta-logo-vista" alt="Logo de tu negocio" hidden>
+            <label class="boton boton--secundario boton--chico">
+              <span id="cuenta-logo-texto">Subir logo</span>
+              <input class="visualmente-oculto" id="cuenta-logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp">
+            </label>
+            <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-logo-cuenta" id="cuenta-logo-quitar" hidden>Quitar</button>
+          </div>
+        </div>
         <label class="campo campo--ancho">
           <span class="campo__etiqueta">Tu nombre o el de tu marca</span>
           <input class="control" data-emisor="nombre" type="text" maxlength="200" placeholder="Ej.: Estudio Norte">

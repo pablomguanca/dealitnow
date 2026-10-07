@@ -61,8 +61,8 @@ const crearAteneaDB = () => {
 
   // Perfil (users/{uid}): nombre visible y datos del negocio que se usan por defecto
   // en las propuestas nuevas.
-  const CAMPOS_EMISOR = ['nombre', 'rol', 'email', 'telefono', 'web', 'presentacion'];
-  const LARGO_EMISOR = { presentacion: 2000 };
+  const CAMPOS_EMISOR = ['nombre', 'rol', 'email', 'telefono', 'web', 'presentacion', 'logo'];
+  const LARGO_EMISOR = { presentacion: 2000, logo: 1000 };
 
   const obtenerPerfil = async () => {
     const snap = await db.collection('users').doc(getUid()).get();

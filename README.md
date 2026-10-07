@@ -33,7 +33,7 @@ npm run check    # lint + tests + build, lo mismo que corre CI
 
 ## Modo demo
 
-Con `npm run dev:demo`, `/` es el panel del dueño y `/p/DEMO0000000000000001` es la vista del cliente (abrila en otra pestaña). Los datos quedan en el navegador; para empezar de cero, borrá la clave `dealit-demo` del localStorage.
+Con `npm run dev:demo`, `/` es el panel del dueño y `/p/DEMO0000000000000001` es la vista del cliente (abrila en otra pestaña). Los datos quedan en el navegador; para empezar de cero, borrá la clave `dealit-demo` del localStorage. Para probar el editor sin cuenta, cerrá sesión desde Mi cuenta; «Continuar con Google» vuelve a iniciarla.
 
 ## Deploy
 

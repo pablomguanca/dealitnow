@@ -54,7 +54,10 @@ const emitir = () => {
 window.addEventListener('storage', e => { if (e.key === CLAVE) emitir(); });
 
 const esCliente = location.pathname.startsWith('/p/');
-const usuario = esCliente ? null : { uid: UID, email: 'demo@dealit.test', displayName: 'Cuenta demo', emailVerified: true };
+// Sin sesión al empezar si se cerró sesión antes (para probar el editor sin cuenta).
+const USUARIO = { uid: UID, email: 'demo@dealit.test', displayName: 'Cuenta demo', emailVerified: true };
+let usuario = esCliente || localStorage.getItem(CLAVE + ':sin-sesion') ? null : USUARIO;
+const oyentesSesion = new Set();
 let n = 0;
 
 const actualizarDoc = (id, cambios) => {
@@ -67,9 +70,21 @@ const actualizarDoc = (id, cambios) => {
 export const AteneaDB = {
   auth: {
     getUser: () => usuario,
-    getUid: () => usuario.uid,
-    onAuthChange: cb => { setTimeout(() => cb(usuario), 30); return () => {}; },
-    signOut: async () => {},
+    getUid: () => usuario?.uid,
+    onAuthChange: cb => {
+      oyentesSesion.add(cb);
+      setTimeout(() => cb(usuario), 30);
+      return () => oyentesSesion.delete(cb);
+    },
+    signInGoogle: async () => {
+      usuario = USUARIO;
+      localStorage.removeItem(`${CLAVE}:sin-sesion`);
+      oyentesSesion.forEach(cb => cb(usuario));
+    },
+    signOut: async () => {
+      usuario = null;
+      localStorage.setItem(`${CLAVE}:sin-sesion`, '1');
+    },
     enviarVerificacion: async () => {},
     comprobarVerificacion: async () => true,
     recuperarPassword: async () => {},

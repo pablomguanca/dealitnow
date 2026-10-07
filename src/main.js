@@ -244,16 +244,19 @@ const crearEnCuenta = e => {
 
 // Migración única: lo que la versión anterior guardaba en el navegador pasa a la
 // cuenta, y se borra del navegador recién cuando el servidor confirmó la copia.
+// Devuelve { id, contenido } de la propuesta creada, o null si no había nada que migrar.
 const migrarLocal = () => {
   const claves = [`${CLAVE}:borrador:${AteneaDB.auth.getUid()}`, CLAVE];
   const clave = claves.find(c => leerLocal(c));
-  if (!clave) return;
-  const creada = crearEnCuenta(leerLocal(clave));
-  if (!creada) return;
+  if (!clave) return null;
+  const contenido = leerLocal(clave);
+  const creada = crearEnCuenta(contenido);
+  if (!creada) return null;
   creada.listo.then(ok => {
     if (ok) try { localStorage.removeItem(clave); } catch {}
   });
-  avisar('Pasamos a tu cuenta la propuesta que tenías guardada en este navegador.', 6000);
+  avisar('Guardamos en tu cuenta la propuesta que armaste.', 6000);
+  return { id: creada.id, contenido };
 };
 
 const plantillaControles = $('#tpl-controles');
@@ -746,7 +749,9 @@ const renderDocumento = () => {
 };
 
 let renderPendiente = false;
+// Se llama en cada cambio que hace quien edita (no en la carga inicial).
 const actualizar = () => {
+  if (invitado) invitadoEdito = true;
   if (renderPendiente) return;
   renderPendiente = true;
   requestAnimationFrame(() => {
@@ -1386,7 +1391,14 @@ document.addEventListener('click', async ev => {
       avisar(await copiar(mensajeAceptacion().texto) ? 'Mensaje copiado. Pegalo en tu chat o mail.' : 'No se pudo copiar. Probá de nuevo.');
       break;
     case 'compartir':
-      abrirCompartir();
+      if (invitado) abrirRegistro('compartir');
+      else abrirCompartir();
+      break;
+    case 'registrarse':
+      abrirRegistro('guardar');
+      break;
+    case 'ingresar':
+      abrirRegistro('ingresar');
       break;
     case 'copiar-link':
       if (await copiar(linkActual)) {
@@ -1443,6 +1455,11 @@ document.addEventListener('click', async ev => {
       renderPanel();
       $(`.filtro[data-estado="${CSS.escape(filtroEstado)}"]`)?.focus();
       break;
+    case 'quitar-logo-cuenta':
+      logoCuenta = '';
+      cuentaEditada = true;
+      pintarLogoCuenta();
+      break;
     case 'cambiar-password':
       cambiarPassword();
       break;
@@ -1468,13 +1485,15 @@ document.addEventListener('click', async ev => {
       escucharPropuestas();
       break;
     case 'guardar-borrador':
-      guardarBorrador();
+      if (invitado) abrirRegistro('guardar');
+      else guardarBorrador();
       break;
     case 'abrir-borrador':
       campoBorrador.click();
       break;
     case 'pdf':
-      descargarPDF();
+      if (invitado) abrirRegistro('pdf');
+      else descargarPDF();
       break;
     case 'ver-editor':
       cambiarPestana(false);
@@ -1773,6 +1792,9 @@ const llenarCuenta = () => {
   const sugeridos = !perfil?.emisor && propuestas[0]?.payload;
   const emisor = perfil?.emisor || (sugeridos ? normalizar(propuestas[0].payload).emisor : {});
   $$('[data-emisor]').forEach(el => { el.value = texto(emisor[el.dataset.emisor]); });
+  // Los logos viejos guardados dentro de la propuesta no van al perfil: solo los de Storage.
+  logoCuenta = esLogoValido(texto(emisor.logo)) && !texto(emisor.logo).startsWith('data:') ? texto(emisor.logo) : '';
+  pintarLogoCuenta();
   elCuentaEstado.textContent = sugeridos ? 'Completamos estos datos con los de tu última propuesta. Guardalos para usarlos siempre.' : '';
   cuentaEditada = false;
 };
@@ -1785,7 +1807,7 @@ $('#cuenta-form').addEventListener('input', () => {
 $('#cuenta-form').addEventListener('submit', async ev => {
   ev.preventDefault();
   const displayName = campoCuentaNombre.value.trim();
-  const emisor = Object.fromEntries($$('[data-emisor]').map(el => [el.dataset.emisor, el.value.trim()]));
+  const emisor = { ...Object.fromEntries($$('[data-emisor]').map(el => [el.dataset.emisor, el.value.trim()])), logo: logoCuenta };
   botonGuardarCuenta.disabled = true;
   botonGuardarCuenta.textContent = 'Guardando…';
   try {
@@ -1802,6 +1824,60 @@ $('#cuenta-form').addEventListener('submit', async ev => {
     botonGuardarCuenta.textContent = 'Guardar cambios';
   }
 });
+
+// Logo del negocio en Mi cuenta: se sube a Storage y se guarda con «Guardar cambios».
+let logoCuenta = '';
+const campoLogoCuenta = $('#cuenta-logo');
+
+const pintarLogoCuenta = () => {
+  const vista = $('#cuenta-logo-vista');
+  vista.hidden = !logoCuenta;
+  if (logoCuenta) vista.src = logoCuenta;
+  else vista.removeAttribute('src');
+  $('#cuenta-logo-quitar').hidden = !logoCuenta;
+  $('#cuenta-logo-texto').textContent = logoCuenta ? 'Cambiar logo' : 'Subir logo';
+};
+
+campoLogoCuenta.addEventListener('change', async () => {
+  const archivo = campoLogoCuenta.files[0];
+  campoLogoCuenta.value = '';
+  if (!archivo || !nube()) return;
+  if (!archivo.type.startsWith('image/')) {
+    avisar('El logo tiene que ser una imagen PNG, JPG, SVG o WebP.');
+    return;
+  }
+  if (archivo.size > LOGO_MAX_ARCHIVO) {
+    avisar('El logo pesa más de 5 MB. Usá una versión más liviana.');
+    return;
+  }
+  $('#cuenta-logo-texto').textContent = 'Subiendo logo…';
+  campoLogoCuenta.disabled = true;
+  try {
+    logoCuenta = await AteneaDB.logos.subir(await logoParaSubir(archivo));
+    cuentaEditada = true;
+    elCuentaEstado.textContent = 'Guardá los cambios para usar este logo en tus propuestas nuevas.';
+  } catch (e) {
+    console.error('No se pudo subir el logo:', e);
+    avisar('No se pudo subir el logo. Revisá tu conexión y probá de nuevo.');
+  } finally {
+    campoLogoCuenta.disabled = false;
+    pintarLogoCuenta();
+  }
+});
+
+// Avatar de la barra: la foto de Google, o la inicial si entró con email.
+const pintarAvatar = user => {
+  const el = $('#barra-avatar');
+  const inicial = texto(user.displayName || user.email).trim().charAt(0).toUpperCase();
+  el.textContent = inicial;
+  if (!/^https:\/\//.test(texto(user.photoURL))) return;
+  const img = document.createElement('img');
+  img.alt = '';
+  img.referrerPolicy = 'no-referrer'; // Google rechaza las fotos pedidas con referer de otro sitio
+  img.src = user.photoURL;
+  img.addEventListener('error', () => { el.textContent = inicial; });
+  el.replaceChildren(img);
+};
 
 const cambiarPassword = async () => {
   const email = AteneaDB.auth.getUser()?.email;
@@ -1865,7 +1941,9 @@ const nuevaPropuesta = base => {
   const nueva = base || vacio();
   if (!base) {
     const ultima = propuestas[0]?.payload ? normalizar(propuestas[0].payload).emisor : null;
-    if (ultima || perfil?.emisor) nueva.emisor = { ...nueva.emisor, ...ultima, ...perfil?.emisor };
+    const guardados = { ...perfil?.emisor };
+    if (!guardados.logo) delete guardados.logo; // sin logo en Mi cuenta, se usa el de la última
+    if (ultima || perfil?.emisor) nueva.emisor = { ...nueva.emisor, ...ultima, ...guardados };
   }
   const creada = crearEnCuenta(nueva);
   if (creada) mostrarEditor(creada.id, nueva);
@@ -1973,11 +2051,23 @@ const iniciarSinCuenta = () => {
 
 // Con cuenta: se entra al panel, o directo a la propuesta si la URL la indica.
 const iniciarConCuenta = async () => {
-  migrarLocal();
+  const migrada = migrarLocal();
   escucharPropuestas();
   cargarPerfil();
+  // Si se registró desde el editor sin cuenta, sigue donde estaba: con su propuesta
+  // abierta y, si quería compartirla o bajar el PDF, haciendo eso.
+  let continuar = null;
+  try {
+    continuar = sessionStorage.getItem(`${CLAVE}:continuar`);
+    sessionStorage.removeItem(`${CLAVE}:continuar`);
+  } catch {}
   const id = idEnUrl();
-  if (id) await abrirPropuesta(id, { historial: false });
+  if (migrada && continuar) {
+    mostrarEditor(migrada.id, migrada.contenido, { historial: false });
+    history.replaceState(null, '', `${location.pathname}?propuesta=${encodeURIComponent(migrada.id)}`);
+    if (continuar === 'compartir') abrirCompartir();
+    else if (continuar === 'pdf') descargarPDF();
+  } else if (id) await abrirPropuesta(id, { historial: false });
   else if (seccionEnUrl() === 'cuenta') irACuenta({ historial: false });
   else irAlPanel({ historial: false });
 };
@@ -2002,6 +2092,82 @@ const verificarError = $('#auth-verificar-error');
 const verificarMensaje = $('#auth-verificar-mensaje');
 let authModo = 'login';
 let entrar = () => {};
+
+// Sin sesión: editor de prueba que guarda en este navegador. Al registrarse, lo que
+// armó pasa a su cuenta (migrarLocal) y sigue con lo que quería hacer.
+let invitado = false;
+let invitadoIniciado = false;
+let invitadoEdito = false; // si no cambió nada, el ejemplo no se guarda en su cuenta
+let guardadoParaRegistro = false;
+
+const iniciarInvitado = () => {
+  invitado = true;
+  document.body.classList.add('invitado');
+  document.body.classList.remove('auth-cargando', 'auth-activo');
+  authPantalla.hidden = true;
+  if (invitadoIniciado) return;
+  invitadoIniciado = true;
+  const pideIngresar = new URLSearchParams(location.search).has('ingresar');
+  if (location.search) history.replaceState(null, '', location.pathname);
+  const guardada = cargarGuardado();
+  invitadoEdito = !!guardada;
+  estado = guardada || ejemplo();
+  seleccion = new Set();
+  llenarFormulario();
+  renderDocumento();
+  actualizarAvisoPagos();
+  editando = true;
+  mostrarEstadoGuardado();
+  if (pideIngresar) abrirRegistro('ingresar');
+};
+
+// Con la sesión ya iniciada, guardarAhora apuntaría a la cuenta: lo pendiente del
+// visitante va al navegador, y de ahí migrarLocal lo pasa a su cuenta.
+const guardarCambiosDeInvitado = () => {
+  if (!hayCambiosSinEnviar()) return;
+  clearTimeout(temporizadorGuardado);
+  temporizadorGuardado = null;
+  guardarLocal();
+};
+
+const MOTIVOS_REGISTRO = {
+  compartir: 'Creá tu cuenta gratis para compartir tu propuesta. Lo que armaste se guarda en tu cuenta.',
+  pdf: 'Creá tu cuenta gratis para descargar tu propuesta en PDF. Lo que armaste se guarda en tu cuenta.',
+  guardar: 'Creá tu cuenta gratis para guardar tus propuestas y abrirlas desde cualquier dispositivo.'
+};
+
+const abrirRegistro = motivo => {
+  if (MOTIVOS_REGISTRO[motivo]) {
+    // Se guarda ya, aunque no haya editado: es la propuesta que quiere compartir.
+    if (invitado) {
+      guardadoParaRegistro = !invitadoEdito;
+      guardarLocal();
+    }
+    try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch {}
+  }
+  const elMotivo = $('#auth-motivo');
+  elMotivo.textContent = MOTIVOS_REGISTRO[motivo] || '';
+  elMotivo.hidden = !MOTIVOS_REGISTRO[motivo];
+  $('#auth-cerrar').hidden = !invitado;
+  authPantalla.hidden = false;
+  authGoogle.focus();
+};
+
+const cerrarRegistro = () => {
+  if (!invitado) return;
+  authPantalla.hidden = true;
+  try {
+    sessionStorage.removeItem(`${CLAVE}:continuar`);
+    // Si solo se guardó para el registro y al final no se registró, no queda nada guardado.
+    if (guardadoParaRegistro && !invitadoEdito) localStorage.removeItem(CLAVE);
+  } catch {}
+  guardadoParaRegistro = false;
+};
+$('#auth-cerrar').addEventListener('click', cerrarRegistro);
+$('.auth__fondo').addEventListener('click', cerrarRegistro);
+document.addEventListener('keydown', ev => {
+  if (ev.key === 'Escape' && !authPantalla.hidden) cerrarRegistro();
+});
 
 const mostrarMensaje = (el, texto) => {
   el.textContent = texto;
@@ -2250,6 +2416,8 @@ if (esLinkCorto) {
   // Cuentas con email y contraseña: hasta verificar el email no entran a la app
   // (las reglas de Firestore y Storage tampoco les permiten escribir).
   const mostrarVerificacion = user => {
+    if (invitado) guardarCambiosDeInvitado();
+    $('#auth-cerrar').hidden = true;
     $('#auth-verificar-email').textContent = user.email;
     elIngreso.hidden = true;
     elVerificar.hidden = false;
@@ -2261,7 +2429,14 @@ if (esLinkCorto) {
     elIngreso.hidden = false;
     authPantalla.hidden = true;
     document.body.classList.remove('auth-activo');
+    if (invitado) {
+      guardarCambiosDeInvitado();
+      invitado = false;
+      editando = false;
+      document.body.classList.remove('invitado');
+    }
     if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
+    pintarAvatar(user);
       if (!editorIniciado) {
       editorIniciado = true;
       // El spinner sigue visible hasta saber qué mostrar, así no se ve un editor vacío.
@@ -2273,7 +2448,8 @@ if (esLinkCorto) {
 
   AteneaDB.auth.onAuthChange(async user => {
     if (!user) {
-      mostrarAuth();
+      // Sin sesión: se entra directo al editor para probar. La cuenta se pide al compartir.
+      iniciarInvitado();
       try {
         if (sessionStorage.getItem(`${CLAVE}:cuenta-eliminada`)) {
           sessionStorage.removeItem(`${CLAVE}:cuenta-eliminada`);

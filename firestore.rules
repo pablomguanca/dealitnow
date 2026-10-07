@@ -14,9 +14,12 @@ service cloud.firestore {
       // Datos del negocio que se usan por defecto en las propuestas nuevas.
       function emisorValido(e) {
         return e is map
-          && e.keys().hasOnly(['nombre', 'rol', 'email', 'telefono', 'web', 'presentacion'])
+          && e.keys().hasOnly(['nombre', 'rol', 'email', 'telefono', 'web', 'presentacion', 'logo'])
           && texto(e, 'nombre', 200) && texto(e, 'rol', 200) && texto(e, 'email', 200)
-          && texto(e, 'telefono', 200) && texto(e, 'web', 200) && texto(e, 'presentacion', 2000);
+          && texto(e, 'telefono', 200) && texto(e, 'web', 200) && texto(e, 'presentacion', 2000)
+          // El logo solo puede ser un archivo del Storage de Dealit.
+          && texto(e, 'logo', 1000)
+          && (e.get('logo', '') == '' || e.get('logo', '').matches('https://firebasestorage[.]googleapis[.]com/v0/b/dealit-7f735[.]firebasestorage[.]app/o/.*'));
       }
 
       allow read: if esDueno(uid);

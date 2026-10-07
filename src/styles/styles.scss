@@ -3590,3 +3590,134 @@ a.barra__logo {
     padding: 1.1rem;
   }
 }
+
+/* ---------- Editor sin cuenta ---------- */
+
+.solo-invitado {
+  display: none;
+}
+
+body.invitado {
+  .solo-invitado {
+    display: revert;
+  }
+
+  .boton.solo-invitado {
+    display: inline-flex;
+  }
+
+  .solo-cuenta {
+    display: none;
+  }
+
+  // El login se abre encima de la propuesta, que se sigue viendo detrás.
+  .auth__fondo {
+    background: var(--velo);
+    backdrop-filter: blur(3px);
+  }
+}
+
+.editor__invitado {
+  margin: 0.9rem 0 0.3rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--dorado-tenue);
+  border-radius: var(--radio-m);
+  background: var(--dorado-fondo);
+
+  p {
+    margin: 0 0 0.6rem;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    color: var(--marfil);
+  }
+}
+
+body.invitado .editor__invitado {
+  display: block;
+}
+
+.auth__cerrar {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: grid;
+  place-items: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--marfil-apagado);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--superficie-borde);
+    color: var(--marfil);
+  }
+
+  &[hidden] {
+    display: none;
+  }
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+}
+
+.auth__motivo {
+  margin: 0.9rem 0 0;
+  padding: 0.65rem 0.8rem;
+  border-radius: var(--radio-s);
+  background: var(--dorado-fondo);
+  color: var(--dorado-papel);
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.4;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.barra__avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2.3rem;
+  height: 2.3rem;
+  overflow: hidden;
+  border-radius: 50%;
+  background: var(--dorado-tenue);
+  color: var(--dorado-papel);
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 0 0 2px var(--superficie), 0 0 0 3px var(--superficie-borde);
+  transition: box-shadow var(--transicion);
+
+  &:hover,
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--superficie), 0 0 0 3px var(--dorado);
+  }
+
+  &:empty {
+    display: none;
+  }
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+// En el editor el avatar se oculta en celulares: la barra ya tiene menú y compartir.
+@media (max-width: 720px) {
+  body:not(.vista-inicio) .barra__avatar {
+    display: none;
+  }
+}
