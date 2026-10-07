@@ -5,7 +5,7 @@
   "description": "Propuestas comerciales que se comparten y aceptan con un link.",
   "type": "module",
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   },
   "scripts": {
     "dev": "vite",
