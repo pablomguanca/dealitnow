@@ -1430,6 +1430,22 @@ document.addEventListener('click', async ev => {
       ev.preventDefault();
       abrirPropuesta(boton.dataset.id);
       break;
+    case 'ir-cuenta':
+      if (!nube()) break;
+      if (boton.tagName === 'A') {
+        if (!clicComun(ev)) break;
+        ev.preventDefault();
+      }
+      irACuenta();
+      break;
+    case 'filtrar':
+      filtroEstado = boton.dataset.estado;
+      renderPanel();
+      $(`.filtro[data-estado="${CSS.escape(filtroEstado)}"]`)?.focus();
+      break;
+    case 'cambiar-password':
+      cambiarPassword();
+      break;
     case 'nueva':
       if (nube()) nuevaPropuesta();
       break;
@@ -1441,6 +1457,9 @@ document.addEventListener('click', async ev => {
       break;
     case 'borrar-propuesta':
       borrarPropuesta(boton.dataset.id);
+      break;
+    case 'cerrar-sesion':
+      cerrarSesion();
       break;
     case 'eliminar-cuenta':
       if (nube()) abrirEliminarCuenta();
@@ -1474,7 +1493,10 @@ const elPanelEstado = $('#panel-estado');
 const elPanelVacio = $('#panel-vacio');
 const elPanelResumen = $('#panel-resumen');
 const elHerramientas = $('#panel-herramientas');
+const elMetricas = $('#panel-metricas');
+const elFiltros = $('#panel-filtros');
 const campoBuscar = $('#panel-buscar');
+const elCuenta = $('#cuenta');
 const ESTADOS_PROPUESTA = { draft: 'Borrador', sent: 'Enviada', accepted: 'Aceptada', rejected: 'Rechazada' };
 
 let propuestas = [];
@@ -1513,18 +1535,26 @@ const seguimientoHTML = p => {
   return editada ? tiempoHTML(editada, `Editada ${haceCuanto(editada)}`) : '';
 };
 
+// Color estable por cliente para el avatar con su inicial.
+const tonoDe = nombre => [...texto(nombre)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 997, 7) % 6;
+const estadoDe = p => (ESTADOS_PROPUESTA[p.status] ? p.status : 'draft');
+
 const propuestaHTML = p => {
   const titulo = texto(p.title).trim() || 'Sin título';
   const cliente = texto(p.clientName).trim();
   const moneda = p.aceptacion?.moneda || p.payload?.inversion?.moneda || 'USD';
   const importe = p.aceptacion ? Number(p.aceptacion.inicial) : Number(p.amount);
   const monto = importe > 0 ? dinero(importe, moneda) : '';
-  const estadoP = ESTADOS_PROPUESTA[p.status] ? p.status : 'draft';
+  const estadoP = estadoDe(p);
+  const inicial = (cliente || titulo).trim().charAt(0).toUpperCase() || '·';
   return `
     <li class="propuesta">
       <a class="propuesta__abrir" href="?propuesta=${encodeURIComponent(p.id)}" data-accion="abrir-propuesta" data-id="${esc(p.id)}">
-        <span class="propuesta__titulo">${esc(titulo)}</span>
-        <span class="propuesta__cliente">${cliente ? esc(cliente) : 'Sin cliente'}</span>
+        <span class="propuesta__avatar" data-tono="${tonoDe(cliente || titulo)}" aria-hidden="true">${esc(inicial)}</span>
+        <span class="propuesta__textos">
+          <span class="propuesta__titulo">${esc(titulo)}</span>
+          <span class="propuesta__cliente">${cliente ? esc(cliente) : 'Sin cliente'}</span>
+        </span>
       </a>
       <span class="propuesta__monto">${esc(monto)}</span>
       <span class="propuesta__estado propuesta__estado--${estadoP}">${ESTADOS_PROPUESTA[estadoP]}</span>
@@ -1543,16 +1573,74 @@ const propuestaHTML = p => {
     </li>`;
 };
 
+const FILTROS = [['todas', 'Todas'], ['draft', 'Borradores'], ['sent', 'Enviadas'], ['accepted', 'Aceptadas'], ['rejected', 'Rechazadas']];
+let filtroEstado = 'todas';
+
+const filtrosHTML = () => {
+  const cuenta = id => (id === 'todas' ? propuestas.length : propuestas.filter(p => estadoDe(p) === id).length);
+  return FILTROS
+    .filter(([id]) => id !== 'rejected' || cuenta(id) > 0)
+    .map(([id, nombre]) => `<button type="button" class="filtro" data-accion="filtrar" data-estado="${id}" aria-pressed="${filtroEstado === id}">${nombre} <span class="filtro__cuenta">${cuenta(id)}</span></button>`)
+    .join('');
+};
+
+// Montos por moneda: el principal grande y el resto debajo.
+const montosPorMoneda = lista => {
+  const sumas = new Map();
+  lista.forEach(p => {
+    const m = p.aceptacion.moneda || 'USD';
+    sumas.set(m, (sumas.get(m) || 0) + (Number(p.aceptacion.inicial) || 0));
+  });
+  return [...sumas].sort((a, b) => b[1] - a[1]).map(([m, total]) => dinero(total, m));
+};
+
+const metricaHTML = (valor, etiqueta, detalle, destacada = false) => `
+  <div class="metrica${destacada ? ' metrica--destacada' : ''}">
+    <span class="metrica__etiqueta">${esc(etiqueta)}</span>
+    <span class="metrica__valor">${esc(valor)}</span>
+    <span class="metrica__detalle">${esc(detalle)}</span>
+  </div>`;
+
+const metricasHTML = () => {
+  const ahora = Date.now();
+  const esperando = propuestas.filter(p => p.status === 'sent' && !p.aceptacion);
+  const sinAbrir = esperando.filter(p => !(Number(p.vistas) > 0)).length;
+  const abiertasSemana = propuestas.filter(p => {
+    const f = fechaDe(p.vistoUltimo);
+    return f && ahora - f < 7 * 86400000;
+  }).length;
+  const aceptadas = propuestas.filter(p => p.aceptacion);
+  const inicioMes = new Date();
+  inicioMes.setDate(1);
+  inicioMes.setHours(0, 0, 0, 0);
+  const delMes = aceptadas.filter(p => (fechaDeAceptacion(p.aceptacion) || 0) >= inicioMes);
+  const enviadas = propuestas.filter(p => ['sent', 'accepted', 'rejected'].includes(p.status)).length;
+  const tasa = enviadas ? Math.round((aceptadas.length / enviadas) * 100) : null;
+  const [montoPrincipal, ...otrosMontos] = montosPorMoneda(delMes);
+  return [
+    metricaHTML(esperando.length, 'Esperando respuesta', esperando.length ? (sinAbrir ? `${sinAbrir} sin abrir todavía` : 'Todas abiertas') : 'Nada pendiente'),
+    metricaHTML(abiertasSemana, 'Abiertas esta semana', 'Propuestas que tus clientes miraron'),
+    metricaHTML(delMes.length, 'Aceptadas este mes', tasa === null ? 'Todavía no enviaste ninguna' : `${tasa} % de las que enviaste`),
+    metricaHTML(montoPrincipal || '—', 'Aceptado este mes', otrosMontos.length ? `y ${otrosMontos.join(' · ')}` : 'Total inicial aceptado', true)
+  ].join('');
+};
+
+const primerNombre = () => nombreVisible().split(' ')[0];
+
 const renderPanel = () => {
   if (elPanel.hidden) return;
   const filtro = sinAcentos(campoBuscar.value.trim());
-  const visibles = filtro
-    ? propuestas.filter(p => sinAcentos(`${p.title} ${p.clientName}`).includes(filtro))
-    : propuestas;
+  const visibles = propuestas
+    .filter(p => filtroEstado === 'todas' || estadoDe(p) === filtroEstado)
+    .filter(p => !filtro || sinAcentos(`${p.title} ${p.clientName}`).includes(filtro));
   const hay = propuestas.length > 0;
 
+  $('#panel-saludo').textContent = primerNombre() ? `Hola, ${primerNombre()}` : 'Hola';
   elPanelResumen.textContent = hay ? `${propuestas.length} ${propuestas.length === 1 ? 'propuesta' : 'propuestas'}` : '';
-  elHerramientas.hidden = propuestas.length < 4;
+  elMetricas.hidden = !hay;
+  if (hay) elMetricas.innerHTML = metricasHTML();
+  elHerramientas.hidden = propuestas.length < 2;
+  elFiltros.innerHTML = filtrosHTML();
   elPanelVacio.hidden = panelCargando || panelError || hay;
 
   if (panelError) {
@@ -1561,6 +1649,8 @@ const renderPanel = () => {
     elPanelEstado.textContent = 'Cargando tus propuestas…';
   } else if (filtro && !visibles.length) {
     elPanelEstado.textContent = `No hay propuestas que coincidan con «${campoBuscar.value.trim()}».`;
+  } else if (hay && !visibles.length) {
+    elPanelEstado.textContent = 'No hay propuestas en este estado.';
   } else {
     elPanelEstado.textContent = '';
   }
@@ -1617,13 +1707,24 @@ const escucharPropuestas = () => {
 };
 
 const idEnUrl = () => new URLSearchParams(location.search).get('propuesta');
+const seccionEnUrl = () => new URLSearchParams(location.search).get('seccion');
 
-const mostrarVista = enPanel => {
-  document.body.classList.toggle('vista-panel', enPanel);
-  elPanel.hidden = !enPanel;
-  app.hidden = enPanel;
+// Vistas: 'panel' (Mis propuestas), 'cuenta' (Mi cuenta) y 'editor'.
+const TITULOS_VISTA = { panel: 'Mis propuestas | Dealit', cuenta: 'Mi cuenta | Dealit' };
+const mostrarVista = vista => {
+  const inicio = vista !== 'editor';
+  document.body.classList.toggle('vista-inicio', inicio);
+  document.body.classList.toggle('vista-panel', vista === 'panel');
+  document.body.classList.toggle('vista-cuenta', vista === 'cuenta');
+  elPanel.hidden = vista !== 'panel';
+  elCuenta.hidden = vista !== 'cuenta';
+  app.hidden = inicio;
+  $$('.barra__nav-link').forEach(a => {
+    if (a.dataset.seccion === vista) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  });
   abrirMenu(false);
-  if (enPanel) document.title = 'Mis propuestas | Dealit';
+  if (TITULOS_VISTA[vista]) document.title = TITULOS_VISTA[vista];
 };
 
 // Antes de cambiar de propuesta o de vista, lo pendiente se manda a la cuenta.
@@ -1636,9 +1737,89 @@ const cerrarEdicion = () => {
 const irAlPanel = ({ historial = true } = {}) => {
   cerrarEdicion();
   if (historial && location.search) history.pushState(null, '', location.pathname);
-  mostrarVista(true);
+  mostrarVista('panel');
   renderPanel();
   elPanel.scrollTop = 0;
+};
+
+// Mi cuenta: perfil y datos del negocio que se usan en las propuestas nuevas.
+let perfil = null;
+let cuentaEditada = false;
+const campoCuentaNombre = $('#cuenta-nombre');
+const elCuentaEstado = $('#cuenta-estado');
+const botonGuardarCuenta = $('#cuenta-guardar');
+
+const nombreVisible = () => texto(perfil?.displayName || AteneaDB?.auth.getUser()?.displayName).trim();
+
+const cargarPerfil = async () => {
+  try {
+    perfil = await AteneaDB.perfil.obtener();
+  } catch (e) {
+    console.warn('No se pudo cargar el perfil:', e);
+    perfil = perfil || {};
+  }
+  renderPanel();
+  if (!elCuenta.hidden && !cuentaEditada) llenarCuenta();
+};
+
+const llenarCuenta = () => {
+  const user = AteneaDB.auth.getUser();
+  const conPassword = AteneaDB.auth.usaPassword();
+  campoCuentaNombre.value = nombreVisible();
+  $('#cuenta-email').textContent = user?.email || '';
+  $('#cuenta-acceso').textContent = conPassword ? 'Con email y contraseña.' : 'Con tu cuenta de Google.';
+  $('[data-accion="cambiar-password"]').hidden = !conPassword;
+  // Si todavía no guardó los datos del negocio, se sugieren los de su última propuesta.
+  const sugeridos = !perfil?.emisor && propuestas[0]?.payload;
+  const emisor = perfil?.emisor || (sugeridos ? normalizar(propuestas[0].payload).emisor : {});
+  $$('[data-emisor]').forEach(el => { el.value = texto(emisor[el.dataset.emisor]); });
+  elCuentaEstado.textContent = sugeridos ? 'Completamos estos datos con los de tu última propuesta. Guardalos para usarlos siempre.' : '';
+  cuentaEditada = false;
+};
+
+$('#cuenta-form').addEventListener('input', () => {
+  cuentaEditada = true;
+  elCuentaEstado.textContent = '';
+});
+
+$('#cuenta-form').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  const displayName = campoCuentaNombre.value.trim();
+  const emisor = Object.fromEntries($$('[data-emisor]').map(el => [el.dataset.emisor, el.value.trim()]));
+  botonGuardarCuenta.disabled = true;
+  botonGuardarCuenta.textContent = 'Guardando…';
+  try {
+    await AteneaDB.perfil.guardar({ displayName, emisor });
+    perfil = { ...perfil, displayName, emisor };
+    cuentaEditada = false;
+    elCuentaEstado.textContent = 'Cambios guardados.';
+    if (menuUsuario) menuUsuario.textContent = displayName || AteneaDB.auth.getUser()?.email || '';
+  } catch (e) {
+    console.error('No se pudo guardar el perfil:', e);
+    elCuentaEstado.textContent = 'No se pudieron guardar los cambios. Revisá tu conexión y probá de nuevo.';
+  } finally {
+    botonGuardarCuenta.disabled = false;
+    botonGuardarCuenta.textContent = 'Guardar cambios';
+  }
+});
+
+const cambiarPassword = async () => {
+  const email = AteneaDB.auth.getUser()?.email;
+  try {
+    await AteneaDB.auth.recuperarPassword(email);
+    avisar(`Te mandamos un email a ${email} para crear una contraseña nueva.`, 6000);
+  } catch (e) {
+    console.error('No se pudo enviar el email de contraseña:', e);
+    avisar('No se pudo enviar el email. Probá de nuevo en unos minutos.');
+  }
+};
+
+const irACuenta = ({ historial = true } = {}) => {
+  cerrarEdicion();
+  if (historial && seccionEnUrl() !== 'cuenta') history.pushState(null, '', `${location.pathname}?seccion=cuenta`);
+  mostrarVista('cuenta');
+  if (!cuentaEditada) llenarCuenta();
+  elCuenta.scrollTop = 0;
 };
 
 const mostrarEditor = (id, contenido, { historial = true } = {}) => {
@@ -1648,7 +1829,7 @@ const mostrarEditor = (id, contenido, { historial = true } = {}) => {
   errorGuardado = '';
   avisoError = false;
   if (historial) history.pushState(null, '', `${location.pathname}?propuesta=${encodeURIComponent(id)}`);
-  mostrarVista(false);
+  mostrarVista('editor');
   cambiarPestana(false);
   llenarFormulario();
   renderDocumento();
@@ -1677,12 +1858,15 @@ const abrirPropuesta = async (id, opciones) => {
   mostrarEditor(id, normalizar(doc.payload), opciones);
 };
 
-// Tus datos de contacto se repiten en cada propuesta: la nueva los toma de la última editada.
+// Tus datos de contacto se repiten en cada propuesta: la nueva toma los de Mi cuenta y,
+// lo que falte (como el logo), de la última propuesta editada.
 const nuevaPropuesta = base => {
   cerrarEdicion();
   const nueva = base || vacio();
-  const ultima = propuestas[0];
-  if (!base && ultima?.payload?.emisor) nueva.emisor = normalizar(ultima.payload).emisor;
+  if (!base) {
+    const ultima = propuestas[0]?.payload ? normalizar(propuestas[0].payload).emisor : null;
+    if (ultima || perfil?.emisor) nueva.emisor = { ...nueva.emisor, ...ultima, ...perfil?.emisor };
+  }
   const creada = crearEnCuenta(nueva);
   if (creada) mostrarEditor(creada.id, nueva);
 };
@@ -1711,8 +1895,10 @@ const borrarPropuesta = async id => {
 window.addEventListener('popstate', () => {
   if (esCliente || !nube()) return;
   const id = idEnUrl();
-  if (!id) irAlPanel({ historial: false });
-  else if (id !== propuestaId) abrirPropuesta(id, { historial: false });
+  if (id) {
+    if (id !== propuestaId) abrirPropuesta(id, { historial: false });
+  } else if (seccionEnUrl() === 'cuenta') irACuenta({ historial: false });
+  else irAlPanel({ historial: false });
 });
 
 // Un clic común abre en esta pestaña; con Ctrl, Cmd o la rueda, el navegador abre una nueva.
@@ -1789,8 +1975,10 @@ const iniciarSinCuenta = () => {
 const iniciarConCuenta = async () => {
   migrarLocal();
   escucharPropuestas();
+  cargarPerfil();
   const id = idEnUrl();
   if (id) await abrirPropuesta(id, { historial: false });
+  else if (seccionEnUrl() === 'cuenta') irACuenta({ historial: false });
   else irAlPanel({ historial: false });
 };
 
@@ -2024,7 +2212,7 @@ eliminarBoton.addEventListener('click', async () => {
   }
 });
 
-document.querySelector('[data-accion="cerrar-sesion"]')?.addEventListener('click', async () => {
+const cerrarSesion = async () => {
   if (!AteneaDB) return;
   if (hayCambiosSinEnviar()) guardarAhora();
   // Cerrar sesión borra la caché local: antes hay que asegurar que todo llegó a la cuenta.
@@ -2038,8 +2226,8 @@ document.querySelector('[data-accion="cerrar-sesion"]')?.addEventListener('click
     aceptar: 'Cerrar sesión igual'
   })) return;
   await AteneaDB.auth.signOut();
-  location.reload();
-});
+  location.replace('/');
+};
 
 const esLinkCorto = location.pathname.startsWith('/p/');
 const esClienteLink = location.hash.startsWith(PREFIJO) || esLinkCorto;
@@ -2074,8 +2262,7 @@ if (esLinkCorto) {
     authPantalla.hidden = true;
     document.body.classList.remove('auth-activo');
     if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
-    $('#panel-usuario').textContent = user.email || user.displayName || '';
-    if (!editorIniciado) {
+      if (!editorIniciado) {
       editorIniciado = true;
       // El spinner sigue visible hasta saber qué mostrar, así no se ve un editor vacío.
       document.body.classList.add('auth-cargando');

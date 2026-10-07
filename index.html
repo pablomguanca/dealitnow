@@ -91,9 +91,13 @@
 
 <header class="barra">
   <div class="barra__marca">
-    <span class="barra__logo">Dealit</span>
-    <span class="barra__producto">Generá tu propuesta</span>
+    <a class="barra__logo" href="/" data-accion="ir-panel" aria-label="Dealit, ir a Mis propuestas">Dealit</a>
+    <span class="barra__producto solo-editor">Generá tu propuesta</span>
   </div>
+  <nav class="barra__nav solo-inicio solo-cuenta" aria-label="Secciones">
+    <a class="barra__nav-link" href="/" data-accion="ir-panel" data-seccion="panel">Propuestas</a>
+    <a class="barra__nav-link" href="/?seccion=cuenta" data-accion="ir-cuenta" data-seccion="cuenta">Mi cuenta</a>
+  </nav>
   <div class="barra__acciones">
     <div class="menu" id="menu">
       <button type="button" class="boton boton--secundario menu__alternar" data-accion="menu" aria-expanded="false" aria-controls="menu-panel" aria-label="Más opciones">
@@ -108,6 +112,7 @@
         <button type="button" class="boton boton--secundario menu__opcion solo-editor" data-accion="pdf">Descargar PDF</button>
         <span class="barra__separador" aria-hidden="true"></span>
         <span class="menu__usuario" id="menu-usuario"></span>
+        <button type="button" class="boton boton--texto menu__opcion solo-editor solo-cuenta" data-accion="ir-cuenta">Mi cuenta</button>
         <button type="button" class="boton boton--texto menu__opcion menu__opcion--salir" data-accion="cerrar-sesion">Cerrar sesión</button>
       </div>
     </div>
@@ -446,6 +451,7 @@
   <div class="panel__contenido">
     <div class="panel__cabecera">
       <div>
+        <p class="panel__saludo" id="panel-saludo"></p>
         <h1 class="panel__titulo" id="panel-titulo">Mis propuestas</h1>
         <p class="panel__bajada" id="panel-resumen"></p>
       </div>
@@ -458,7 +464,10 @@
       </div>
     </div>
 
+    <section class="metricas" id="panel-metricas" aria-label="Resumen de tus propuestas" hidden></section>
+
     <div class="panel__herramientas" id="panel-herramientas" hidden>
+      <div class="filtros" id="panel-filtros" role="group" aria-label="Filtrar por estado"></div>
       <label class="visualmente-oculto" for="panel-buscar">Buscar propuestas</label>
       <input class="control panel__buscar" id="panel-buscar" type="search" placeholder="Buscar por título o cliente" autocomplete="off">
     </div>
@@ -474,11 +483,85 @@
         <button type="button" class="boton boton--primario" data-accion="nueva">Crear mi primera propuesta</button>
       </div>
     </div>
+  </div>
+</main>
 
-    <footer class="panel__cuenta">
-      <span>Sesión iniciada como <strong id="panel-usuario"></strong></span>
-      <button type="button" class="boton boton--texto boton--chico boton--peligro" data-accion="eliminar-cuenta">Eliminar cuenta</button>
-    </footer>
+<main class="cuenta" id="cuenta" aria-labelledby="cuenta-titulo" hidden>
+  <div class="cuenta__contenido">
+    <h1 class="panel__titulo" id="cuenta-titulo">Mi cuenta</h1>
+
+    <form class="tarjeta" id="cuenta-form" novalidate>
+      <div class="tarjeta__cabecera">
+        <h2 class="tarjeta__titulo">Perfil</h2>
+        <p class="tarjeta__ayuda">Cómo te ve Dealit y cómo iniciás sesión.</p>
+      </div>
+      <div class="grilla">
+        <label class="campo campo--ancho">
+          <span class="campo__etiqueta">Tu nombre</span>
+          <input class="control" id="cuenta-nombre" type="text" maxlength="80" autocomplete="name">
+        </label>
+        <div class="campo campo--ancho">
+          <span class="campo__etiqueta">Email</span>
+          <p class="cuenta__dato" id="cuenta-email"></p>
+        </div>
+        <div class="campo campo--ancho">
+          <span class="campo__etiqueta">Inicio de sesión</span>
+          <p class="cuenta__dato" id="cuenta-acceso"></p>
+          <button type="button" class="boton boton--secundario boton--chico cuenta__password" data-accion="cambiar-password" hidden>Cambiar contraseña</button>
+        </div>
+      </div>
+
+      <div class="tarjeta__cabecera tarjeta__cabecera--seccion">
+        <h2 class="tarjeta__titulo">Datos de tu negocio</h2>
+        <p class="tarjeta__ayuda">Se completan solos en cada propuesta nueva. Podés cambiarlos en cada propuesta.</p>
+      </div>
+      <div class="grilla">
+        <label class="campo campo--ancho">
+          <span class="campo__etiqueta">Tu nombre o el de tu marca</span>
+          <input class="control" data-emisor="nombre" type="text" maxlength="200" placeholder="Ej.: Estudio Norte">
+        </label>
+        <label class="campo campo--ancho">
+          <span class="campo__etiqueta">Qué hacés</span>
+          <input class="control" data-emisor="rol" type="text" maxlength="200" placeholder="Ej.: Diseño y desarrollo web">
+        </label>
+        <label class="campo">
+          <span class="campo__etiqueta">Email de contacto</span>
+          <input class="control" data-emisor="email" type="email" maxlength="200" placeholder="hola@tumarca.com">
+        </label>
+        <label class="campo">
+          <span class="campo__etiqueta">WhatsApp</span>
+          <input class="control" data-emisor="telefono" type="tel" maxlength="200" placeholder="+54 9 11 0000-0000">
+        </label>
+        <label class="campo campo--ancho">
+          <span class="campo__etiqueta">Sitio web o portfolio</span>
+          <input class="control" data-emisor="web" type="text" maxlength="200" placeholder="tumarca.com">
+        </label>
+        <label class="campo campo--ancho">
+          <span class="campo__etiqueta">Presentación breve</span>
+          <textarea class="control" data-emisor="presentacion" rows="4" maxlength="2000" placeholder="Quién sos, cómo trabajás y por qué sos la persona indicada."></textarea>
+        </label>
+      </div>
+      <div class="tarjeta__pie">
+        <p class="cuenta__estado" id="cuenta-estado" role="status" aria-live="polite"></p>
+        <button type="submit" class="boton boton--primario" id="cuenta-guardar">Guardar cambios</button>
+      </div>
+    </form>
+
+    <section class="tarjeta">
+      <div class="tarjeta__cabecera">
+        <h2 class="tarjeta__titulo">Sesión</h2>
+        <p class="tarjeta__ayuda">Cerrar sesión borra la copia de tus propuestas guardada en este navegador.</p>
+      </div>
+      <button type="button" class="boton boton--secundario" data-accion="cerrar-sesion">Cerrar sesión</button>
+    </section>
+
+    <section class="tarjeta tarjeta--peligro">
+      <div class="tarjeta__cabecera">
+        <h2 class="tarjeta__titulo">Eliminar cuenta</h2>
+        <p class="tarjeta__ayuda">Se borran tu cuenta, tus propuestas y tus logos, y los links que compartiste dejan de funcionar. No se puede deshacer.</p>
+      </div>
+      <button type="button" class="boton boton--secundario boton--peligro" data-accion="eliminar-cuenta">Eliminar mi cuenta</button>
+    </section>
   </div>
 </main>
 

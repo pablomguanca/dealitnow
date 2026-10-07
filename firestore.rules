@@ -9,10 +9,22 @@ service cloud.firestore {
     function verificado()   { return request.auth.token.email_verified == true; }
 
     match /users/{uid} {
+      function texto(m, campo, largo) { return m.get(campo, '') is string && m.get(campo, '').size() <= largo; }
+
+      // Datos del negocio que se usan por defecto en las propuestas nuevas.
+      function emisorValido(e) {
+        return e is map
+          && e.keys().hasOnly(['nombre', 'rol', 'email', 'telefono', 'web', 'presentacion'])
+          && texto(e, 'nombre', 200) && texto(e, 'rol', 200) && texto(e, 'email', 200)
+          && texto(e, 'telefono', 200) && texto(e, 'web', 200) && texto(e, 'presentacion', 2000);
+      }
+
       allow read: if esDueno(uid);
       allow create, update: if esDueno(uid)
-        && request.resource.data.keys().hasOnly(['email', 'displayName', 'photoURL', 'createdAt'])
-        && request.resource.data.email == request.auth.token.email;
+        && request.resource.data.keys().hasOnly(['email', 'displayName', 'photoURL', 'createdAt', 'emisor'])
+        && request.resource.data.email == request.auth.token.email
+        && texto(request.resource.data, 'displayName', 80)
+        && (!('emisor' in request.resource.data) || emisorValido(request.resource.data.emisor));
       allow delete: if esDueno(uid);
     }
 

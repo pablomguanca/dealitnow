@@ -59,6 +59,24 @@ const crearAteneaDB = () => {
     }
   };
 
+  // Perfil (users/{uid}): nombre visible y datos del negocio que se usan por defecto
+  // en las propuestas nuevas.
+  const CAMPOS_EMISOR = ['nombre', 'rol', 'email', 'telefono', 'web', 'presentacion'];
+  const LARGO_EMISOR = { presentacion: 2000 };
+
+  const obtenerPerfil = async () => {
+    const snap = await db.collection('users').doc(getUid()).get();
+    return snap.exists ? snap.data() : {};
+  };
+
+  const guardarPerfil = async ({ displayName, emisor }) => {
+    const user = auth.currentUser;
+    const nombre = String(displayName ?? '').trim().slice(0, 80);
+    const datos = Object.fromEntries(CAMPOS_EMISOR.map(k => [k, String(emisor?.[k] ?? '').trim().slice(0, LARGO_EMISOR[k] || 200)]));
+    if (nombre !== (user.displayName || '')) await user.updateProfile({ displayName: nombre });
+    await db.collection('users').doc(user.uid).set({ email: user.email, displayName: nombre, emisor: datos }, { merge: true });
+  };
+
   auth.onAuthStateChanged(user => {
     if (user) _crearPerfilSiNoExiste(user);
   });
@@ -314,6 +332,7 @@ const crearAteneaDB = () => {
       enviarVerificacion, comprobarVerificacion, recuperarPassword, usaPassword, eliminarCuenta, tokenDeSesion
     },
     logos: { subir: subirLogo, prefijoURL: PREFIJO_URL_LOGO },
+    perfil: { obtener: obtenerPerfil, guardar: guardarPerfil },
     proposals: {
       nuevoId:    nuevoIdPropuesta,
       crear:      crearPropuesta,

@@ -78,6 +78,10 @@ export const AteneaDB = {
     tokenDeSesion: async () => (usuario ? 'token-demo' : null)
   },
   logos: { prefijoURL: 'https://demo.invalid/', subir: async () => { throw new Error('Sin Storage en el modo demo'); } },
+  perfil: {
+    obtener: async () => JSON.parse(localStorage.getItem(`${CLAVE}:perfil`) || '{}'),
+    guardar: async datos => { localStorage.setItem(`${CLAVE}:perfil`, JSON.stringify(datos)); }
+  },
   proposals: {
     nuevoId: () => `DEMO${String(Date.now()).slice(-12)}${String(++n).padStart(4, '0')}`,
     crear: async (datos, id) => {
