@@ -17,7 +17,11 @@ import {
 } from './lib/formato.js';
 import {
   MODALIDADES,
+  DECORACIONES,
+  PORTADAS,
+  ESTILOS_BLOQUES,
   TEMAS,
+  PLANTILLAS,
   LISTAS,
   vacio,
   ejemplo,
@@ -39,6 +43,88 @@ const RUTA_LINK = /^\/p\/([A-Za-z0-9]{20})\/?$/; // IDs de Firestore: 20 caracte
 
 const ICONO_SUMAR = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>';
 const ICONO_SUMADO = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
+const ICONO_CHECK = '<svg class="icono-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6.5"/></svg>';
+
+const decoracionPortadaSVG = tipo => {
+  switch (tipo) {
+    case 'organica':
+      return `
+        <svg class="portada__svg portada__svg--organica" viewBox="0 0 800 1000" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M520,-40 C690,-30 840,90 830,270 C820,450 670,510 570,430 C470,350 430,220 460,90 C480,10 490,-40 520,-40 Z" fill="currentColor" opacity="0.12"/>
+          <path d="M620,60 C740,80 820,200 780,340 C740,480 600,520 530,440 C460,360 500,40 620,60 Z" fill="none" stroke="currentColor" stroke-width="2" opacity="0.28"/>
+          <path d="M-80,760 C40,680 220,720 280,840 C340,960 240,1060 90,1050 C-60,1040 -140,810 -80,760 Z" fill="currentColor" opacity="0.1"/>
+          <path d="M-40,830 C70,750 200,800 240,910" fill="none" stroke="currentColor" stroke-width="1.8" opacity="0.3"/>
+          <circle cx="650" cy="190" r="8" fill="currentColor" opacity="0.35"/>
+          <circle cx="140" cy="820" r="6" fill="currentColor" opacity="0.3"/>
+        </svg>`;
+    case 'geometrica':
+      return `
+        <svg class="portada__svg portada__svg--geometrica" viewBox="0 0 800 1000" preserveAspectRatio="none" aria-hidden="true">
+          <circle cx="680" cy="160" r="180" fill="none" stroke="currentColor" stroke-width="2" opacity="0.24"/>
+          <circle cx="680" cy="160" r="110" fill="currentColor" opacity="0.1"/>
+          <circle cx="680" cy="160" r="42" fill="currentColor" opacity="0.22"/>
+          <path d="M540,0 L800,260 M620,0 L800,180" stroke="currentColor" stroke-width="1.5" opacity="0.18"/>
+          <path d="M0,780 L220,1000 L0,1000 Z" fill="currentColor" opacity="0.11"/>
+          <rect x="48" y="48" width="704" height="904" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.2"/>
+          <rect x="64" y="64" width="28" height="6" fill="currentColor" opacity="0.45"/>
+        </svg>`;
+    case 'aurora':
+      return `
+        <svg class="portada__svg portada__svg--aurora" viewBox="0 0 800 1000" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <radialGradient id="aurora-a" cx="78%" cy="18%" r="48%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.38"/>
+              <stop offset="55%" stop-color="currentColor" stop-opacity="0.1"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="aurora-b" cx="16%" cy="82%" r="45%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.26"/>
+              <stop offset="60%" stop-color="currentColor" stop-opacity="0.06"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect width="800" height="1000" fill="url(#aurora-a)"/>
+          <rect width="800" height="1000" fill="url(#aurora-b)"/>
+          <ellipse cx="640" cy="190" rx="210" ry="120" transform="rotate(-18 640 190)" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.25"/>
+          <path d="M670,95 L676,113 L694,119 L676,125 L670,143 L664,125 L646,119 L664,113 Z" fill="currentColor" opacity="0.55"/>
+          <path d="M130,780 L134,792 L146,796 L134,800 L130,812 L126,800 L114,796 L126,792 Z" fill="currentColor" opacity="0.4"/>
+        </svg>`;
+    case 'trama':
+      return `
+        <svg class="portada__svg portada__svg--trama" viewBox="0 0 800 1000" preserveAspectRatio="none" aria-hidden="true">
+          <defs>
+            <pattern id="patron-puntos" width="32" height="32" patternUnits="userSpaceOnUse">
+              <circle cx="16" cy="16" r="1.3" fill="currentColor" opacity="0.22"/>
+            </pattern>
+          </defs>
+          <rect x="44" y="44" width="712" height="912" fill="url(#patron-puntos)"/>
+          <rect x="44" y="44" width="712" height="912" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.28"/>
+          <path d="M34,44 H58 M44,34 V58 M742,44 H766 M756,34 V58 M34,956 H58 M44,942 V966 M742,956 H766 M756,942 V966" stroke="currentColor" stroke-width="2" opacity="0.55"/>
+          <line x1="560" y1="44" x2="560" y2="956" stroke="currentColor" stroke-width="1" stroke-dasharray="4 6" opacity="0.18"/>
+        </svg>`;
+    case 'ondas':
+      return `
+        <svg class="portada__svg portada__svg--ondas" viewBox="0 0 800 1000" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0,120 C220,40 420,200 800,70 L800,0 L0,0 Z" fill="currentColor" opacity="0.1"/>
+          <path d="M0,165 C260,80 480,230 800,115" fill="none" stroke="currentColor" stroke-width="1.8" opacity="0.26"/>
+          <path d="M0,860 C240,790 480,940 800,830 L800,1000 L0,1000 Z" fill="currentColor" opacity="0.12"/>
+          <path d="M0,820 C260,750 510,910 800,790" fill="none" stroke="currentColor" stroke-width="2" opacity="0.32"/>
+          <path d="M0,895 C230,835 520,965 800,875" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.22"/>
+        </svg>`;
+    case 'ninguna':
+      return '';
+    case 'marco':
+    default:
+      return `
+        <svg class="portada__svg portada__svg--marco" viewBox="0 0 800 1000" preserveAspectRatio="none" aria-hidden="true">
+          <rect x="38" y="38" width="724" height="924" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.32"/>
+          <rect x="48" y="48" width="704" height="904" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.18"/>
+          <path d="M38,78 L78,38 M722,38 L762,78 M38,922 L78,962 M722,962 L762,922" stroke="currentColor" stroke-width="1.4" opacity="0.38"/>
+          <polygon points="400,30 408,38 400,46 392,38" fill="currentColor" opacity="0.45"/>
+          <polygon points="400,954 408,962 400,970 392,962" fill="currentColor" opacity="0.45"/>
+        </svg>`;
+  }
+};
 
 const normalizar = datos => normalizarPropuesta(datos, { logoValido: esLogoValido });
 
@@ -349,19 +435,26 @@ const servicioHTML = (s, moneda, web) => {
   const sumado = s.opcional && seleccion.has(s.id);
   if (sumado && !web) modo += ', sumado por el cliente';
   const entregables = lineas(s.entregables);
+  const etiquetaModalidad = s.modalidad === 'mensual' ? 'Abono mensual' : s.modalidad === 'hora' ? 'Por hora' : 'Incluido';
+  const insignia = s.opcional
+    ? `<span class="servicio__chip servicio__chip--opcional">${sumado ? 'Opcional sumado' : 'Opcional'}</span>`
+    : `<span class="servicio__chip">${etiquetaModalidad}</span>`;
   const boton = web && s.opcional && aceptada()
     ? (sumado ? `<span class="servicio__incluido">${ICONO_SUMADO} Incluido en la aceptación</span>` : '')
     : web && s.opcional
     ? `<button type="button" class="servicio__sumar" data-accion="sumar" data-id="${esc(s.id)}" aria-pressed="${sumado}">${sumado ? `${ICONO_SUMADO} Sumado a la propuesta` : `${ICONO_SUMAR} Sumar a la propuesta`}</button>`
     : '';
   return `
-    <div class="servicio">
+    <div class="servicio${s.opcional ? ' servicio--opcional' : ''}${sumado ? ' servicio--sumado' : ''}">
       <div class="servicio__cabecera">
-        <h3 class="servicio__nombre">${s.nombre.trim() ? esc(s.nombre) : vacioHTML('Servicio sin nombre')}</h3>
+        <div class="servicio__titular">
+          ${insignia}
+          <h3 class="servicio__nombre">${s.nombre.trim() ? esc(s.nombre) : vacioHTML('Servicio sin nombre')}</h3>
+        </div>
         <p class="servicio__precio">${dinero(totalServicio(s), moneda)}<span class="servicio__modo">${esc(modo)}</span></p>
       </div>
       ${s.descripcion.trim() ? `<p class="servicio__desc">${esc(s.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
-      ${entregables.length ? `<ul class="doc-lista">${entregables.map(e => `<li>${esc(e)}</li>`).join('')}</ul>` : ''}
+      ${entregables.length ? `<ul class="doc-lista servicio__entregables">${entregables.map(e => `<li>${ICONO_CHECK}<span>${esc(e)}</span></li>`).join('')}</ul>` : ''}
       ${boton}
     </div>`;
 };
@@ -551,16 +644,22 @@ const aplicarTema = doc => {
   doc.style.setProperty('--fuente-display', `'${ft}', 'Georgia', serif`);
   doc.style.setProperty('--fuente-texto', `'${fc}', 'Helvetica Neue', Arial, sans-serif`);
 
+  doc.dataset.tema = t.preset || 'elegante-oscuro';
+  doc.dataset.portada = PORTADAS[t.portada] ? t.portada : (preset.portada || 'editorial');
+  doc.dataset.decoracion = DECORACIONES[t.decoracion] ? t.decoracion : (preset.decoracion || 'marco');
+  doc.dataset.estilo = ESTILOS_BLOQUES[t.estilo] ? t.estilo : (preset.estilo || 'editorial');
+  doc.dataset.modo = preset.modo;
+
   if (esClaro) {
-    const portadaBg = mezclar(acento, false, 0.7);
+    const portadaBg = mezclar(acento, false, 0.72);
     const portadaTexto = luminancia(portadaBg) > 0.4 ? '#111111' : '#F5F5F0';
     doc.style.setProperty('--portada-fondo', portadaBg);
     doc.style.setProperty('--portada-texto', portadaTexto);
-    doc.style.setProperty('--portada-acento', mezclar(acento, true, 0.15));
-    doc.style.setProperty('--portada-apagado', conAlpha(portadaTexto, 0.55));
-    doc.style.setProperty('--portada-borde', conAlpha(acento, 0.25));
+    doc.style.setProperty('--portada-acento', mezclar(acento, true, 0.18));
+    doc.style.setProperty('--portada-apagado', conAlpha(portadaTexto, 0.6));
+    doc.style.setProperty('--portada-borde', conAlpha(acento, 0.28));
     doc.style.setProperty('--portada-linea', conAlpha(portadaTexto, 0.18));
-    doc.style.setProperty('--portada-acento-claro', mezclar(acento, true, 0.3));
+    doc.style.setProperty('--portada-acento-claro', mezclar(acento, true, 0.32));
 
     doc.style.setProperty('--papel', preset.fondo);
     doc.style.setProperty('--tinta', preset.texto);
@@ -591,6 +690,8 @@ const renderDocumento = () => {
   const p = s.propuesta;
   const vig = vigencia();
   const destinatario = cl.empresa.trim() || cl.nombre.trim();
+  const tipoDecoracion = doc.dataset.decoracion || 'marco';
+  const tipoPortada = doc.dataset.portada || 'editorial';
 
   const marca = e.logo
     ? `<img class="portada__logo" src="${esc(e.logo)}" alt="${esc(e.nombre || 'Logo')}">`
@@ -611,14 +712,20 @@ const renderDocumento = () => {
     }
   }
 
+  const marcaAguaNumero = tipoPortada === 'impacto' && p.numero.trim()
+    ? `<span class="portada__marca-agua" aria-hidden="true">${esc(p.numero.trim())}</span>`
+    : '';
+
   const portada = `
-    <section class="portada" aria-label="Portada">
+    <section class="portada portada--${esc(tipoPortada)}" aria-label="Portada">
+      <div class="portada__decoracion" aria-hidden="true">${decoracionPortadaSVG(tipoDecoracion)}</div>
+      ${marcaAguaNumero}
       <div class="portada__superior">
         ${marca}
         ${p.numero.trim() ? `<p class="portada__numero">Propuesta ${esc(p.numero)}</p>` : ''}
       </div>
       <div class="portada__centro">
-        <p class="portada__para">${destinatario ? `Propuesta para ${esc(destinatario)}` : 'Propuesta comercial'}</p>
+        <p class="portada__para"><span class="portada__para-chip">${destinatario ? `Propuesta para ${esc(destinatario)}` : 'Propuesta comercial'}</span></p>
         <h1 class="portada__titulo">${p.titulo.trim() ? esc(p.titulo) : vacioHTML('Título de la propuesta')}</h1>
         <hr class="portada__regla">
       </div>
@@ -628,32 +735,50 @@ const renderDocumento = () => {
   const bloques = [];
 
   if (e.presentacion.trim()) {
-    bloques.push({ titulo: e.nombre.trim() ? `Sobre ${e.nombre.trim()}` : 'Quién presenta esta propuesta', html: parrafos(e.presentacion) });
+    bloques.push({
+      titulo: e.nombre.trim() ? `Sobre ${e.nombre.trim()}` : 'Quién presenta esta propuesta',
+      html: `<div class="presentacion-bloque">${parrafos(e.presentacion)}</div>`
+    });
   }
 
-  if (s.contexto.trim()) bloques.push({ titulo: 'El punto de partida', html: parrafos(s.contexto) });
+  if (s.contexto.trim()) {
+    bloques.push({
+      titulo: 'El punto de partida',
+      html: `<div class="contexto-bloque">${parrafos(s.contexto)}</div>`
+    });
+  }
 
   const objetivos = s.objetivos.filter(o => o.texto.trim());
   if (objetivos.length) {
-    bloques.push({ titulo: 'Qué queremos lograr', html: `<ul class="doc-lista">${objetivos.map(o => `<li>${esc(o.texto.trim())}</li>`).join('')}</ul>` });
+    bloques.push({
+      titulo: 'Qué queremos lograr',
+      html: `<ul class="doc-lista objetivos-lista">${objetivos.map((o, i) => `
+        <li class="objetivo-item">
+          <span class="objetivo-item__indice" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span>
+          <span class="objetivo-item__texto">${esc(o.texto.trim())}</span>
+        </li>`).join('')}</ul>`
+    });
   }
 
   const incluidos = s.servicios.filter(x => !x.opcional && servicioConContenido(x));
   const opcionales = s.servicios.filter(x => x.opcional && servicioConContenido(x));
   if (incluidos.length || opcionales.length) {
-    let html = incluidos.map(x => servicioHTML(x, m, web)).join('');
+    let html = `<div class="servicios-grilla">${incluidos.map(x => servicioHTML(x, m, web)).join('')}</div>`;
     if (opcionales.length) {
-      const [primero, ...resto] = opcionales;
       const nota = web
-        ? 'No están incluidos en la inversión. Sumá los que quieras y el total se actualiza en el momento.'
+        ? 'No están incluidos en la inversión base. Sumá los que quieras con un toque y el total se actualiza en el momento.'
         : 'No están incluidos en la inversión, salvo los que figuran como sumados. Se pueden agregar en cualquier momento del proyecto.';
       html += `
         <div class="doc-grupo">
-          <h3 class="doc-subtitulo">Para sumar, si querés</h3>
+          <div class="doc-grupo__cabecera">
+            <h3 class="doc-subtitulo">Para sumar, si querés</h3>
+            <span class="doc-grupo__badge">Interactivo</span>
+          </div>
           <p class="doc-nota">${nota}</p>
-          ${servicioHTML(primero, m, web)}
-        </div>
-        ${resto.map(x => servicioHTML(x, m, web)).join('')}`;
+          <div class="servicios-grilla servicios-grilla--opcionales">
+            ${opcionales.map(x => servicioHTML(x, m, web)).join('')}
+          </div>
+        </div>`;
     }
     bloques.push({ titulo: 'Qué incluye la propuesta', html });
   }
@@ -665,26 +790,31 @@ const renderDocumento = () => {
       html: `<ol class="etapas">${etapas.map((x, i) => `
         <li class="etapa">
           <span class="etapa__num" aria-hidden="true">${i + 1}</span>
-          <div>
+          <div class="etapa__cuerpo">
             <p class="etapa__nombre">${x.nombre.trim() ? esc(x.nombre) : vacioHTML('Etapa sin nombre')}</p>
             ${x.descripcion.trim() ? `<p class="etapa__desc">${esc(x.descripcion.trim())}</p>` : ''}
           </div>
-          <p class="etapa__duracion">${esc(x.duracion.trim())}</p>
+          ${x.duracion.trim() ? `<p class="etapa__duracion"><span class="etapa__chip">${esc(x.duracion.trim())}</span></p>` : '<p class="etapa__duracion"></p>'}
         </li>`).join('')}</ol>`
     });
   }
 
   if (c.inicial.base > 0 || c.mensual.base > 0) {
     const columnas = [];
-    if (c.inicial.base > 0) columnas.push(`<div><h3 class="resumen__titulo">${c.mensual.base > 0 ? 'Inversión inicial' : 'Inversión total'}</h3>${filasResumen(c.inicial, c)}</div>`);
-    if (c.mensual.base > 0) columnas.push(`<div><h3 class="resumen__titulo">Servicio mensual</h3>${filasResumen(c.mensual, c, 'por mes')}</div>`);
+    if (c.inicial.base > 0) columnas.push(`<div class="resumen__columna"><h3 class="resumen__titulo">${c.mensual.base > 0 ? 'Inversión inicial' : 'Inversión total'}</h3>${filasResumen(c.inicial, c)}</div>`);
+    if (c.mensual.base > 0) columnas.push(`<div class="resumen__columna"><h3 class="resumen__titulo">Servicio mensual</h3>${filasResumen(c.mensual, c, 'por mes')}</div>`);
     let html = `<div class="resumen">${columnas.join('')}</div>`;
     const pagos = s.inversion.pagos.filter(x => x.concepto.trim() || numero(x.porcentaje) > 0);
     if (pagos.length && c.inicial.total > 0) {
+      const barraSegmentos = pagos
+        .filter(x => numero(x.porcentaje) > 0)
+        .map((x, idx) => `<span class="pagos-barra__seg pagos-barra__seg--${(idx % 4) + 1}" style="flex:${Math.max(5, numero(x.porcentaje))}" title="${esc(x.concepto.trim() || `Pago ${idx + 1}`)}: ${cantidadTexto(numero(x.porcentaje))}%"><span>${cantidadTexto(numero(x.porcentaje))}%</span></span>`)
+        .join('');
       html += `<h3 class="doc-subtitulo">Forma de pago</h3>
+        ${barraSegmentos ? `<div class="pagos-barra" aria-hidden="true">${barraSegmentos}</div>` : ''}
         <table class="pagos">
           <thead><tr><th scope="col">Momento</th><th scope="col" class="pagos__num">Porcentaje</th><th scope="col" class="pagos__num">Monto</th></tr></thead>
-          <tbody>${pagos.map(x => `<tr><td>${x.concepto.trim() ? esc(x.concepto) : vacioHTML('Pago sin descripción')}</td><td class="pagos__num">${cantidadTexto(numero(x.porcentaje))}%</td><td class="pagos__num">${dinero(c.inicial.total * numero(x.porcentaje) / 100, m)}</td></tr>`).join('')}</tbody>
+          <tbody>${pagos.map(x => `<tr><td>${x.concepto.trim() ? esc(x.concepto) : vacioHTML('Pago sin descripción')}</td><td class="pagos__num"><span class="pagos__pct">${cantidadTexto(numero(x.porcentaje))}%</span></td><td class="pagos__num pagos__monto">${dinero(c.inicial.total * numero(x.porcentaje) / 100, m)}</td></tr>`).join('')}</tbody>
         </table>`;
       if (c.mensual.base > 0) html += '<p class="doc-nota">El servicio mensual se factura por mes adelantado, desde que empieza ese servicio.</p>';
     }
@@ -795,13 +925,20 @@ formulario.addEventListener('submit', ev => ev.preventDefault());
 
 const llenarTemaEditor = () => {
   const t = estado.tema;
+  const preset = TEMAS[t.preset] || TEMAS['elegante-oscuro'];
   $$('.tema-card').forEach(el => el.classList.toggle('tema-card--activo', el.dataset.tema === t.preset));
+  const decoracionActiva = DECORACIONES[t.decoracion] ? t.decoracion : (preset.decoracion || 'marco');
+  const portadaActiva = PORTADAS[t.portada] ? t.portada : (preset.portada || 'editorial');
+  const estiloActivo = ESTILOS_BLOQUES[t.estilo] ? t.estilo : (preset.estilo || 'editorial');
+  $$('[data-decoracion]').forEach(el => el.classList.toggle('opcion-visual--activa', el.dataset.decoracion === decoracionActiva));
+  $$('[data-portada]').forEach(el => el.classList.toggle('opcion-visual--activa', el.dataset.portada === portadaActiva));
+  $$('[data-estilo]').forEach(el => el.classList.toggle('opcion-visual--activa', el.dataset.estilo === estiloActivo));
   const acento = $('#tema-acento');
   const ft = $('#tema-fuente-titulos');
   const fc = $('#tema-fuente-cuerpo');
-  if (acento) acento.value = t.acento || TEMAS[t.preset]?.acento || '#C9A84C';
-  if (ft) ft.value = t.fuenteTitulos || TEMAS[t.preset]?.fuenteTitulos || 'Bebas Neue';
-  if (fc) fc.value = t.fuenteCuerpo || TEMAS[t.preset]?.fuenteCuerpo || 'Montserrat';
+  if (acento) acento.value = t.acento || preset.acento || '#C9A84C';
+  if (ft) ft.value = t.fuenteTitulos || preset.fuenteTitulos || 'Bebas Neue';
+  if (fc) fc.value = t.fuenteCuerpo || preset.fuenteCuerpo || 'Montserrat';
 };
 
 const contenedorTemas = $('#temas-grid');
@@ -816,10 +953,100 @@ if (contenedorTemas) {
     estado.tema.acento = preset.acento;
     estado.tema.fuenteTitulos = preset.fuenteTitulos;
     estado.tema.fuenteCuerpo = preset.fuenteCuerpo;
+    estado.tema.portada = preset.portada || 'editorial';
+    estado.tema.decoracion = preset.decoracion || 'marco';
+    estado.tema.estilo = preset.estilo || 'editorial';
     llenarTemaEditor();
     actualizar();
   });
 }
+
+const contenedorDecoraciones = $('#decoraciones-grid');
+if (contenedorDecoraciones) {
+  contenedorDecoraciones.addEventListener('click', ev => {
+    const btn = ev.target.closest('[data-decoracion]');
+    if (!btn || !DECORACIONES[btn.dataset.decoracion]) return;
+    estado.tema.decoracion = btn.dataset.decoracion;
+    llenarTemaEditor();
+    actualizar();
+  });
+}
+
+const contenedorPortadas = $('#portadas-grid');
+if (contenedorPortadas) {
+  contenedorPortadas.addEventListener('click', ev => {
+    const btn = ev.target.closest('[data-portada]');
+    if (!btn || !PORTADAS[btn.dataset.portada]) return;
+    estado.tema.portada = btn.dataset.portada;
+    llenarTemaEditor();
+    actualizar();
+  });
+}
+
+const contenedorEstilos = $('#estilos-grid');
+if (contenedorEstilos) {
+  contenedorEstilos.addEventListener('click', ev => {
+    const btn = ev.target.closest('[data-estilo]');
+    if (!btn || !ESTILOS_BLOQUES[btn.dataset.estilo]) return;
+    estado.tema.estilo = btn.dataset.estilo;
+    llenarTemaEditor();
+    actualizar();
+  });
+}
+
+let plantillaPendiente = null;
+const dialogoPlantilla = $('#dialogo-plantilla');
+const aplicarPlantillaRubro = (id, soloDiseno = false) => {
+  const tpl = PLANTILLAS[id];
+  if (!tpl) return;
+  const generada = normalizar(tpl.crear());
+  if (soloDiseno) {
+    estado.tema = { ...generada.tema };
+    llenarTemaEditor();
+    actualizar();
+    avisar(`Diseño de «${tpl.nombre}» aplicado a tu propuesta.`);
+  } else {
+    // Si ya tenía sus propios datos de emisor guardados en Mi cuenta, los conserva
+    if (perfil?.emisor && Object.values(perfil.emisor).some(Boolean)) {
+      generada.emisor = { ...generada.emisor, ...perfil.emisor };
+    }
+    reemplazarEstado(generada);
+    avisar(`Plantilla «${tpl.nombre}» cargada. Editá lo que quieras.`);
+  }
+  $$('.plantilla-chip').forEach(c => c.classList.toggle('plantilla-chip--activa', c.dataset.plantilla === id));
+};
+
+const contenedorPlantillas = $('#plantillas-grid');
+if (contenedorPlantillas) {
+  contenedorPlantillas.addEventListener('click', ev => {
+    const chip = ev.target.closest('[data-plantilla]');
+    if (!chip) return;
+    const id = chip.dataset.plantilla;
+    const tpl = PLANTILLAS[id];
+    if (!tpl) return;
+    const tieneTextoPropio = estado.propuesta.titulo.trim() || estado.servicios.some(servicioConContenido);
+    if (tieneTextoPropio && dialogoPlantilla && typeof dialogoPlantilla.showModal === 'function') {
+      plantillaPendiente = id;
+      $('#plantilla-modal-titulo').textContent = `Plantilla: ${tpl.nombre}`;
+      $('#plantilla-modal-texto').textContent = `¿Querés cargar los textos y servicios de ejemplo de «${tpl.nombre}» o aplicar únicamente su diseño visual (tema, decoración y disposición) conservando lo que ya escribiste?`;
+      dialogoPlantilla.showModal();
+    } else {
+      aplicarPlantillaRubro(id, false);
+    }
+  });
+}
+
+$('#plantilla-solo-diseno')?.addEventListener('click', () => {
+  if (plantillaPendiente) aplicarPlantillaRubro(plantillaPendiente, true);
+  plantillaPendiente = null;
+  dialogoPlantilla?.close();
+});
+
+$('#plantilla-completa')?.addEventListener('click', () => {
+  if (plantillaPendiente) aplicarPlantillaRubro(plantillaPendiente, false);
+  plantillaPendiente = null;
+  dialogoPlantilla?.close();
+});
 
 const temaAcento = $('#tema-acento');
 if (temaAcento) {

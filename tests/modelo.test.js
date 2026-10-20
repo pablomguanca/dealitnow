@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { calcularTotales, ejemplo, normalizarPropuesta, vacio } from '../src/modelo.js';
+import {
+  DECORACIONES,
+  ESTILOS_BLOQUES,
+  PLANTILLAS,
+  PORTADAS,
+  TEMAS,
+  calcularTotales,
+  ejemplo,
+  normalizarPropuesta,
+  vacio
+} from '../src/modelo.js';
 
 const conServicios = (servicios, inversion = {}) => ({
   ...vacio(),
@@ -46,19 +56,30 @@ describe('normalizarPropuesta', () => {
       const n = normalizarPropuesta(entrada);
       expect(n.servicios).toEqual([]);
       expect(n.tema.preset).toBe('elegante-oscuro');
+      expect(n.tema.portada).toBe('editorial');
+      expect(n.tema.decoracion).toBe('marco');
+      expect(n.tema.estilo).toBe('editorial');
       expect(n.inversion.moneda).toBe('USD');
     }
   });
 
-  it('corrige valores desconocidos', () => {
+  it('corrige valores desconocidos y toma valores por defecto del preset', () => {
     const n = normalizarPropuesta({
-      tema: { preset: 'no-existe' },
+      tema: { preset: 'no-existe', portada: 'invalida', decoracion: 'invalida', estilo: 'invalido' },
       servicios: [{ nombre: 5, modalidad: 'trimestral' }, null, 'basura']
     });
     expect(n.tema.preset).toBe('elegante-oscuro');
+    expect(n.tema.portada).toBe('editorial');
+    expect(n.tema.decoracion).toBe('marco');
+    expect(n.tema.estilo).toBe('editorial');
     expect(n.servicios).toHaveLength(1);
     expect(n.servicios[0]).toMatchObject({ nombre: '5', modalidad: 'unico' });
     expect(n.servicios[0].id).toBeTruthy();
+
+    const aurora = normalizarPropuesta({ tema: { preset: 'aurora-tech' } });
+    expect(aurora.tema.portada).toBe('impacto');
+    expect(aurora.tema.decoracion).toBe('aurora');
+    expect(aurora.tema.estilo).toBe('bento');
   });
 
   it('descarta logos que no pasan la validación', () => {
@@ -69,8 +90,16 @@ describe('normalizarPropuesta', () => {
     expect(normalizarPropuesta({ emisor: { logo: deStorage } }, { logoValido }).emisor.logo).toBe(deStorage);
   });
 
-  it('es idempotente con la propuesta de ejemplo', () => {
+  it('es idempotente con la propuesta de ejemplo y con todas las plantillas por rubro', () => {
     const una = normalizarPropuesta(ejemplo());
     expect(normalizarPropuesta(una)).toEqual(una);
+    for (const [id, tpl] of Object.entries(PLANTILLAS)) {
+      const creada = normalizarPropuesta(tpl.crear());
+      expect(normalizarPropuesta(creada), `plantilla ${id}`).toEqual(creada);
+      expect(TEMAS[creada.tema.preset]).toBeTruthy();
+      expect(PORTADAS[creada.tema.portada]).toBeTruthy();
+      expect(DECORACIONES[creada.tema.decoracion]).toBeTruthy();
+      expect(ESTILOS_BLOQUES[creada.tema.estilo]).toBeTruthy();
+    }
   });
 });

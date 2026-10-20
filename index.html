@@ -147,38 +147,176 @@
         <button type="button" class="boton boton--primario boton--chico" data-accion="registrarse">Crear cuenta gratis</button>
       </div>
       <p class="editor__aceptada" id="editor-aceptada" role="status" hidden></p>
-      <p class="editor__bajada">Completala y mandala como link: tu cliente la abre en el celular, suma los opcionales que quiera y la acepta ahí mismo.</p>
+      <p class="editor__bajada">Elegí una plantilla, escribí tus datos y mandala como link interactivo: el diseño se arma solo.</p>
     </div>
 
     <form id="formulario" novalidate>
-      <details class="paso">
+      <details class="paso" open>
         <summary class="paso__resumen">
           <span class="paso__num icono-pincel"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.5 1.5l3 3-8.5 8.5H3v-3l8.5-8.5z"/></svg></span>
-          <span class="paso__titulo">Diseño</span>
-          <span class="paso__desc">Colores y tipografía de la propuesta</span>
+          <span class="paso__titulo">Diseño y plantillas</span>
+          <span class="paso__desc">Rubros, temas, decoración tipo Canva y disposición</span>
         </summary>
         <div class="paso__contenido">
-          <h3 class="separador-campos">Tema</h3>
+          <div class="estudio-cabecera">
+            <h3 class="separador-campos">Partir de una plantilla por rubro</h3>
+            <p class="campo__ayuda">Cargá una propuesta completa con textos, servicios y diseño pensados para tu actividad.</p>
+          </div>
+          <div class="plantillas-rubro" id="plantillas-grid">
+            <button type="button" class="plantilla-chip" data-plantilla="diseno-web">
+              <span class="plantilla-chip__rubro">Diseño &amp; Web</span>
+              <span class="plantilla-chip__nombre">Branding y Tienda Online</span>
+            </button>
+            <button type="button" class="plantilla-chip" data-plantilla="software-saas">
+              <span class="plantilla-chip__rubro">Software &amp; Tech <em class="insignia-pro">PRO</em></span>
+              <span class="plantilla-chip__nombre">App Web y Panel Operativo</span>
+            </button>
+            <button type="button" class="plantilla-chip" data-plantilla="marketing-redes">
+              <span class="plantilla-chip__rubro">Agencia &amp; Redes <em class="insignia-pro">PRO</em></span>
+              <span class="plantilla-chip__nombre">Reels, Redes y Campañas</span>
+            </button>
+            <button type="button" class="plantilla-chip" data-plantilla="arquitectura-interiorismo">
+              <span class="plantilla-chip__rubro">Arquitectura &amp; Obra <em class="insignia-pro">PRO</em></span>
+              <span class="plantilla-chip__nombre">Interiorismo y Reforma</span>
+            </button>
+            <button type="button" class="plantilla-chip" data-plantilla="consultoria-b2b">
+              <span class="plantilla-chip__rubro">Consultoría B2B</span>
+              <span class="plantilla-chip__nombre">Procesos y Ventas CRM</span>
+            </button>
+            <button type="button" class="plantilla-chip" data-plantilla="audiovisual-eventos">
+              <span class="plantilla-chip__rubro">Audiovisual &amp; Foto <em class="insignia-pro">PRO</em></span>
+              <span class="plantilla-chip__nombre">Rodaje y Campaña 4K</span>
+            </button>
+          </div>
+
+          <h3 class="separador-campos">Tema visual</h3>
           <div class="temas" id="temas-grid">
             <button type="button" class="tema-card tema-card--activo" data-tema="elegante-oscuro">
               <div class="tema-card__muestra"><span style="background:#06060A"></span><span style="background:#C9A84C"></span><span style="background:#F0EBE0"></span></div>
               <span class="tema-card__nombre">Elegante oscuro</span>
+              <span class="tema-card__sub">Noir &amp; Oro</span>
             </button>
             <button type="button" class="tema-card" data-tema="corporativo">
               <div class="tema-card__muestra"><span style="background:#FFFFFF"></span><span style="background:#2563EB"></span><span style="background:#0F172A"></span></div>
               <span class="tema-card__nombre">Corporativo</span>
+              <span class="tema-card__sub">Ejecutivo B2B</span>
             </button>
             <button type="button" class="tema-card" data-tema="moderno">
               <div class="tema-card__muestra"><span style="background:#0F172A"></span><span style="background:#8B5CF6"></span><span style="background:#E2E8F0"></span></div>
               <span class="tema-card__nombre">Moderno</span>
+              <span class="tema-card__sub">Violeta Digital</span>
             </button>
             <button type="button" class="tema-card" data-tema="calido">
               <div class="tema-card__muestra"><span style="background:#FFFBEB"></span><span style="background:#B45309"></span><span style="background:#292524"></span></div>
               <span class="tema-card__nombre">Cálido</span>
+              <span class="tema-card__sub">Editorial Crema</span>
             </button>
             <button type="button" class="tema-card" data-tema="minimalista">
               <div class="tema-card__muestra"><span style="background:#FAFAFA"></span><span style="background:#18181B"></span><span style="background:#171717"></span></div>
               <span class="tema-card__nombre">Minimalista</span>
+              <span class="tema-card__sub">Puro &amp; Limpio</span>
+            </button>
+            <button type="button" class="tema-card" data-tema="botanico">
+              <span class="tema-card__badge">PRO</span>
+              <div class="tema-card__muestra"><span style="background:#F4F7F4"></span><span style="background:#15803D"></span><span style="background:#14261A"></span></div>
+              <span class="tema-card__nombre">Botánico</span>
+              <span class="tema-card__sub">Orgánico Natural</span>
+            </button>
+            <button type="button" class="tema-card" data-tema="aurora-tech">
+              <span class="tema-card__badge">PRO</span>
+              <div class="tema-card__muestra"><span style="background:#050914"></span><span style="background:#06B6D4"></span><span style="background:#ECFEFF"></span></div>
+              <span class="tema-card__nombre">Aurora Tech</span>
+              <span class="tema-card__sub">SaaS &amp; Futuro</span>
+            </button>
+            <button type="button" class="tema-card" data-tema="editorial-studio">
+              <span class="tema-card__badge">PRO</span>
+              <div class="tema-card__muestra"><span style="background:#FAF6F0"></span><span style="background:#E11D48"></span><span style="background:#181311"></span></div>
+              <span class="tema-card__nombre">Estudio Bold</span>
+              <span class="tema-card__sub">Agencia &amp; Bauhaus</span>
+            </button>
+            <button type="button" class="tema-card" data-tema="arquitectura">
+              <span class="tema-card__badge">PRO</span>
+              <div class="tema-card__muestra"><span style="background:#F5F4F0"></span><span style="background:#9A3412"></span><span style="background:#1C1917"></span></div>
+              <span class="tema-card__nombre">Arquitectura</span>
+              <span class="tema-card__sub">Piedra &amp; Obra</span>
+            </button>
+            <button type="button" class="tema-card" data-tema="oceano-dinamico">
+              <span class="tema-card__badge">PRO</span>
+              <div class="tema-card__muestra"><span style="background:#071324"></span><span style="background:#38BDF8"></span><span style="background:#F0F9FF"></span></div>
+              <span class="tema-card__nombre">Océano Vivo</span>
+              <span class="tema-card__sub">Fluido &amp; Creativo</span>
+            </button>
+          </div>
+
+          <h3 class="separador-campos">Decoración gráfica</h3>
+          <div class="opciones-visuales" id="decoraciones-grid">
+            <button type="button" class="opcion-visual opcion-visual--activa" data-decoracion="marco">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="3" y="3" width="30" height="18" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="6" y="6" width="24" height="12" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="2 2"/></svg>
+              <span>Marco</span>
+            </button>
+            <button type="button" class="opcion-visual" data-decoracion="organica">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><path d="M26 2c5 0 8 4 8 9s-5 11-12 11S10 17 12 11 21 2 26 2z" fill="currentColor" opacity="0.28"/><path d="M4 20C4 12 11 6 19 6" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+              <span>Orgánica</span>
+            </button>
+            <button type="button" class="opcion-visual" data-decoracion="geometrica">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><circle cx="26" cy="10" r="7" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M4 21L18 5v16H4z" fill="currentColor" opacity="0.25"/></svg>
+              <span>Bauhaus</span>
+            </button>
+            <button type="button" class="opcion-visual" data-decoracion="aurora">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><circle cx="14" cy="12" r="8" fill="currentColor" opacity="0.28"/><circle cx="25" cy="10" r="6" fill="currentColor" opacity="0.45"/><path d="M28 4l1 2.5L31.5 7.5 29 8.5 28 11l-1-2.5L24.5 7.5 27 6.5z" fill="currentColor"/></svg>
+              <span>Aurora</span>
+            </button>
+            <button type="button" class="opcion-visual" data-decoracion="trama">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><circle cx="8" cy="7" r="1.2" fill="currentColor"/><circle cx="15" cy="7" r="1.2" fill="currentColor"/><circle cx="22" cy="7" r="1.2" fill="currentColor"/><circle cx="8" cy="14" r="1.2" fill="currentColor"/><circle cx="15" cy="14" r="1.2" fill="currentColor"/><circle cx="22" cy="14" r="1.2" fill="currentColor"/><path d="M27 15h6M30 12v6" stroke="currentColor" stroke-width="1.4"/></svg>
+              <span>Trama</span>
+            </button>
+            <button type="button" class="opcion-visual" data-decoracion="ondas">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><path d="M2 15c5-4 10 4 16 0s11-4 16 0" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 19c5-4 10 4 16 0s11-4 16 0" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.55"/></svg>
+              <span>Ondas</span>
+            </button>
+            <button type="button" class="opcion-visual" data-decoracion="ninguna">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><line x1="8" y1="18" x2="28" y2="6" stroke="currentColor" stroke-width="1.4"/></svg>
+              <span>Limpio</span>
+            </button>
+          </div>
+
+          <h3 class="separador-campos">Disposición de portada</h3>
+          <div class="opciones-visuales opciones-visuales--4" id="portadas-grid">
+            <button type="button" class="opcion-visual opcion-visual--activa" data-portada="editorial">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="4" y="4" width="10" height="2" fill="currentColor"/><rect x="4" y="10" width="24" height="4" fill="currentColor"/><rect x="4" y="19" width="28" height="1.5" fill="currentColor" opacity="0.45"/></svg>
+              <span>Editorial</span>
+            </button>
+            <button type="button" class="opcion-visual" data-portada="dividida">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="2" y="2" width="8" height="20" fill="currentColor" opacity="0.35"/><rect x="13" y="8" width="19" height="4" fill="currentColor"/><rect x="13" y="15" width="14" height="5" fill="currentColor" opacity="0.25"/></svg>
+              <span>Dividida</span>
+            </button>
+            <button type="button" class="opcion-visual" data-portada="insignia">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="12" y="4" width="12" height="2.5" rx="1.2" fill="currentColor" opacity="0.45"/><rect x="6" y="9" width="24" height="4" fill="currentColor"/><rect x="8" y="17" width="20" height="4" rx="1.5" fill="currentColor" opacity="0.25"/></svg>
+              <span>Centrada</span>
+            </button>
+            <button type="button" class="opcion-visual" data-portada="impacto">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><path d="M2 2h32v11L2 16z" fill="currentColor" opacity="0.3"/><rect x="5" y="7" width="22" height="4" fill="currentColor"/><rect x="5" y="18" width="8" height="3.5" fill="currentColor" opacity="0.4"/><rect x="15" y="18" width="8" height="3.5" fill="currentColor" opacity="0.4"/></svg>
+              <span>Impacto</span>
+            </button>
+          </div>
+
+          <h3 class="separador-campos">Estilo de bloques y servicios</h3>
+          <div class="opciones-visuales opciones-visuales--4" id="estilos-grid">
+            <button type="button" class="opcion-visual opcion-visual--activa" data-estilo="editorial">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><text x="4" y="12" font-size="8" fill="currentColor" font-weight="bold">01</text><line x1="14" y1="7" x2="32" y2="7" stroke="currentColor" stroke-width="2"/><line x1="14" y1="13" x2="30" y2="13" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="14" y1="18" x2="32" y2="18" stroke="currentColor" stroke-width="1.2" opacity="0.5"/></svg>
+              <span>Editorial</span>
+            </button>
+            <button type="button" class="opcion-visual" data-estilo="tarjetas">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="3" y="4" width="30" height="7" rx="2" fill="currentColor" opacity="0.22" stroke="currentColor" stroke-width="1"/><rect x="3" y="13" width="30" height="7" rx="2" fill="currentColor" opacity="0.22" stroke="currentColor" stroke-width="1"/></svg>
+              <span>Tarjetas</span>
+            </button>
+            <button type="button" class="opcion-visual" data-estilo="bento">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="3" y="4" width="14" height="16" rx="2" fill="currentColor" opacity="0.28"/><rect x="19" y="4" width="14" height="7" rx="2" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-width="1"/><rect x="19" y="13" width="14" height="7" rx="2" fill="currentColor" opacity="0.18" stroke="currentColor" stroke-width="1"/></svg>
+              <span>Bento</span>
+            </button>
+            <button type="button" class="opcion-visual" data-estilo="minimal">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><line x1="5" y1="4" x2="5" y2="20" stroke="currentColor" stroke-width="2.5"/><line x1="10" y1="7" x2="30" y2="7" stroke="currentColor" stroke-width="2"/><line x1="10" y1="13" x2="26" y2="13" stroke="currentColor" stroke-width="1.2" opacity="0.5"/><line x1="10" y1="17" x2="28" y2="17" stroke="currentColor" stroke-width="1.2" opacity="0.5"/></svg>
+              <span>Lateral</span>
             </button>
           </div>
 
@@ -226,7 +364,7 @@
         </div>
       </details>
 
-      <details class="paso" open>
+      <details class="paso">
         <summary class="paso__resumen">
           <span class="paso__num">1</span>
           <span class="paso__titulo">Tus datos</span>
@@ -268,7 +406,7 @@
               </label>
               <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-logo" id="logo-quitar" hidden>Quitar</button>
             </div>
-            <p class="campo__ayuda">Va sobre fondo negro: usá una versión clara del logo. Se optimiza solo: PNG, JPG, SVG o WebP de hasta 5 MB.</p>
+            <p class="campo__ayuda">Se adapta al tema elegido y se optimiza solo: PNG, JPG, SVG o WebP de hasta 5 MB.</p>
           </div>
         </div>
       </details>
@@ -466,7 +604,7 @@
         <p class="panel__bajada" id="panel-resumen"></p>
       </div>
       <div class="panel__acciones">
-        <button type="button" class="boton boton--secundario" data-accion="nueva-ejemplo">Usar un ejemplo</button>
+        <button type="button" class="boton boton--secundario" data-accion="nueva-ejemplo">Usar una plantilla</button>
         <button type="button" class="boton boton--primario" data-accion="nueva">
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>
           Nueva propuesta
@@ -487,9 +625,9 @@
 
     <div class="panel__vacio" id="panel-vacio" hidden>
       <h2 class="panel__vacio-titulo">Todavía no tenés propuestas</h2>
-      <p>Creá la primera desde cero o partí de un ejemplo completo y cambiá los datos por los de tu proyecto.</p>
+      <p>Creá la primera desde cero o partí de una plantilla profesional por rubro y cambiá los datos por los de tu proyecto.</p>
       <div class="panel__acciones">
-        <button type="button" class="boton boton--secundario" data-accion="nueva-ejemplo">Usar un ejemplo</button>
+        <button type="button" class="boton boton--secundario" data-accion="nueva-ejemplo">Elegir una plantilla</button>
         <button type="button" class="boton boton--primario" data-accion="nueva">Crear mi primera propuesta</button>
       </div>
     </div>
@@ -593,6 +731,18 @@
     <div class="dialogo__acciones">
       <button class="boton boton--texto" value="cancelar">Cancelar</button>
       <button class="boton boton--primario" value="aceptar" id="dialogo-confirmar"></button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="dialogo dialogo--ancho" id="dialogo-plantilla" aria-labelledby="plantilla-modal-titulo">
+  <form method="dialog">
+    <h2 class="dialogo__titulo" id="plantilla-modal-titulo">Aplicar plantilla</h2>
+    <p class="dialogo__texto" id="plantilla-modal-texto">¿Querés cargar toda la propuesta de ejemplo de este rubro o aplicar únicamente su diseño visual manteniendo lo que ya escribiste?</p>
+    <div class="dialogo__acciones">
+      <button class="boton boton--texto" value="cancelar">Cancelar</button>
+      <button type="button" class="boton boton--secundario" id="plantilla-solo-diseno">Solo aplicar diseño</button>
+      <button type="button" class="boton boton--primario" id="plantilla-completa">Cargar texto y diseño</button>
     </div>
   </form>
 </dialog>
