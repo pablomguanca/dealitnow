@@ -794,7 +794,7 @@ const renderDocumento = () => {
             <p class="etapa__nombre">${x.nombre.trim() ? esc(x.nombre) : vacioHTML('Etapa sin nombre')}</p>
             ${x.descripcion.trim() ? `<p class="etapa__desc">${esc(x.descripcion.trim())}</p>` : ''}
           </div>
-          ${x.duracion.trim() ? `<p class="etapa__duracion"><span class="etapa__chip">${esc(x.duracion.trim())}</span></p>` : '<p class="etapa__duracion"></p>'}
+          ${x.duracion.trim() ? `<p class="etapa__duracion"><span class="etapa__chip">${esc(x.duracion.trim())}</span></p>` : '<p class="etapa__duracion etapa__duracion--vacia"></p>'}
         </li>`).join('')}</ol>`
     });
   }

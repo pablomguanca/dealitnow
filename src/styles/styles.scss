@@ -1072,9 +1072,9 @@ textarea {
 
   &__cabecera {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 2em;
+    gap: 1.5em;
   }
 
   &__nombre {
@@ -1584,13 +1584,56 @@ textarea {
 
     .etapa {
       grid-template-columns: 2.4em 1fr;
+      row-gap: 0.4em;
+    }
+
+    .etapa__num {
+      grid-column: 1;
+      grid-row: 1;
     }
 
     .etapa__duracion {
       grid-column: 2;
       grid-row: 1;
-      margin: 0 0 -0.3em;
+      align-self: center;
+      margin: 0;
       font-size: 0.85em;
+    }
+
+    .etapa__duracion--vacia {
+      display: none;
+    }
+
+    .etapa__cuerpo {
+      grid-column: 2;
+      grid-row: 2;
+      min-width: 0;
+    }
+
+    .etapa:has(.etapa__duracion--vacia) .etapa__cuerpo {
+      grid-row: 1;
+      align-self: center;
+    }
+
+    .etapa__nombre {
+      margin-top: 0;
+    }
+
+    &[data-estilo="tarjetas"] .etapa {
+      row-gap: 0.65em;
+      padding: 1.1em 1.15em;
+
+      .etapa__duracion {
+        justify-self: end;
+      }
+
+      .etapa__cuerpo {
+        grid-column: 1 / -1;
+      }
+    }
+
+    &[data-estilo="bento"] .etapa {
+      padding: 1.1em 1.15em;
     }
 
     .resumen {
@@ -2143,6 +2186,10 @@ body.modo-cliente {
   padding-right: 0.6em;
   margin-left: -0.6em;
   margin-right: -0.6em;
+
+  &:not(:last-child)::after {
+    left: 1.8em;
+  }
   border-radius: var(--radio-m);
   transition: opacity 0.5s var(--ease-out-expo),
     transform 0.5s var(--ease-out-expo),
@@ -4383,8 +4430,8 @@ body.invitado .editor__invitado {
   }
 
   .etapa {
-    grid-template-columns: auto 1fr;
-    gap: 0.75em;
+    grid-template-columns: 2.4em 1fr;
+    gap: 0.65em 0.75em;
     margin: 0;
     padding: 1.25em 1.35em;
     border: 1px solid var(--d-linea);
@@ -4395,8 +4442,19 @@ body.invitado .editor__invitado {
       display: none;
     }
 
+    &__num {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
     &__cuerpo {
       grid-column: 1 / -1;
+      grid-row: 2;
+      min-width: 0;
+    }
+
+    &__nombre {
+      margin-top: 0;
     }
 
     &__duracion {
