@@ -208,6 +208,9 @@ export const ejemplo = () => ({
   tema: {
     preset: 'elegante-oscuro',
     acento: '#C9A84C',
+    colorTexto: '',
+    colorSvg: '',
+    opacidadSvg: 100,
     fuenteTitulos: 'Bebas Neue',
     fuenteCuerpo: 'Montserrat',
     portada: 'editorial',
@@ -278,6 +281,9 @@ export const PLANTILLAS = {
       tema: {
         preset: 'aurora-tech',
         acento: '#06B6D4',
+        colorTexto: '',
+        colorSvg: '',
+        opacidadSvg: 100,
         fuenteTitulos: 'Sora',
         fuenteCuerpo: 'IBM Plex Sans',
         portada: 'impacto',
@@ -337,6 +343,9 @@ export const PLANTILLAS = {
       tema: {
         preset: 'editorial-studio',
         acento: '#E11D48',
+        colorTexto: '',
+        colorSvg: '',
+        opacidadSvg: 100,
         fuenteTitulos: 'Archivo Black',
         fuenteCuerpo: 'Source Sans 3',
         portada: 'dividida',
@@ -397,6 +406,9 @@ export const PLANTILLAS = {
       tema: {
         preset: 'arquitectura',
         acento: '#9A3412',
+        colorTexto: '',
+        colorSvg: '',
+        opacidadSvg: 100,
         fuenteTitulos: 'Oswald',
         fuenteCuerpo: 'Rubik',
         portada: 'dividida',
@@ -455,6 +467,9 @@ export const PLANTILLAS = {
       tema: {
         preset: 'corporativo',
         acento: '#2563EB',
+        colorTexto: '',
+        colorSvg: '',
+        opacidadSvg: 100,
         fuenteTitulos: 'Inter',
         fuenteCuerpo: 'Inter',
         portada: 'dividida',
@@ -515,6 +530,9 @@ export const PLANTILLAS = {
       tema: {
         preset: 'oceano-dinamico',
         acento: '#38BDF8',
+        colorTexto: '',
+        colorSvg: '',
+        opacidadSvg: 100,
         fuenteTitulos: 'Outfit',
         fuenteCuerpo: 'Nunito',
         portada: 'insignia',
