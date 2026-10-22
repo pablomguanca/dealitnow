@@ -45,7 +45,25 @@ const ICONO_SUMAR = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5
 const ICONO_SUMADO = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
 const ICONO_CHECK = '<svg class="icono-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6.5"/></svg>';
 
-const decoracionPortadaSVG = tipo => {
+const escalarOpacidadSVG = (svg, opacidadPct = 100) => {
+  const escala = Math.max(0, Math.min(2.5, numero(opacidadPct) / 100));
+  if (!svg || escala <= 0) return '';
+  if (Math.abs(escala - 1) < 0.01) return svg;
+  return svg
+    .split(/(<mask[\s\S]*?<\/mask>)/gi)
+    .map(parte => {
+      if (/^<mask/i.test(parte)) return parte;
+      return parte.replace(/\b(stop-opacity|opacity)="([\d.]+)"/g, (m, attr, val) => {
+        const num = parseFloat(val);
+        if (!Number.isFinite(num) || num === 0) return m;
+        const nuevo = Math.min(0.95, Math.max(0, +(num * escala).toFixed(3)));
+        return `${attr}="${nuevo}"`;
+      });
+    })
+    .join('');
+};
+
+const decoracionPortadaSVGBase = tipo => {
   switch (tipo) {
     case 'organica':
       return `
@@ -345,6 +363,8 @@ const decoracionPortadaSVG = tipo => {
         </svg>`;
   }
 };
+
+const decoracionPortadaSVG = (tipo, opacidadPct = 100) => escalarOpacidadSVG(decoracionPortadaSVGBase(tipo), opacidadPct);
 
 const normalizar = datos => normalizarPropuesta(datos, { logoValido: esLogoValido });
 
@@ -837,25 +857,121 @@ const cargarFuente = nombre => {
   document.head.append(link);
 };
 
+const esHexValido = v => /^#[0-9A-Fa-f]{6}$/.test(String(v || '').trim());
+
+const mezclarColores = (hex1, hex2, peso) => {
+  const [r1, g1, b1] = hexARgb(hex1);
+  const [r2, g2, b2] = hexARgb(hex2);
+  return rgbAHex(r1 + (r2 - r1) * peso, g1 + (g2 - g1) * peso, b1 + (b2 - b1) * peso);
+};
+
+const resolverColoresTema = (t = estado.tema) => {
+  const preset = TEMAS[t.preset] || TEMAS['elegante-oscuro'];
+  const esClaro = preset.modo === 'claro';
+  const acento = esHexValido(t.acento) ? t.acento : preset.acento;
+  const lumAcento = luminancia(acento);
+  const lumFondo = luminancia(preset.fondo);
+
+  // Tinta de contraste para botones y chips rellenos con el color de marca
+  const acentoTinta = lumAcento > 0.42 ? '#0A0A0F' : '#FFFFFF';
+  const acentoBordeContraste = Math.abs(lumAcento - lumFondo) < 0.14
+    ? (esClaro ? 'rgba(0, 0, 0, 0.22)' : 'rgba(255, 255, 255, 0.28)')
+    : 'transparent';
+
+  // Versión legible del acento para textos, montos y numeración sobre el fondo del documento
+  let acentoLectura = acento;
+  if (!esClaro && lumAcento < 0.24) {
+    const factorLuz = Math.min(0.76, Math.max(0.46, (0.3 - lumAcento) * 2.4));
+    acentoLectura = mezclar(acento, true, factorLuz);
+  } else if (esClaro && lumAcento > 0.72) {
+    acentoLectura = mezclar(acento, false, 0.45);
+  }
+
+  // Fondo de portada
+  let portadaBg = esClaro ? mezclar(acento, false, 0.72) : preset.fondo;
+  const colorTextoPersonalizado = esHexValido(t.colorTexto) ? t.colorTexto : '';
+  if (esClaro && colorTextoPersonalizado && luminancia(colorTextoPersonalizado) < 0.3) {
+    portadaBg = mezclar(acento, true, 0.88);
+  }
+  const lumPortada = luminancia(portadaBg);
+
+  // Color de tipografía en portada y en cuerpo
+  const portadaTexto = colorTextoPersonalizado
+    || (esClaro ? (lumPortada > 0.4 ? '#111111' : '#F5F5F0') : preset.texto);
+
+  let cuerpoTexto = colorTextoPersonalizado || preset.texto;
+  if (colorTextoPersonalizado && Math.abs(luminancia(colorTextoPersonalizado) - lumFondo) < 0.18) {
+    cuerpoTexto = esClaro ? mezclar(colorTextoPersonalizado, false, 0.78) : mezclar(colorTextoPersonalizado, true, 0.78);
+  }
+  const cuerpoApagado = colorTextoPersonalizado ? mezclarColores(cuerpoTexto, preset.fondo, 0.36) : preset.textoApagado;
+  const cuerpoTenue = colorTextoPersonalizado ? mezclarColores(cuerpoTexto, preset.fondo, 0.58) : preset.textoTenue;
+
+  // Color de acento en portada (para reglas, bordes y chips)
+  let portadaAcento = esClaro ? mezclar(acento, true, 0.18) : acentoLectura;
+  if (lumPortada < 0.35 && luminancia(portadaAcento) < 0.24) {
+    portadaAcento = mezclar(acento, true, 0.62);
+  } else if (lumPortada >= 0.35 && luminancia(portadaAcento) > 0.72) {
+    portadaAcento = mezclar(acento, false, 0.45);
+  }
+
+  // Color de decoración SVG y marca de agua
+  let colorSvg = esHexValido(t.colorSvg) ? t.colorSvg : '';
+  if (!colorSvg) {
+    if (lumPortada < 0.35) {
+      colorSvg = lumAcento < 0.26
+        ? mezclar(acento, true, Math.min(0.72, Math.max(0.45, (0.32 - lumAcento) * 2.2)))
+        : (esClaro ? mezclar(acento, true, 0.18) : acento);
+    } else {
+      colorSvg = lumAcento > 0.72 ? mezclar(acento, false, 0.45) : acento;
+    }
+  }
+
+  const opacidadSvg = t.opacidadSvg !== undefined && t.opacidadSvg !== null && t.opacidadSvg !== ''
+    ? Math.min(200, Math.max(0, Math.round(numero(t.opacidadSvg))))
+    : 100;
+
+  return {
+    preset,
+    esClaro,
+    acento,
+    acentoTinta,
+    acentoBordeContraste,
+    acentoLectura,
+    portadaBg,
+    portadaTexto,
+    portadaAcento,
+    cuerpoTexto,
+    cuerpoApagado,
+    cuerpoTenue,
+    colorSvg,
+    opacidadSvg
+  };
+};
+
 const aplicarTema = doc => {
   const t = estado.tema;
-  const preset = TEMAS[t.preset] || TEMAS['elegante-oscuro'];
-  const acento = t.acento || preset.acento;
-  const esClaro = preset.modo === 'claro';
+  const col = resolverColoresTema(t);
+  const { preset, esClaro, acento } = col;
 
   doc.style.setProperty('--negro', preset.fondo);
   doc.style.setProperty('--negro-2', preset.fondo2);
   doc.style.setProperty('--superficie', preset.superficie);
   doc.style.setProperty('--superficie-borde', preset.superficieBorde);
-  doc.style.setProperty('--marfil', preset.texto);
-  doc.style.setProperty('--marfil-apagado', preset.textoApagado);
-  doc.style.setProperty('--marfil-tenue', preset.textoTenue);
+  doc.style.setProperty('--marfil', col.cuerpoTexto);
+  doc.style.setProperty('--marfil-apagado', col.cuerpoApagado);
+  doc.style.setProperty('--marfil-tenue', col.cuerpoTenue);
 
   doc.style.setProperty('--dorado', acento);
-  doc.style.setProperty('--dorado-claro', mezclar(acento, true, 0.3));
-  doc.style.setProperty('--dorado-papel', mezclar(acento, false, 0.2));
-  doc.style.setProperty('--dorado-tenue', conAlpha(acento, 0.32));
-  doc.style.setProperty('--dorado-fondo', conAlpha(acento, 0.1));
+  doc.style.setProperty('--dorado-lectura', col.acentoLectura);
+  doc.style.setProperty('--acento-tinta', col.acentoTinta);
+  doc.style.setProperty('--acento-borde-contraste', col.acentoBordeContraste);
+  doc.style.setProperty('--dorado-claro', mezclar(col.acentoLectura, true, 0.3));
+  doc.style.setProperty('--dorado-papel', mezclar(col.acentoLectura, false, 0.2));
+  doc.style.setProperty('--dorado-tenue', conAlpha(col.acentoLectura, 0.32));
+  doc.style.setProperty('--dorado-fondo', conAlpha(col.acentoLectura, 0.1));
+
+  doc.style.setProperty('--portada-svg-color', col.colorSvg);
+  doc.style.setProperty('--svg-opacidad', String(+(col.opacidadSvg / 100).toFixed(2)));
 
   const ft = t.fuenteTitulos || preset.fuenteTitulos;
   const fc = t.fuenteCuerpo || preset.fuenteCuerpo;
@@ -870,30 +986,20 @@ const aplicarTema = doc => {
   doc.dataset.estilo = ESTILOS_BLOQUES[t.estilo] ? t.estilo : (preset.estilo || 'editorial');
   doc.dataset.modo = preset.modo;
 
-  if (esClaro) {
-    const portadaBg = mezclar(acento, false, 0.72);
-    const portadaTexto = luminancia(portadaBg) > 0.4 ? '#111111' : '#F5F5F0';
-    doc.style.setProperty('--portada-fondo', portadaBg);
-    doc.style.setProperty('--portada-texto', portadaTexto);
-    doc.style.setProperty('--portada-acento', mezclar(acento, true, 0.18));
-    doc.style.setProperty('--portada-apagado', conAlpha(portadaTexto, 0.6));
-    doc.style.setProperty('--portada-borde', conAlpha(acento, 0.28));
-    doc.style.setProperty('--portada-linea', conAlpha(portadaTexto, 0.18));
-    doc.style.setProperty('--portada-acento-claro', mezclar(acento, true, 0.32));
+  doc.style.setProperty('--portada-fondo', col.portadaBg);
+  doc.style.setProperty('--portada-texto', col.portadaTexto);
+  doc.style.setProperty('--portada-acento', col.portadaAcento);
+  doc.style.setProperty('--portada-apagado', conAlpha(col.portadaTexto, 0.64));
+  doc.style.setProperty('--portada-borde', conAlpha(col.portadaAcento, 0.28));
+  doc.style.setProperty('--portada-linea', conAlpha(col.portadaTexto, 0.18));
+  doc.style.setProperty('--portada-acento-claro', mezclar(col.portadaAcento, true, 0.32));
 
+  if (esClaro) {
     doc.style.setProperty('--papel', preset.fondo);
-    doc.style.setProperty('--tinta', preset.texto);
-    doc.style.setProperty('--tinta-suave', preset.textoApagado);
-    doc.style.setProperty('--tinta-tenue', preset.textoTenue);
+    doc.style.setProperty('--tinta', col.cuerpoTexto);
+    doc.style.setProperty('--tinta-suave', col.cuerpoApagado);
+    doc.style.setProperty('--tinta-tenue', col.cuerpoTenue);
     doc.style.setProperty('--linea-papel', preset.superficie);
-  } else {
-    doc.style.removeProperty('--portada-fondo');
-    doc.style.removeProperty('--portada-texto');
-    doc.style.removeProperty('--portada-acento');
-    doc.style.removeProperty('--portada-apagado');
-    doc.style.removeProperty('--portada-borde');
-    doc.style.removeProperty('--portada-linea');
-    doc.style.removeProperty('--portada-acento-claro');
   }
 };
 
@@ -938,7 +1044,7 @@ const renderDocumento = () => {
 
   const portada = `
     <section class="portada portada--${esc(tipoPortada)}" aria-label="Portada">
-      <div class="portada__decoracion" aria-hidden="true">${decoracionPortadaSVG(tipoDecoracion)}</div>
+      <div class="portada__decoracion" aria-hidden="true">${decoracionPortadaSVG(tipoDecoracion, s.tema?.opacidadSvg ?? 100)}</div>
       ${marcaAguaNumero}
       <div class="portada__superior">
         ${marca}
@@ -1146,6 +1252,7 @@ formulario.addEventListener('submit', ev => ev.preventDefault());
 const llenarTemaEditor = () => {
   const t = estado.tema;
   const preset = TEMAS[t.preset] || TEMAS['elegante-oscuro'];
+  const col = resolverColoresTema(t);
   $$('.tema-card').forEach(el => el.classList.toggle('tema-card--activo', el.dataset.tema === t.preset));
   const decoracionActiva = DECORACIONES[t.decoracion] ? t.decoracion : (preset.decoracion || 'marco');
   const portadaActiva = PORTADAS[t.portada] ? t.portada : (preset.portada || 'editorial');
@@ -1154,9 +1261,25 @@ const llenarTemaEditor = () => {
   $$('[data-portada]').forEach(el => el.classList.toggle('opcion-visual--activa', el.dataset.portada === portadaActiva));
   $$('[data-estilo]').forEach(el => el.classList.toggle('opcion-visual--activa', el.dataset.estilo === estiloActivo));
   const acento = $('#tema-acento');
+  const colorTexto = $('#tema-color-texto');
+  const colorSvg = $('#tema-color-svg');
+  const opacidadSvg = $('#tema-opacidad-svg');
+  const opacidadValor = $('#tema-opacidad-valor');
+  const btnReset = $('#tema-restablecer-colores');
   const ft = $('#tema-fuente-titulos');
   const fc = $('#tema-fuente-cuerpo');
-  if (acento) acento.value = t.acento || preset.acento || '#C9A84C';
+  if (acento) acento.value = col.acento;
+  if (colorTexto) colorTexto.value = col.portadaTexto;
+  if (colorSvg) colorSvg.value = col.colorSvg;
+  if (opacidadSvg) opacidadSvg.value = String(col.opacidadSvg);
+  if (opacidadValor) opacidadValor.textContent = `${col.opacidadSvg}%`;
+  if (btnReset) {
+    const cambiado = (t.acento && t.acento.toLowerCase() !== preset.acento.toLowerCase())
+      || !!t.colorTexto
+      || !!t.colorSvg
+      || (t.opacidadSvg !== undefined && Number(t.opacidadSvg) !== 100);
+    btnReset.hidden = !cambiado;
+  }
   if (ft) ft.value = t.fuenteTitulos || preset.fuenteTitulos || 'Bebas Neue';
   if (fc) fc.value = t.fuenteCuerpo || preset.fuenteCuerpo || 'Montserrat';
 };
@@ -1171,6 +1294,9 @@ if (contenedorTemas) {
     if (!preset) return;
     estado.tema.preset = id;
     estado.tema.acento = preset.acento;
+    estado.tema.colorTexto = '';
+    estado.tema.colorSvg = '';
+    estado.tema.opacidadSvg = 100;
     estado.tema.fuenteTitulos = preset.fuenteTitulos;
     estado.tema.fuenteCuerpo = preset.fuenteCuerpo;
     estado.tema.portada = preset.portada || 'editorial';
@@ -1272,7 +1398,49 @@ const temaAcento = $('#tema-acento');
 if (temaAcento) {
   temaAcento.addEventListener('input', ev => {
     estado.tema.acento = ev.target.value;
+    llenarTemaEditor();
     actualizar();
+  });
+}
+
+const temaColorTexto = $('#tema-color-texto');
+if (temaColorTexto) {
+  temaColorTexto.addEventListener('input', ev => {
+    estado.tema.colorTexto = ev.target.value;
+    llenarTemaEditor();
+    actualizar();
+  });
+}
+
+const temaColorSvg = $('#tema-color-svg');
+if (temaColorSvg) {
+  temaColorSvg.addEventListener('input', ev => {
+    estado.tema.colorSvg = ev.target.value;
+    llenarTemaEditor();
+    actualizar();
+  });
+}
+
+const temaOpacidadSvg = $('#tema-opacidad-svg');
+if (temaOpacidadSvg) {
+  temaOpacidadSvg.addEventListener('input', ev => {
+    estado.tema.opacidadSvg = Number(ev.target.value);
+    llenarTemaEditor();
+    actualizar();
+  });
+}
+
+const temaRestablecerColores = $('#tema-restablecer-colores');
+if (temaRestablecerColores) {
+  temaRestablecerColores.addEventListener('click', () => {
+    const preset = TEMAS[estado.tema.preset] || TEMAS['elegante-oscuro'];
+    estado.tema.acento = preset.acento;
+    estado.tema.colorTexto = '';
+    estado.tema.colorSvg = '';
+    estado.tema.opacidadSvg = 100;
+    llenarTemaEditor();
+    actualizar();
+    avisar('Colores e intensidad del SVG restablecidos al tema original.');
   });
 }
 

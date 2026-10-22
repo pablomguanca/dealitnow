@@ -147,6 +147,9 @@ export const vacio = () => ({
   tema: {
     preset: 'elegante-oscuro',
     acento: '#C9A84C',
+    colorTexto: '',
+    colorSvg: '',
+    opacidadSvg: 100,
     fuenteTitulos: 'Bebas Neue',
     fuenteCuerpo: 'Montserrat',
     portada: 'editorial',
@@ -530,6 +533,11 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
   const temaEntrada = d.tema && typeof d.tema === 'object' ? d.tema : {};
   const presetValido = TEMAS[temaEntrada.preset] ? temaEntrada.preset : 'elegante-oscuro';
   const presetDef = TEMAS[presetValido];
+  const esColorHex = c => /^#[0-9A-Fa-f]{6}$/.test(texto(c).trim());
+  const opacidadCruda = temaEntrada.opacidadSvg;
+  const opacidadValida = opacidadCruda !== undefined && opacidadCruda !== null && opacidadCruda !== '' && Number.isFinite(Number(opacidadCruda))
+    ? Math.min(200, Math.max(0, Math.round(Number(opacidadCruda))))
+    : 100;
   const n = {
     emisor: limpiar(d.emisor, base.emisor),
     cliente: limpiar(d.cliente, base.cliente),
@@ -546,6 +554,10 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
       ...base.tema,
       ...temaEntrada,
       preset: presetValido,
+      acento: esColorHex(temaEntrada.acento) ? texto(temaEntrada.acento).trim() : (presetDef.acento || base.tema.acento),
+      colorTexto: esColorHex(temaEntrada.colorTexto) ? texto(temaEntrada.colorTexto).trim() : '',
+      colorSvg: esColorHex(temaEntrada.colorSvg) ? texto(temaEntrada.colorSvg).trim() : '',
+      opacidadSvg: opacidadValida,
       portada: PORTADAS[temaEntrada.portada] ? temaEntrada.portada : (presetDef.portada || 'editorial'),
       decoracion: DECORACIONES[temaEntrada.decoracion] ? temaEntrada.decoracion : (presetDef.decoracion || 'marco'),
       estilo: ESTILOS_BLOQUES[temaEntrada.estilo] ? temaEntrada.estilo : (presetDef.estilo || 'editorial')

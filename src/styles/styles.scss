@@ -850,12 +850,23 @@ textarea {
     --d-suave: var(--marfil-apagado);
     --d-tenue: var(--marfil-tenue);
     --d-linea: var(--superficie);
-    --d-acento: var(--dorado);
+    --d-acento: var(--dorado-lectura, var(--dorado));
     --d-panel: var(--negro-2);
     --d-panel-linea: var(--superficie-borde);
 
     font-size: 17px;
     background: var(--d-fondo);
+  }
+
+  .boton--primario {
+    background: var(--dorado);
+    color: var(--acento-tinta, var(--negro));
+    border-color: var(--acento-borde-contraste, transparent);
+
+    &:hover {
+      background: var(--dorado-claro);
+      color: #0A0A0F;
+    }
   }
 }
 .portada {
@@ -1153,8 +1164,8 @@ textarea {
 
     &[aria-pressed="true"] {
       background: var(--dorado);
-      border-color: var(--dorado);
-      color: var(--negro);
+      border-color: var(--acento-borde-contraste, var(--dorado));
+      color: var(--acento-tinta, var(--negro));
     }
   }
 }
@@ -1266,7 +1277,7 @@ textarea {
         font-size: 2.3em;
         font-weight: 600;
         line-height: 1;
-        color: var(--dorado);
+        color: var(--dorado-lectura, var(--dorado));
       }
     }
   }
@@ -1451,7 +1462,7 @@ textarea {
     font-family: var(--fuente-display);
     font-size: 1.65rem;
     font-weight: 600;
-    color: var(--dorado);
+    color: var(--dorado-lectura, var(--dorado));
     font-variant-numeric: tabular-nums;
   }
 
@@ -1894,10 +1905,67 @@ body.modo-cliente {
   flex-wrap: wrap;
 }
 
+.personalizar-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+
+  .separador-campos {
+    margin-bottom: 0.75rem;
+  }
+}
+
+.personalizar-reset {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  color: var(--dorado-papel);
+}
+
 .color-campo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid #88888845;
+  border-radius: var(--radio-s);
+  background: var(--superficie);
+  cursor: pointer;
+  transition: border-color var(--transicion);
+
+  &:hover {
+    border-color: var(--superficie-borde);
+  }
+}
+
+.color-campo__texto {
+  font-size: 0.78rem;
+  color: var(--marfil-apagado);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.campo__etiqueta--fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+}
+
+.campo__valor {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--dorado-papel);
+}
+
+.rango-input {
+  width: 100%;
+  height: 2.35rem;
+  margin: 0;
+  accent-color: var(--dorado);
+  cursor: pointer;
 }
 
 .color-input {
@@ -3949,7 +4017,7 @@ body.invitado .editor__invitado {
     inset: 0;
     z-index: 0;
     pointer-events: none;
-    color: var(--portada-acento, var(--dorado));
+    color: var(--portada-svg-color, var(--portada-acento, var(--dorado)));
     overflow: hidden;
     -webkit-mask-image: radial-gradient(ellipse 68% 48% at 36% 48%, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.78) 62%, #000 100%);
     mask-image: radial-gradient(ellipse 68% 48% at 36% 48%, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.78) 62%, #000 100%);
@@ -3977,8 +4045,8 @@ body.invitado .editor__invitado {
     line-height: 0.85;
     letter-spacing: -0.02em;
     color: transparent;
-    -webkit-text-stroke: 1.5px var(--portada-acento, var(--dorado));
-    opacity: 0.12;
+    -webkit-text-stroke: 1.5px var(--portada-svg-color, var(--portada-acento, var(--dorado)));
+    opacity: calc(0.14 * var(--svg-opacidad, 1));
     pointer-events: none;
     user-select: none;
     -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.15) 100%);
@@ -4127,9 +4195,10 @@ body.invitado .editor__invitado {
     .portada__para-chip {
       display: inline-block;
       padding: 0.34em 0.95em;
+      border: 1px solid var(--acento-borde-contraste, transparent);
       border-radius: var(--radio-s);
-      background: var(--portada-acento, var(--dorado));
-      color: var(--portada-fondo, var(--negro));
+      background: var(--dorado);
+      color: var(--acento-tinta, var(--portada-fondo, var(--negro)));
       box-shadow: 0 0.35em 1.2em rgba(0, 0, 0, 0.22);
       font-weight: 700;
       font-size: 0.82em;
@@ -4197,8 +4266,9 @@ body.invitado .editor__invitado {
 
 .servicio--sumado .servicio__chip--opcional {
   border-style: solid;
-  background: var(--d-acento);
-  color: var(--d-fondo);
+  border-color: var(--acento-borde-contraste, var(--d-acento));
+  background: var(--dorado);
+  color: var(--acento-tinta, var(--d-fondo));
 }
 
 .servicio__entregables {
@@ -4300,8 +4370,8 @@ body.invitado .editor__invitado {
     justify-content: center;
     min-width: 2.6em;
     border-radius: var(--radio-s);
-    background: var(--d-acento);
-    color: var(--negro);
+    background: var(--dorado);
+    color: var(--acento-tinta, var(--negro));
     font-size: 0.78em;
     font-weight: 700;
     font-variant-numeric: tabular-nums;

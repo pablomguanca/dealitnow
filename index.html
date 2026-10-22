@@ -320,15 +320,39 @@
             </button>
           </div>
 
-          <h3 class="separador-campos">Personalizar</h3>
+          <div class="personalizar-cabecera">
+            <h3 class="separador-campos">Personalizar</h3>
+            <button type="button" class="boton boton--texto boton--chico personalizar-reset" id="tema-restablecer-colores" data-accion="restablecer-colores" hidden>Restablecer colores</button>
+          </div>
           <div class="grilla">
-            <div class="campo">
+            <label class="campo">
               <span class="campo__etiqueta">Color de acento</span>
-              <div class="color-campo">
+              <span class="color-campo">
                 <input class="color-input" type="color" id="tema-acento" value="#C9A84C">
-                <span class="campo__etiqueta" style="font-size:0.8em;color:var(--marfil-apagado)">Tu color de marca</span>
-              </div>
-            </div>
+                <span class="color-campo__texto">Tu color de marca</span>
+              </span>
+            </label>
+            <label class="campo">
+              <span class="campo__etiqueta">Color de tipografía</span>
+              <span class="color-campo">
+                <input class="color-input" type="color" id="tema-color-texto" value="#F0EBE0">
+                <span class="color-campo__texto">Títulos y textos</span>
+              </span>
+            </label>
+            <label class="campo">
+              <span class="campo__etiqueta">Color de elementos</span>
+              <span class="color-campo">
+                <input class="color-input" type="color" id="tema-color-svg" value="#C9A84C">
+                <span class="color-campo__texto">Líneas, tramas y sello</span>
+              </span>
+            </label>
+            <label class="campo">
+              <span class="campo__etiqueta campo__etiqueta--fila">
+                <span>Intensidad de elementos</span>
+                <output class="campo__valor" id="tema-opacidad-valor" for="tema-opacidad-svg">100%</output>
+              </span>
+              <input class="rango-input" type="range" id="tema-opacidad-svg" min="0" max="200" step="5" value="100">
+            </label>
             <label class="campo">
               <span class="campo__etiqueta">Tipografía de títulos</span>
               <select class="control" id="tema-fuente-titulos">
