@@ -49,79 +49,299 @@ const decoracionPortadaSVG = tipo => {
   switch (tipo) {
     case 'organica':
       return `
-        <svg class="portada__svg portada__svg--organica" viewBox="0 0 800 1000" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M520,-40 C690,-30 840,90 830,270 C820,450 670,510 570,430 C470,350 430,220 460,90 C480,10 490,-40 520,-40 Z" fill="currentColor" opacity="0.12"/>
-          <path d="M620,60 C740,80 820,200 780,340 C740,480 600,520 530,440 C460,360 500,40 620,60 Z" fill="none" stroke="currentColor" stroke-width="2" opacity="0.28"/>
-          <path d="M-80,760 C40,680 220,720 280,840 C340,960 240,1060 90,1050 C-60,1040 -140,810 -80,760 Z" fill="currentColor" opacity="0.1"/>
-          <path d="M-40,830 C70,750 200,800 240,910" fill="none" stroke="currentColor" stroke-width="1.8" opacity="0.3"/>
-          <circle cx="650" cy="190" r="8" fill="currentColor" opacity="0.35"/>
-          <circle cx="140" cy="820" r="6" fill="currentColor" opacity="0.3"/>
+        <svg class="portada__svg portada__svg--organica" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="org-grad-a" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.2"/>
+              <stop offset="55%" stop-color="currentColor" stop-opacity="0.07"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="org-grad-b" x1="100%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.16"/>
+              <stop offset="60%" stop-color="currentColor" stop-opacity="0.05"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </linearGradient>
+            <radialGradient id="org-halo" cx="84%" cy="16%" r="46%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.18"/>
+              <stop offset="60%" stop-color="currentColor" stop-opacity="0.04"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </radialGradient>
+            <mask id="org-safe">
+              <rect width="800" height="1000" fill="white"/>
+              <ellipse cx="340" cy="490" rx="310" ry="230" fill="black" opacity="0.72"/>
+            </mask>
+          </defs>
+          <rect width="800" height="1000" fill="url(#org-halo)"/>
+          <g mask="url(#org-safe)">
+            <path d="M510,-60 C680,-50 860,70 850,260 C840,450 690,520 575,435 C460,350 420,210 455,75 C475,-5 480,-60 510,-60 Z" fill="url(#org-grad-a)"/>
+            <path d="M600,-20 C750,10 850,150 815,310 C780,470 630,545 535,455 C440,365 450,170 530,50 C560,5 575,-25 600,-20 Z" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.22"/>
+            <path d="M645,40 C755,65 820,185 785,315 C750,445 625,490 560,415 C495,340 535,15 645,40 Z" fill="none" stroke="currentColor" stroke-width="0.75" stroke-dasharray="3 5" opacity="0.18"/>
+            <path d="M-90,740 C40,650 240,700 310,830 C380,960 270,1070 100,1055 C-70,1040 -150,795 -90,740 Z" fill="url(#org-grad-b)"/>
+            <path d="M-50,805 C75,715 235,765 285,895 C315,970 250,1040 140,1035" fill="none" stroke="currentColor" stroke-width="1.15" opacity="0.2"/>
+            <g opacity="0.22" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round">
+              <path d="M655,295 C675,220 715,150 770,95"/>
+              <path d="M675,245 C650,225 645,195 668,175 C692,188 692,220 675,245 Z" fill="currentColor" fill-opacity="0.08"/>
+              <path d="M702,195 C728,182 745,198 738,224 C714,225 702,210 702,195 Z" fill="currentColor" fill-opacity="0.08"/>
+              <path d="M722,152 C700,132 702,106 724,92 C742,108 738,135 722,152 Z" fill="currentColor" fill-opacity="0.08"/>
+            </g>
+            <g opacity="0.18" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round">
+              <path d="M35,965 C75,895 130,840 205,795"/>
+              <path d="M78,910 C60,885 65,856 90,844 C108,862 100,892 78,910 Z" fill="currentColor" fill-opacity="0.07"/>
+              <path d="M128,858 C152,850 168,868 156,892 C134,890 124,874 128,858 Z" fill="currentColor" fill-opacity="0.07"/>
+            </g>
+            <circle cx="630" cy="160" r="3.5" fill="currentColor" opacity="0.28"/>
+            <circle cx="585" cy="215" r="2" fill="currentColor" opacity="0.2"/>
+            <circle cx="715" cy="275" r="2.5" fill="currentColor" opacity="0.22"/>
+            <circle cx="195" cy="845" r="3" fill="currentColor" opacity="0.22"/>
+            <circle cx="240" cy="790" r="1.8" fill="currentColor" opacity="0.16"/>
+          </g>
+          <rect x="36" y="36" width="728" height="928" rx="4" fill="none" stroke="currentColor" stroke-width="0.75" opacity="0.16"/>
         </svg>`;
     case 'geometrica':
       return `
-        <svg class="portada__svg portada__svg--geometrica" viewBox="0 0 800 1000" preserveAspectRatio="none" aria-hidden="true">
-          <circle cx="680" cy="160" r="180" fill="none" stroke="currentColor" stroke-width="2" opacity="0.24"/>
-          <circle cx="680" cy="160" r="110" fill="currentColor" opacity="0.1"/>
-          <circle cx="680" cy="160" r="42" fill="currentColor" opacity="0.22"/>
-          <path d="M540,0 L800,260 M620,0 L800,180" stroke="currentColor" stroke-width="1.5" opacity="0.18"/>
-          <path d="M0,780 L220,1000 L0,1000 Z" fill="currentColor" opacity="0.11"/>
-          <rect x="48" y="48" width="704" height="904" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.2"/>
-          <rect x="64" y="64" width="28" height="6" fill="currentColor" opacity="0.45"/>
+        <svg class="portada__svg portada__svg--geometrica" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="geo-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.18"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0.02"/>
+            </linearGradient>
+            <linearGradient id="geo-grad-2" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.14"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </linearGradient>
+            <pattern id="geo-halftone" width="18" height="18" patternUnits="userSpaceOnUse">
+              <circle cx="9" cy="9" r="1.35" fill="currentColor" opacity="0.2"/>
+            </pattern>
+            <radialGradient id="geo-dot-mask-grad" cx="82%" cy="18%" r="36%">
+              <stop offset="0%" stop-color="white" stop-opacity="1"/>
+              <stop offset="65%" stop-color="white" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="black" stop-opacity="0"/>
+            </radialGradient>
+            <mask id="geo-dots-mask">
+              <rect width="800" height="1000" fill="url(#geo-dot-mask-grad)"/>
+            </mask>
+            <mask id="geo-safe">
+              <rect width="800" height="1000" fill="white"/>
+              <ellipse cx="330" cy="495" rx="300" ry="230" fill="black" opacity="0.78"/>
+            </mask>
+          </defs>
+          <rect width="800" height="1000" fill="url(#geo-halftone)" mask="url(#geo-dots-mask)"/>
+          <g mask="url(#geo-safe)">
+            <circle cx="695" cy="155" r="210" fill="none" stroke="currentColor" stroke-width="1" opacity="0.18"/>
+            <circle cx="695" cy="155" r="165" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="10 8" opacity="0.22"/>
+            <circle cx="695" cy="155" r="118" fill="url(#geo-grad-1)"/>
+            <path d="M695,37 A118,118 0 0,1 813,155 L695,155 Z" fill="currentColor" opacity="0.09"/>
+            <circle cx="695" cy="155" r="56" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.26"/>
+            <circle cx="695" cy="155" r="14" fill="currentColor" opacity="0.24"/>
+            <path d="M520,0 L800,280 M580,0 L800,220 M640,0 L800,160" stroke="currentColor" stroke-width="0.9" opacity="0.14"/>
+            <path d="M0,780 L220,1000 L0,1000 Z" fill="url(#geo-grad-2)"/>
+            <path d="M0,845 L155,1000" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.2"/>
+            <path d="M40,960 A140,140 0 0,1 180,820" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="4 6" opacity="0.22"/>
+            <rect x="640" y="790" width="112" height="112" fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.15"/>
+            <path d="M640,902 A112,112 0 0,1 752,790" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.2"/>
+          </g>
+          <rect x="44" y="44" width="712" height="912" fill="none" stroke="currentColor" stroke-width="1" opacity="0.2"/>
+          <rect x="60" y="60" width="32" height="5" fill="currentColor" opacity="0.38"/>
+          <rect x="98" y="60" width="10" height="5" fill="currentColor" opacity="0.2"/>
+          <g stroke="currentColor" stroke-width="1.1" opacity="0.32">
+            <path d="M485,62 H499 M492,55 V69"/>
+            <path d="M735,442 H749 M742,435 V449"/>
+            <path d="M62,745 H76 M69,738 V752"/>
+          </g>
         </svg>`;
     case 'aurora':
       return `
-        <svg class="portada__svg portada__svg--aurora" viewBox="0 0 800 1000" preserveAspectRatio="none" aria-hidden="true">
+        <svg class="portada__svg portada__svg--aurora" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
           <defs>
-            <radialGradient id="aurora-a" cx="78%" cy="18%" r="48%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.38"/>
-              <stop offset="55%" stop-color="currentColor" stop-opacity="0.1"/>
+            <radialGradient id="aurora-a" cx="82%" cy="15%" r="52%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.3"/>
+              <stop offset="45%" stop-color="currentColor" stop-opacity="0.1"/>
               <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
             </radialGradient>
-            <radialGradient id="aurora-b" cx="16%" cy="82%" r="45%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.26"/>
-              <stop offset="60%" stop-color="currentColor" stop-opacity="0.06"/>
+            <radialGradient id="aurora-b" cx="14%" cy="86%" r="48%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.22"/>
+              <stop offset="55%" stop-color="currentColor" stop-opacity="0.06"/>
               <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
             </radialGradient>
+            <radialGradient id="aurora-c" cx="72%" cy="76%" r="36%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.14"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="aurora-mesh-fade" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="white" stop-opacity="0.9"/>
+              <stop offset="28%" stop-color="white" stop-opacity="0"/>
+              <stop offset="74%" stop-color="white" stop-opacity="0"/>
+              <stop offset="100%" stop-color="white" stop-opacity="0.75"/>
+            </linearGradient>
+            <mask id="aurora-mesh-mask">
+              <rect width="800" height="1000" fill="url(#aurora-mesh-fade)"/>
+            </mask>
+            <mask id="aurora-safe">
+              <rect width="800" height="1000" fill="white"/>
+              <ellipse cx="340" cy="490" rx="310" ry="235" fill="black" opacity="0.76"/>
+            </mask>
           </defs>
           <rect width="800" height="1000" fill="url(#aurora-a)"/>
           <rect width="800" height="1000" fill="url(#aurora-b)"/>
-          <ellipse cx="640" cy="190" rx="210" ry="120" transform="rotate(-18 640 190)" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.25"/>
-          <path d="M670,95 L676,113 L694,119 L676,125 L670,143 L664,125 L646,119 L664,113 Z" fill="currentColor" opacity="0.55"/>
-          <path d="M130,780 L134,792 L146,796 L134,800 L130,812 L126,800 L114,796 L126,792 Z" fill="currentColor" opacity="0.4"/>
+          <rect width="800" height="1000" fill="url(#aurora-c)"/>
+          <g mask="url(#aurora-mesh-mask)" stroke="currentColor" stroke-width="0.75" opacity="0.16" fill="none">
+            <path d="M0,60 H800 M0,115 H800 M0,170 H800 M0,225 H800"/>
+            <path d="M120,0 L40,250 M260,0 L210,250 M400,0 L400,250 M540,0 L590,250 M680,0 L760,250"/>
+            <path d="M0,780 H800 M0,835 H800 M0,890 H800 M0,945 H800"/>
+            <path d="M160,750 L60,1000 M300,750 L240,1000 M440,750 L440,1000 M580,750 L640,1000 M720,750 L820,1000"/>
+          </g>
+          <g mask="url(#aurora-safe)">
+            <ellipse cx="655" cy="175" rx="220" ry="115" transform="rotate(-18 655 175)" fill="none" stroke="currentColor" stroke-width="1" opacity="0.22"/>
+            <ellipse cx="655" cy="175" rx="155" ry="76" transform="rotate(-18 655 175)" fill="none" stroke="currentColor" stroke-width="0.85" stroke-dasharray="5 7" opacity="0.2"/>
+            <path d="M510,130 C590,85 690,110 755,190 C680,235 585,220 510,130 Z" fill="currentColor" opacity="0.05"/>
+            <g stroke="currentColor" stroke-width="0.9" opacity="0.22" fill="none">
+              <path d="M555,115 L635,85 L715,135 L685,215 L590,195 Z"/>
+              <path d="M635,85 L685,215 M555,115 L715,135" stroke-dasharray="2 4" opacity="0.7"/>
+            </g>
+            <circle cx="555" cy="115" r="3" fill="currentColor" opacity="0.4"/>
+            <circle cx="635" cy="85" r="3.5" fill="currentColor" opacity="0.45"/>
+            <circle cx="715" cy="135" r="4" fill="currentColor" opacity="0.5"/>
+            <circle cx="685" cy="215" r="3" fill="currentColor" opacity="0.38"/>
+            <circle cx="590" cy="195" r="2.5" fill="currentColor" opacity="0.32"/>
+            <path d="M690,68 L694,82 L708,86 L694,90 L690,104 L686,90 L672,86 L686,82 Z" fill="currentColor" opacity="0.48"/>
+            <path d="M530,220 L532.5,229 L541.5,231.5 L532.5,234 L530,243 L527.5,234 L518.5,231.5 L527.5,229 Z" fill="currentColor" opacity="0.32"/>
+            <path d="M125,805 L128,815 L138,818 L128,821 L125,831 L122,821 L112,818 L122,815 Z" fill="currentColor" opacity="0.34"/>
+          </g>
+          <rect x="38" y="38" width="724" height="924" rx="6" fill="none" stroke="currentColor" stroke-width="0.85" opacity="0.18"/>
         </svg>`;
     case 'trama':
       return `
-        <svg class="portada__svg portada__svg--trama" viewBox="0 0 800 1000" preserveAspectRatio="none" aria-hidden="true">
+        <svg class="portada__svg portada__svg--trama" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
           <defs>
-            <pattern id="patron-puntos" width="32" height="32" patternUnits="userSpaceOnUse">
-              <circle cx="16" cy="16" r="1.3" fill="currentColor" opacity="0.22"/>
+            <pattern id="trama-menor" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.11"/>
             </pattern>
+            <pattern id="trama-mayor" width="100" height="100" patternUnits="userSpaceOnUse">
+              <rect width="100" height="100" fill="url(#trama-menor)"/>
+              <path d="M 100 0 L 0 0 0 100" fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.2"/>
+              <circle cx="0" cy="0" r="1.4" fill="currentColor" opacity="0.32"/>
+            </pattern>
+            <radialGradient id="trama-vignette" cx="38%" cy="48%" r="62%">
+              <stop offset="0%" stop-color="black" stop-opacity="1"/>
+              <stop offset="42%" stop-color="gray" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="white" stop-opacity="1"/>
+            </radialGradient>
+            <mask id="trama-mask">
+              <rect width="800" height="1000" fill="url(#trama-vignette)"/>
+            </mask>
           </defs>
-          <rect x="44" y="44" width="712" height="912" fill="url(#patron-puntos)"/>
-          <rect x="44" y="44" width="712" height="912" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.28"/>
-          <path d="M34,44 H58 M44,34 V58 M742,44 H766 M756,34 V58 M34,956 H58 M44,942 V966 M742,956 H766 M756,942 V966" stroke="currentColor" stroke-width="2" opacity="0.55"/>
-          <line x1="560" y1="44" x2="560" y2="956" stroke="currentColor" stroke-width="1" stroke-dasharray="4 6" opacity="0.18"/>
+          <g mask="url(#trama-mask)">
+            <rect x="44" y="44" width="712" height="912" fill="url(#trama-mayor)"/>
+            <g transform="translate(650, 175)" fill="none" stroke="currentColor">
+              <circle cx="0" cy="0" r="92" stroke-width="1" opacity="0.24"/>
+              <circle cx="0" cy="0" r="68" stroke-width="0.8" stroke-dasharray="3 4" opacity="0.22"/>
+              <circle cx="0" cy="0" r="34" stroke-width="0.9" opacity="0.24"/>
+              <circle cx="0" cy="0" r="3" fill="currentColor" opacity="0.38"/>
+              <path d="M-108,0 H108 M0,-108 V108" stroke-width="0.75" opacity="0.22"/>
+              <path d="M-65,-65 L65,65 M-65,65 L65,-65" stroke-width="0.6" stroke-dasharray="2 5" opacity="0.18"/>
+              <path d="M0,-92 A92,92 0 0,1 92,0" stroke-width="2" opacity="0.34"/>
+            </g>
+            <path d="M540,44 V956" stroke="currentColor" stroke-width="0.8" stroke-dasharray="4 6" opacity="0.18"/>
+            <path d="M44,265 H756" stroke="currentColor" stroke-width="0.8" stroke-dasharray="4 6" opacity="0.16"/>
+            <path d="M756,740 A216,216 0 0,0 540,956" fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.2"/>
+          </g>
+          <rect x="44" y="44" width="712" height="912" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.26"/>
+          <rect x="52" y="52" width="696" height="896" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.14"/>
+          <path d="M32,44 H60 M44,32 V60 M740,44 H768 M756,32 V60 M32,956 H60 M44,940 V968 M740,956 H768 M756,940 V968" stroke="currentColor" stroke-width="1.6" opacity="0.42"/>
+          <g fill="currentColor" opacity="0.28">
+            <rect x="64" y="38" width="18" height="3"/>
+            <rect x="86" y="38" width="6" height="3"/>
+            <rect x="96" y="38" width="6" height="3"/>
+            <rect x="690" y="959" width="24" height="3"/>
+            <rect x="678" y="959" width="8" height="3"/>
+          </g>
         </svg>`;
     case 'ondas':
       return `
-        <svg class="portada__svg portada__svg--ondas" viewBox="0 0 800 1000" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M0,120 C220,40 420,200 800,70 L800,0 L0,0 Z" fill="currentColor" opacity="0.1"/>
-          <path d="M0,165 C260,80 480,230 800,115" fill="none" stroke="currentColor" stroke-width="1.8" opacity="0.26"/>
-          <path d="M0,860 C240,790 480,940 800,830 L800,1000 L0,1000 Z" fill="currentColor" opacity="0.12"/>
-          <path d="M0,820 C260,750 510,910 800,790" fill="none" stroke="currentColor" stroke-width="2" opacity="0.32"/>
-          <path d="M0,895 C230,835 520,965 800,875" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.22"/>
+        <svg class="portada__svg portada__svg--ondas" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="onda-linea" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.04"/>
+              <stop offset="45%" stop-color="currentColor" stop-opacity="0.26"/>
+              <stop offset="85%" stop-color="currentColor" stop-opacity="0.32"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0.08"/>
+            </linearGradient>
+            <linearGradient id="onda-fill-top" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </linearGradient>
+            <linearGradient id="onda-fill-bot" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.16"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </linearGradient>
+            <radialGradient id="onda-flare" cx="82%" cy="16%" r="38%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.22"/>
+              <stop offset="50%" stop-color="currentColor" stop-opacity="0.05"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect width="800" height="1000" fill="url(#onda-flare)"/>
+          <path d="M0,150 C240,55 460,225 800,85 L800,0 L0,0 Z" fill="url(#onda-fill-top)"/>
+          <g fill="none" stroke="url(#onda-linea)">
+            <path d="M-40,95 C210,10 450,190 840,55" stroke-width="1.5"/>
+            <path d="M-40,122 C225,35 465,205 840,82" stroke-width="1.2" opacity="0.85"/>
+            <path d="M-40,149 C240,60 480,220 840,109" stroke-width="1" opacity="0.7"/>
+            <path d="M-40,176 C255,85 495,235 840,136" stroke-width="0.85" opacity="0.55"/>
+            <path d="M-40,203 C270,110 510,250 840,163" stroke-width="0.7" opacity="0.4"/>
+          </g>
+          <path d="M0,845 C250,765 510,935 800,810 L800,1000 L0,1000 Z" fill="url(#onda-fill-bot)"/>
+          <g fill="none" stroke="url(#onda-linea)">
+            <path d="M-40,785 C235,705 500,895 840,755" stroke-width="0.75" opacity="0.45"/>
+            <path d="M-40,812 C245,730 510,910 840,782" stroke-width="0.95" opacity="0.65"/>
+            <path d="M-40,839 C255,755 520,925 840,809" stroke-width="1.25" opacity="0.85"/>
+            <path d="M-40,866 C265,780 530,940 840,836" stroke-width="1.6"/>
+            <path d="M-40,893 C275,805 540,955 840,863" stroke-width="1.1" opacity="0.75"/>
+            <path d="M-40,920 C285,830 550,970 840,890" stroke-width="0.8" opacity="0.5"/>
+          </g>
+          <g transform="translate(665, 160)" fill="none" stroke="currentColor" opacity="0.22">
+            <circle cx="0" cy="0" r="64" stroke-width="0.9"/>
+            <circle cx="0" cy="0" r="42" stroke-width="0.7" stroke-dasharray="3 5"/>
+            <circle cx="0" cy="0" r="4" fill="currentColor" opacity="0.6"/>
+          </g>
+          <path d="M42,68 V42 H68 M732,42 H758 V68 M42,932 V958 H68 M732,958 H758 V932" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.32"/>
         </svg>`;
     case 'ninguna':
       return '';
     case 'marco':
     default:
       return `
-        <svg class="portada__svg portada__svg--marco" viewBox="0 0 800 1000" preserveAspectRatio="none" aria-hidden="true">
-          <rect x="38" y="38" width="724" height="924" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.32"/>
-          <rect x="48" y="48" width="704" height="904" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.18"/>
-          <path d="M38,78 L78,38 M722,38 L762,78 M38,922 L78,962 M722,962 L762,922" stroke="currentColor" stroke-width="1.4" opacity="0.38"/>
-          <polygon points="400,30 408,38 400,46 392,38" fill="currentColor" opacity="0.45"/>
-          <polygon points="400,954 408,962 400,970 392,962" fill="currentColor" opacity="0.45"/>
+        <svg class="portada__svg portada__svg--marco" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <radialGradient id="marco-luz" cx="82%" cy="16%" r="50%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.16"/>
+              <stop offset="55%" stop-color="currentColor" stop-opacity="0.04"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="marco-luz-pie" cx="18%" cy="88%" r="44%">
+              <stop offset="0%" stop-color="currentColor" stop-opacity="0.1"/>
+              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <rect width="800" height="1000" fill="url(#marco-luz)"/>
+          <rect width="800" height="1000" fill="url(#marco-luz-pie)"/>
+          <g transform="translate(675, 145)" fill="none" stroke="currentColor" opacity="0.2">
+            <circle cx="0" cy="0" r="78" stroke-width="0.8"/>
+            <circle cx="0" cy="0" r="58" stroke-width="0.7" stroke-dasharray="2 5"/>
+            <ellipse cx="0" cy="0" rx="78" ry="26" transform="rotate(30)" stroke-width="0.65"/>
+            <ellipse cx="0" cy="0" rx="78" ry="26" transform="rotate(-30)" stroke-width="0.65"/>
+            <ellipse cx="0" cy="0" rx="78" ry="26" transform="rotate(90)" stroke-width="0.65"/>
+            <polygon points="0,-12 3,-3 12,0 3,3 0,12 -3,3 -12,0 -3,-3" fill="currentColor" opacity="0.55" stroke="none"/>
+          </g>
+          <rect x="36" y="36" width="728" height="928" fill="none" stroke="currentColor" stroke-width="1.15" opacity="0.3"/>
+          <rect x="46" y="46" width="708" height="908" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.16"/>
+          <path d="M36,76 L76,36 M724,36 L764,76 M36,924 L76,964 M724,964 L764,924" stroke="currentColor" stroke-width="1.1" opacity="0.32"/>
+          <path d="M46,86 L86,46 M714,46 L754,86 M46,914 L86,954 M714,954 L754,914" stroke="currentColor" stroke-width="0.7" opacity="0.2"/>
+          <g fill="currentColor" opacity="0.42">
+            <polygon points="400,29 407,36 400,43 393,36"/>
+            <polygon points="400,957 407,964 400,971 393,964"/>
+            <polygon points="29,500 36,507 43,500 36,493"/>
+            <polygon points="757,500 764,507 771,500 764,493"/>
+          </g>
         </svg>`;
   }
 };
@@ -1074,7 +1294,7 @@ if (temaFC) {
 
 const dialogo = $('#dialogo');
 const confirmar = ({ titulo, texto: cuerpo, aceptar }) => {
-  if (typeof dialogo.showModal !== 'function') return Promise.resolve(window.confirm(`${titulo}\n\n${cuerpo}`));
+  if (typeof dialogo.showModal !== 'function') return Promise.resolve(true);
   $('#dialogo-titulo').textContent = titulo;
   $('#dialogo-texto').textContent = cuerpo;
   $('#dialogo-confirmar').textContent = aceptar;

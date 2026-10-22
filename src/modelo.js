@@ -21,12 +21,12 @@ export const FUENTES_CUERPO = [
 ];
 
 export const DECORACIONES = {
-  marco: { nombre: 'Marco de galería', desc: 'Doble filete fino y esquineros editoriales' },
-  organica: { nombre: 'Formas orgánicas', desc: 'Curvas fluidas y hojas abstractas tipo Canva' },
-  geometrica: { nombre: 'Bauhaus geométrica', desc: 'Círculos, arcos y diagonales de alto impacto' },
-  aurora: { nombre: 'Destellos aurora', desc: 'Orbes de luz difuminada y brillos suaves' },
-  trama: { nombre: 'Trama técnica', desc: 'Matriz de puntos y marcas de precisión' },
-  ondas: { nombre: 'Ondas dinámicas', desc: 'Capas curvas fluidas al pie y en cabeceras' },
+  marco: { nombre: 'Marco de galería', desc: 'Doble filete áureo, rosetón editorial y esquineros' },
+  organica: { nombre: 'Botánica orgánica', desc: 'Capas acuareladas, follaje fino y curvas fluidas' },
+  geometrica: { nombre: 'Estudio Bauhaus', desc: 'Trama semitono, arcos concéntricos y marcas suizas' },
+  aurora: { nombre: 'Aurora & Red Tech', desc: 'Nebulosas de luz, malla en perspectiva y constelación' },
+  trama: { nombre: 'Plano & Compás CAD', desc: 'Grilla milimétrica con viñeta, compás áureo y cotas' },
+  ondas: { nombre: 'Ondas armónicas', desc: 'Líneas guilloché fluidas, destello óptico y visor 4K' },
   ninguna: { nombre: 'Sin decoración', desc: 'Fondo limpio y despojado' }
 };
 
