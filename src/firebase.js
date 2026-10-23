@@ -6,12 +6,12 @@ import 'firebase/compat/firestore';
 import 'firebase/compat/storage';
 
 const firebaseConfig = {
-  apiKey:            'AIzaSyA4fAtms8k5hOEvtFiTnf6B2ijg2jiWDtg',
-  authDomain:        'dealitnow.vercel.app',
-  projectId:         'dealit-7f735',
-  storageBucket:     'dealit-7f735.firebasestorage.app',
+  apiKey: 'AIzaSyA4fAtms8k5hOEvtFiTnf6B2ijg2jiWDtg',
+  authDomain: 'dealitnow.vercel.app',
+  projectId: 'dealit-7f735',
+  storageBucket: 'dealit-7f735.firebasestorage.app',
   messagingSenderId: '837213426465',
-  appId:             '1:837213426465:web:91f1c863f453efe950e460'
+  appId: '1:837213426465:web:91f1c863f453efe950e460'
 };
 
 const crearAteneaDB = () => {
@@ -29,7 +29,7 @@ const crearAteneaDB = () => {
 
   const auth = firebase.auth();
   auth.languageCode = 'es'; // emails de verificación y de contraseña en español
-  const db   = firebase.firestore();
+  const db = firebase.firestore();
 
   // Caché local en IndexedDB: el editor funciona sin conexión y sincroniza al volver.
   // Tiene que pedirse antes de cualquier otra operación sobre Firestore.
@@ -42,7 +42,7 @@ const crearAteneaDB = () => {
   let _unsubSnapshots = [];
 
   const getUser = () => auth.currentUser;
-  const getUid  = () => { const u = getUser(); if (!u) throw new Error('No autenticado'); return u.uid; };
+  const getUid = () => { const u = getUser(); if (!u) throw new Error('No autenticado'); return u.uid; };
 
   const onAuthChange = callback => auth.onAuthStateChanged(callback);
 
@@ -147,12 +147,12 @@ const crearAteneaDB = () => {
   // Solo estos campos se escriben; userId y createdAt nunca vienen de quien llama.
   const _camposEditables = (data) => {
     const limpio = {};
-    if ('title' in data)      limpio.title      = String(data.title ?? '').slice(0, LARGO_MAX);
+    if ('title' in data) limpio.title = String(data.title ?? '').slice(0, LARGO_MAX);
     if ('clientName' in data) limpio.clientName = String(data.clientName ?? '').slice(0, LARGO_MAX);
-    if ('amount' in data)     limpio.amount     = Number.isFinite(data.amount) ? data.amount : 0;
-    if ('theme' in data)      limpio.theme      = String(data.theme ?? '');
-    if ('payload' in data)    limpio.payload    = data.payload && typeof data.payload === 'object' ? data.payload : {};
-    if ('publico' in data)    limpio.publico    = data.publico === true;
+    if ('amount' in data) limpio.amount = Number.isFinite(data.amount) ? data.amount : 0;
+    if ('theme' in data) limpio.theme = String(data.theme ?? '');
+    if ('payload' in data) limpio.payload = data.payload && typeof data.payload === 'object' ? data.payload : {};
+    if ('publico' in data) limpio.publico = data.publico === true;
     if ('status' in data && ESTADOS.includes(data.status)) limpio.status = data.status;
     return limpio;
   };
@@ -166,8 +166,8 @@ const crearAteneaDB = () => {
     await _colProposals().doc(id).set({
       title: '', clientName: '', amount: 0, theme: 'elegante-oscuro', payload: {},
       ..._camposEditables(data),
-      status:    'draft',
-      userId:    getUid(),
+      status: 'draft',
+      userId: getUid(),
       createdAt: ahora,
       updatedAt: ahora
     });
@@ -229,6 +229,85 @@ const crearAteneaDB = () => {
       callback(docs);
     }, err => {
       console.error('Error en snapshot de propuestas:', err);
+      if (alFallar) alFallar(err);
+    });
+    _unsubSnapshots.push(unsub);
+    return unsub;
+  };
+
+
+  const _colPortfolios = () => db.collection('portfolios');
+
+  const _baseQueryPortfolios = () =>
+    _colPortfolios()
+      .where('userId', '==', getUid())
+      .orderBy('createdAt', 'desc');
+
+  const _camposEditablesPortafolio = (data) => {
+    const limpio = {};
+    if ('title' in data) limpio.title = String(data.title ?? '').slice(0, LARGO_MAX);
+    if ('subtitle' in data) limpio.subtitle = String(data.subtitle ?? '').slice(0, LARGO_MAX);
+    if ('projectCount' in data) limpio.projectCount = Number.isFinite(data.projectCount) ? Math.max(0, Math.round(data.projectCount)) : 0;
+    if ('theme' in data) limpio.theme = String(data.theme ?? '');
+    if ('payload' in data) limpio.payload = data.payload && typeof data.payload === 'object' ? data.payload : {};
+    if ('publico' in data) limpio.publico = data.publico === true;
+    return limpio;
+  };
+
+  const nuevoIdPortafolio = () => _colPortfolios().doc().id;
+
+  const crearPortafolio = async (data, id = nuevoIdPortafolio()) => {
+    const ahora = firebase.firestore.FieldValue.serverTimestamp();
+    await _colPortfolios().doc(id).set({
+      title: '', subtitle: '', projectCount: 0, theme: 'elegante-oscuro', payload: {},
+      publico: false,
+      ..._camposEditablesPortafolio(data),
+      userId: getUid(),
+      createdAt: ahora,
+      updatedAt: ahora
+    });
+    return id;
+  };
+
+  const obtenerPortafolio = async (id) => {
+    const snap = await _colPortfolios().doc(id).get();
+    if (!snap.exists) return null;
+    const data = snap.data();
+    if (data.userId !== getUid()) return null;
+    return { id: snap.id, ...data };
+  };
+
+  const obtenerPortafolioPublico = async (id) => {
+    try {
+      const snap = await _colPortfolios().doc(id).get();
+      if (!snap.exists || !snap.data().payload) return null;
+      const { payload } = snap.data();
+      return { payload };
+    } catch (e) {
+      if (e.code === 'permission-denied') return null;
+      throw e;
+    }
+  };
+
+  const listarPortafolios = async (limite = 50) => {
+    const snap = await _baseQueryPortfolios().limit(limite).get();
+    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  };
+
+  const actualizarPortafolio = (id, cambios) =>
+    _colPortfolios().doc(id).update({
+      ..._camposEditablesPortafolio(cambios),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+  const borrarPortafolio = (id) => _colPortfolios().doc(id).delete();
+
+  const escucharPortafolios = (callback, alFallar, limite = 100) => {
+    const unsub = _baseQueryPortfolios().limit(limite).onSnapshot(snap => {
+      const docs = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
+      callback(docs);
+    }, err => {
+      console.error('Error en snapshot de portafolios:', err);
       if (alFallar) alFallar(err);
     });
     _unsubSnapshots.push(unsub);
@@ -308,6 +387,17 @@ const crearAteneaDB = () => {
       await lote.commit();
     }
 
+    try {
+      const portafolios = await _colPortfolios().where('userId', '==', uid).get();
+      for (let i = 0; i < portafolios.docs.length; i += 400) {
+        const lote = db.batch();
+        portafolios.docs.slice(i, i + 400).forEach(d => lote.delete(d.ref));
+        await lote.commit();
+      }
+    } catch (e) {
+      console.warn('No se pudieron borrar los portafolios:', e);
+    }
+
     if (storage) {
       try {
         const logos = await storage.ref(`users/${uid}/logos`).listAll();
@@ -334,15 +424,25 @@ const crearAteneaDB = () => {
     logos: { subir: subirLogo, prefijoURL: PREFIJO_URL_LOGO },
     perfil: { obtener: obtenerPerfil, guardar: guardarPerfil },
     proposals: {
-      nuevoId:    nuevoIdPropuesta,
-      crear:      crearPropuesta,
-      obtener:    obtenerPropuesta,
+      nuevoId: nuevoIdPropuesta,
+      crear: crearPropuesta,
+      obtener: obtenerPropuesta,
       obtenerPublica,
-      listar:     listarPropuestas,
-      listarPor:  listarPorEstado,
+      listar: listarPropuestas,
+      listarPor: listarPorEstado,
       actualizar: actualizarPropuesta,
-      borrar:     borrarPropuesta,
-      escuchar:   escucharPropuestas
+      borrar: borrarPropuesta,
+      escuchar: escucharPropuestas
+    },
+    portfolios: {
+      nuevoId: nuevoIdPortafolio,
+      crear: crearPortafolio,
+      obtener: obtenerPortafolio,
+      obtenerPublico: obtenerPortafolioPublico,
+      listar: listarPortafolios,
+      actualizar: actualizarPortafolio,
+      borrar: borrarPortafolio,
+      escuchar: escucharPortafolios
     }
   };
 };

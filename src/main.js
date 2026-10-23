@@ -22,10 +22,17 @@ import {
   ESTILOS_BLOQUES,
   TEMAS,
   PLANTILLAS,
+  PLANTILLAS_PORTAFOLIO,
   LISTAS,
+  LISTAS_PORTAFOLIO,
+  uid,
   vacio,
+  vacioPortafolio,
   ejemplo,
+  ejemploPortafolio,
   normalizarPropuesta,
+  normalizarPortafolio,
+  resumenPortafolio,
   totalServicio,
   calcularTotales
 } from './modelo.js';
@@ -36,14 +43,18 @@ import {
 import { MENSAJES_ACEPTACION, NOMBRE_MIN, limpiarNombre } from './aceptacion.js';
 
 const CLAVE = 'generador-propuestas-v1';
+const CLAVE_PORTAFOLIOS = 'generador-portafolios-v1';
 const LOGO_MAX_ARCHIVO = 5 * 1024 * 1024;
 const LOGO_MAX_LINK = 40000;
 const PREFIJO = '#p=';
+const PREFIJO_PORTAFOLIO = '#f=';
 const RUTA_LINK = /^\/p\/([A-Za-z0-9]{20})\/?$/; // IDs de Firestore: 20 caracteres
+const RUTA_PORTAFOLIO = /^\/portafolio\/([A-Za-z0-9]{20})\/?$/;
 
 const ICONO_SUMAR = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>';
 const ICONO_SUMADO = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
 const ICONO_CHECK = '<svg class="icono-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6.5"/></svg>';
+const ICONO_EXTERNO = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5h6.5V10M12 4L4.5 11.5"/></svg>';
 
 let svgSecuencia = 0;
 
@@ -299,6 +310,7 @@ const decoracionPortadaSVG = (tipo, opacidadPct = 100, colorHex = '') => {
 };
 
 const normalizar = datos => normalizarPropuesta(datos, { logoValido: esLogoValido });
+const normalizarPf = datos => normalizarPortafolio(datos, { logoValido: esLogoValido });
 
 const leerLocal = clave => {
   try {
@@ -313,6 +325,14 @@ const leerLocal = clave => {
 const cargarGuardado = () => leerLocal(CLAVE);
 
 let estado = vacio();
+let estadoPortafolio = vacioPortafolio();
+let modoEditor = 'propuesta'; // 'propuesta' | 'portafolio'
+const docActivo = () => (modoEditor === 'portafolio' ? estadoPortafolio : estado);
+let portafolioId = null;
+let portafolios = [];
+let portafoliosCargando = false;
+let portafoliosError = false;
+let dejarDeEscucharPortafolios = null;
 let seleccion = new Set();
 let esCliente = false;
 // Link corto abierto por el cliente: { id, aceptacion }. aceptacion es null hasta que acepta.
@@ -336,20 +356,21 @@ const vigencia = () => {
   return { fecha, vence, restantes, vencida: restantes < 0 };
 };
 
-const digitosWhatsApp = () => estado.emisor.telefono.replace(/\D/g, '');
+const digitosWhatsApp = (em = docActivo().emisor) => (em?.telefono || '').replace(/\D/g, '');
 
-const enlaceWhatsApp = mensaje => {
-  const d = digitosWhatsApp();
+const enlaceWhatsApp = (mensaje, em = docActivo().emisor) => {
+  const d = digitosWhatsApp(em);
   return d.length >= 8 ? `https://wa.me/${d}?text=${encodeURIComponent(mensaje)}` : '';
 };
 
-const enlaceEmail = (asunto, mensaje) => {
-  const mail = estado.emisor.email.trim();
+const enlaceEmail = (asunto, mensaje, em = docActivo().emisor) => {
+  const mail = (em?.email || '').trim();
   return mail ? `mailto:${mail}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(mensaje)}` : '';
 };
 
-const nombreEmisor = () => estado.emisor.nombre.trim();
+const nombreEmisor = (em = docActivo().emisor) => (em?.nombre || '').trim();
 const tituloPropuesta = () => estado.propuesta.titulo.trim() || 'la propuesta';
+const tituloPortafolio = () => estadoPortafolio.portafolio.titulo.trim() || estadoPortafolio.portafolio.nombreInterno.trim() || 'tu portfolio';
 
 const mensajeConsulta = () => `Hola${nombreEmisor() ? ` ${nombreEmisor().split(' ')[0]}` : ''}, tengo una consulta sobre la propuesta «${tituloPropuesta()}».`;
 
@@ -413,6 +434,60 @@ const datosParaGuardar = e => {
   };
 };
 
+
+const datosPortafolioParaGuardar = pf => {
+  const payload = JSON.stringify(pf);
+  if (payload.length > PAYLOAD_MAX) return null;
+  const proyectosValidos = (pf.proyectos || []).filter(p => p.titulo.trim() || p.descripcion.trim() || p.imagen);
+  return {
+    title: pf.portafolio.nombreInterno.trim() || pf.portafolio.titulo.trim() || 'Portfolio sin título',
+    subtitle: pf.portafolio.subtitulo.trim() || pf.emisor.rol.trim(),
+    projectCount: proyectosValidos.length,
+    theme: pf.tema.preset,
+    payload: JSON.parse(payload)
+  };
+};
+
+const cargarPortafoliosLocales = () => {
+  try {
+    const crudo = localStorage.getItem(CLAVE_PORTAFOLIOS);
+    if (crudo) {
+      const arr = JSON.parse(crudo);
+      if (Array.isArray(arr) && arr.length) {
+        return arr.map(item => {
+          const payload = normalizarPf(item.payload || item);
+          const meta = datosPortafolioParaGuardar(payload) || { title: 'Portfolio', subtitle: '', projectCount: 0, theme: 'elegante-oscuro', payload };
+          return {
+            id: item.id || uid(),
+            ...meta,
+            publico: !!item.publico,
+            updatedAt: item.updatedAt || new Date().toISOString()
+          };
+        });
+      }
+    }
+  } catch { }
+  // Por defecto inicializamos dos portfolios de muestra (uno con casos reales y otro conceptual)
+  const p1 = normalizarPf(PLANTILLAS_PORTAFOLIO['diseno-web'].crear());
+  const p2 = normalizarPf(PLANTILLAS_PORTAFOLIO['conceptos-expertise'].crear());
+  const iniciales = [
+    { id: 'pf-diseno-demo', ...datosPortafolioParaGuardar(p1), publico: true, updatedAt: new Date().toISOString() },
+    { id: 'pf-conceptos-demo', ...datosPortafolioParaGuardar(p2), publico: true, updatedAt: new Date(Date.now() - 3600000).toISOString() }
+  ];
+  try { localStorage.setItem(CLAVE_PORTAFOLIOS, JSON.stringify(iniciales)); } catch { }
+  return iniciales;
+};
+
+const guardarPortafoliosLocales = () => {
+  try {
+    localStorage.setItem(CLAVE_PORTAFOLIOS, JSON.stringify(portafolios));
+    errorGuardado = '';
+  } catch {
+    fallarGuardado('No se pudo guardar el portfolio en este navegador. Usá «Guardar borrador» para no perder los cambios.');
+  }
+  mostrarEstadoGuardado();
+};
+
 // Todas las escrituras pasan por acá: así el estado de guardado y el cierre de
 // sesión saben si queda algo por llegar al servidor.
 const registrarEscritura = (promesa, mensajeError) => {
@@ -447,11 +522,52 @@ const guardarLocal = () => {
   mostrarEstadoGuardado();
 };
 
+const sincronizarPortafolioEnPropuesta = () => {
+  const pfId = estado.opciones?.portafolioId || '';
+  if (!pfId) {
+    if (estado.opciones) delete estado.opciones.portafolio;
+    return;
+  }
+  const pfDoc = portafolios.find(x => x.id === pfId);
+  if (pfDoc) {
+    estado.opciones.portafolio = resumenPortafolio(pfDoc.payload, pfDoc.id, pfDoc.publico);
+  }
+};
+
 const guardarAhora = () => {
   clearTimeout(temporizadorGuardado);
   temporizadorGuardado = null;
   if (!editando) return;
   const db = nube();
+  if (modoEditor === 'portafolio') {
+    const datosPf = datosPortafolioParaGuardar(estadoPortafolio);
+    if (!datosPf) {
+      fallarGuardado(AVISO_PESADA);
+      mostrarEstadoGuardado();
+      return;
+    }
+    if (portafolioId) {
+      const idx = portafolios.findIndex(x => x.id === portafolioId);
+      const actualizado = {
+        ...(idx >= 0 ? portafolios[idx] : { id: portafolioId, publico: false }),
+        ...datosPf,
+        updatedAt: new Date().toISOString()
+      };
+      if (idx >= 0) portafolios[idx] = actualizado;
+      else portafolios.unshift(actualizado);
+    }
+    if (!db || !AteneaDB?.portfolios) {
+      guardarPortafoliosLocales();
+      actualizarSelectorPortafolio();
+      return;
+    }
+    if (!portafolioId) return;
+    return registrarEscritura(
+      db.portfolios.actualizar(portafolioId, datosPf),
+      'No se pudieron guardar los últimos cambios del portfolio en tu cuenta.'
+    );
+  }
+  sincronizarPortafolioEnPropuesta();
   if (!db) return guardarLocal();
   if (!propuestaId) return;
   const datos = datosParaGuardar(estado);
@@ -511,7 +627,7 @@ const migrarLocal = () => {
   const creada = crearEnCuenta(contenido);
   if (!creada) return null;
   creada.listo.then(ok => {
-    if (ok) try { localStorage.removeItem(clave); } catch {}
+    if (ok) try { localStorage.removeItem(clave); } catch { }
   });
   avisar('Guardamos en tu cuenta la propuesta que armaste.', 6000);
   return { id: creada.id, contenido };
@@ -575,7 +691,8 @@ const actualizarAvisoPagos = () => {
 };
 
 const actualizarLogo = () => {
-  const logo = estado.emisor.logo;
+  const actual = docActivo();
+  const logo = actual.emisor.logo;
   const vistaLogo = $('#logo-vista');
   vistaLogo.hidden = !logo;
   if (logo) vistaLogo.src = logo;
@@ -584,7 +701,130 @@ const actualizarLogo = () => {
   $('#logo-texto').textContent = logo ? 'Cambiar logo' : 'Subir logo';
 };
 
+const actualizarSelectorPortafolio = () => {
+  const sel = $('#propuesta-portafolio-select');
+  if (!sel) return;
+  const valorActual = estado.opciones?.portafolioId || '';
+  const opcionesHTML = [
+    '<option value="">No incluir portfolio en esta propuesta</option>',
+    ...portafolios.map(pf => {
+      const nombre = texto(pf.title).trim() || 'Portfolio sin título';
+      const cant = Number(pf.projectCount) || (pf.payload?.proyectos?.length || 0);
+      const detalle = cant === 1 ? '1 proyecto' : `${cant} proyectos`;
+      return `<option value="${esc(pf.id)}">${esc(nombre)} (${detalle})</option>`;
+    })
+  ];
+  if (valorActual && !portafolios.some(pf => pf.id === valorActual) && estado.opciones?.portafolio?.titulo) {
+    opcionesHTML.push(`<option value="${esc(valorActual)}">${esc(estado.opciones.portafolio.titulo)} (vinculado)</option>`);
+  }
+  sel.innerHTML = opcionesHTML.join('');
+  sel.value = valorActual;
+};
+
+const actualizarImagenProyectoItem = (nodo, item) => {
+  const img = $('[data-pf-img-vista]', nodo);
+  const btnQuitar = $('[data-pf-img-quitar]', nodo);
+  const txt = $('[data-pf-img-texto]', nodo);
+  const tiene = !!item.imagen;
+  if (img) {
+    img.hidden = !tiene;
+    if (tiene) img.src = item.imagen;
+    else img.removeAttribute('src');
+  }
+  if (btnQuitar) btnQuitar.hidden = !tiene;
+  if (txt) txt.textContent = tiene ? 'Cambiar imagen' : 'Subir imagen';
+};
+
+const renderListaPortafolio = nombre => {
+  const conf = LISTAS_PORTAFOLIO[nombre];
+  const contenedor = $(`.lista[data-lista-pf="${nombre}"]`);
+  const plantilla = $(`#tpl-${nombre}`);
+  if (!conf || !contenedor || !plantilla) return;
+  const arr = obtener(estadoPortafolio, conf.ruta);
+  const nodos = arr.map((item, i) => {
+    const nodo = plantilla.content.firstElementChild.cloneNode(true);
+    nodo.dataset.indicePf = i;
+    $$('[data-item-pf]', nodo).forEach(el => {
+      const v = item[el.dataset.itemPf];
+      if (el.type === 'checkbox') el.checked = !!v;
+      else el.value = v ?? '';
+    });
+    const orden = $('[data-orden]', nodo);
+    if (orden) orden.textContent = i + 1;
+    const controles = $('[data-controles]', nodo);
+    controles.append(plantillaControles.content.cloneNode(true));
+    const [subir, bajar, quitar] = controles.children;
+    subir.disabled = i === 0;
+    bajar.disabled = i === arr.length - 1;
+    subir.setAttribute('aria-label', `Subir ${conf.nombre} ${i + 1}`);
+    bajar.setAttribute('aria-label', `Bajar ${conf.nombre} ${i + 1}`);
+    quitar.setAttribute('aria-label', `Quitar ${conf.nombre} ${i + 1}`);
+    if (nombre === 'proyectos') actualizarImagenProyectoItem(nodo, item);
+    return nodo;
+  });
+  contenedor.replaceChildren(...nodos);
+};
+
+const renderListasPortafolio = () => Object.keys(LISTAS_PORTAFOLIO).forEach(renderListaPortafolio);
+
+const sincronizarModoEditorUI = () => {
+  const esPf = modoEditor === 'portafolio';
+  const pasosProp = $('#pasos-propuesta');
+  const pasosPf = $('#pasos-portafolio');
+  const wrapTplProp = $('#plantillas-propuesta-wrap');
+  const wrapTplPf = $('#plantillas-portafolio-wrap');
+  const campoVincularPf = $('#campo-vincular-portafolio');
+  const subtituloBarra = $('#barra-subtitulo');
+  const tituloEditor = $('#editor-titulo');
+  const bajadaEditor = $('#editor-bajada');
+  const volverLink = $('#editor-volver');
+  const volverTexto = $('#editor-volver-texto');
+  const btnOtraSeccion = $('#editor-ir-otra-seccion');
+  const grupoActual = $('#menu-grupo-actual');
+
+  if (pasosProp) pasosProp.hidden = esPf;
+  if (pasosPf) pasosPf.hidden = !esPf;
+  if (wrapTplProp) wrapTplProp.hidden = esPf;
+  if (wrapTplPf) wrapTplPf.hidden = !esPf;
+  if (campoVincularPf) campoVincularPf.hidden = esPf;
+  if (subtituloBarra) subtituloBarra.textContent = esPf ? 'Armá tu portfolio' : 'Generá tu propuesta';
+  if (tituloEditor) tituloEditor.textContent = esPf ? 'Armá tu portfolio' : 'Armá tu propuesta';
+  if (bajadaEditor) {
+    bajadaEditor.textContent = esPf
+      ? 'Creá un portfolio a medida para cada rubro o tipo de cliente. Podés compartirlo como link propio o sumarlo a tus propuestas.'
+      : 'Elegí una plantilla, escribí tus datos y mandala como link interactivo: el diseño se arma solo.';
+  }
+  if (volverLink) {
+    volverLink.dataset.accion = esPf ? 'ir-portafolios' : 'ir-panel';
+    volverLink.href = esPf ? '/?seccion=portafolios' : '/';
+  }
+  if (volverTexto) volverTexto.textContent = esPf ? 'Mis portfolios' : 'Mis propuestas';
+  if (btnOtraSeccion) {
+    btnOtraSeccion.dataset.accion = esPf ? 'ir-panel' : 'ir-portafolios';
+    btnOtraSeccion.textContent = esPf ? 'Ir a Mis propuestas →' : 'Ir a Mis portfolios →';
+  }
+  if (grupoActual) grupoActual.textContent = esPf ? 'Portfolio actual' : 'Propuesta actual';
+};
+
 const llenarFormulario = () => {
+  sincronizarModoEditorUI();
+  const actual = docActivo();
+  if (modoEditor === 'portafolio') {
+    $$('[data-campo^="emisor."]').forEach(el => {
+      const v = obtener(estadoPortafolio, el.dataset.campo);
+      el.value = v ?? '';
+    });
+    $$('[data-campo-pf]').forEach(el => {
+      const v = obtener(estadoPortafolio, el.dataset.campoPf);
+      if (el.type === 'checkbox') el.checked = !!v;
+      else el.value = v ?? '';
+    });
+    actualizarLogo();
+    renderListasPortafolio();
+    llenarTemaEditor();
+    return;
+  }
+  actualizarSelectorPortafolio();
   $$('[data-campo]').forEach(el => {
     const v = obtener(estado, el.dataset.campo);
     if (el.type === 'checkbox') el.checked = !!v;
@@ -614,8 +854,8 @@ const servicioHTML = (s, moneda, web) => {
   const boton = web && s.opcional && aceptada()
     ? (sumado ? `<span class="servicio__incluido">${ICONO_SUMADO} Incluido en la aceptación</span>` : '')
     : web && s.opcional
-    ? `<button type="button" class="servicio__sumar" data-accion="sumar" data-id="${esc(s.id)}" aria-pressed="${sumado}">${sumado ? `${ICONO_SUMADO} Sumado a la propuesta` : `${ICONO_SUMAR} Sumar a la propuesta`}</button>`
-    : '';
+      ? `<button type="button" class="servicio__sumar" data-accion="sumar" data-id="${esc(s.id)}" aria-pressed="${sumado}">${sumado ? `${ICONO_SUMADO} Sumado a la propuesta` : `${ICONO_SUMAR} Sumar a la propuesta`}</button>`
+      : '';
   return `
     <div class="servicio${s.opcional ? ' servicio--opcional' : ''}${sumado ? ' servicio--sumado' : ''}">
       <div class="servicio__cabecera">
@@ -665,8 +905,8 @@ const barraClienteHTML = (c, vig) => {
   const accion = aceptada()
     ? '<span class="barra-cliente__aceptada">Propuesta aceptada</span>'
     : vig.vencida
-    ? (consulta ? `<a class="boton boton--primario" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a>` : '')
-    : `<button type="button" class="boton boton--primario" data-accion="aceptar">Aceptar propuesta</button>`;
+      ? (consulta ? `<a class="boton boton--primario" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a>` : '')
+      : `<button type="button" class="boton boton--primario" data-accion="aceptar">Aceptar propuesta</button>`;
   return `
     <div class="barra-cliente">
       <div>
@@ -721,7 +961,7 @@ const cierreHTML = vig => {
 
 let observador;
 const OBS_SEL = '.bloque, .resumen, .cierre, .pie, .doc-aviso';
-const HIJO_SEL = '.servicio, .etapa';
+const HIJO_SEL = '.servicio, .etapa, .proyecto-card';
 let animacionInicialLista = false;
 const observarElementos = raiz => {
   if (observador) observador.disconnect();
@@ -801,7 +1041,7 @@ const mezclarColores = (hex1, hex2, peso) => {
   return rgbAHex(r1 + (r2 - r1) * peso, g1 + (g2 - g1) * peso, b1 + (b2 - b1) * peso);
 };
 
-const resolverColoresTema = (t = estado.tema) => {
+const resolverColoresTema = (t = docActivo().tema) => {
   const preset = TEMAS[t.preset] || TEMAS['elegante-oscuro'];
   const esClaro = preset.modo === 'claro';
   const acento = esHexValido(t.acento) ? t.acento : preset.acento;
@@ -885,7 +1125,7 @@ const resolverColoresTema = (t = estado.tema) => {
 };
 
 const aplicarTema = doc => {
-  const t = estado.tema;
+  const t = docActivo().tema;
   const col = resolverColoresTema(t);
   const { preset, esClaro, acento } = col;
 
@@ -939,7 +1179,210 @@ const aplicarTema = doc => {
   }
 };
 
+
+const proyectoConContenido = p => p && (p.titulo.trim() || p.descripcion.trim() || p.imagen);
+
+const proyectoCardHTML = (p, idx, web) => {
+  const tags = texto(p.tags).split(/[,\n]/).map(t => t.trim()).filter(Boolean);
+  const urlRaw = texto(p.enlace).trim();
+  const url = urlRaw ? (/^https?:\/\//i.test(urlRaw) ? urlRaw : `https://${urlRaw}`) : '';
+  const media = p.imagen
+    ? `<div class="proyecto-card__media"><img src="${esc(p.imagen)}" alt="${esc(p.titulo || 'Proyecto')}"></div>`
+    : `<div class="proyecto-card__arte" aria-hidden="true">
+        <div class="proyecto-card__arte-top">
+          <span class="proyecto-card__arte-indice">${String(idx + 1).padStart(2, '0')}</span>
+          ${p.destacado.trim() ? `<span class="proyecto-card__destacado">${esc(p.destacado.trim())}</span>` : ''}
+        </div>
+        <span class="proyecto-card__arte-titular">${esc(p.titulo.trim() || 'Proyecto destacado')}</span>
+      </div>`;
+  return `
+    <article class="proyecto-card">
+      ${media}
+      <div class="proyecto-card__cuerpo">
+        ${(p.categoria.trim() || (p.imagen && p.destacado.trim())) ? `
+          <div class="proyecto-card__chips">
+            ${p.categoria.trim() ? `<span class="proyecto-card__chip">${esc(p.categoria.trim())}</span>` : ''}
+            ${p.imagen && p.destacado.trim() ? `<span class="proyecto-card__destacado">${esc(p.destacado.trim())}</span>` : ''}
+          </div>` : ''}
+        <h3 class="proyecto-card__titulo">${p.titulo.trim() ? esc(p.titulo) : vacioHTML('Proyecto sin título')}</h3>
+        ${p.subtitulo.trim() ? `<p class="proyecto-card__subtitulo">${esc(p.subtitulo.trim())}</p>` : ''}
+        ${p.descripcion.trim() ? `<p class="proyecto-card__desc">${esc(p.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
+        ${tags.length ? `<ul class="proyecto-card__tags">${tags.map(t => `<li class="proyecto-card__tag">${esc(t)}</li>`).join('')}</ul>` : ''}
+        ${url ? `<div class="proyecto-card__pie"><a class="proyecto-card__link" href="${esc(url)}" target="_blank" rel="noopener" data-enlace-cliente><span>${esc(p.textoEnlace.trim() || 'Ver proyecto')}</span>${ICONO_EXTERNO}</a></div>` : ''}
+      </div>
+    </article>`;
+};
+
+const bloquePortafolioEnPropuestaHTML = (pfResumen, web) => {
+  const proyectos = (pfResumen?.proyectos || []).filter(proyectoConContenido);
+  if (!proyectos.length) return '';
+  const linkPublico = pfResumen.publico && pfResumen.id && /^[A-Za-z0-9]{20}$/.test(pfResumen.id)
+    ? `${location.origin}/portafolio/${pfResumen.id}`
+    : '';
+  return `
+    ${(pfResumen.subtitulo || linkPublico) ? `
+      <div class="portafolio-embebido__cabecera">
+        ${pfResumen.subtitulo ? `<p class="portafolio-embebido__sub">${esc(pfResumen.subtitulo)}</p>` : '<span></span>'}
+        ${web && linkPublico ? `<a class="portafolio-embebido__ver-mas" href="${esc(linkPublico)}" target="_blank" rel="noopener" data-enlace-cliente><span>Ver portfolio completo</span>${ICONO_EXTERNO}</a>` : ''}
+      </div>` : ''}
+    <div class="portafolio-grilla">
+      ${proyectos.map((p, idx) => proyectoCardHTML(p, idx, web)).join('')}
+    </div>`;
+};
+
+const enlaceContactoPortafolio = () => {
+  const e = estadoPortafolio.emisor;
+  const emisor = e.nombre.trim();
+  const msg = `Hola${emisor ? ` ${emisor.split(' ')[0]}` : ''}! Vi tu portfolio «${tituloPortafolio()}» y me gustaría conversar sobre un proyecto.`;
+  return enlaceWhatsApp(msg, e) || enlaceEmail(`Consulta desde tu portfolio: ${tituloPortafolio()}`, msg, e);
+};
+
+const renderPortafolio = () => {
+  const web = !imprimiendo && (esCliente || vista !== 'pdf');
+  const doc = $('#documento');
+  doc.classList.toggle('doc--web', web);
+  aplicarTema(doc);
+  const s = estadoPortafolio;
+  const e = s.emisor;
+  const pf = s.portafolio;
+  const tipoDecoracion = doc.dataset.decoracion || 'marco';
+  const tipoPortada = doc.dataset.portada || 'editorial';
+
+  const marca = e.logo
+    ? `<img class="portada__logo" src="${esc(e.logo)}" alt="${esc(e.nombre || 'Logo')}">`
+    : `<span class="portada__marca">${e.nombre.trim() ? esc(e.nombre) : vacioHTML('Tu marca')}</span>`;
+
+  const proyectosValidos = s.proyectos.filter(proyectoConContenido);
+  const especialidadesValidas = s.especialidades.filter(x => x.texto.trim());
+
+  const meta = [];
+  if (e.nombre.trim()) meta.push(['Presentado por', `${esc(e.nombre)}${e.rol.trim() ? `<span>${esc(e.rol)}</span>` : ''}`]);
+  if (proyectosValidos.length) meta.push(['Casos seleccionados', `${proyectosValidos.length} ${proyectosValidos.length === 1 ? 'proyecto destacado' : 'proyectos destacados'}`]);
+  if (pf.disponibilidad.trim()) meta.push(['Estado', `<span class="portada__urgente">${esc(pf.disponibilidad.trim())}</span>`]);
+  if (e.web.trim() || e.email.trim()) meta.push(['Contacto', esc(e.web.trim() || e.email.trim())]);
+
+  const marcaAgua = tipoPortada === 'impacto'
+    ? `<span class="portada__marca-agua" aria-hidden="true">${esc(String(proyectosValidos.length || '01').padStart(2, '0'))}</span>`
+    : '';
+
+  const colTema = resolverColoresTema(s.tema);
+  const portada = `
+    <section class="portada portada--${esc(tipoPortada)}" aria-label="Portada del portfolio">
+      <div class="portada__decoracion" style="color:${esc(colTema.colorSvg)}" aria-hidden="true">${decoracionPortadaSVG(tipoDecoracion, colTema.opacidadSvg, colTema.colorSvg)}</div>
+      ${marcaAgua}
+      <div class="portada__superior">
+        ${marca}
+        ${pf.disponibilidad.trim() ? `<p class="portada__numero">${esc(pf.disponibilidad.trim())}</p>` : ''}
+      </div>
+      <div class="portada__centro">
+        <p class="portada__para"><span class="portada__para-chip">${esc(pf.insignia.trim() || 'Portfolio & Casos')}</span></p>
+        <h1 class="portada__titulo">${pf.titulo.trim() ? esc(pf.titulo) : vacioHTML('Título de tu portfolio')}</h1>
+        ${pf.subtitulo.trim() ? `<p class="portada__subtitulo">${esc(pf.subtitulo.trim())}</p>` : ''}
+        <hr class="portada__regla">
+      </div>
+      ${meta.length ? `<dl class="portada__meta">${meta.map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join('')}</dl>` : ''}
+    </section>`;
+
+  const bloques = [];
+
+  if (e.presentacion.trim() || especialidadesValidas.length) {
+    let html = '';
+    if (e.presentacion.trim()) html += `<div class="presentacion-bloque">${parrafos(e.presentacion)}</div>`;
+    if (especialidadesValidas.length) {
+      html += `<ul class="especialidades-chips">${especialidadesValidas.map(esp => `<li class="especialidad-chip">${esc(esp.texto.trim())}</li>`).join('')}</ul>`;
+    }
+    bloques.push({
+      titulo: e.nombre.trim() ? `Sobre ${e.nombre.trim()}` : 'Perfil y especialidades',
+      html
+    });
+  }
+
+  if (proyectosValidos.length) {
+    bloques.push({
+      titulo: 'Proyectos y casos seleccionados',
+      html: `<div class="portafolio-grilla">${proyectosValidos.map((p, idx) => proyectoCardHTML(p, idx, web)).join('')}</div>`
+    });
+  }
+
+  const ctaLabel = pf.ctaTexto.trim() || 'Contactar';
+  const msgContacto = `Hola${e.nombre.trim() ? ` ${e.nombre.trim().split(' ')[0]}` : ''}! Vi tu portfolio «${tituloPortafolio()}» y me gustaría conversar sobre un proyecto.`;
+  const waUrl = enlaceWhatsApp(msgContacto, e);
+  const mailUrl = enlaceEmail(`Consulta desde tu portfolio: ${tituloPortafolio()}`, msgContacto, e);
+  const principalUrl = waUrl || mailUrl;
+
+  if (web) {
+    const botonesCierre = [];
+    if (waUrl) {
+      botonesCierre.push(`<a class="boton boton--primario boton--grande" href="${esc(waUrl)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(ctaLabel)} por WhatsApp</a>`);
+    }
+    if (mailUrl) {
+      botonesCierre.push(`<a class="boton ${waUrl ? 'boton--secundario' : 'boton--primario'} boton--grande" href="${esc(mailUrl)}" data-enlace-cliente>${waUrl ? 'Escribir por email' : esc(ctaLabel)}</a>`);
+    }
+    if (!botonesCierre.length) {
+      botonesCierre.push(`<button type="button" class="boton boton--primario boton--grande" data-accion="contacto-demo">${esc(ctaLabel)}</button>`);
+    }
+    bloques.push({
+      titulo: 'Contacto',
+      html: `
+        <div class="cierre">
+          <p class="cierre__titulo">${esc(pf.cierreTitulo.trim() || '¿Trabajamos juntos?')}</p>
+          <p class="cierre__texto">${esc(pf.cierreTexto.trim() || 'Contame qué tenés en mente y armamos una propuesta a medida.')}</p>
+          <div class="cierre__acciones">${botonesCierre.join('')}</div>
+        </div>`
+    });
+  }
+
+  const contactos = [];
+  if (e.email.trim()) contactos.push(web ? `<a href="mailto:${esc(e.email.trim())}" data-enlace-cliente>${esc(e.email.trim())}</a>` : esc(e.email.trim()));
+  if (e.telefono.trim()) contactos.push(esc(e.telefono.trim()));
+  if (e.web.trim()) {
+    const url = /^https?:\/\//i.test(e.web.trim()) ? e.web.trim() : `https://${e.web.trim()}`;
+    contactos.push(web ? `<a href="${esc(url)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(e.web.trim())}</a>` : esc(e.web.trim()));
+  }
+  const pie = `
+    <footer class="pie">
+      ${e.nombre.trim() ? `<span class="pie__nombre">${esc(e.nombre)}</span>` : ''}
+      ${contactos.map(x => `<span>${x}</span>`).join('')}
+      ${web ? '<button type="button" class="pie__pdf" data-accion="pdf">Descargar en PDF</button>' : ''}
+      ${s.opciones.credito ? '<span class="pie__credito">Portfolio creado con Dealit</span>' : ''}
+    </footer>`;
+
+  const barraInferior = web ? `
+    <div class="barra-cliente">
+      <div>
+        <span class="barra-cliente__etiqueta">${esc(pf.disponibilidad.trim() || 'Portfolio profesional')}</span>
+        <span class="barra-cliente__monto">${esc(e.nombre.trim() || pf.titulo.trim() || 'Disponible')}</span>
+        ${e.rol.trim() ? `<span class="barra-cliente__extra">${esc(e.rol.trim())}</span>` : ''}
+      </div>
+      ${principalUrl
+      ? `<a class="boton boton--primario" href="${esc(principalUrl)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(ctaLabel)}</a>`
+      : `<button type="button" class="boton boton--primario" data-accion="contacto-demo">${esc(ctaLabel)}</button>`}
+    </div>` : '';
+
+  const cuerpo = `
+    <div class="cuerpo">
+      ${bloques.length ? bloques.map((b, i) => `
+        <section class="bloque">
+          <span class="bloque__num" aria-hidden="true">${i + 1}</span>
+          <div class="bloque__contenido">
+            <h2 class="bloque__titulo">${esc(b.titulo)}</h2>
+            ${b.html}
+          </div>
+        </section>`).join('') : '<p class="doc-nota">Sumá tus proyectos desde el panel izquierdo para armar tu portfolio.</p>'}
+      ${pie}
+    </div>`;
+
+  if (animacionInicialLista) doc.classList.add('doc--estatico');
+  doc.innerHTML = portada + cuerpo + barraInferior;
+  if (web) observarElementos(doc);
+  if (!animacionInicialLista && web) {
+    animacionInicialLista = true;
+    setTimeout(() => doc.classList.add('doc--estatico'), 1400);
+  }
+};
+
 const renderDocumento = () => {
+  if (modoEditor === 'portafolio') return renderPortafolio();
   const web = !imprimiendo && (esCliente || vista !== 'pdf');
   const doc = $('#documento');
   doc.classList.toggle('doc--web', web);
@@ -1002,6 +1445,18 @@ const renderDocumento = () => {
       titulo: e.nombre.trim() ? `Sobre ${e.nombre.trim()}` : 'Quién presenta esta propuesta',
       html: `<div class="presentacion-bloque">${parrafos(e.presentacion)}</div>`
     });
+  }
+
+  sincronizarPortafolioEnPropuesta();
+  const pfAdjunto = s.opciones?.portafolioId ? s.opciones?.portafolio : null;
+  if (pfAdjunto && Array.isArray(pfAdjunto.proyectos) && pfAdjunto.proyectos.some(proyectoConContenido)) {
+    const htmlPf = bloquePortafolioEnPropuestaHTML(pfAdjunto, web);
+    if (htmlPf) {
+      bloques.push({
+        titulo: pfAdjunto.titulo?.trim() || 'Trabajos y casos destacados',
+        html: htmlPf
+      });
+    }
   }
 
   if (s.contexto.trim()) {
@@ -1158,7 +1613,8 @@ const actualizarTemaEnVivo = () => {
   doc.classList.add('doc--estatico');
   animacionInicialLista = true;
   aplicarTema(doc);
-  const col = resolverColoresTema(estado.tema);
+  const actual = docActivo();
+  const col = resolverColoresTema(actual.tema);
   const tipoDecoracion = doc.dataset.decoracion || 'marco';
   const tipoPortada = doc.dataset.portada || 'editorial';
   const seccionPortada = doc.querySelector('.portada');
@@ -1170,7 +1626,9 @@ const actualizarTemaEnVivo = () => {
       deco.innerHTML = decoracionPortadaSVG(tipoDecoracion, col.opacidadSvg, col.colorSvg);
     }
     const existenteAgua = seccionPortada.querySelector('.portada__marca-agua');
-    const numTexto = estado.propuesta.numero.trim();
+    const numTexto = modoEditor === 'portafolio'
+      ? String((estadoPortafolio.proyectos || []).filter(proyectoConContenido).length || '01').padStart(2, '0')
+      : estado.propuesta.numero.trim();
     if (tipoPortada === 'impacto' && numTexto) {
       if (existenteAgua) {
         existenteAgua.textContent = numTexto;
@@ -1211,8 +1669,33 @@ const leerValor = el => {
 
 const alEditar = ev => {
   const el = ev.target;
+  if (modoEditor === 'portafolio') {
+    if (el.dataset.campo && el.dataset.campo.startsWith('emisor.')) {
+      asignar(estadoPortafolio, el.dataset.campo, leerValor(el));
+      actualizar();
+      return;
+    }
+    if (el.dataset.campoPf) {
+      asignar(estadoPortafolio, el.dataset.campoPf, leerValor(el));
+      actualizar();
+      return;
+    }
+    if (el.dataset.itemPf) {
+      const nodo = el.closest('[data-indice-pf]');
+      const lista = el.closest('.lista');
+      if (!nodo || !lista) return;
+      const conf = LISTAS_PORTAFOLIO[lista.dataset.listaPf];
+      if (!conf) return;
+      const item = obtener(estadoPortafolio, conf.ruta)[Number(nodo.dataset.indicePf)];
+      if (!item) return;
+      item[el.dataset.itemPf] = leerValor(el);
+      actualizar();
+      return;
+    }
+  }
   if (el.dataset.campo) {
     asignar(estado, el.dataset.campo, leerValor(el));
+    if (el.dataset.campo === 'opciones.portafolioId') sincronizarPortafolioEnPropuesta();
     actualizar();
     return;
   }
@@ -1234,7 +1717,7 @@ formulario.addEventListener('change', alEditar);
 formulario.addEventListener('submit', ev => ev.preventDefault());
 
 const llenarTemaEditor = () => {
-  const t = estado.tema;
+  const t = docActivo().tema;
   const preset = TEMAS[t.preset] || TEMAS['elegante-oscuro'];
   const col = resolverColoresTema(t);
   $$('.tema-card').forEach(el => el.classList.toggle('tema-card--activo', el.dataset.tema === t.preset));
@@ -1276,16 +1759,17 @@ if (contenedorTemas) {
     const id = card.dataset.tema;
     const preset = TEMAS[id];
     if (!preset) return;
-    estado.tema.preset = id;
-    estado.tema.acento = preset.acento;
-    estado.tema.colorTexto = '';
-    estado.tema.colorSvg = '';
-    estado.tema.opacidadSvg = 100;
-    estado.tema.fuenteTitulos = preset.fuenteTitulos;
-    estado.tema.fuenteCuerpo = preset.fuenteCuerpo;
-    estado.tema.portada = preset.portada || 'editorial';
-    estado.tema.decoracion = preset.decoracion || 'marco';
-    estado.tema.estilo = preset.estilo || 'editorial';
+    const t = docActivo().tema;
+    t.preset = id;
+    t.acento = preset.acento;
+    t.colorTexto = '';
+    t.colorSvg = '';
+    t.opacidadSvg = 100;
+    t.fuenteTitulos = preset.fuenteTitulos;
+    t.fuenteCuerpo = preset.fuenteCuerpo;
+    t.portada = preset.portada || 'editorial';
+    t.decoracion = preset.decoracion || 'marco';
+    t.estilo = preset.estilo || 'editorial';
     llenarTemaEditor();
     actualizarTemaEnVivo();
   });
@@ -1296,7 +1780,7 @@ if (contenedorDecoraciones) {
   contenedorDecoraciones.addEventListener('click', ev => {
     const btn = ev.target.closest('[data-decoracion]');
     if (!btn || !DECORACIONES[btn.dataset.decoracion]) return;
-    estado.tema.decoracion = btn.dataset.decoracion;
+    docActivo().tema.decoracion = btn.dataset.decoracion;
     llenarTemaEditor();
     actualizarTemaEnVivo();
   });
@@ -1307,7 +1791,7 @@ if (contenedorPortadas) {
   contenedorPortadas.addEventListener('click', ev => {
     const btn = ev.target.closest('[data-portada]');
     if (!btn || !PORTADAS[btn.dataset.portada]) return;
-    estado.tema.portada = btn.dataset.portada;
+    docActivo().tema.portada = btn.dataset.portada;
     llenarTemaEditor();
     actualizarTemaEnVivo();
   });
@@ -1318,7 +1802,7 @@ if (contenedorEstilos) {
   contenedorEstilos.addEventListener('click', ev => {
     const btn = ev.target.closest('[data-estilo]');
     if (!btn || !ESTILOS_BLOQUES[btn.dataset.estilo]) return;
-    estado.tema.estilo = btn.dataset.estilo;
+    docActivo().tema.estilo = btn.dataset.estilo;
     llenarTemaEditor();
     actualizarTemaEnVivo();
   });
@@ -1381,7 +1865,7 @@ $('#plantilla-completa')?.addEventListener('click', () => {
 const temaAcento = $('#tema-acento');
 if (temaAcento) {
   temaAcento.addEventListener('input', ev => {
-    estado.tema.acento = ev.target.value;
+    docActivo().tema.acento = ev.target.value;
     llenarTemaEditor();
     actualizarTemaEnVivo();
   });
@@ -1390,7 +1874,7 @@ if (temaAcento) {
 const temaColorTexto = $('#tema-color-texto');
 if (temaColorTexto) {
   temaColorTexto.addEventListener('input', ev => {
-    estado.tema.colorTexto = ev.target.value;
+    docActivo().tema.colorTexto = ev.target.value;
     llenarTemaEditor();
     actualizarTemaEnVivo();
   });
@@ -1399,7 +1883,7 @@ if (temaColorTexto) {
 const temaColorSvg = $('#tema-color-svg');
 if (temaColorSvg) {
   temaColorSvg.addEventListener('input', ev => {
-    estado.tema.colorSvg = ev.target.value;
+    docActivo().tema.colorSvg = ev.target.value;
     llenarTemaEditor();
     actualizarTemaEnVivo();
   });
@@ -1408,7 +1892,7 @@ if (temaColorSvg) {
 const temaOpacidadSvg = $('#tema-opacidad-svg');
 if (temaOpacidadSvg) {
   temaOpacidadSvg.addEventListener('input', ev => {
-    estado.tema.opacidadSvg = Number(ev.target.value);
+    docActivo().tema.opacidadSvg = Number(ev.target.value);
     llenarTemaEditor();
     actualizarTemaEnVivo();
   });
@@ -1417,11 +1901,12 @@ if (temaOpacidadSvg) {
 const temaRestablecerColores = $('#tema-restablecer-colores');
 if (temaRestablecerColores) {
   temaRestablecerColores.addEventListener('click', () => {
-    const preset = TEMAS[estado.tema.preset] || TEMAS['elegante-oscuro'];
-    estado.tema.acento = preset.acento;
-    estado.tema.colorTexto = '';
-    estado.tema.colorSvg = '';
-    estado.tema.opacidadSvg = 100;
+    const t = docActivo().tema;
+    const preset = TEMAS[t.preset] || TEMAS['elegante-oscuro'];
+    t.acento = preset.acento;
+    t.colorTexto = '';
+    t.colorSvg = '';
+    t.opacidadSvg = 100;
     llenarTemaEditor();
     actualizarTemaEnVivo();
     avisar('Colores e intensidad del SVG restablecidos al tema original.');
@@ -1431,7 +1916,7 @@ if (temaRestablecerColores) {
 const temaFT = $('#tema-fuente-titulos');
 if (temaFT) {
   temaFT.addEventListener('change', ev => {
-    estado.tema.fuenteTitulos = ev.target.value;
+    docActivo().tema.fuenteTitulos = ev.target.value;
     actualizarTemaEnVivo();
   });
 }
@@ -1439,8 +1924,40 @@ if (temaFT) {
 const temaFC = $('#tema-fuente-cuerpo');
 if (temaFC) {
   temaFC.addEventListener('change', ev => {
-    estado.tema.fuenteCuerpo = ev.target.value;
+    docActivo().tema.fuenteCuerpo = ev.target.value;
     actualizarTemaEnVivo();
+  });
+}
+
+const aplicarPlantillaPortafolio = (id, soloDiseno = false) => {
+  const tpl = PLANTILLAS_PORTAFOLIO[id];
+  if (!tpl) return;
+  const generada = normalizarPf(tpl.crear());
+  if (soloDiseno) {
+    estadoPortafolio.tema = { ...generada.tema };
+    llenarTemaEditor();
+    actualizarTemaEnVivo();
+    avisar(`Diseño de «${tpl.nombre}» aplicado a tu portfolio.`);
+  } else {
+    if (perfil?.emisor && Object.values(perfil.emisor).some(Boolean)) {
+      generada.emisor = { ...generada.emisor, ...perfil.emisor };
+    }
+    estadoPortafolio = generada;
+    llenarFormulario();
+    actualizar();
+    avisar(`Plantilla de portfolio «${tpl.nombre}» cargada.`);
+  }
+  $$('[data-plantilla-portafolio]').forEach(c => c.classList.toggle('plantilla-chip--activa', c.dataset.plantillaPortafolio === id));
+};
+
+const contenedorPlantillasPf = $('#plantillas-portafolio-grid');
+if (contenedorPlantillasPf) {
+  contenedorPlantillasPf.addEventListener('click', ev => {
+    const chip = ev.target.closest('[data-plantilla-portafolio]');
+    if (!chip) return;
+    const id = chip.dataset.plantillaPortafolio;
+    if (!PLANTILLAS_PORTAFOLIO[id]) return;
+    aplicarPlantillaPortafolio(id, false);
   });
 }
 
@@ -1463,12 +1980,16 @@ const reemplazarEstado = nuevo => {
 };
 
 const nombreArchivo = () => {
-  const base = [estado.propuesta.numero, estado.cliente.empresa || estado.cliente.nombre].map(x => texto(x).trim()).filter(Boolean).join(' ');
-  return (base || 'propuesta').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').toLowerCase();
+  const base = modoEditor === 'portafolio'
+    ? [estadoPortafolio.portafolio.nombreInterno || estadoPortafolio.portafolio.titulo, estadoPortafolio.emisor.nombre].map(x => texto(x).trim()).filter(Boolean).join(' ')
+    : [estado.propuesta.numero, estado.cliente.empresa || estado.cliente.nombre].map(x => texto(x).trim()).filter(Boolean).join(' ');
+  return (base || (modoEditor === 'portafolio' ? 'portfolio' : 'propuesta')).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w\s-]/g, '').trim().replace(/\s+/g, '-').toLowerCase();
 };
 
 const guardarBorrador = () => {
-  const blob = new Blob([JSON.stringify({ version: 1, ...estado }, null, 2)], { type: 'application/json' });
+  const actual = docActivo();
+  const payload = modoEditor === 'portafolio' ? { tipo: 'portafolio', version: 1, ...actual } : { version: 1, ...actual };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const enlace = document.createElement('a');
   enlace.href = url;
@@ -1488,12 +2009,19 @@ campoBorrador.addEventListener('change', () => {
   const lector = new FileReader();
   lector.onload = () => {
     try {
-      const abierto = normalizar(JSON.parse(lector.result));
+      const crudo = JSON.parse(lector.result);
+      if (crudo && (crudo.tipo === 'portafolio' || crudo.portafolio)) {
+        nuevoPortafolio(normalizarPf(crudo));
+        avisar('Portfolio abierto desde archivo.');
+        return;
+      }
+      const abierto = normalizar(crudo);
       if (nube()) {
         // Con cuenta, el borrador entra como propuesta nueva: no pisa ninguna existente.
         nuevaPropuesta(abierto);
         avisar('Borrador abierto como propuesta nueva.');
       } else {
+        modoEditor = 'propuesta';
         reemplazarEstado(abierto);
         avisar('Borrador abierto.');
       }
@@ -1554,7 +2082,7 @@ const esLogoValido = logo => /^data:image\//.test(logo)
   || (!!AteneaDB?.logos && logo.startsWith(AteneaDB.logos.prefijoURL));
 
 const subiendoLogo = estaSubiendo => {
-  $('#logo-texto').textContent = estaSubiendo ? 'Subiendo logo…' : (estado.emisor.logo ? 'Cambiar logo' : 'Subir logo');
+  $('#logo-texto').textContent = estaSubiendo ? 'Subiendo logo…' : (docActivo().emisor.logo ? 'Cambiar logo' : 'Subir logo');
   campoLogo.disabled = estaSubiendo;
 };
 
@@ -1592,9 +2120,8 @@ campoLogo.addEventListener('change', async () => {
   } catch {
     avisar('No se pudo leer la imagen. Probá con otra.');
   }
-  // Si mientras subía se cambió de propuesta, el logo no se aplica a la otra.
   if (logo && propuestaId === id) {
-    estado.emisor.logo = logo;
+    docActivo().emisor.logo = logo;
     actualizarLogo();
     actualizar();
   }
@@ -1619,6 +2146,79 @@ const migrarLogo = async () => {
   }
 };
 
+
+// Redimensiona una imagen de proyecto a máx 960x600 para que se vea nítida y liviana.
+const procesarImagenProyecto = async (archivo, paraStorage = false) => {
+  const original = await leerComoDataURL(archivo);
+  const img = await new Promise((res, rej) => {
+    const i = new Image();
+    i.onload = () => res(i);
+    i.onerror = rej;
+    i.src = original;
+  });
+  const anchoMax = paraStorage ? 1200 : 880;
+  const altoMax = paraStorage ? 780 : 560;
+  const escala = Math.min(1, anchoMax / (img.naturalWidth || anchoMax), altoMax / (img.naturalHeight || altoMax));
+  const lienzo = document.createElement('canvas');
+  lienzo.width = Math.max(1, Math.round((img.naturalWidth || anchoMax) * escala));
+  lienzo.height = Math.max(1, Math.round((img.naturalHeight || altoMax) * escala));
+  lienzo.getContext('2d').drawImage(img, 0, 0, lienzo.width, lienzo.height);
+  if (paraStorage) {
+    const aBlob = (tipo, calidad) => new Promise(res => lienzo.toBlob(res, tipo, calidad));
+    const webp = await aBlob('image/webp', 0.88);
+    return webp && webp.type === 'image/webp' ? webp : aBlob('image/jpeg', 0.88);
+  }
+  const webp = lienzo.toDataURL('image/webp', 0.84);
+  return webp.startsWith('data:image/webp') ? webp : lienzo.toDataURL('image/jpeg', 0.84);
+};
+
+formulario.addEventListener('change', async ev => {
+  const inputImg = ev.target.closest('[data-pf-img-input]');
+  if (!inputImg) return;
+  const archivo = inputImg.files?.[0];
+  inputImg.value = '';
+  if (!archivo) return;
+  if (!archivo.type.startsWith('image/')) {
+    avisar('La imagen del proyecto tiene que ser PNG, JPG o WebP.');
+    return;
+  }
+  if (archivo.size > LOGO_MAX_ARCHIVO) {
+    avisar('La imagen pesa más de 5 MB. Probá con una más liviana.');
+    return;
+  }
+  const nodo = inputImg.closest('[data-indice-pf]');
+  if (!nodo) return;
+  const idx = Number(nodo.dataset.indicePf);
+  const proyecto = estadoPortafolio.proyectos[idx];
+  if (!proyecto) return;
+  const txt = $('[data-pf-img-texto]', nodo);
+  if (txt) txt.textContent = 'Subiendo…';
+  inputImg.disabled = true;
+  try {
+    const db = nube();
+    let urlImg = '';
+    if (db && db.logos) {
+      try {
+        urlImg = await db.logos.subir(await procesarImagenProyecto(archivo, true));
+      } catch {
+        urlImg = await procesarImagenProyecto(archivo, false);
+      }
+    } else {
+      urlImg = await procesarImagenProyecto(archivo, false);
+    }
+    if (urlImg && estadoPortafolio.proyectos[idx] === proyecto) {
+      proyecto.imagen = urlImg;
+      actualizarImagenProyectoItem(nodo, proyecto);
+      actualizar();
+    }
+  } catch {
+    avisar('No se pudo cargar la imagen. Probá con otra.');
+  } finally {
+    inputImg.disabled = false;
+    if (estadoPortafolio.proyectos[idx] === proyecto) actualizarImagenProyectoItem(nodo, proyecto);
+  }
+});
+
 const datosParaLink = () => {
   const sinId = arr => arr.map(({ id, ...resto }) => resto);
   const logoEntra = estado.emisor.logo.length <= LOGO_MAX_LINK;
@@ -1639,6 +2239,7 @@ const datosParaLink = () => {
 let linkActual = '';
 
 const linkCorto = id => `${location.origin}/p/${id}`;
+const linkCortoPortafolio = id => `${location.origin}/portafolio/${id}`;
 
 // Activa el link corto: la propuesta pasa a ser legible por quien tenga el link
 // y, si era un borrador, queda como enviada. Devuelve true si el servidor lo
@@ -1656,7 +2257,54 @@ const activarLink = async () => {
   return Promise.race([escritura, new Promise(res => setTimeout(() => res(null), 4000))]);
 };
 
+const abrirCompartirPortafolio = async () => {
+  const tieneProyectos = estadoPortafolio.portafolio.titulo.trim() || estadoPortafolio.proyectos.some(proyectoConContenido);
+  if (!tieneProyectos) {
+    avisar('Cargá al menos el título y un proyecto antes de compartir tu portfolio.');
+    return;
+  }
+  if (hayCambiosSinEnviar()) guardarAhora();
+  const conCuenta = !!(nube() && AteneaDB?.portfolios && portafolioId && /^[A-Za-z0-9]{20}$/.test(portafolioId));
+  const avisos = [];
+  if (conCuenta) {
+    const escritura = registrarEscritura(
+      AteneaDB.portfolios.actualizar(portafolioId, { publico: true }),
+      'No se pudo activar el link del portfolio.'
+    );
+    const activado = await Promise.race([escritura, new Promise(res => setTimeout(() => res(null), 4000))]);
+    if (activado === false) return;
+    if (activado === null) avisos.push('Estás sin conexión: el link empieza a funcionar en cuanto vuelva.');
+    linkActual = linkCortoPortafolio(portafolioId);
+  } else {
+    const copia = JSON.parse(JSON.stringify(estadoPortafolio));
+    if (copia.emisor.logo.length > LOGO_MAX_LINK) copia.emisor.logo = '';
+    copia.proyectos.forEach(p => { if (p.imagen.length > LOGO_MAX_LINK) p.imagen = ''; });
+    try {
+      linkActual = `${location.origin}${location.pathname}${PREFIJO_PORTAFOLIO}${await comprimir(JSON.stringify(copia))}`;
+    } catch {
+      avisar('No se pudo generar el link del portfolio.');
+      return;
+    }
+  }
+  $('#compartir-titulo').textContent = 'Tu portfolio está listo para compartir';
+  $('#enlace-propuesta').value = linkActual;
+  $('#compartir-abrir').href = linkActual;
+  const msg = `Hola! Te comparto mi portfolio «${tituloPortafolio()}» con una selección de proyectos y casos: ${linkActual}`;
+  $('#compartir-whatsapp').href = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+  $('#compartir-nativo').hidden = typeof navigator.share !== 'function';
+  $('#compartir-desactivar').hidden = !conCuenta;
+  $('#compartir-nota').textContent = conCuenta
+    ? 'El link muestra siempre la última versión de este portfolio.'
+    : 'Este link incluye tu portfolio comprimido listo para abrir.';
+  const elAvisoCompartir = $('#compartir-aviso');
+  elAvisoCompartir.hidden = !avisos.length;
+  elAvisoCompartir.textContent = avisos.join(' ');
+  $('#dialogo-compartir').showModal();
+};
+
 const abrirCompartir = async () => {
+  if (modoEditor === 'portafolio') return abrirCompartirPortafolio();
+  $('#compartir-titulo').textContent = 'Tu propuesta está lista para mandar';
   const tieneContenido = estado.propuesta.titulo.trim() || estado.servicios.some(servicioConContenido);
   if (!tieneContenido) {
     avisar('Cargá al menos el título y un servicio antes de compartir la propuesta.');
@@ -1768,7 +2416,7 @@ const registrarVisita = id => {
   try {
     if (Date.now() - Number(localStorage.getItem(clave) || 0) < VISITA_INTERVALO) return;
     localStorage.setItem(clave, String(Date.now()));
-  } catch {}
+  } catch { }
   llamarApi('/api/visto', { id }, { keepalive: true }).catch(e => console.warn('No se pudo registrar la visita:', e));
 };
 
@@ -1953,6 +2601,21 @@ document.addEventListener('click', async ev => {
   if (boton.closest('#menu-panel')) abrirMenu(false);
 
   if (['subir', 'bajar', 'quitar'].includes(accion)) {
+    const nodoPf = boton.closest('[data-indice-pf]');
+    if (nodoPf) {
+      const nombrePf = boton.closest('.lista').dataset.listaPf;
+      const arrPf = obtener(estadoPortafolio, LISTAS_PORTAFOLIO[nombrePf].ruta);
+      const i = Number(nodoPf.dataset.indicePf);
+      const j = accion === 'subir' ? i - 1 : i + 1;
+      if (accion === 'quitar') arrPf.splice(i, 1);
+      else {
+        if (j < 0 || j >= arrPf.length) return;
+        [arrPf[i], arrPf[j]] = [arrPf[j], arrPf[i]];
+      }
+      renderListaPortafolio(nombrePf);
+      actualizar();
+      return;
+    }
     const nodo = boton.closest('[data-indice]');
     const nombre = boton.closest('.lista').dataset.lista;
     const arr = obtener(estado, LISTAS[nombre].ruta);
@@ -2026,23 +2689,82 @@ document.addEventListener('click', async ev => {
     case 'compartir-nativo':
       try {
         await navigator.share({ title: estado.propuesta.titulo.trim() || 'Propuesta', url: linkActual });
-      } catch {}
+      } catch { }
       break;
     case 'vista':
       cambiarVista(boton.dataset.vista);
       break;
+    case 'agregar-pf': {
+      const nombrePf = boton.dataset.listaPf;
+      const confPf = LISTAS_PORTAFOLIO[nombrePf];
+      if (!confPf) break;
+      obtener(estadoPortafolio, confPf.ruta).push(confPf.nuevo());
+      renderListaPortafolio(nombrePf);
+      const ultimoPf = $(`.lista[data-lista-pf="${nombrePf}"] > :last-child input`);
+      if (ultimoPf) ultimoPf.focus();
+      actualizar();
+      break;
+    }
+    case 'quitar-img-proyecto': {
+      const nodoPf = boton.closest('[data-indice-pf]');
+      if (!nodoPf) break;
+      const itemPf = estadoPortafolio.proyectos[Number(nodoPf.dataset.indicePf)];
+      if (!itemPf) break;
+      itemPf.imagen = '';
+      actualizarImagenProyectoItem(nodoPf, itemPf);
+      actualizar();
+      break;
+    }
+    case 'contacto-demo':
+      avisar('En tu portfolio compartido, este botón abre WhatsApp o email directo para contratarte.');
+      break;
     case 'quitar-logo':
-      estado.emisor.logo = '';
+      docActivo().emisor.logo = '';
       actualizarLogo();
       actualizar();
       break;
     case 'ir-panel':
-      if (!nube()) break;
       if (boton.tagName === 'A') {
         if (!clicComun(ev)) break;
         ev.preventDefault();
       }
-      irAlPanel();
+      if (nube()) irAlPanel();
+      else volverAEditorPropuestaInvitado();
+      break;
+    case 'ir-portafolios':
+      if (boton.tagName === 'A') {
+        if (!clicComun(ev)) break;
+        ev.preventDefault();
+      }
+      irAPortafolios();
+      break;
+    case 'nuevo-portafolio':
+      nuevoPortafolio();
+      break;
+    case 'nuevo-portafolio-ejemplo':
+      nuevoPortafolio(ejemploPortafolio());
+      break;
+    case 'crear-pf-rubro': {
+      const tpl = PLANTILLAS_PORTAFOLIO[boton.dataset.rubro];
+      if (tpl) nuevoPortafolio(tpl.crear());
+      break;
+    }
+    case 'abrir-portafolio':
+      if (boton.tagName === 'A') {
+        if (!clicComun(ev)) break;
+        ev.preventDefault();
+      }
+      abrirPortafolio(boton.dataset.id);
+      break;
+    case 'duplicar-portafolio':
+      duplicarPortafolio(boton.dataset.id);
+      break;
+    case 'borrar-portafolio':
+      borrarPortafolio(boton.dataset.id);
+      break;
+    case 'copiar-link-portafolio':
+      if (await copiar(linkCortoPortafolio(boton.dataset.id))) avisar('Link del portfolio copiado.');
+      else avisar('No se pudo copiar el link.');
       break;
     case 'abrir-propuesta':
       if (!clicComun(ev)) break;
@@ -2072,6 +2794,10 @@ document.addEventListener('click', async ev => {
       break;
     case 'nueva':
       if (nube()) nuevaPropuesta();
+      else {
+        volverAEditorPropuestaInvitado(vacio());
+        avisar('Nueva propuesta en blanco lista.');
+      }
       break;
     case 'nueva-ejemplo':
       if (nube()) nuevaPropuesta(ejemplo());
@@ -2332,17 +3058,110 @@ const escucharPropuestas = () => {
   });
 };
 
+
+const elPortafolios = $('#portafolios');
+const elListaPortafolios = $('#lista-portafolios');
+const elPortafoliosEstado = $('#portafolios-estado');
+const elPortafoliosVacio = $('#portafolios-vacio');
+const elPortafoliosHerramientas = $('#portafolios-herramientas');
+const campoBuscarPortafolios = $('#portafolios-buscar');
+
+const portafolioItemHTML = pf => {
+  const titulo = texto(pf.title).trim() || 'Portfolio sin título';
+  const subtitulo = texto(pf.subtitle).trim() || 'Sin subtítulo';
+  const cant = Number(pf.projectCount) || (pf.payload?.proyectos?.length || 0);
+  const cantTexto = cant === 1 ? '1 proyecto' : `${cant} proyectos`;
+  const temaNombre = TEMAS[pf.theme]?.nombre || 'Elegante oscuro';
+  const inicial = titulo.charAt(0).toUpperCase() || 'P';
+  const editada = fechaDe(pf.updatedAt) || (typeof pf.updatedAt === 'string' ? new Date(pf.updatedAt) : null);
+  const tiempo = editada && !Number.isNaN(editada.getTime()) ? tiempoHTML(editada, `Editado ${haceCuanto(editada)}`) : '';
+  const esNube = !!(nube() && /^[A-Za-z0-9]{20}$/.test(pf.id));
+  return `
+    <li class="propuesta">
+      <a class="propuesta__abrir" href="?portafolio=${encodeURIComponent(pf.id)}" data-accion="abrir-portafolio" data-id="${esc(pf.id)}">
+        <span class="propuesta__avatar" data-tono="${tonoDe(titulo)}" aria-hidden="true">${esc(inicial)}</span>
+        <span class="propuesta__textos">
+          <span class="propuesta__titulo">${esc(titulo)}</span>
+          <span class="propuesta__cliente">${esc(subtitulo)}</span>
+        </span>
+      </a>
+      <span class="propuesta__monto">${esc(cantTexto)}</span>
+      <span class="propuesta__estado propuesta__estado--sent">${esc(temaNombre)}</span>
+      <span class="propuesta__fecha">${tiempo}</span>
+      <span class="propuesta__acciones">
+        ${esNube && pf.publico === true ? `<button type="button" class="icono-boton icono-boton--activo" data-accion="copiar-link-portafolio" data-id="${esc(pf.id)}" aria-label="Copiar link de «${esc(titulo)}»" title="Link activo: copiar">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.3 0l2-2a3 3 0 0 0-4.3-4.3l-.9.9M9.2 6.8a3 3 0 0 0-4.3 0l-2 2a3 3 0 0 0 4.3 4.3l.9-.9"/></svg>
+        </button>` : ''}
+        <button type="button" class="icono-boton" data-accion="duplicar-portafolio" data-id="${esc(pf.id)}" aria-label="Duplicar «${esc(titulo)}»" title="Duplicar para otro tipo de cliente">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.2"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
+        </button>
+        <button type="button" class="icono-boton icono-boton--peligro" data-accion="borrar-portafolio" data-id="${esc(pf.id)}" aria-label="Borrar «${esc(titulo)}»" title="Borrar">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>
+        </button>
+      </span>
+    </li>`;
+};
+
+const renderPanelPortafolios = () => {
+  if (!elPortafolios || elPortafolios.hidden) return;
+  const filtro = sinAcentos(campoBuscarPortafolios?.value.trim() || '');
+  const visibles = portafolios.filter(pf => !filtro || sinAcentos(`${pf.title} ${pf.subtitle}`).includes(filtro));
+  const hay = portafolios.length > 0;
+
+  if (elPortafoliosHerramientas) elPortafoliosHerramientas.hidden = !hay;
+  if (elPortafoliosVacio) elPortafoliosVacio.hidden = portafoliosCargando || portafoliosError || hay;
+
+  if (portafoliosError) {
+    elPortafoliosEstado.textContent = 'No pudimos cargar tus portfolios. Revisá tu conexión.';
+  } else if (portafoliosCargando) {
+    elPortafoliosEstado.textContent = 'Cargando tus portfolios…';
+  } else if (filtro && !visibles.length) {
+    elPortafoliosEstado.textContent = `No hay portfolios que coincidan con «${campoBuscarPortafolios.value.trim()}».`;
+  } else {
+    elPortafoliosEstado.textContent = '';
+  }
+  if (elListaPortafolios) elListaPortafolios.innerHTML = visibles.map(portafolioItemHTML).join('');
+};
+
+campoBuscarPortafolios?.addEventListener('input', renderPanelPortafolios);
+
+const escucharPortafoliosNube = () => {
+  if (!AteneaDB?.portfolios) return;
+  if (dejarDeEscucharPortafolios) dejarDeEscucharPortafolios();
+  portafoliosCargando = true;
+  portafoliosError = false;
+  renderPanelPortafolios();
+  dejarDeEscucharPortafolios = AteneaDB.portfolios.escuchar(docs => {
+    portafolios = docs.sort((a, b) => (fechaDe(b.updatedAt) || 0) - (fechaDe(a.updatedAt) || 0));
+    portafoliosCargando = false;
+    portafoliosError = false;
+    renderPanelPortafolios();
+    actualizarSelectorPortafolio();
+  }, () => {
+    portafoliosCargando = false;
+    portafoliosError = true;
+    renderPanelPortafolios();
+  });
+};
+
 const idEnUrl = () => new URLSearchParams(location.search).get('propuesta');
+const idPortafolioEnUrl = () => new URLSearchParams(location.search).get('portafolio');
 const seccionEnUrl = () => new URLSearchParams(location.search).get('seccion');
 
-// Vistas: 'panel' (Mis propuestas), 'cuenta' (Mi cuenta) y 'editor'.
-const TITULOS_VISTA = { panel: 'Mis propuestas | Dealit', cuenta: 'Mi cuenta | Dealit' };
+// Vistas: 'panel' (Mis propuestas), 'portafolios' (Mis portfolios), 'cuenta' (Mi cuenta) y 'editor'.
+const TITULOS_VISTA = {
+  panel: 'Mis propuestas | Dealit',
+  portafolios: 'Mis portfolios | Dealit',
+  cuenta: 'Mi cuenta | Dealit'
+};
 const mostrarVista = vista => {
   const inicio = vista !== 'editor';
   document.body.classList.toggle('vista-inicio', inicio);
   document.body.classList.toggle('vista-panel', vista === 'panel');
+  document.body.classList.toggle('vista-portafolios', vista === 'portafolios');
   document.body.classList.toggle('vista-cuenta', vista === 'cuenta');
   elPanel.hidden = vista !== 'panel';
+  if (elPortafolios) elPortafolios.hidden = vista !== 'portafolios';
   elCuenta.hidden = vista !== 'cuenta';
   app.hidden = inicio;
   $$('.barra__nav-link').forEach(a => {
@@ -2358,6 +3177,130 @@ const cerrarEdicion = () => {
   if (hayCambiosSinEnviar()) guardarAhora();
   editando = false;
   propuestaId = null;
+  portafolioId = null;
+};
+
+const irAPortafolios = ({ historial = true } = {}) => {
+  cerrarEdicion();
+  if (!nube() && !portafolios.length) portafolios = cargarPortafoliosLocales();
+  if (historial && seccionEnUrl() !== 'portafolios') {
+    try { history.pushState(null, '', `${location.pathname}?seccion=portafolios`); } catch { }
+  }
+  mostrarVista('portafolios');
+  renderPanelPortafolios();
+  if (elPortafolios) elPortafolios.scrollTop = 0;
+};
+
+const mostrarEditorPortafolio = (id, contenido, { historial = true } = {}) => {
+  modoEditor = 'portafolio';
+  portafolioId = id;
+  propuestaId = null;
+  estadoPortafolio = normalizarPf(contenido);
+  errorGuardado = '';
+  avisoError = false;
+  if (historial) {
+    try { history.pushState(null, '', `${location.pathname}?portafolio=${encodeURIComponent(id)}`); } catch { }
+  }
+  mostrarVista('editor');
+  cambiarPestana(false);
+  llenarFormulario();
+  renderDocumento();
+  document.title = `${estadoPortafolio.portafolio.nombreInterno.trim() || estadoPortafolio.portafolio.titulo.trim() || 'Portfolio'} | Dealit`;
+  $('.editor').scrollTop = 0;
+  editando = true;
+  mostrarEstadoGuardado();
+  elAvisoAceptada.hidden = true;
+};
+
+const crearPortafolioEnCuentaOLocal = pf => {
+  const datos = datosPortafolioParaGuardar(pf);
+  if (!datos) {
+    avisar(AVISO_PESADA, 7000);
+    return null;
+  }
+  if (nube() && AteneaDB?.portfolios) {
+    const id = AteneaDB.portfolios.nuevoId();
+    const listo = registrarEscritura(AteneaDB.portfolios.crear(datos, id), 'No se pudo crear el portfolio en tu cuenta.');
+    return { id, listo };
+  }
+  if (!portafolios.length) portafolios = cargarPortafoliosLocales();
+  const id = 'pf-' + uid();
+  portafolios.unshift({ id, ...datos, publico: true, updatedAt: new Date().toISOString() });
+  guardarPortafoliosLocales();
+  return { id, listo: Promise.resolve(true) };
+};
+
+const nuevoPortafolio = base => {
+  cerrarEdicion();
+  const nuevo = normalizarPf(base || ejemploPortafolio());
+  if (!base) {
+    const emisorPrevio = perfil?.emisor || estado.emisor;
+    if (emisorPrevio && Object.values(emisorPrevio).some(Boolean)) {
+      nuevo.emisor = { ...nuevo.emisor, ...emisorPrevio };
+    }
+  }
+  const creado = crearPortafolioEnCuentaOLocal(nuevo);
+  if (creado) mostrarEditorPortafolio(creado.id, nuevo);
+};
+
+const abrirPortafolio = async (id, opciones) => {
+  cerrarEdicion();
+  if (!nube() && !portafolios.length) portafolios = cargarPortafoliosLocales();
+  let doc = portafolios.find(x => x.id === id);
+  if (!doc && nube() && AteneaDB?.portfolios) {
+    doc = await AteneaDB.portfolios.obtener(id).catch(() => null);
+  }
+  if (!doc) {
+    avisar('No encontramos ese portfolio.');
+    irAPortafolios({ historial: false });
+    return;
+  }
+  mostrarEditorPortafolio(id, normalizarPf(doc.payload), opciones);
+};
+
+const duplicarPortafolio = id => {
+  const original = portafolios.find(x => x.id === id);
+  if (!original) return;
+  const copia = normalizarPf(original.payload);
+  const baseNombre = copia.portafolio.nombreInterno.trim() || copia.portafolio.titulo.trim() || 'Portfolio';
+  copia.portafolio.nombreInterno = `${baseNombre} (copia)`;
+  if (crearPortafolioEnCuentaOLocal(copia)) {
+    renderPanelPortafolios();
+    avisar('Portfolio duplicado. Ahora podés adaptarlo para otro cliente o rubro.');
+  }
+};
+
+const borrarPortafolio = async id => {
+  const pf = portafolios.find(x => x.id === id);
+  const titulo = texto(pf?.title).trim();
+  const ok = await confirmar({
+    titulo: '¿Borrar este portfolio?',
+    texto: `Se borra ${titulo ? `«${titulo}»` : 'este portfolio'} y no se puede recuperar.`,
+    aceptar: 'Borrar'
+  });
+  if (!ok) return;
+  if (nube() && AteneaDB?.portfolios) {
+    registrarEscritura(AteneaDB.portfolios.borrar(id), 'No se pudo borrar el portfolio.')
+      .then(borrado => { if (borrado) avisar('Portfolio borrado.'); });
+  } else {
+    portafolios = portafolios.filter(x => x.id !== id);
+    guardarPortafoliosLocales();
+    renderPanelPortafolios();
+    avisar('Portfolio borrado.');
+  }
+};
+
+const volverAEditorPropuestaInvitado = nuevaBase => {
+  cerrarEdicion();
+  modoEditor = 'propuesta';
+  if (nuevaBase) estado = normalizar(nuevaBase);
+  mostrarVista('editor');
+  cambiarPestana(false);
+  llenarFormulario();
+  renderDocumento();
+  actualizarAvisoPagos();
+  editando = true;
+  mostrarEstadoGuardado();
 };
 
 const irAlPanel = ({ historial = true } = {}) => {
@@ -2506,6 +3449,8 @@ const irACuenta = ({ historial = true } = {}) => {
 };
 
 const mostrarEditor = (id, contenido, { historial = true } = {}) => {
+  modoEditor = 'propuesta';
+  portafolioId = null;
   propuestaId = id;
   estado = contenido;
   seleccion = new Set();
@@ -2578,7 +3523,20 @@ const borrarPropuesta = async id => {
 };
 
 window.addEventListener('popstate', () => {
-  if (esCliente || !nube()) return;
+  if (esCliente) return;
+  const idPf = idPortafolioEnUrl();
+  if (idPf) {
+    if (idPf !== portafolioId) abrirPortafolio(idPf, { historial: false });
+    return;
+  }
+  if (seccionEnUrl() === 'portafolios') {
+    irAPortafolios({ historial: false });
+    return;
+  }
+  if (!nube()) {
+    volverAEditorPropuestaInvitado();
+    return;
+  }
   const id = idEnUrl();
   if (id) {
     if (id !== propuestaId) abrirPropuesta(id, { historial: false });
@@ -2648,6 +3606,7 @@ const iniciarClienteCorto = async id => {
 // Sin Firebase: un solo editor que guarda en el navegador, como antes de las cuentas.
 const iniciarSinCuenta = () => {
   document.body.classList.add('sin-cuenta');
+  portafolios = cargarPortafoliosLocales();
   estado = cargarGuardado() || ejemplo();
   llenarFormulario();
   renderDocumento();
@@ -2660,6 +3619,7 @@ const iniciarSinCuenta = () => {
 const iniciarConCuenta = async () => {
   const migrada = migrarLocal();
   escucharPropuestas();
+  escucharPortafoliosNube();
   cargarPerfil();
   // Si se registró desde el editor sin cuenta, sigue donde estaba: con su propuesta
   // abierta y, si quería compartirla o bajar el PDF, haciendo eso.
@@ -2667,38 +3627,40 @@ const iniciarConCuenta = async () => {
   try {
     continuar = sessionStorage.getItem(`${CLAVE}:continuar`);
     sessionStorage.removeItem(`${CLAVE}:continuar`);
-  } catch {}
+  } catch { }
   const id = idEnUrl();
   if (migrada && continuar) {
     mostrarEditor(migrada.id, migrada.contenido, { historial: false });
     history.replaceState(null, '', `${location.pathname}?propuesta=${encodeURIComponent(migrada.id)}`);
     if (continuar === 'compartir') abrirCompartir();
     else if (continuar === 'pdf') descargarPDF();
-  } else if (id) await abrirPropuesta(id, { historial: false });
+  } else if (idPortafolioEnUrl()) await abrirPortafolio(idPortafolioEnUrl(), { historial: false });
+  else if (id) await abrirPropuesta(id, { historial: false });
+  else if (seccionEnUrl() === 'portafolios') irAPortafolios({ historial: false });
   else if (seccionEnUrl() === 'cuenta') irACuenta({ historial: false });
   else irAlPanel({ historial: false });
 };
 
-const authPantalla   = $('#auth-pantalla');
-const authForm       = $('#auth-form');
-const authGoogle     = $('#auth-google');
-const authErrorG     = $('#auth-error-google');
-const authError      = $('#auth-error');
-const authSubmit     = $('#auth-submit');
+const authPantalla = $('#auth-pantalla');
+const authForm = $('#auth-form');
+const authGoogle = $('#auth-google');
+const authErrorG = $('#auth-error-google');
+const authError = $('#auth-error');
+const authSubmit = $('#auth-submit');
 const authSubmitText = authSubmit?.querySelector('.auth__submit-texto');
-const authSpinner    = authSubmit?.querySelector('.auth__spinner');
-const authNombre     = $('#auth-nombre');
-const authEmail      = $('#auth-email');
-const authPass       = $('#auth-pass');
-const menuUsuario    = $('#menu-usuario');
-const authOlvido     = $('#auth-olvido');
-const authMensaje    = $('#auth-mensaje');
-const elIngreso      = $('#auth-ingreso');
-const elVerificar    = $('#auth-verificar');
+const authSpinner = authSubmit?.querySelector('.auth__spinner');
+const authNombre = $('#auth-nombre');
+const authEmail = $('#auth-email');
+const authPass = $('#auth-pass');
+const menuUsuario = $('#menu-usuario');
+const authOlvido = $('#auth-olvido');
+const authMensaje = $('#auth-mensaje');
+const elIngreso = $('#auth-ingreso');
+const elVerificar = $('#auth-verificar');
 const verificarError = $('#auth-verificar-error');
 const verificarMensaje = $('#auth-verificar-mensaje');
 let authModo = 'login';
-let entrar = () => {};
+let entrar = () => { };
 
 // Sin sesión: editor de prueba que guarda en este navegador. Al registrarse, lo que
 // armó pasa a su cuenta (migrarLocal) y sigue con lo que quería hacer.
@@ -2716,6 +3678,7 @@ const iniciarInvitado = () => {
   invitadoIniciado = true;
   const pideIngresar = new URLSearchParams(location.search).has('ingresar');
   if (location.search) history.replaceState(null, '', location.pathname);
+  portafolios = cargarPortafoliosLocales();
   const guardada = cargarGuardado();
   invitadoEdito = !!guardada;
   estado = guardada || ejemplo();
@@ -2750,7 +3713,7 @@ const abrirRegistro = motivo => {
       guardadoParaRegistro = !invitadoEdito;
       guardarLocal();
     }
-    try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch {}
+    try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch { }
   }
   const elMotivo = $('#auth-motivo');
   elMotivo.textContent = MOTIVOS_REGISTRO[motivo] || '';
@@ -2767,7 +3730,7 @@ const cerrarRegistro = () => {
     sessionStorage.removeItem(`${CLAVE}:continuar`);
     // Si solo se guardó para el registro y al final no se registró, no queda nada guardado.
     if (guardadoParaRegistro && !invitadoEdito) localStorage.removeItem(CLAVE);
-  } catch {}
+  } catch { }
   guardadoParaRegistro = false;
 };
 $('#auth-cerrar').addEventListener('click', cerrarRegistro);
@@ -2784,14 +3747,14 @@ const mostrarMensaje = (el, texto) => {
 const mostrarErrorAuth = (el, msg) => {
   if (!el) return;
   const MENSAJES = {
-    'auth/user-not-found':          'No hay cuenta con ese email.',
-    'auth/wrong-password':          'Contraseña incorrecta.',
-    'auth/invalid-credential':      'Email o contraseña incorrectos.',
-    'auth/email-already-in-use':    'Ya existe una cuenta con ese email.',
-    'auth/weak-password':           'La contraseña debe tener al menos 6 caracteres.',
-    'auth/invalid-email':           'El email no es válido.',
-    'auth/too-many-requests':       'Demasiados intentos. Esperá un momento.',
-    'auth/popup-closed-by-user':    '',
+    'auth/user-not-found': 'No hay cuenta con ese email.',
+    'auth/wrong-password': 'Contraseña incorrecta.',
+    'auth/invalid-credential': 'Email o contraseña incorrectos.',
+    'auth/email-already-in-use': 'Ya existe una cuenta con ese email.',
+    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+    'auth/invalid-email': 'El email no es válido.',
+    'auth/too-many-requests': 'Demasiados intentos. Esperá un momento.',
+    'auth/popup-closed-by-user': '',
     'auth/cancelled-popup-request': ''
   };
   const texto = MENSAJES[msg?.code] ?? MENSAJES[msg?.message] ?? (typeof msg === 'string' ? msg : 'Ocurrió un error. Intentá de nuevo.');
@@ -2847,7 +3810,7 @@ if (authPantalla && AteneaDB) {
   authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = authEmail?.value.trim();
-    const pass  = authPass?.value;
+    const pass = authPass?.value;
     if (!email || !pass) return;
     setAuthCargando(true);
     if (authError) authError.hidden = true;
@@ -2927,7 +3890,7 @@ if (authPantalla && AteneaDB) {
     if (document.visibilityState !== 'visible' || elVerificar.hidden || !AteneaDB.auth.getUser()) return;
     try {
       if (await AteneaDB.auth.comprobarVerificacion()) entrar(AteneaDB.auth.getUser());
-    } catch {}
+    } catch { }
   });
 }
 
@@ -2965,7 +3928,7 @@ eliminarBoton.addEventListener('click', async () => {
     try {
       Object.keys(localStorage).filter(k => k.startsWith(CLAVE)).forEach(k => localStorage.removeItem(k));
       sessionStorage.setItem(`${CLAVE}:cuenta-eliminada`, '1');
-    } catch {}
+    } catch { }
     location.replace('/');
   } catch (e) {
     console.error('No se pudo eliminar la cuenta:', e);
@@ -3002,12 +3965,57 @@ const cerrarSesion = async () => {
   location.replace('/');
 };
 
+
+const mostrarClientePortafolio = datos => {
+  modoEditor = 'portafolio';
+  estadoPortafolio = normalizarPf(datos);
+  document.title = [estadoPortafolio.portafolio.titulo.trim() || 'Portfolio', estadoPortafolio.emisor.nombre.trim()].filter(Boolean).join(' · ');
+  renderPortafolio();
+};
+
+const iniciarClientePortafolio = async () => {
+  esCliente = true;
+  modoEditor = 'portafolio';
+  document.body.classList.add('modo-cliente');
+  try {
+    mostrarClientePortafolio(JSON.parse(await descomprimir(location.hash.slice(PREFIJO_PORTAFOLIO.length))));
+  } catch {
+    errorCliente('No pudimos abrir este portfolio', 'El link llegó incompleto o se cortó al copiarlo.');
+  }
+};
+
+const iniciarClientePortafolioCorto = async id => {
+  esCliente = true;
+  modoEditor = 'portafolio';
+  document.body.classList.add('modo-cliente');
+  if (!id || !AteneaDB?.portfolios) {
+    errorCliente('No pudimos abrir este portfolio', 'Revisá el link o tu conexión y recargá la página.');
+    return;
+  }
+  try {
+    const datos = await AteneaDB.portfolios.obtenerPublico(id);
+    if (datos && datos.payload) {
+      mostrarClientePortafolio(datos.payload);
+    } else {
+      errorCliente('Este portfolio ya no está disponible', 'Puede que el link se haya desactivado.');
+    }
+  } catch {
+    errorCliente('No pudimos abrir este portfolio', 'Hubo un problema al conectar. Revisá tu conexión y recargá la página.');
+  }
+};
+
 const esLinkCorto = location.pathname.startsWith('/p/');
-const esClienteLink = location.hash.startsWith(PREFIJO) || esLinkCorto;
+const esLinkPortafolioCorto = location.pathname.startsWith('/portafolio/');
+const esHashPortafolio = location.hash.startsWith(PREFIJO_PORTAFOLIO);
+const esClienteLink = location.hash.startsWith(PREFIJO) || esLinkCorto || esLinkPortafolioCorto || esHashPortafolio;
 
 if (!AteneaDB || esClienteLink) document.body.classList.remove('auth-cargando');
 
-if (esLinkCorto) {
+if (esLinkPortafolioCorto) {
+  iniciarClientePortafolioCorto((location.pathname.match(RUTA_PORTAFOLIO) || [])[1]);
+} else if (esHashPortafolio) {
+  iniciarClientePortafolio();
+} else if (esLinkCorto) {
   iniciarClienteCorto((location.pathname.match(RUTA_LINK) || [])[1]);
 } else if (esClienteLink) {
   iniciarCliente();
@@ -3044,7 +4052,7 @@ if (esLinkCorto) {
     }
     if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
     pintarAvatar(user);
-      if (!editorIniciado) {
+    if (!editorIniciado) {
       editorIniciado = true;
       // El spinner sigue visible hasta saber qué mostrar, así no se ve un editor vacío.
       document.body.classList.add('auth-cargando');
@@ -3062,7 +4070,7 @@ if (esLinkCorto) {
           sessionStorage.removeItem(`${CLAVE}:cuenta-eliminada`);
           avisar('Tu cuenta y todos tus datos se eliminaron.', 6000);
         }
-      } catch {}
+      } catch { }
       return;
     }
     // Al volver desde el link del email, el usuario en memoria puede estar desactualizado.
@@ -3086,5 +4094,5 @@ if (esLinkCorto) {
 }
 
 window.addEventListener('hashchange', () => {
-  if (location.hash.startsWith(PREFIJO) || esCliente) location.reload();
+  if (location.hash.startsWith(PREFIJO) || location.hash.startsWith(PREFIJO_PORTAFOLIO) || esCliente) location.reload();
 });

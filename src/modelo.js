@@ -588,6 +588,12 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
   n.objetivos.forEach(o => { o.texto = texto(o.texto); });
   n.etapas.forEach(e => ['nombre', 'duracion', 'descripcion'].forEach(k => { e[k] = texto(e[k]); }));
   n.inversion.pagos.forEach(p => { p.concepto = texto(p.concepto); });
+  if (n.opciones && typeof n.opciones === 'object') {
+    if ('portafolioId' in n.opciones) n.opciones.portafolioId = texto(n.opciones.portafolioId).trim();
+    if ('portafolio' in n.opciones) {
+      n.opciones.portafolio = n.opciones.portafolio ? normalizarResumenPortafolio(n.opciones.portafolio, { logoValido }) : null;
+    }
+  }
   if (!logoValido(n.emisor.logo)) n.emisor.logo = '';
   return n;
 };
@@ -611,4 +617,471 @@ export const calcularTotales = (e, sumados = new Set()) => {
     return { base, desc, imp, total: neto + imp };
   };
   return { inicial: bloque(inicial), mensual: bloque(mensual), descuento, impuesto };
+};
+
+
+export const LISTAS_PORTAFOLIO = {
+  proyectos: {
+    ruta: 'proyectos',
+    nombre: 'proyecto',
+    nuevo: () => ({
+      id: uid(),
+      titulo: '',
+      categoria: '',
+      subtitulo: '',
+      destacado: '',
+      descripcion: '',
+      tags: '',
+      imagen: '',
+      enlace: '',
+      textoEnlace: 'Ver proyecto'
+    })
+  },
+  especialidades: {
+    ruta: 'especialidades',
+    nombre: 'especialidad',
+    nuevo: () => ({ id: uid(), texto: '' })
+  }
+};
+
+export const vacioPortafolio = () => ({
+  emisor: { nombre: '', rol: '', email: '', telefono: '', web: '', presentacion: '', logo: '' },
+  portafolio: {
+    nombreInterno: '',
+    titulo: '',
+    subtitulo: '',
+    insignia: 'Portfolio & Casos',
+    disponibilidad: 'Disponible para nuevos proyectos',
+    ctaTexto: 'Contactar',
+    cierreTitulo: '¿Trabajamos juntos en tu próximo proyecto?',
+    cierreTexto: 'Escribime por WhatsApp o email para conversar sobre tu proyecto o solicitar una propuesta a medida.'
+  },
+  especialidades: [],
+  proyectos: [],
+  opciones: { credito: true },
+  tema: {
+    preset: 'elegante-oscuro',
+    acento: '#C9A84C',
+    colorTexto: '',
+    colorSvg: '',
+    opacidadSvg: 100,
+    fuenteTitulos: 'Bebas Neue',
+    fuenteCuerpo: 'Montserrat',
+    portada: 'editorial',
+    decoracion: 'marco',
+    estilo: 'bento'
+  }
+});
+
+export const ejemploPortafolio = () => ({
+  emisor: {
+    nombre: 'Martina Ríos',
+    rol: 'Diseño de marca, UX/UI y tiendas online',
+    email: 'hola@martinarios.com',
+    telefono: '+54 9 11 5555-0142',
+    web: 'martinarios.com',
+    presentacion: 'Diseño sistemas visuales y experiencias de compra digital para marcas que buscan diferenciarse. Cada proyecto combina estrategia comercial, dirección de arte e implementación técnica lista para vender.',
+    logo: ''
+  },
+  portafolio: {
+    nombreInterno: 'Portfolio Diseño & E-commerce',
+    titulo: 'Selección de proyectos y casos de estudio',
+    subtitulo: 'Identidad visual, diseño UX/UI y tiendas online desarrolladas a medida.',
+    insignia: 'Portfolio & Casos',
+    disponibilidad: 'Agenda abierta para nuevos proyectos',
+    ctaTexto: 'Contactar por un proyecto',
+    cierreTitulo: '¿Tenés un proyecto en mente?',
+    cierreTexto: 'Contame qué querés lanzar o rediseñar y te preparo una propuesta a medida con plazos e inversión detallada.'
+  },
+  especialidades: [
+    { id: uid(), texto: 'Identidad visual y manuales de marca' },
+    { id: uid(), texto: 'Diseño UX/UI en Figma' },
+    { id: uid(), texto: 'Tiendas online y e-commerce' },
+    { id: uid(), texto: 'Dirección de arte y packaging' }
+  ],
+  proyectos: [
+    {
+      id: uid(),
+      titulo: 'Rebranding integral y tienda online',
+      categoria: 'Branding & E-commerce',
+      subtitulo: 'Almacén Botánico · Palermo',
+      destacado: '+140% ventas online en 60 días',
+      descripcion: 'Rediseño completo del sistema visual, fotografía de catálogo y desarrollo de tienda con cobros integrados y cálculo automático de envíos en AMBA.',
+      tags: 'Identidad visual, Tienda Nube / Shopify, Packaging, Fotografía',
+      imagen: '',
+      enlace: 'https://almacenbotanico.example.com',
+      textoEnlace: 'Ver caso online'
+    },
+    {
+      id: uid(),
+      titulo: 'Identidad gastronómica y carta digital interactiva',
+      categoria: 'Dirección de Arte & Web',
+      subtitulo: 'Casa Tostadores · Especialidad',
+      destacado: 'Sistema para 3 sucursales',
+      descripcion: 'Creación de marca desde cero, empaques para café de especialidad en grano y experiencia web móvil para reservas y suscripción mensual.',
+      tags: 'Branding, Packaging, Diseño Web, Ilustración',
+      imagen: '',
+      enlace: '',
+      textoEnlace: 'Ver proyecto'
+    },
+    {
+      id: uid(),
+      titulo: 'Landing page de alta conversión y sistema UI',
+      categoria: 'UX/UI & Desarrollo Web',
+      subtitulo: 'Lumen Estudio Solar',
+      destacado: '3.8x más solicitudes de cotización',
+      descripcion: 'Arquitectura de información, calculadora interactiva de ahorro energético y diseño de interfaz adaptable con tiempos de carga menores a 1 segundo.',
+      tags: 'Figma, Diseño UI, Desarrollo Frontend, SEO',
+      imagen: '',
+      enlace: '',
+      textoEnlace: 'Ver proyecto'
+    }
+  ],
+  opciones: { credito: true },
+  tema: {
+    preset: 'elegante-oscuro',
+    acento: '#C9A84C',
+    colorTexto: '',
+    colorSvg: '',
+    opacidadSvg: 100,
+    fuenteTitulos: 'Bebas Neue',
+    fuenteCuerpo: 'Montserrat',
+    portada: 'editorial',
+    decoracion: 'marco',
+    estilo: 'bento'
+  }
+});
+
+export const PLANTILLAS_PORTAFOLIO = {
+  'diseno-web': {
+    nombre: 'Diseño, Branding & Web',
+    rubro: 'Diseño & Estudio',
+    desc: 'Casos de identidad visual, tiendas online y dirección de arte.',
+    plan: 'gratis',
+    crear: () => ejemploPortafolio()
+  },
+  'software-producto': {
+    nombre: 'Software, Apps & Tech',
+    rubro: 'Desarrollo & SaaS',
+    desc: 'Plataformas web, paneles operativos, APIs y productos digitales.',
+    plan: 'pro',
+    crear: () => ({
+      emisor: {
+        nombre: 'Nexo Digital Studio',
+        rol: 'Desarrollo de software a medida, UX/UI y automatización',
+        email: 'proyectos@nexodigital.io',
+        telefono: '+54 9 11 4488-9210',
+        web: 'nexodigital.io',
+        presentacion: 'Construimos aplicaciones web rápidas, paneles operativos e integraciones en la nube. Diseñamos pensando en la usabilidad diaria del equipo y en una arquitectura limpia que escale sin fricción.',
+        logo: ''
+      },
+      portafolio: {
+        nombreInterno: 'Portfolio Software & Producto',
+        titulo: 'Productos digitales y sistemas en producción',
+        subtitulo: 'Aplicaciones web, portales B2B y automatizaciones diseñadas a medida.',
+        insignia: 'Portfolio Técnico',
+        disponibilidad: 'Disponibles para nuevos desarrollos',
+        ctaTexto: 'Agendar llamada técnica',
+        cierreTitulo: '¿Querés digitalizar un proceso o lanzar tu plataforma?',
+        cierreTexto: 'Analizamos tu caso sin cargo y te proponemos una arquitectura por etapas con entregas quincenales.'
+      },
+      especialidades: [
+        { id: uid(), texto: 'Aplicaciones Web Full-Stack' },
+        { id: uid(), texto: 'Portales de clientes y paneles B2B' },
+        { id: uid(), texto: 'Integraciones API y WhatsApp Cloud' },
+        { id: uid(), texto: 'Prototipado UX/UI en Figma' }
+      ],
+      proyectos: [
+        {
+          id: uid(),
+          titulo: 'Portal corporativo de trazabilidad logística en vivo',
+          categoria: 'Web App & API REST',
+          subtitulo: 'Logística Sur S.A.',
+          destacado: '-72% consultas manuales de soporte',
+          descripcion: 'Plataforma autogestionable para más de 400 empresas clientes con seguimiento de envíos en tiempo real, descarga de remitos firmados y alertas por WhatsApp.',
+          tags: 'React, Node.js, PostgreSQL, WhatsApp API',
+          imagen: '',
+          enlace: '',
+          textoEnlace: 'Ver arquitectura'
+        },
+        {
+          id: uid(),
+          titulo: 'Sistema de turnos, historia clínica y cobros online',
+          categoria: 'Plataforma SaaS',
+          subtitulo: 'Red de Consultorios Vitae',
+          destacado: '+12.000 turnos mensuales gestionados',
+          descripcion: 'Agenda médica multi-sede con recordatorios automáticos, cobro de señas por Mercado Pago y liquidación automática de honorarios para 45 profesionales.',
+          tags: 'TypeScript, Firebase, Mercado Pago API, PWA',
+          imagen: '',
+          enlace: '',
+          textoEnlace: 'Ver caso'
+        },
+        {
+          id: uid(),
+          titulo: 'Tablero gerencial de ventas e inventario multi-depósito',
+          categoria: 'BI & Automatización',
+          subtitulo: 'Distribuidora Andina',
+          destacado: 'Sincronización en tiempo real',
+          descripcion: 'Unificación de stock entre ERP, tienda mayorista y vendedores en calle, con alertas de reposición y métricas de rentabilidad por línea.',
+          tags: 'Dashboard, API ERP, Cloud Functions, UX/UI',
+          imagen: '',
+          enlace: '',
+          textoEnlace: 'Ver proyecto'
+        }
+      ],
+      opciones: { credito: true },
+      tema: {
+        preset: 'aurora-tech',
+        acento: '#06B6D4',
+        colorTexto: '',
+        colorSvg: '',
+        opacidadSvg: 100,
+        fuenteTitulos: 'Sora',
+        fuenteCuerpo: 'IBM Plex Sans',
+        portada: 'impacto',
+        decoracion: 'aurora',
+        estilo: 'bento'
+      }
+    })
+  },
+  'marketing-contenido': {
+    nombre: 'Marketing, Redes & Video',
+    rubro: 'Agencia & Contenido',
+    desc: 'Campañas digitales, producción de Reels, estrategia y performance.',
+    plan: 'pro',
+    crear: () => ({
+      emisor: {
+        nombre: 'Pulso Estudio Creativo',
+        rol: 'Contenido audiovisual, redes sociales y campañas Meta/Google Ads',
+        email: 'hola@pulsoestudio.ar',
+        telefono: '+54 9 11 6120-3344',
+        web: 'pulsoestudio.ar',
+        presentacion: 'Combinamos dirección creativa, rodaje ágil y pauta publicitaria para que las marcas no solo sumen visualizaciones, sino consultas, reservas y ventas medibles.',
+        logo: ''
+      },
+      portafolio: {
+        nombreInterno: 'Portfolio Agencia & Redes',
+        titulo: 'Campañas, contenido audiovisual y resultados',
+        subtitulo: 'Reels, dirección de arte y performance para marcas gastronómicas y lifestyle.',
+        insignia: 'Casos & Reel',
+        disponibilidad: 'Cupos mensuales disponibles',
+        ctaTexto: 'Consultar disponibilidad',
+        cierreTitulo: '¿Listos para darle pulso a tu marca?',
+        cierreTexto: 'Escribinos para evaluar tu cuenta actual y armar un plan de contenidos y anuncios a medida.'
+      },
+      especialidades: [
+        { id: uid(), texto: 'Producción y edición de Reels 4K' },
+        { id: uid(), texto: 'Estrategia y gestión de Instagram & TikTok' },
+        { id: uid(), texto: 'Campañas en Meta Ads y Google Ads' },
+        { id: uid(), texto: 'Fotografía gastronómica y de producto' }
+      ],
+      proyectos: [
+        {
+          id: uid(),
+          titulo: 'Relanzamiento audiovisual y campaña de reservas nocturnas',
+          categoria: 'Reels & Meta Ads',
+          subtitulo: 'Casa Brava Bistró',
+          destacado: 'Salón completo de jueves a sábado',
+          descripcion: 'Producción mensual en locación mostrando cocina en vivo y coctelería, acompañada de anuncios segmentados por radio geográfico directo a WhatsApp.',
+          tags: 'Rodaje 4K, Reels, Meta Ads, Dirección de Arte',
+          imagen: '',
+          enlace: '',
+          textoEnlace: 'Ver piezas'
+        },
+        {
+          id: uid(),
+          titulo: 'Lanzamiento de colección cápsula y performance e-commerce',
+          categoria: 'Campaña Integral',
+          subtitulo: 'Ámbar Indumentaria',
+          destacado: 'ROAS 6.4x en mes de lanzamiento',
+          descripcion: 'Editorial fotográfica, serie de 10 videos cortos de estilismo y embudo de anuncios dinámicos de catálogo para venta online en todo el país.',
+          tags: 'Fotografía, TikTok & Reels, Social Ads, Copywriting',
+          imagen: '',
+          enlace: '',
+          textoEnlace: 'Ver campaña'
+        }
+      ],
+      opciones: { credito: true },
+      tema: {
+        preset: 'editorial-studio',
+        acento: '#E11D48',
+        colorTexto: '',
+        colorSvg: '',
+        opacidadSvg: 100,
+        fuenteTitulos: 'Archivo Black',
+        fuenteCuerpo: 'Source Sans 3',
+        portada: 'dividida',
+        decoracion: 'geometrica',
+        estilo: 'tarjetas'
+      }
+    })
+  },
+  'conceptos-expertise': {
+    nombre: 'Conceptos & Muestra de Expertise',
+    rubro: 'Sin clientes previos',
+    desc: 'Ideal para presentar proyectos conceptuales, rediseños y habilidades técnicas.',
+    plan: 'gratis',
+    crear: () => ({
+      emisor: {
+        nombre: 'Lucas Méndez',
+        rol: 'Diseñador UX/UI & Desarrollador Frontend',
+        email: 'lucas@mendezstudio.dev',
+        telefono: '+54 9 11 3344-7788',
+        web: 'mendezstudio.dev',
+        presentacion: 'Me especializo en diseñar interfaces claras y construir sitios web modernos y veloces. Desarrollé esta selección de casos de estudio y prototipos funcionales para mostrar mi criterio visual, proceso de trabajo y calidad de código en distintos rubros.',
+        logo: ''
+      },
+      portafolio: {
+        nombreInterno: 'Portfolio Proyectos Conceptuales',
+        titulo: 'Muestras de trabajo y prototipos funcionales',
+        subtitulo: 'Exploraciones de diseño, arquitectura de interfaz y desarrollo web aplicado a casos reales de uso.',
+        insignia: 'Portfolio Profesional',
+        disponibilidad: 'Disponible para proyectos freelance',
+        ctaTexto: 'Contratar / Consultar',
+        cierreTitulo: '¿Te gusta este enfoque para tu proyecto?',
+        cierreTexto: 'Puedo aplicar este mismo nivel de detalle y dedicación en tu marca o negocio. Escribime y conversamos sin compromiso.'
+      },
+      especialidades: [
+        { id: uid(), texto: 'Diseño de interfaces (Figma)' },
+        { id: uid(), texto: 'Desarrollo Web Responsivo' },
+        { id: uid(), texto: 'Prototipos interactivos' },
+        { id: uid(), texto: 'Optimización de conversión y velocidad' }
+      ],
+      proyectos: [
+        {
+          id: uid(),
+          titulo: 'Kova — Experiencia de compra para café de especialidad',
+          categoria: 'Proyecto Conceptual · E-commerce',
+          subtitulo: 'Caso de estudio propio',
+          destacado: 'Flujo de suscripción en 3 pasos',
+          descripcion: 'Exploración de marca y diseño de tienda online con un recomendador interactivo según el método de filtrado del usuario y checkout simplificado para celular.',
+          tags: 'Figma, Sistema de Diseño, Prototipo Mobile, UI',
+          imagen: '',
+          enlace: '',
+          textoEnlace: 'Ver prototipo'
+        },
+        {
+          id: uid(),
+          titulo: 'NovaPay — Rediseño de billetera virtual y panel de gastos',
+          categoria: 'Caso de Estudio UX/UI',
+          subtitulo: 'Concepto Fintech',
+          destacado: '24 pantallas + modo oscuro',
+          descripcion: 'Rediseño conceptual enfocado en simplificar la lectura de gastos mensuales, transferencias frecuentes en un toque y accesibilidad de contraste AAA.',
+          tags: 'UX Research, Wireframes, Design System, Accesibilidad',
+          imagen: '',
+          enlace: '',
+          textoEnlace: 'Ver estudio'
+        },
+        {
+          id: uid(),
+          titulo: 'Landing page interactiva para estudio de arquitectura',
+          categoria: 'Desarrollo Frontend',
+          subtitulo: 'Demostración técnica',
+          destacado: 'Puntaje 100/100 en Lighthouse',
+          descripcion: 'Maquetado web editorial con grilla adaptable, galería filtrable por tipología de obra y formulario de cotización paso a paso.',
+          tags: 'HTML5, SCSS, JavaScript, Animaciones CSS',
+          imagen: '',
+          enlace: '',
+          textoEnlace: 'Ver demo en vivo'
+        }
+      ],
+      opciones: { credito: true },
+      tema: {
+        preset: 'moderno',
+        acento: '#8B5CF6',
+        colorTexto: '',
+        colorSvg: '',
+        opacidadSvg: 100,
+        fuenteTitulos: 'Space Grotesk',
+        fuenteCuerpo: 'Inter',
+        portada: 'impacto',
+        decoracion: 'aurora',
+        estilo: 'bento'
+      }
+    })
+  }
+};
+
+export const normalizarResumenPortafolio = (datos, { logoValido = logo => /^data:image\//.test(logo) } = {}) => {
+  if (!datos || typeof datos !== 'object') return null;
+  const proyectos = Array.isArray(datos.proyectos)
+    ? datos.proyectos
+      .filter(x => x && typeof x === 'object')
+      .map(x => ({
+        id: texto(x.id) || uid(),
+        titulo: texto(x.titulo),
+        categoria: texto(x.categoria),
+        subtitulo: texto(x.subtitulo),
+        destacado: texto(x.destacado),
+        descripcion: texto(x.descripcion),
+        tags: texto(x.tags),
+        imagen: logoValido(texto(x.imagen)) ? texto(x.imagen) : '',
+        enlace: texto(x.enlace),
+        textoEnlace: texto(x.textoEnlace) || 'Ver proyecto'
+      }))
+    : [];
+  return {
+    id: texto(datos.id),
+    titulo: texto(datos.titulo),
+    subtitulo: texto(datos.subtitulo),
+    insignia: texto(datos.insignia) || 'Portfolio & Casos',
+    publico: datos.publico === true,
+    proyectos
+  };
+};
+
+export const normalizarPortafolio = (datos, { logoValido = logo => /^data:image\//.test(logo) } = {}) => {
+  const base = vacioPortafolio();
+  const d = datos && typeof datos === 'object' ? datos : {};
+  const lista = (arr, nuevo) => (Array.isArray(arr) ? arr.filter(x => x && typeof x === 'object').map(x => ({ ...nuevo(), ...x, id: x.id || uid() })) : []);
+  const limpiar = (obj, molde) => Object.fromEntries(Object.entries(molde).map(([k, v]) => [k, typeof v === 'string' ? texto(obj?.[k] ?? v) : (obj?.[k] ?? v)]));
+  const temaEntrada = d.tema && typeof d.tema === 'object' ? d.tema : {};
+  const presetValido = TEMAS[temaEntrada.preset] ? temaEntrada.preset : 'elegante-oscuro';
+  const presetDef = TEMAS[presetValido];
+  const esColorHex = c => /^#[0-9A-Fa-f]{6}$/.test(texto(c).trim());
+  const opacidadCruda = temaEntrada.opacidadSvg;
+  const opacidadValida = opacidadCruda !== undefined && opacidadCruda !== null && opacidadCruda !== '' && Number.isFinite(Number(opacidadCruda))
+    ? Math.min(200, Math.max(0, Math.round(Number(opacidadCruda))))
+    : 100;
+  const n = {
+    emisor: limpiar(d.emisor, base.emisor),
+    portafolio: limpiar(d.portafolio, base.portafolio),
+    especialidades: lista(d.especialidades, LISTAS_PORTAFOLIO.especialidades.nuevo),
+    proyectos: lista(d.proyectos, LISTAS_PORTAFOLIO.proyectos.nuevo),
+    opciones: { credito: d.opciones?.credito !== undefined ? !!d.opciones.credito : true },
+    tema: {
+      ...base.tema,
+      ...temaEntrada,
+      preset: presetValido,
+      acento: esColorHex(temaEntrada.acento) ? texto(temaEntrada.acento).trim() : (presetDef.acento || base.tema.acento),
+      colorTexto: esColorHex(temaEntrada.colorTexto) ? texto(temaEntrada.colorTexto).trim() : '',
+      colorSvg: esColorHex(temaEntrada.colorSvg) ? texto(temaEntrada.colorSvg).trim() : '',
+      opacidadSvg: opacidadValida,
+      portada: PORTADAS[temaEntrada.portada] ? temaEntrada.portada : (presetDef.portada || 'editorial'),
+      decoracion: DECORACIONES[temaEntrada.decoracion] ? temaEntrada.decoracion : (presetDef.decoracion || 'marco'),
+      estilo: ESTILOS_BLOQUES[temaEntrada.estilo] ? temaEntrada.estilo : (presetDef.estilo || 'bento')
+    }
+  };
+  n.especialidades.forEach(e => { e.texto = texto(e.texto); });
+  n.proyectos.forEach(p => {
+    ['titulo', 'categoria', 'subtitulo', 'destacado', 'descripcion', 'tags', 'enlace', 'textoEnlace'].forEach(k => {
+      p[k] = texto(p[k]);
+    });
+    if (!p.textoEnlace.trim()) p.textoEnlace = 'Ver proyecto';
+    p.imagen = logoValido(texto(p.imagen)) ? texto(p.imagen) : '';
+  });
+  if (!logoValido(n.emisor.logo)) n.emisor.logo = '';
+  return n;
+};
+
+export const resumenPortafolio = (portafolio, id = '', publico = false) => {
+  const norm = normalizarPortafolio(portafolio, { logoValido: () => true });
+  return {
+    id: texto(id),
+    titulo: norm.portafolio.titulo.trim() || norm.portafolio.nombreInterno.trim() || 'Portfolio de proyectos',
+    subtitulo: norm.portafolio.subtitulo.trim(),
+    insignia: norm.portafolio.insignia.trim() || 'Portfolio & Casos',
+    publico: !!publico,
+    proyectos: norm.proyectos.filter(p => p.titulo.trim() || p.descripcion.trim() || p.imagen)
+  };
 };
