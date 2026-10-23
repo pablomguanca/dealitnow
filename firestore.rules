@@ -14,12 +14,16 @@ service cloud.firestore {
       // Datos del negocio que se usan por defecto en las propuestas nuevas.
       function emisorValido(e) {
         return e is map
-          && e.keys().hasOnly(['nombre', 'rol', 'email', 'telefono', 'web', 'presentacion', 'logo'])
+          && e.keys().hasOnly(['nombre', 'rol', 'email', 'telefono', 'web', 'presentacion', 'logo', 'foto', 'ubicacion', 'instagram', 'linkedin', 'behance', 'github'])
           && texto(e, 'nombre', 200) && texto(e, 'rol', 200) && texto(e, 'email', 200)
           && texto(e, 'telefono', 200) && texto(e, 'web', 200) && texto(e, 'presentacion', 2000)
-          // El logo solo puede ser un archivo del Storage de Dealit.
+          && texto(e, 'ubicacion', 200) && texto(e, 'instagram', 200) && texto(e, 'linkedin', 200)
+          && texto(e, 'behance', 200) && texto(e, 'github', 200)
+          // El logo y la foto solo pueden ser archivos del Storage de Dealit.
           && texto(e, 'logo', 1000)
-          && (e.get('logo', '') == '' || e.get('logo', '').matches('https://firebasestorage[.]googleapis[.]com/v0/b/dealit-7f735[.]firebasestorage[.]app/o/.*'));
+          && (e.get('logo', '') == '' || e.get('logo', '').matches('https://firebasestorage[.]googleapis[.]com/v0/b/dealit-7f735[.]firebasestorage[.]app/o/.*'))
+          && texto(e, 'foto', 1000)
+          && (e.get('foto', '') == '' || e.get('foto', '').matches('https://firebasestorage[.]googleapis[.]com/v0/b/dealit-7f735[.]firebasestorage[.]app/o/.*'));
       }
 
       allow read: if esDueno(uid);

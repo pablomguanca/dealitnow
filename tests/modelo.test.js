@@ -3,6 +3,10 @@ import {
   DECORACIONES,
   ESTILOS_BLOQUES,
   PLANTILLAS,
+  PLANTILLAS_PORTAFOLIO,
+  ejemploPortafolio,
+  normalizarPortafolio,
+  resumenPortafolio,
   PORTADAS,
   TEMAS,
   calcularTotales,
@@ -76,10 +80,13 @@ describe('normalizarPropuesta', () => {
     expect(n.servicios[0]).toMatchObject({ nombre: '5', modalidad: 'unico' });
     expect(n.servicios[0].id).toBeTruthy();
 
-    const aurora = normalizarPropuesta({ tema: { preset: 'aurora-tech' } });
+    const aurora = normalizarPropuesta({ tema: { preset: 'aurora-tech', colorTexto: '#F8FAFC', colorSvg: '#38BDF8', opacidadSvg: 160 } });
     expect(aurora.tema.portada).toBe('impacto');
     expect(aurora.tema.decoracion).toBe('aurora');
     expect(aurora.tema.estilo).toBe('bento');
+    expect(aurora.tema.colorTexto).toBe('#F8FAFC');
+    expect(aurora.tema.colorSvg).toBe('#38BDF8');
+    expect(aurora.tema.opacidadSvg).toBe(160);
   });
 
   it('descarta logos que no pasan la validación', () => {
@@ -101,5 +108,66 @@ describe('normalizarPropuesta', () => {
       expect(DECORACIONES[creada.tema.decoracion]).toBeTruthy();
       expect(ESTILOS_BLOQUES[creada.tema.estilo]).toBeTruthy();
     }
+  });
+});
+
+describe('normalizarPortafolio', () => {
+  it('es idempotente con el portfolio de ejemplo y todas las plantillas de portfolio', () => {
+    const base = normalizarPortafolio(ejemploPortafolio());
+    expect(normalizarPortafolio(base)).toEqual(base);
+    for (const [id, tpl] of Object.entries(PLANTILLAS_PORTAFOLIO)) {
+      const creado = normalizarPortafolio(tpl.crear());
+      expect(normalizarPortafolio(creado), `plantilla portafolio ${id}`).toEqual(creado);
+      expect(creado.proyectos.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('permite vincular un resumen de portfolio dentro de una propuesta', () => {
+    const pf = normalizarPortafolio(ejemploPortafolio());
+    const res = resumenPortafolio(pf, 'pf123', true);
+    const prop = normalizarPropuesta({
+      ...ejemplo(),
+      opciones: { firmas: true, credito: true, portafolioId: 'pf123', portafolio: res }
+    });
+    expect(prop.opciones.portafolioId).toBe('pf123');
+    expect(prop.opciones.portafolio.proyectos.length).toBe(pf.proyectos.length);
+    expect(normalizarPropuesta(prop)).toEqual(prop);
+  });
+
+  it('soporta fotos de perfil, portada hero, galería libre, galería por proyecto, testimonios y FAQs', () => {
+    const imgData = 'data:image/webp;base64,UklGRh4AAABXRUJQVlA4TBEAAAAvAAAAAAfQ//73v/+BiOh/AAA=';
+    const pf = normalizarPortafolio({
+      ...ejemploPortafolio(),
+      emisor: { ...ejemploPortafolio().emisor, foto: imgData, ubicacion: 'Buenos Aires', instagram: '@test' },
+      portafolio: { ...ejemploPortafolio().portafolio, imagenPortada: imgData, opacidadPortada: 45 },
+      proyectos: [
+        { ...ejemploPortafolio().proyectos[0], imagen: imgData, galeria: [imgData, imgData], proporcion: 'vertical' }
+      ],
+      galeria: [{ id: 'g1', imagen: imgData, titulo: 'Foto 1', descripcion: 'Detalle', proporcion: 'cuadrada' }],
+      testimonios: [{ id: 't1', texto: 'Excelente', autor: 'Juan', rol: 'CEO', avatar: imgData }],
+      faqs: [{ id: 'f1', pregunta: '¿Plazos?', respuesta: '2 semanas' }]
+    });
+    expect(pf.emisor.foto).toBe(imgData);
+    expect(pf.portafolio.imagenPortada).toBe(imgData);
+    expect(pf.portafolio.opacidadPortada).toBe(45);
+    expect(pf.proyectos[0].galeria).toHaveLength(2);
+    expect(pf.proyectos[0].proporcion).toBe('vertical');
+    expect(pf.galeria[0].proporcion).toBe('cuadrada');
+    expect(normalizarPortafolio(pf)).toEqual(pf);
+
+    const prop = normalizarPropuesta({
+      ...ejemplo(),
+      emisor: { ...ejemplo().emisor, foto: imgData },
+      propuesta: { ...ejemplo().propuesta, imagenPortada: imgData, opacidadPortada: 50 },
+      galeria: [{ id: 'g2', imagen: imgData, titulo: 'Ref', descripcion: '', proporcion: 'panoramica' }],
+      testimonios: [{ id: 't2', texto: 'Muy bueno', autor: 'Ana', rol: 'Directora', avatar: imgData }],
+      faqs: [{ id: 'f2', pregunta: '¿Garantía?', respuesta: '60 días' }]
+    });
+    expect(prop.emisor.foto).toBe(imgData);
+    expect(prop.propuesta.imagenPortada).toBe(imgData);
+    expect(prop.galeria).toHaveLength(1);
+    expect(prop.testimonios).toHaveLength(1);
+    expect(prop.faqs).toHaveLength(1);
+    expect(normalizarPropuesta(prop)).toEqual(prop);
   });
 });

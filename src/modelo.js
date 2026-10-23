@@ -44,6 +44,20 @@ export const ESTILOS_BLOQUES = {
   minimal: { nombre: 'Acento lateral', desc: 'Barras verticales de color y diseño limpio' }
 };
 
+export const PROPORCIONES_IMAGEN = {
+  panoramica: { nombre: 'Panorámica (16:9)', ratio: '16 / 9.5' },
+  cuadrada: { nombre: 'Cuadrada (1:1)', ratio: '1 / 1' },
+  vertical: { nombre: 'Vertical (4:5)', ratio: '4 / 5' },
+  natural: { nombre: 'Proporción original', ratio: 'auto' }
+};
+
+export const LAYOUTS_GALERIA = {
+  grilla: { nombre: 'Grilla uniforme (2 columnas)' },
+  bento: { nombre: 'Mosaico Bento (destaca la 1ª foto)' },
+  editorial: { nombre: 'Editorial (1 columna grande)' },
+  carrusel: { nombre: 'Tira deslizable horizontal' }
+};
+
 export const TEMAS = {
   'elegante-oscuro': {
     nombre: 'Elegante oscuro', etiqueta: 'Noir & Oro', plan: 'gratis', acento: '#C9A84C', modo: 'oscuro',
@@ -127,23 +141,41 @@ export const hoyISO = () => {
 
 export const LISTAS = {
   objetivos: { ruta: 'objetivos', nombre: 'objetivo', nuevo: () => ({ id: uid(), texto: '' }) },
-  servicios: { ruta: 'servicios', nombre: 'servicio', nuevo: () => ({ id: uid(), nombre: '', modalidad: 'unico', cantidad: 1, precio: 0, descripcion: '', entregables: '', opcional: false }) },
+  servicios: { ruta: 'servicios', nombre: 'servicio', nuevo: () => ({ id: uid(), nombre: '', modalidad: 'unico', cantidad: 1, precio: 0, descripcion: '', entregables: '', opcional: false, imagen: '' }) },
   etapas: { ruta: 'etapas', nombre: 'etapa', nuevo: () => ({ id: uid(), nombre: '', duracion: '', descripcion: '' }) },
-  pagos: { ruta: 'inversion.pagos', nombre: 'pago', nuevo: () => ({ id: uid(), concepto: '', porcentaje: 0 }) }
+  pagos: { ruta: 'inversion.pagos', nombre: 'pago', nuevo: () => ({ id: uid(), concepto: '', porcentaje: 0 }) },
+  galeria: { ruta: 'galeria', nombre: 'foto', nuevo: () => ({ id: uid(), imagen: '', titulo: '', descripcion: '', proporcion: 'panoramica' }) },
+  testimonios: { ruta: 'testimonios', nombre: 'testimonio', nuevo: () => ({ id: uid(), texto: '', autor: '', rol: '', avatar: '' }) },
+  faqs: { ruta: 'faqs', nombre: 'pregunta', nuevo: () => ({ id: uid(), pregunta: '', respuesta: '' }) }
 };
 
 export const vacio = () => ({
-  emisor: { nombre: '', rol: '', email: '', telefono: '', web: '', presentacion: '', logo: '' },
+  emisor: {
+    nombre: '', rol: '', email: '', telefono: '', web: '', presentacion: '',
+    logo: '', foto: '', ubicacion: '', instagram: '', linkedin: '', behance: '', github: ''
+  },
   cliente: { nombre: '', empresa: '', cargo: '' },
-  propuesta: { titulo: '', numero: '', fecha: hoyISO(), validez: 15 },
+  propuesta: { titulo: '', numero: '', fecha: hoyISO(), validez: 15, imagenPortada: '', opacidadPortada: 35 },
   contexto: '',
   objetivos: [],
   servicios: [],
   etapas: [],
+  galeria: [],
+  testimonios: [],
+  faqs: [],
   inversion: { moneda: 'USD', descuento: 0, impuestoNombre: 'IVA', impuesto: 0, pagos: [] },
   condiciones: '',
   proximosPasos: '',
-  opciones: { firmas: true, credito: true },
+  opciones: {
+    firmas: true,
+    credito: true,
+    barraNav: false,
+    lightbox: true,
+    galeriaTitulo: 'Galería visual y referencias',
+    galeriaSubtitulo: '',
+    galeriaLayout: 'bento',
+    galeriaProporcion: 'panoramica'
+  },
   tema: {
     preset: 'elegante-oscuro',
     acento: '#C9A84C',
@@ -556,18 +588,39 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
   const opacidadValida = opacidadCruda !== undefined && opacidadCruda !== null && opacidadCruda !== '' && Number.isFinite(Number(opacidadCruda))
     ? Math.min(200, Math.max(0, Math.round(Number(opacidadCruda))))
     : 100;
+  const opPortadaCruda = d.propuesta?.opacidadPortada;
+  const opPortadaValida = opPortadaCruda !== undefined && opPortadaCruda !== null && opPortadaCruda !== '' && Number.isFinite(Number(opPortadaCruda))
+    ? Math.min(90, Math.max(0, Math.round(Number(opPortadaCruda))))
+    : 35;
   const n = {
     emisor: limpiar(d.emisor, base.emisor),
     cliente: limpiar(d.cliente, base.cliente),
-    propuesta: limpiar(d.propuesta, base.propuesta),
+    propuesta: {
+      ...limpiar(d.propuesta, base.propuesta),
+      opacidadPortada: opPortadaValida
+    },
     contexto: texto(d.contexto),
     objetivos: lista(d.objetivos, LISTAS.objetivos.nuevo),
     servicios: lista(d.servicios, LISTAS.servicios.nuevo),
     etapas: lista(d.etapas, LISTAS.etapas.nuevo),
+    galeria: lista(d.galeria, LISTAS.galeria.nuevo),
+    testimonios: lista(d.testimonios, LISTAS.testimonios.nuevo),
+    faqs: lista(d.faqs, LISTAS.faqs.nuevo),
     inversion: { ...limpiar(d.inversion, base.inversion), pagos: lista(d.inversion?.pagos, LISTAS.pagos.nuevo) },
     condiciones: texto(d.condiciones),
     proximosPasos: texto(d.proximosPasos),
-    opciones: { ...base.opciones, ...(d.opciones || {}) },
+    opciones: {
+      ...base.opciones,
+      ...(d.opciones || {}),
+      firmas: d.opciones?.firmas !== undefined ? !!d.opciones.firmas : true,
+      credito: d.opciones?.credito !== undefined ? !!d.opciones.credito : true,
+      barraNav: d.opciones?.barraNav !== undefined ? !!d.opciones.barraNav : false,
+      lightbox: d.opciones?.lightbox !== undefined ? !!d.opciones.lightbox : true,
+      galeriaTitulo: texto(d.opciones?.galeriaTitulo ?? base.opciones.galeriaTitulo),
+      galeriaSubtitulo: texto(d.opciones?.galeriaSubtitulo ?? base.opciones.galeriaSubtitulo),
+      galeriaLayout: LAYOUTS_GALERIA[d.opciones?.galeriaLayout] ? d.opciones.galeriaLayout : 'bento',
+      galeriaProporcion: PROPORCIONES_IMAGEN[d.opciones?.galeriaProporcion] ? d.opciones.galeriaProporcion : 'panoramica'
+    },
     tema: {
       ...base.tema,
       ...temaEntrada,
@@ -584,9 +637,24 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
   n.servicios.forEach(s => {
     ['nombre', 'descripcion', 'entregables'].forEach(k => { s[k] = texto(s[k]); });
     if (!MODALIDADES[s.modalidad]) s.modalidad = 'unico';
+    s.imagen = logoValido(texto(s.imagen)) ? texto(s.imagen) : '';
   });
   n.objetivos.forEach(o => { o.texto = texto(o.texto); });
   n.etapas.forEach(e => ['nombre', 'duracion', 'descripcion'].forEach(k => { e[k] = texto(e[k]); }));
+  n.galeria.forEach(g => {
+    g.titulo = texto(g.titulo);
+    g.descripcion = texto(g.descripcion);
+    g.proporcion = PROPORCIONES_IMAGEN[g.proporcion] ? g.proporcion : 'panoramica';
+    g.imagen = logoValido(texto(g.imagen)) ? texto(g.imagen) : '';
+  });
+  n.testimonios.forEach(t => {
+    ['texto', 'autor', 'rol'].forEach(k => { t[k] = texto(t[k]); });
+    t.avatar = logoValido(texto(t.avatar)) ? texto(t.avatar) : '';
+  });
+  n.faqs.forEach(f => {
+    f.pregunta = texto(f.pregunta);
+    f.respuesta = texto(f.respuesta);
+  });
   n.inversion.pagos.forEach(p => { p.concepto = texto(p.concepto); });
   if (n.opciones && typeof n.opciones === 'object') {
     if ('portafolioId' in n.opciones) n.opciones.portafolioId = texto(n.opciones.portafolioId).trim();
@@ -595,6 +663,8 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
     }
   }
   if (!logoValido(n.emisor.logo)) n.emisor.logo = '';
+  if (!logoValido(n.emisor.foto)) n.emisor.foto = '';
+  if (!logoValido(n.propuesta.imagenPortada)) n.propuesta.imagenPortada = '';
   return n;
 };
 
@@ -633,6 +703,8 @@ export const LISTAS_PORTAFOLIO = {
       descripcion: '',
       tags: '',
       imagen: '',
+      galeria: [],
+      proporcion: 'panoramica',
       enlace: '',
       textoEnlace: 'Ver proyecto'
     })
@@ -641,24 +713,62 @@ export const LISTAS_PORTAFOLIO = {
     ruta: 'especialidades',
     nombre: 'especialidad',
     nuevo: () => ({ id: uid(), texto: '' })
+  },
+  galeria: {
+    ruta: 'galeria',
+    nombre: 'foto',
+    nuevo: () => ({ id: uid(), imagen: '', titulo: '', descripcion: '', proporcion: 'panoramica' })
+  },
+  serviciosWeb: {
+    ruta: 'serviciosWeb',
+    nombre: 'servicio',
+    nuevo: () => ({ id: uid(), titulo: '', precio: '', descripcion: '', imagen: '', cta: 'Consultar' })
+  },
+  testimonios: {
+    ruta: 'testimonios',
+    nombre: 'testimonio',
+    nuevo: () => ({ id: uid(), texto: '', autor: '', rol: '', avatar: '' })
+  },
+  faqs: {
+    ruta: 'faqs',
+    nombre: 'pregunta',
+    nuevo: () => ({ id: uid(), pregunta: '', respuesta: '' })
   }
 };
 
 export const vacioPortafolio = () => ({
-  emisor: { nombre: '', rol: '', email: '', telefono: '', web: '', presentacion: '', logo: '' },
+  emisor: {
+    nombre: '', rol: '', email: '', telefono: '', web: '', presentacion: '',
+    logo: '', foto: '', ubicacion: '', instagram: '', linkedin: '', behance: '', github: ''
+  },
   portafolio: {
     nombreInterno: '',
     titulo: '',
     subtitulo: '',
-    insignia: 'Portfolio & Casos',
+    insignia: 'Portfolio & Página Web',
     disponibilidad: 'Disponible para nuevos proyectos',
+    imagenPortada: '',
+    opacidadPortada: 35,
     ctaTexto: 'Contactar',
     cierreTitulo: '¿Trabajamos juntos en tu próximo proyecto?',
     cierreTexto: 'Escribime por WhatsApp o email para conversar sobre tu proyecto o solicitar una propuesta a medida.'
   },
   especialidades: [],
   proyectos: [],
-  opciones: { credito: true },
+  galeria: [],
+  serviciosWeb: [],
+  testimonios: [],
+  faqs: [],
+  opciones: {
+    credito: true,
+    barraNav: true,
+    lightbox: true,
+    galeriaTitulo: 'Galería visual',
+    galeriaSubtitulo: '',
+    galeriaLayout: 'bento',
+    galeriaProporcion: 'panoramica',
+    serviciosTitulo: 'Servicios y soluciones'
+  },
   tema: {
     preset: 'elegante-oscuro',
     acento: '#C9A84C',
@@ -681,14 +791,22 @@ export const ejemploPortafolio = () => ({
     telefono: '+54 9 11 5555-0142',
     web: 'martinarios.com',
     presentacion: 'Diseño sistemas visuales y experiencias de compra digital para marcas que buscan diferenciarse. Cada proyecto combina estrategia comercial, dirección de arte e implementación técnica lista para vender.',
-    logo: ''
+    logo: '',
+    foto: '',
+    ubicacion: 'Buenos Aires · Remoto',
+    instagram: '@martinarios.studio',
+    linkedin: 'linkedin.com/in/martinarios',
+    behance: 'behance.net/martinarios',
+    github: ''
   },
   portafolio: {
     nombreInterno: 'Portfolio Diseño & E-commerce',
     titulo: 'Selección de proyectos y casos de estudio',
     subtitulo: 'Identidad visual, diseño UX/UI y tiendas online desarrolladas a medida.',
-    insignia: 'Portfolio & Casos',
+    insignia: 'Portfolio & Página Web',
     disponibilidad: 'Agenda abierta para nuevos proyectos',
+    imagenPortada: '',
+    opacidadPortada: 35,
     ctaTexto: 'Contactar por un proyecto',
     cierreTitulo: '¿Tenés un proyecto en mente?',
     cierreTexto: 'Contame qué querés lanzar o rediseñar y te preparo una propuesta a medida con plazos e inversión detallada.'
@@ -709,6 +827,8 @@ export const ejemploPortafolio = () => ({
       descripcion: 'Rediseño completo del sistema visual, fotografía de catálogo y desarrollo de tienda con cobros integrados y cálculo automático de envíos en AMBA.',
       tags: 'Identidad visual, Tienda Nube / Shopify, Packaging, Fotografía',
       imagen: '',
+      galeria: [],
+      proporcion: 'panoramica',
       enlace: 'https://almacenbotanico.example.com',
       textoEnlace: 'Ver caso online'
     },
@@ -721,6 +841,8 @@ export const ejemploPortafolio = () => ({
       descripcion: 'Creación de marca desde cero, empaques para café de especialidad en grano y experiencia web móvil para reservas y suscripción mensual.',
       tags: 'Branding, Packaging, Diseño Web, Ilustración',
       imagen: '',
+      galeria: [],
+      proporcion: 'panoramica',
       enlace: '',
       textoEnlace: 'Ver proyecto'
     },
@@ -733,11 +855,69 @@ export const ejemploPortafolio = () => ({
       descripcion: 'Arquitectura de información, calculadora interactiva de ahorro energético y diseño de interfaz adaptable con tiempos de carga menores a 1 segundo.',
       tags: 'Figma, Diseño UI, Desarrollo Frontend, SEO',
       imagen: '',
+      galeria: [],
+      proporcion: 'panoramica',
       enlace: '',
       textoEnlace: 'Ver proyecto'
     }
   ],
-  opciones: { credito: true },
+  galeria: [],
+  serviciosWeb: [
+    {
+      id: uid(),
+      titulo: 'Identidad Visual & Manual de Marca',
+      precio: 'Desde USD 950',
+      descripcion: 'Sistema completo de logo, paleta cromática, tipografías, papelería y plantillas editables para redes sociales.',
+      imagen: '',
+      cta: 'Consultar por Branding'
+    },
+    {
+      id: uid(),
+      titulo: 'Diseño UX/UI & Tienda Online',
+      precio: 'Desde USD 1.600',
+      descripcion: 'Diseño a medida y puesta en marcha de tu tienda o landing page optimizada para celulares, cobros y envíos.',
+      imagen: '',
+      cta: 'Pedir presupuesto web'
+    }
+  ],
+  testimonios: [
+    {
+      id: uid(),
+      texto: 'Pasamos de tomar pedidos a mano por Instagram a tener una tienda que vende sola las 24 horas y una marca que nuestros clientes reconocen al instante.',
+      autor: 'Gastón Peralta',
+      rol: 'Fundador de Almacén Botánico',
+      avatar: ''
+    },
+    {
+      id: uid(),
+      texto: 'El proceso fue súper ordenado: cada semana veíamos avances concretos y el resultado superó por completo lo que imaginábamos.',
+      autor: 'Clara Mendizábal',
+      rol: 'Directora de Casa Tostadores',
+      avatar: ''
+    }
+  ],
+  faqs: [
+    {
+      id: uid(),
+      pregunta: '¿Cómo es la forma de trabajo y los pagos?',
+      respuesta: 'Trabajamos por etapas con entregas semanales. Se reserva fecha con un 40% de anticipo y el saldo contra entregas.'
+    },
+    {
+      id: uid(),
+      pregunta: '¿Entregan los archivos editables y accesos?',
+      respuesta: 'Sí, al finalizar el proyecto recibís el 100% de los originales, manuales y accesos de administrador junto con una capacitación.'
+    }
+  ],
+  opciones: {
+    credito: true,
+    barraNav: true,
+    lightbox: true,
+    galeriaTitulo: 'Galería visual',
+    galeriaSubtitulo: '',
+    galeriaLayout: 'bento',
+    galeriaProporcion: 'panoramica',
+    serviciosTitulo: 'Servicios y soluciones'
+  },
   tema: {
     preset: 'elegante-oscuro',
     acento: '#C9A84C',
@@ -1006,27 +1186,41 @@ export const normalizarResumenPortafolio = (datos, { logoValido = logo => /^data
   if (!datos || typeof datos !== 'object') return null;
   const proyectos = Array.isArray(datos.proyectos)
     ? datos.proyectos
-      .filter(x => x && typeof x === 'object')
-      .map(x => ({
-        id: texto(x.id) || uid(),
-        titulo: texto(x.titulo),
-        categoria: texto(x.categoria),
-        subtitulo: texto(x.subtitulo),
-        destacado: texto(x.destacado),
-        descripcion: texto(x.descripcion),
-        tags: texto(x.tags),
-        imagen: logoValido(texto(x.imagen)) ? texto(x.imagen) : '',
-        enlace: texto(x.enlace),
-        textoEnlace: texto(x.textoEnlace) || 'Ver proyecto'
-      }))
+        .filter(x => x && typeof x === 'object')
+        .map(x => ({
+          id: texto(x.id) || uid(),
+          titulo: texto(x.titulo),
+          categoria: texto(x.categoria),
+          subtitulo: texto(x.subtitulo),
+          destacado: texto(x.destacado),
+          descripcion: texto(x.descripcion),
+          tags: texto(x.tags),
+          imagen: logoValido(texto(x.imagen)) ? texto(x.imagen) : '',
+          galeria: Array.isArray(x.galeria) ? x.galeria.map(img => texto(img)).filter(img => logoValido(img)).slice(0, 8) : [],
+          proporcion: PROPORCIONES_IMAGEN[x.proporcion] ? x.proporcion : 'panoramica',
+          enlace: texto(x.enlace),
+          textoEnlace: texto(x.textoEnlace) || 'Ver proyecto'
+        }))
+    : [];
+  const galeria = Array.isArray(datos.galeria)
+    ? datos.galeria
+        .filter(g => g && typeof g === 'object' && logoValido(texto(g.imagen)))
+        .map(g => ({
+          id: texto(g.id) || uid(),
+          imagen: texto(g.imagen),
+          titulo: texto(g.titulo),
+          descripcion: texto(g.descripcion),
+          proporcion: PROPORCIONES_IMAGEN[g.proporcion] ? g.proporcion : 'panoramica'
+        }))
     : [];
   return {
     id: texto(datos.id),
     titulo: texto(datos.titulo),
     subtitulo: texto(datos.subtitulo),
-    insignia: texto(datos.insignia) || 'Portfolio & Casos',
+    insignia: texto(datos.insignia) || 'Portfolio & Página Web',
     publico: datos.publico === true,
-    proyectos
+    proyectos,
+    galeria
   };
 };
 
@@ -1043,12 +1237,34 @@ export const normalizarPortafolio = (datos, { logoValido = logo => /^data:image\
   const opacidadValida = opacidadCruda !== undefined && opacidadCruda !== null && opacidadCruda !== '' && Number.isFinite(Number(opacidadCruda))
     ? Math.min(200, Math.max(0, Math.round(Number(opacidadCruda))))
     : 100;
+  const opPortadaCruda = d.portafolio?.opacidadPortada;
+  const opPortadaValida = opPortadaCruda !== undefined && opPortadaCruda !== null && opPortadaCruda !== '' && Number.isFinite(Number(opPortadaCruda))
+    ? Math.min(90, Math.max(0, Math.round(Number(opPortadaCruda))))
+    : 35;
   const n = {
     emisor: limpiar(d.emisor, base.emisor),
-    portafolio: limpiar(d.portafolio, base.portafolio),
+    portafolio: {
+      ...limpiar(d.portafolio, base.portafolio),
+      opacidadPortada: opPortadaValida
+    },
     especialidades: lista(d.especialidades, LISTAS_PORTAFOLIO.especialidades.nuevo),
     proyectos: lista(d.proyectos, LISTAS_PORTAFOLIO.proyectos.nuevo),
-    opciones: { credito: d.opciones?.credito !== undefined ? !!d.opciones.credito : true },
+    galeria: lista(d.galeria, LISTAS_PORTAFOLIO.galeria.nuevo),
+    serviciosWeb: lista(d.serviciosWeb, LISTAS_PORTAFOLIO.serviciosWeb.nuevo),
+    testimonios: lista(d.testimonios, LISTAS_PORTAFOLIO.testimonios.nuevo),
+    faqs: lista(d.faqs, LISTAS_PORTAFOLIO.faqs.nuevo),
+    opciones: {
+      ...base.opciones,
+      ...(d.opciones || {}),
+      credito: d.opciones?.credito !== undefined ? !!d.opciones.credito : true,
+      barraNav: d.opciones?.barraNav !== undefined ? !!d.opciones.barraNav : true,
+      lightbox: d.opciones?.lightbox !== undefined ? !!d.opciones.lightbox : true,
+      galeriaTitulo: texto(d.opciones?.galeriaTitulo ?? base.opciones.galeriaTitulo),
+      galeriaSubtitulo: texto(d.opciones?.galeriaSubtitulo ?? base.opciones.galeriaSubtitulo),
+      galeriaLayout: LAYOUTS_GALERIA[d.opciones?.galeriaLayout] ? d.opciones.galeriaLayout : 'bento',
+      galeriaProporcion: PROPORCIONES_IMAGEN[d.opciones?.galeriaProporcion] ? d.opciones.galeriaProporcion : 'panoramica',
+      serviciosTitulo: texto(d.opciones?.serviciosTitulo ?? base.opciones.serviciosTitulo)
+    },
     tema: {
       ...base.tema,
       ...temaEntrada,
@@ -1068,9 +1284,34 @@ export const normalizarPortafolio = (datos, { logoValido = logo => /^data:image\
       p[k] = texto(p[k]);
     });
     if (!p.textoEnlace.trim()) p.textoEnlace = 'Ver proyecto';
+    p.proporcion = PROPORCIONES_IMAGEN[p.proporcion] ? p.proporcion : 'panoramica';
     p.imagen = logoValido(texto(p.imagen)) ? texto(p.imagen) : '';
+    p.galeria = Array.isArray(p.galeria)
+      ? p.galeria.map(img => texto(img)).filter(img => logoValido(img)).slice(0, 8)
+      : [];
+  });
+  n.galeria.forEach(g => {
+    g.titulo = texto(g.titulo);
+    g.descripcion = texto(g.descripcion);
+    g.proporcion = PROPORCIONES_IMAGEN[g.proporcion] ? g.proporcion : 'panoramica';
+    g.imagen = logoValido(texto(g.imagen)) ? texto(g.imagen) : '';
+  });
+  n.serviciosWeb.forEach(s => {
+    ['titulo', 'precio', 'descripcion', 'cta'].forEach(k => { s[k] = texto(s[k]); });
+    if (!s.cta.trim()) s.cta = 'Consultar';
+    s.imagen = logoValido(texto(s.imagen)) ? texto(s.imagen) : '';
+  });
+  n.testimonios.forEach(t => {
+    ['texto', 'autor', 'rol'].forEach(k => { t[k] = texto(t[k]); });
+    t.avatar = logoValido(texto(t.avatar)) ? texto(t.avatar) : '';
+  });
+  n.faqs.forEach(f => {
+    f.pregunta = texto(f.pregunta);
+    f.respuesta = texto(f.respuesta);
   });
   if (!logoValido(n.emisor.logo)) n.emisor.logo = '';
+  if (!logoValido(n.emisor.foto)) n.emisor.foto = '';
+  if (!logoValido(n.portafolio.imagenPortada)) n.portafolio.imagenPortada = '';
   return n;
 };
 
@@ -1080,8 +1321,9 @@ export const resumenPortafolio = (portafolio, id = '', publico = false) => {
     id: texto(id),
     titulo: norm.portafolio.titulo.trim() || norm.portafolio.nombreInterno.trim() || 'Portfolio de proyectos',
     subtitulo: norm.portafolio.subtitulo.trim(),
-    insignia: norm.portafolio.insignia.trim() || 'Portfolio & Casos',
+    insignia: norm.portafolio.insignia.trim() || 'Portfolio & Página Web',
     publico: !!publico,
-    proyectos: norm.proyectos.filter(p => p.titulo.trim() || p.descripcion.trim() || p.imagen)
+    proyectos: norm.proyectos.filter(p => p.titulo.trim() || p.descripcion.trim() || p.imagen || (p.galeria && p.galeria.length)),
+    galeria: norm.galeria.filter(g => g.imagen)
   };
 };

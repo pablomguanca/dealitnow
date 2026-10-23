@@ -20,6 +20,8 @@ import {
   DECORACIONES,
   PORTADAS,
   ESTILOS_BLOQUES,
+  PROPORCIONES_IMAGEN,
+  LAYOUTS_GALERIA,
   TEMAS,
   PLANTILLAS,
   PLANTILLAS_PORTAFOLIO,
@@ -466,7 +468,7 @@ const cargarPortafoliosLocales = () => {
         });
       }
     }
-  } catch { }
+  } catch {}
   // Por defecto inicializamos dos portfolios de muestra (uno con casos reales y otro conceptual)
   const p1 = normalizarPf(PLANTILLAS_PORTAFOLIO['diseno-web'].crear());
   const p2 = normalizarPf(PLANTILLAS_PORTAFOLIO['conceptos-expertise'].crear());
@@ -474,7 +476,7 @@ const cargarPortafoliosLocales = () => {
     { id: 'pf-diseno-demo', ...datosPortafolioParaGuardar(p1), publico: true, updatedAt: new Date().toISOString() },
     { id: 'pf-conceptos-demo', ...datosPortafolioParaGuardar(p2), publico: true, updatedAt: new Date(Date.now() - 3600000).toISOString() }
   ];
-  try { localStorage.setItem(CLAVE_PORTAFOLIOS, JSON.stringify(iniciales)); } catch { }
+  try { localStorage.setItem(CLAVE_PORTAFOLIOS, JSON.stringify(iniciales)); } catch {}
   return iniciales;
 };
 
@@ -627,13 +629,27 @@ const migrarLocal = () => {
   const creada = crearEnCuenta(contenido);
   if (!creada) return null;
   creada.listo.then(ok => {
-    if (ok) try { localStorage.removeItem(clave); } catch { }
+    if (ok) try { localStorage.removeItem(clave); } catch {}
   });
   avisar('Guardamos en tu cuenta la propuesta que armaste.', 6000);
   return { id: creada.id, contenido };
 };
 
 const plantillaControles = $('#tpl-controles');
+
+const actualizarImagenGenericaItem = (nodo, urlImg, prefijo, textoSubir = 'Subir foto', textoCambiar = 'Cambiar foto') => {
+  const img = $(`[${prefijo}-vista]`, nodo);
+  const btnQuitar = $(`[${prefijo}-quitar]`, nodo);
+  const txt = $(`[${prefijo}-texto]`, nodo);
+  const tiene = !!urlImg;
+  if (img) {
+    img.hidden = !tiene;
+    if (tiene) img.src = urlImg;
+    else img.removeAttribute('src');
+  }
+  if (btnQuitar) btnQuitar.hidden = !tiene;
+  if (txt) txt.textContent = tiene ? textoCambiar : textoSubir;
+};
 
 const actualizarItemServicio = (nodo, s) => {
   const modo = MODALIDADES[s.modalidad] || MODALIDADES.unico;
@@ -642,6 +658,7 @@ const actualizarItemServicio = (nodo, s) => {
   const sufijo = s.modalidad === 'mensual' ? ' por mes' : '';
   $('[data-subtotal]', nodo).textContent = dinero(totalServicio(s), estado.inversion.moneda) + sufijo;
   nodo.classList.toggle('item--opcional', !!s.opcional);
+  actualizarImagenGenericaItem(nodo, s.imagen, 'data-srv-img');
 };
 
 const renderLista = nombre => {
@@ -668,6 +685,8 @@ const renderLista = nombre => {
     bajar.setAttribute('aria-label', `Bajar ${conf.nombre} ${i + 1}`);
     quitar.setAttribute('aria-label', `Quitar ${conf.nombre} ${i + 1}`);
     if (nombre === 'servicios') actualizarItemServicio(nodo, item);
+    if (nombre === 'galeria') actualizarImagenGenericaItem(nodo, item.imagen, 'data-gal-img');
+    if (nombre === 'testimonios') actualizarImagenGenericaItem(nodo, item.avatar, 'data-test-img');
     return nodo;
   });
   contenedor.replaceChildren(...nodos);
@@ -694,11 +713,49 @@ const actualizarLogo = () => {
   const actual = docActivo();
   const logo = actual.emisor.logo;
   const vistaLogo = $('#logo-vista');
-  vistaLogo.hidden = !logo;
-  if (logo) vistaLogo.src = logo;
-  else vistaLogo.removeAttribute('src');
-  $('#logo-quitar').hidden = !logo;
-  $('#logo-texto').textContent = logo ? 'Cambiar logo' : 'Subir logo';
+  if (vistaLogo) {
+    vistaLogo.hidden = !logo;
+    if (logo) vistaLogo.src = logo;
+    else vistaLogo.removeAttribute('src');
+  }
+  if ($('#logo-quitar')) $('#logo-quitar').hidden = !logo;
+  if ($('#logo-texto')) $('#logo-texto').textContent = logo ? 'Cambiar logo' : 'Subir logo';
+
+  const foto = actual.emisor.foto || '';
+  const vistaFoto = $('#foto-emisor-vista');
+  if (vistaFoto) {
+    vistaFoto.hidden = !foto;
+    if (foto) vistaFoto.src = foto;
+    else vistaFoto.removeAttribute('src');
+  }
+  if ($('#foto-emisor-quitar')) $('#foto-emisor-quitar').hidden = !foto;
+  if ($('#foto-emisor-texto')) $('#foto-emisor-texto').textContent = foto ? 'Cambiar foto' : 'Subir foto';
+
+  // Foto de portada Hero (Propuesta)
+  const imgPortProp = estado.propuesta?.imagenPortada || '';
+  const vistaPortProp = $('#portada-prop-vista');
+  if (vistaPortProp) {
+    vistaPortProp.hidden = !imgPortProp;
+    if (imgPortProp) vistaPortProp.src = imgPortProp;
+    else vistaPortProp.removeAttribute('src');
+  }
+  if ($('#portada-prop-quitar')) $('#portada-prop-quitar').hidden = !imgPortProp;
+  if ($('#portada-prop-texto')) $('#portada-prop-texto').textContent = imgPortProp ? 'Cambiar foto de portada' : 'Subir foto de portada';
+  if ($('#portada-prop-opacidad-wrap')) $('#portada-prop-opacidad-wrap').hidden = !imgPortProp;
+  if ($('#portada-prop-opacidad-val')) $('#portada-prop-opacidad-val').textContent = `${estado.propuesta?.opacidadPortada ?? 35}%`;
+
+  // Foto de portada Hero (Portfolio)
+  const imgPortPf = estadoPortafolio.portafolio?.imagenPortada || '';
+  const vistaPortPf = $('#portada-pf-vista');
+  if (vistaPortPf) {
+    vistaPortPf.hidden = !imgPortPf;
+    if (imgPortPf) vistaPortPf.src = imgPortPf;
+    else vistaPortPf.removeAttribute('src');
+  }
+  if ($('#portada-pf-quitar')) $('#portada-pf-quitar').hidden = !imgPortPf;
+  if ($('#portada-pf-texto')) $('#portada-pf-texto').textContent = imgPortPf ? 'Cambiar foto de portada' : 'Subir foto de portada';
+  if ($('#portada-pf-opacidad-wrap')) $('#portada-pf-opacidad-wrap').hidden = !imgPortPf;
+  if ($('#portada-pf-opacidad-val')) $('#portada-pf-opacidad-val').textContent = `${estadoPortafolio.portafolio?.opacidadPortada ?? 35}%`;
 };
 
 const actualizarSelectorPortafolio = () => {
@@ -722,17 +779,16 @@ const actualizarSelectorPortafolio = () => {
 };
 
 const actualizarImagenProyectoItem = (nodo, item) => {
-  const img = $('[data-pf-img-vista]', nodo);
-  const btnQuitar = $('[data-pf-img-quitar]', nodo);
-  const txt = $('[data-pf-img-texto]', nodo);
-  const tiene = !!item.imagen;
-  if (img) {
-    img.hidden = !tiene;
-    if (tiene) img.src = item.imagen;
-    else img.removeAttribute('src');
+  actualizarImagenGenericaItem(nodo, item.imagen, 'data-pf-img', 'Subir portada', 'Cambiar portada');
+  const galLista = $('[data-pf-galeria-lista]', nodo);
+  if (galLista) {
+    const fotos = Array.isArray(item.galeria) ? item.galeria : [];
+    galLista.innerHTML = fotos.map((src, idxFoto) => `
+      <div class="proyecto-galeria-mini__item">
+        <img src="${esc(src)}" alt="Foto ${idxFoto + 1}">
+        <button type="button" class="proyecto-galeria-mini__quitar" data-accion="quitar-foto-galeria-proyecto" data-foto-idx="${idxFoto}" aria-label="Quitar foto ${idxFoto + 1}">×</button>
+      </div>`).join('');
   }
-  if (btnQuitar) btnQuitar.hidden = !tiene;
-  if (txt) txt.textContent = tiene ? 'Cambiar imagen' : 'Subir imagen';
 };
 
 const renderListaPortafolio = nombre => {
@@ -760,6 +816,9 @@ const renderListaPortafolio = nombre => {
     bajar.setAttribute('aria-label', `Bajar ${conf.nombre} ${i + 1}`);
     quitar.setAttribute('aria-label', `Quitar ${conf.nombre} ${i + 1}`);
     if (nombre === 'proyectos') actualizarImagenProyectoItem(nodo, item);
+    if (nombre === 'galeria') actualizarImagenGenericaItem(nodo, item.imagen, 'data-gal-img');
+    if (nombre === 'serviciosWeb') actualizarImagenGenericaItem(nodo, item.imagen, 'data-sweb-img');
+    if (nombre === 'testimonios') actualizarImagenGenericaItem(nodo, item.avatar, 'data-test-img');
     return nodo;
   });
   contenedor.replaceChildren(...nodos);
@@ -854,10 +913,15 @@ const servicioHTML = (s, moneda, web) => {
   const boton = web && s.opcional && aceptada()
     ? (sumado ? `<span class="servicio__incluido">${ICONO_SUMADO} Incluido en la aceptación</span>` : '')
     : web && s.opcional
-      ? `<button type="button" class="servicio__sumar" data-accion="sumar" data-id="${esc(s.id)}" aria-pressed="${sumado}">${sumado ? `${ICONO_SUMADO} Sumado a la propuesta` : `${ICONO_SUMAR} Sumar a la propuesta`}</button>`
-      : '';
+    ? `<button type="button" class="servicio__sumar" data-accion="sumar" data-id="${esc(s.id)}" aria-pressed="${sumado}">${sumado ? `${ICONO_SUMADO} Sumado a la propuesta` : `${ICONO_SUMAR} Sumar a la propuesta`}</button>`
+    : '';
+  const usaLightbox = web && estado.opciones?.lightbox !== false;
+  const mediaSrv = s.imagen
+    ? `<div class="servicio__media"${usaLightbox ? ` data-lightbox-src="${esc(s.imagen)}" data-lightbox-caption="${esc(s.nombre || 'Servicio')}"` : ''}><img src="${esc(s.imagen)}" alt="${esc(s.nombre || 'Servicio')}"></div>`
+    : '';
   return `
     <div class="servicio${s.opcional ? ' servicio--opcional' : ''}${sumado ? ' servicio--sumado' : ''}">
+      ${mediaSrv}
       <div class="servicio__cabecera">
         <div class="servicio__titular">
           ${insignia}
@@ -905,8 +969,8 @@ const barraClienteHTML = (c, vig) => {
   const accion = aceptada()
     ? '<span class="barra-cliente__aceptada">Propuesta aceptada</span>'
     : vig.vencida
-      ? (consulta ? `<a class="boton boton--primario" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a>` : '')
-      : `<button type="button" class="boton boton--primario" data-accion="aceptar">Aceptar propuesta</button>`;
+    ? (consulta ? `<a class="boton boton--primario" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a>` : '')
+    : `<button type="button" class="boton boton--primario" data-accion="aceptar">Aceptar propuesta</button>`;
   return `
     <div class="barra-cliente">
       <div>
@@ -961,7 +1025,7 @@ const cierreHTML = vig => {
 
 let observador;
 const OBS_SEL = '.bloque, .resumen, .cierre, .pie, .doc-aviso';
-const HIJO_SEL = '.servicio, .etapa, .proyecto-card';
+const HIJO_SEL = '.servicio, .etapa, .proyecto-card, .galeria-item, .testimonio-card, .faq-item, .servicio-web-card';
 let animacionInicialLista = false;
 const observarElementos = raiz => {
   if (observador) observador.disconnect();
@@ -1180,14 +1244,143 @@ const aplicarTema = doc => {
 };
 
 
-const proyectoConContenido = p => p && (p.titulo.trim() || p.descripcion.trim() || p.imagen);
+const proyectoConContenido = p => p && (p.titulo.trim() || p.descripcion.trim() || p.imagen || (Array.isArray(p.galeria) && p.galeria.length > 0));
 
-const proyectoCardHTML = (p, idx, web) => {
+const normalizarUrlRed = (valor, tipo) => {
+  const v = texto(valor).trim();
+  if (!v) return '';
+  if (/^https?:\/\//i.test(v)) return v;
+  const limpio = v.replace(/^@/, '');
+  if (tipo === 'instagram' && !limpio.includes('/')) return `https://instagram.com/${limpio}`;
+  if (tipo === 'linkedin' && !limpio.includes('.')) return `https://linkedin.com/in/${limpio}`;
+  if (tipo === 'behance' && !limpio.includes('.')) return `https://behance.net/${limpio}`;
+  return `https://${limpio}`;
+};
+
+const redesEmisorHTML = (e, web) => {
+  const items = [];
+  if (e.instagram?.trim()) {
+    const u = normalizarUrlRed(e.instagram, 'instagram');
+    const etq = e.instagram.trim().startsWith('@') ? e.instagram.trim() : `@${e.instagram.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/\/$/, '')}`;
+    items.push({ url: u, texto: etq, icono: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.2" y="2.2" width="11.6" height="11.6" rx="3.2"/><circle cx="8" cy="8" r="2.6"/><circle cx="11.4" cy="4.6" r="0.6" fill="currentColor"/></svg>' });
+  }
+  if (e.linkedin?.trim()) {
+    const u = normalizarUrlRed(e.linkedin, 'linkedin');
+    items.push({ url: u, texto: 'LinkedIn', icono: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.2" y="2.2" width="11.6" height="11.6" rx="2"/><path d="M5.2 7v4.2M5.2 4.9v.1M8 11.2V8.6c0-1 .7-1.7 1.6-1.7s1.5.6 1.5 1.7v2.6"/></svg>' });
+  }
+  if (e.behance?.trim()) {
+    const u = normalizarUrlRed(e.behance, 'behance');
+    const esGh = /github/i.test(e.behance);
+    items.push({ url: u, texto: esGh ? 'GitHub' : 'Portfolio / Red', icono: ICONO_EXTERNO });
+  }
+  if (e.web?.trim()) {
+    const u = /^https?:\/\//i.test(e.web.trim()) ? e.web.trim() : `https://${e.web.trim()}`;
+    items.push({ url: u, texto: e.web.trim().replace(/^https?:\/\//i, ''), icono: ICONO_EXTERNO });
+  }
+  if (!items.length) return '';
+  return `<ul class="sobre-mi__redes">${items.map(it => `<li><a class="sobre-mi__red" href="${esc(it.url)}" target="_blank" rel="noopener"${web ? ' data-enlace-cliente' : ''}>${it.icono}<span>${esc(it.texto)}</span></a></li>`).join('')}</ul>`;
+};
+
+const sobreMiBloqueHTML = (e, especialidades = [], web = true, lightbox = true) => {
+  const tieneFoto = !!e.foto;
+  const tieneTexto = !!e.presentacion?.trim();
+  const espValidas = (especialidades || []).filter(x => x.texto?.trim());
+  const redes = redesEmisorHTML(e, web);
+  const ubic = e.ubicacion?.trim()
+    ? `<span class="sobre-mi__ubicacion"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 14s4.5-4.2 4.5-7.5a4.5 4.5 0 1 0-9 0C3.5 9.8 8 14 8 14z"/><circle cx="8" cy="6.5" r="1.5"/></svg>${esc(e.ubicacion.trim())}</span>`
+    : '';
+  const avatarHTML = tieneFoto
+    ? `<div class="sobre-mi__avatar-wrap">
+        <img class="sobre-mi__avatar" src="${esc(e.foto)}" alt="${esc(e.nombre || 'Foto de perfil')}"${web && lightbox ? ` data-lightbox-src="${esc(e.foto)}" data-lightbox-caption="${esc(e.nombre || '')}"` : ''}>
+        ${ubic}
+      </div>`
+    : '';
+  return `
+    <div class="sobre-mi${tieneFoto ? '' : ' sobre-mi--sin-foto'}">
+      ${avatarHTML}
+      <div class="sobre-mi__cuerpo">
+        ${!tieneFoto && ubic ? `<div style="margin-bottom:0.65em">${ubic}</div>` : ''}
+        ${tieneTexto ? `<div class="presentacion-bloque">${parrafos(e.presentacion)}</div>` : ''}
+        ${espValidas.length ? `<ul class="especialidades-chips">${espValidas.map(esp => `<li class="especialidad-chip">${esc(esp.texto.trim())}</li>`).join('')}</ul>` : ''}
+        ${redes}
+      </div>
+    </div>`;
+};
+
+const galeriaSeccionHTML = (fotos = [], opciones = {}, web = true) => {
+  const validas = (fotos || []).filter(g => g && g.imagen);
+  if (!validas.length) return '';
+  const layout = LAYOUTS_GALERIA[opciones.galeriaLayout] ? opciones.galeriaLayout : 'bento';
+  const propDef = PROPORCIONES_IMAGEN[opciones.galeriaProporcion] ? opciones.galeriaProporcion : 'panoramica';
+  const usaLightbox = web && opciones.lightbox !== false;
+  const sub = opciones.galeriaSubtitulo?.trim() ? `<p class="galeria-subtitulo">${esc(opciones.galeriaSubtitulo.trim())}</p>` : '';
+  const items = validas.map((g, idx) => {
+    const prop = PROPORCIONES_IMAGEN[g.proporcion] ? g.proporcion : propDef;
+    const cap = [g.titulo?.trim(), g.descripcion?.trim()].filter(Boolean).join(' — ');
+    return `
+      <figure class="galeria-item">
+        <div class="galeria-item__media media-ratio--${esc(prop)}"${usaLightbox ? ` data-lightbox-src="${esc(g.imagen)}" data-lightbox-caption="${esc(cap)}" data-lightbox-group="galeria"` : ''}>
+          <img src="${esc(g.imagen)}" alt="${esc(g.titulo?.trim() || `Imagen ${idx + 1}`)}">
+        </div>
+        ${(g.titulo?.trim() || g.descripcion?.trim()) ? `
+          <figcaption class="galeria-item__pie">
+            ${g.titulo?.trim() ? `<p class="galeria-item__titulo">${esc(g.titulo.trim())}</p>` : ''}
+            ${g.descripcion?.trim() ? `<p class="galeria-item__desc">${esc(g.descripcion.trim())}</p>` : ''}
+          </figcaption>` : ''}
+      </figure>`;
+  }).join('');
+  return `${sub}<div class="galeria-web galeria-web--${esc(layout)}">${items}</div>`;
+};
+
+const testimoniosSeccionHTML = (lista = [], web = true, lightbox = true) => {
+  const validos = (lista || []).filter(t => t && (t.texto?.trim() || t.autor?.trim()));
+  if (!validos.length) return '';
+  return `<div class="testimonios-grilla">${validos.map(t => {
+    const inicial = (t.autor?.trim() || 'C').charAt(0).toUpperCase();
+    const avatar = t.avatar
+      ? `<img class="testimonio-card__avatar" src="${esc(t.avatar)}" alt="${esc(t.autor || 'Cliente')}"${web && lightbox ? ` data-lightbox-src="${esc(t.avatar)}" data-lightbox-caption="${esc(t.autor || '')}"` : ''}>`
+      : `<span class="testimonio-card__inicial" aria-hidden="true">${esc(inicial)}</span>`;
+    return `
+      <blockquote class="testimonio-card">
+        ${t.texto?.trim() ? `<p class="testimonio-card__texto">“${esc(t.texto.trim()).replace(/\n/g, '<br>')}”</p>` : ''}
+        <footer class="testimonio-card__autor">
+          ${avatar}
+          <div>
+            <span class="testimonio-card__nombre">${esc(t.autor?.trim() || 'Cliente')}</span>
+            ${t.rol?.trim() ? `<span class="testimonio-card__rol">${esc(t.rol.trim())}</span>` : ''}
+          </div>
+        </footer>
+      </blockquote>`;
+  }).join('')}</div>`;
+};
+
+const faqsSeccionHTML = (lista = [], web = true) => {
+  const validas = (lista || []).filter(f => f && (f.pregunta?.trim() || f.respuesta?.trim()));
+  if (!validas.length) return '';
+  return `<div class="faqs-lista">${validas.map((f, i) => `
+    <details class="faq-item"${!web || i === 0 ? ' open' : ''}>
+      <summary class="faq-item__pregunta">${esc(f.pregunta?.trim() || 'Pregunta frecuente')}</summary>
+      <div class="faq-item__respuesta">${parrafos(f.respuesta || '')}</div>
+    </details>`).join('')}</div>`;
+};
+
+const proyectoCardHTML = (p, idx, web, lightbox = true) => {
   const tags = texto(p.tags).split(/[,\n]/).map(t => t.trim()).filter(Boolean);
   const urlRaw = texto(p.enlace).trim();
   const url = urlRaw ? (/^https?:\/\//i.test(urlRaw) ? urlRaw : `https://${urlRaw}`) : '';
-  const media = p.imagen
-    ? `<div class="proyecto-card__media"><img src="${esc(p.imagen)}" alt="${esc(p.titulo || 'Proyecto')}"></div>`
+  const prop = PROPORCIONES_IMAGEN[p.proporcion] ? p.proporcion : 'panoramica';
+  const extras = Array.isArray(p.galeria) ? p.galeria.filter(Boolean) : [];
+  const imagenPrincipal = p.imagen || extras[0] || '';
+  const todasLasFotos = [p.imagen, ...extras].filter(Boolean);
+  const grupoLb = `proy-${p.id || idx}`;
+  const usaLb = web && lightbox;
+  const capBase = [p.titulo?.trim(), p.subtitulo?.trim(), p.destacado?.trim()].filter(Boolean).join(' · ');
+
+  const media = imagenPrincipal
+    ? `<div class="proyecto-card__media media-ratio--${esc(prop)}"${usaLb ? ` data-lightbox-src="${esc(imagenPrincipal)}" data-lightbox-caption="${esc(capBase)}" data-lightbox-group="${esc(grupoLb)}"` : ''}>
+        <img src="${esc(imagenPrincipal)}" alt="${esc(p.titulo || 'Proyecto')}">
+        ${todasLasFotos.length > 1 ? `<span class="proyecto-card__contador-fotos">${todasLasFotos.length} fotos</span>` : ''}
+      </div>`
     : `<div class="proyecto-card__arte" aria-hidden="true">
         <div class="proyecto-card__arte-top">
           <span class="proyecto-card__arte-indice">${String(idx + 1).padStart(2, '0')}</span>
@@ -1195,14 +1388,23 @@ const proyectoCardHTML = (p, idx, web) => {
         </div>
         <span class="proyecto-card__arte-titular">${esc(p.titulo.trim() || 'Proyecto destacado')}</span>
       </div>`;
+
+  const tiraExtras = extras.length
+    ? `<div class="proyecto-card__tira">${extras.map((imgUrl, iEx) => `
+        <button type="button" class="proyecto-card__mini"${usaLb ? ` data-lightbox-src="${esc(imgUrl)}" data-lightbox-caption="${esc(capBase ? `${capBase} (${iEx + 2}/${todasLasFotos.length})` : '')}" data-lightbox-group="${esc(grupoLb)}"` : ''} aria-label="Ver foto ${iEx + 2} de ${esc(p.titulo || 'proyecto')}">
+          <img src="${esc(imgUrl)}" alt="">
+        </button>`).join('')}</div>`
+    : '';
+
   return `
     <article class="proyecto-card">
       ${media}
+      ${tiraExtras}
       <div class="proyecto-card__cuerpo">
-        ${(p.categoria.trim() || (p.imagen && p.destacado.trim())) ? `
+        ${(p.categoria.trim() || (imagenPrincipal && p.destacado.trim())) ? `
           <div class="proyecto-card__chips">
             ${p.categoria.trim() ? `<span class="proyecto-card__chip">${esc(p.categoria.trim())}</span>` : ''}
-            ${p.imagen && p.destacado.trim() ? `<span class="proyecto-card__destacado">${esc(p.destacado.trim())}</span>` : ''}
+            ${imagenPrincipal && p.destacado.trim() ? `<span class="proyecto-card__destacado">${esc(p.destacado.trim())}</span>` : ''}
           </div>` : ''}
         <h3 class="proyecto-card__titulo">${p.titulo.trim() ? esc(p.titulo) : vacioHTML('Proyecto sin título')}</h3>
         ${p.subtitulo.trim() ? `<p class="proyecto-card__subtitulo">${esc(p.subtitulo.trim())}</p>` : ''}
@@ -1215,7 +1417,8 @@ const proyectoCardHTML = (p, idx, web) => {
 
 const bloquePortafolioEnPropuestaHTML = (pfResumen, web) => {
   const proyectos = (pfResumen?.proyectos || []).filter(proyectoConContenido);
-  if (!proyectos.length) return '';
+  const galeriaPf = (pfResumen?.galeria || []).filter(g => g && g.imagen);
+  if (!proyectos.length && !galeriaPf.length) return '';
   const linkPublico = pfResumen.publico && pfResumen.id && /^[A-Za-z0-9]{20}$/.test(pfResumen.id)
     ? `${location.origin}/portafolio/${pfResumen.id}`
     : '';
@@ -1223,11 +1426,10 @@ const bloquePortafolioEnPropuestaHTML = (pfResumen, web) => {
     ${(pfResumen.subtitulo || linkPublico) ? `
       <div class="portafolio-embebido__cabecera">
         ${pfResumen.subtitulo ? `<p class="portafolio-embebido__sub">${esc(pfResumen.subtitulo)}</p>` : '<span></span>'}
-        ${web && linkPublico ? `<a class="portafolio-embebido__ver-mas" href="${esc(linkPublico)}" target="_blank" rel="noopener" data-enlace-cliente><span>Ver portfolio completo</span>${ICONO_EXTERNO}</a>` : ''}
+        ${web && linkPublico ? `<a class="portafolio-embebido__ver-mas" href="${esc(linkPublico)}" target="_blank" rel="noopener" data-enlace-cliente><span>Ver página completa</span>${ICONO_EXTERNO}</a>` : ''}
       </div>` : ''}
-    <div class="portafolio-grilla">
-      ${proyectos.map((p, idx) => proyectoCardHTML(p, idx, web)).join('')}
-    </div>`;
+    ${proyectos.length ? `<div class="portafolio-grilla">${proyectos.map((p, idx) => proyectoCardHTML(p, idx, web, estado.opciones?.lightbox !== false)).join('')}</div>` : ''}
+    ${galeriaPf.length ? `<div style="margin-top:${proyectos.length ? '1.6em' : '0'}">${galeriaSeccionHTML(galeriaPf, { galeriaLayout: 'bento', lightbox: estado.opciones?.lightbox !== false }, web)}</div>` : ''}`;
 };
 
 const enlaceContactoPortafolio = () => {
@@ -1245,6 +1447,7 @@ const renderPortafolio = () => {
   const s = estadoPortafolio;
   const e = s.emisor;
   const pf = s.portafolio;
+  const usaLightbox = s.opciones?.lightbox !== false;
   const tipoDecoracion = doc.dataset.decoracion || 'marco';
   const tipoPortada = doc.dataset.portada || 'editorial';
 
@@ -1254,20 +1457,30 @@ const renderPortafolio = () => {
 
   const proyectosValidos = s.proyectos.filter(proyectoConContenido);
   const especialidadesValidas = s.especialidades.filter(x => x.texto.trim());
+  const galeriaValida = (s.galeria || []).filter(g => g && g.imagen);
+  const serviciosWebValidos = (s.serviciosWeb || []).filter(sw => sw && (sw.titulo.trim() || sw.descripcion.trim() || sw.imagen));
+  const testimoniosValidos = (s.testimonios || []).filter(t => t && (t.texto.trim() || t.autor.trim()));
+  const faqsValidas = (s.faqs || []).filter(f => f && (f.pregunta.trim() || f.respuesta.trim()));
 
   const meta = [];
   if (e.nombre.trim()) meta.push(['Presentado por', `${esc(e.nombre)}${e.rol.trim() ? `<span>${esc(e.rol)}</span>` : ''}`]);
   if (proyectosValidos.length) meta.push(['Casos seleccionados', `${proyectosValidos.length} ${proyectosValidos.length === 1 ? 'proyecto destacado' : 'proyectos destacados'}`]);
   if (pf.disponibilidad.trim()) meta.push(['Estado', `<span class="portada__urgente">${esc(pf.disponibilidad.trim())}</span>`]);
-  if (e.web.trim() || e.email.trim()) meta.push(['Contacto', esc(e.web.trim() || e.email.trim())]);
+  if (e.ubicacion?.trim() || e.web.trim() || e.email.trim()) meta.push(['Ubicación / Web', esc(e.ubicacion?.trim() || e.web.trim() || e.email.trim())]);
 
   const marcaAgua = tipoPortada === 'impacto'
     ? `<span class="portada__marca-agua" aria-hidden="true">${esc(String(proyectosValidos.length || '01').padStart(2, '0'))}</span>`
     : '';
 
   const colTema = resolverColoresTema(s.tema);
+  const opPortada = Math.min(0.85, Math.max(0.08, (Number(pf.opacidadPortada) || 35) / 100));
+  const fondoFotoHTML = pf.imagenPortada
+    ? `<div class="portada__fondo-img" style="--portada-img-opacidad:${opPortada}" aria-hidden="true"><img src="${esc(pf.imagenPortada)}" alt=""></div>`
+    : '';
+
   const portada = `
-    <section class="portada portada--${esc(tipoPortada)}" aria-label="Portada del portfolio">
+    <section class="portada portada--${esc(tipoPortada)}" id="sec-inicio" aria-label="Portada del portfolio">
+      ${fondoFotoHTML}
       <div class="portada__decoracion" style="color:${esc(colTema.colorSvg)}" aria-hidden="true">${decoracionPortadaSVG(tipoDecoracion, colTema.opacidadSvg, colTema.colorSvg)}</div>
       ${marcaAgua}
       <div class="portada__superior">
@@ -1275,8 +1488,8 @@ const renderPortafolio = () => {
         ${pf.disponibilidad.trim() ? `<p class="portada__numero">${esc(pf.disponibilidad.trim())}</p>` : ''}
       </div>
       <div class="portada__centro">
-        <p class="portada__para"><span class="portada__para-chip">${esc(pf.insignia.trim() || 'Portfolio & Casos')}</span></p>
-        <h1 class="portada__titulo">${pf.titulo.trim() ? esc(pf.titulo) : vacioHTML('Título de tu portfolio')}</h1>
+        <p class="portada__para"><span class="portada__para-chip">${esc(pf.insignia.trim() || 'Portfolio & Página Web')}</span></p>
+        <h1 class="portada__titulo">${pf.titulo.trim() ? esc(pf.titulo) : vacioHTML('Título de tu página o portfolio')}</h1>
         ${pf.subtitulo.trim() ? `<p class="portada__subtitulo">${esc(pf.subtitulo.trim())}</p>` : ''}
         <hr class="portada__regla">
       </div>
@@ -1285,30 +1498,81 @@ const renderPortafolio = () => {
 
   const bloques = [];
 
-  if (e.presentacion.trim() || especialidadesValidas.length) {
-    let html = '';
-    if (e.presentacion.trim()) html += `<div class="presentacion-bloque">${parrafos(e.presentacion)}</div>`;
-    if (especialidadesValidas.length) {
-      html += `<ul class="especialidades-chips">${especialidadesValidas.map(esp => `<li class="especialidad-chip">${esc(esp.texto.trim())}</li>`).join('')}</ul>`;
-    }
+  if (e.presentacion.trim() || e.foto || especialidadesValidas.length || e.instagram?.trim() || e.linkedin?.trim() || e.behance?.trim()) {
     bloques.push({
+      id: 'sec-sobre-mi',
+      nav: 'Sobre mí',
       titulo: e.nombre.trim() ? `Sobre ${e.nombre.trim()}` : 'Perfil y especialidades',
-      html
+      html: sobreMiBloqueHTML(e, especialidadesValidas, web, usaLightbox)
     });
   }
 
   if (proyectosValidos.length) {
     bloques.push({
+      id: 'sec-proyectos',
+      nav: 'Proyectos',
       titulo: 'Proyectos y casos seleccionados',
-      html: `<div class="portafolio-grilla">${proyectosValidos.map((p, idx) => proyectoCardHTML(p, idx, web)).join('')}</div>`
+      html: `<div class="portafolio-grilla">${proyectosValidos.map((p, idx) => proyectoCardHTML(p, idx, web, usaLightbox)).join('')}</div>`
+    });
+  }
+
+  if (galeriaValida.length) {
+    bloques.push({
+      id: 'sec-galeria',
+      nav: 'Galería',
+      titulo: s.opciones?.galeriaTitulo?.trim() || 'Galería visual',
+      html: galeriaSeccionHTML(galeriaValida, s.opciones, web)
     });
   }
 
   const ctaLabel = pf.ctaTexto.trim() || 'Contactar';
-  const msgContacto = `Hola${e.nombre.trim() ? ` ${e.nombre.trim().split(' ')[0]}` : ''}! Vi tu portfolio «${tituloPortafolio()}» y me gustaría conversar sobre un proyecto.`;
+  const msgContacto = `Hola${e.nombre.trim() ? ` ${e.nombre.trim().split(' ')[0]}` : ''}! Vi tu página «${tituloPortafolio()}» y me gustaría conversar sobre un proyecto.`;
   const waUrl = enlaceWhatsApp(msgContacto, e);
-  const mailUrl = enlaceEmail(`Consulta desde tu portfolio: ${tituloPortafolio()}`, msgContacto, e);
+  const mailUrl = enlaceEmail(`Consulta desde tu página: ${tituloPortafolio()}`, msgContacto, e);
   const principalUrl = waUrl || mailUrl;
+
+  if (serviciosWebValidos.length) {
+    const htmlSrv = `<div class="servicios-web-grilla">${serviciosWebValidos.map(sw => {
+      const msgSrv = `Hola${e.nombre.trim() ? ` ${e.nombre.trim().split(' ')[0]}` : ''}! Me interesa consultar por «${sw.titulo.trim() || 'tu servicio'}» que vi en tu página.`;
+      const linkSrv = enlaceWhatsApp(msgSrv, e) || enlaceEmail(`Consulta por ${sw.titulo.trim() || 'servicio'}`, msgSrv, e);
+      return `
+        <article class="servicio-web-card">
+          ${sw.imagen ? `<div class="servicio-web-card__media"${web && usaLightbox ? ` data-lightbox-src="${esc(sw.imagen)}" data-lightbox-caption="${esc(sw.titulo || '')}"` : ''}><img src="${esc(sw.imagen)}" alt="${esc(sw.titulo || 'Servicio')}"></div>` : ''}
+          <div class="servicio-web-card__cabecera">
+            <h3 class="servicio-web-card__titulo">${sw.titulo.trim() ? esc(sw.titulo) : vacioHTML('Servicio')}</h3>
+            ${sw.precio.trim() ? `<span class="servicio-web-card__precio">${esc(sw.precio.trim())}</span>` : ''}
+          </div>
+          ${sw.descripcion.trim() ? `<p class="servicio-web-card__desc">${esc(sw.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
+          ${web ? (linkSrv
+            ? `<a class="boton boton--secundario boton--chico servicio-web-card__cta" href="${esc(linkSrv)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(sw.cta.trim() || 'Consultar')}</a>`
+            : `<button type="button" class="boton boton--secundario boton--chico servicio-web-card__cta" data-accion="contacto-demo">${esc(sw.cta.trim() || 'Consultar')}</button>`) : ''}
+        </article>`;
+    }).join('')}</div>`;
+    bloques.push({
+      id: 'sec-servicios',
+      nav: 'Servicios',
+      titulo: s.opciones?.serviciosTitulo?.trim() || 'Servicios y soluciones',
+      html: htmlSrv
+    });
+  }
+
+  if (testimoniosValidos.length) {
+    bloques.push({
+      id: 'sec-testimonios',
+      nav: 'Testimonios',
+      titulo: 'Qué dicen quienes trabajaron conmigo',
+      html: testimoniosSeccionHTML(testimoniosValidos, web, usaLightbox)
+    });
+  }
+
+  if (faqsValidas.length) {
+    bloques.push({
+      id: 'sec-faq',
+      nav: 'Preguntas',
+      titulo: 'Preguntas frecuentes',
+      html: faqsSeccionHTML(faqsValidas, web)
+    });
+  }
 
   if (web) {
     const botonesCierre = [];
@@ -1322,6 +1586,8 @@ const renderPortafolio = () => {
       botonesCierre.push(`<button type="button" class="boton boton--primario boton--grande" data-accion="contacto-demo">${esc(ctaLabel)}</button>`);
     }
     bloques.push({
+      id: 'sec-contacto',
+      nav: 'Contacto',
       titulo: 'Contacto',
       html: `
         <div class="cierre">
@@ -1331,6 +1597,15 @@ const renderPortafolio = () => {
         </div>`
     });
   }
+
+  const navLanding = web && s.opciones?.barraNav !== false && bloques.length > 1
+    ? `<nav class="doc-nav" aria-label="Secciones de la página">
+        <a class="doc-nav__marca" href="#sec-inicio" data-scroll-interno>${esc(e.nombre.trim() || pf.insignia.trim() || 'Inicio')}</a>
+        <ul class="doc-nav__links">
+          ${bloques.filter(b => b.nav).map(b => `<li><a class="doc-nav__link" href="#${esc(b.id)}" data-scroll-interno>${esc(b.nav)}</a></li>`).join('')}
+        </ul>
+      </nav>`
+    : '';
 
   const contactos = [];
   if (e.email.trim()) contactos.push(web ? `<a href="mailto:${esc(e.email.trim())}" data-enlace-cliente>${esc(e.email.trim())}</a>` : esc(e.email.trim()));
@@ -1344,36 +1619,36 @@ const renderPortafolio = () => {
       ${e.nombre.trim() ? `<span class="pie__nombre">${esc(e.nombre)}</span>` : ''}
       ${contactos.map(x => `<span>${x}</span>`).join('')}
       ${web ? '<button type="button" class="pie__pdf" data-accion="pdf">Descargar en PDF</button>' : ''}
-      ${s.opciones.credito ? '<span class="pie__credito">Portfolio creado con Dealit</span>' : ''}
+      ${s.opciones.credito ? '<span class="pie__credito">Página creada con Dealit</span>' : ''}
     </footer>`;
 
   const barraInferior = web ? `
     <div class="barra-cliente">
       <div>
-        <span class="barra-cliente__etiqueta">${esc(pf.disponibilidad.trim() || 'Portfolio profesional')}</span>
+        <span class="barra-cliente__etiqueta">${esc(pf.disponibilidad.trim() || 'Página profesional')}</span>
         <span class="barra-cliente__monto">${esc(e.nombre.trim() || pf.titulo.trim() || 'Disponible')}</span>
         ${e.rol.trim() ? `<span class="barra-cliente__extra">${esc(e.rol.trim())}</span>` : ''}
       </div>
       ${principalUrl
-      ? `<a class="boton boton--primario" href="${esc(principalUrl)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(ctaLabel)}</a>`
-      : `<button type="button" class="boton boton--primario" data-accion="contacto-demo">${esc(ctaLabel)}</button>`}
+        ? `<a class="boton boton--primario" href="${esc(principalUrl)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(ctaLabel)}</a>`
+        : `<button type="button" class="boton boton--primario" data-accion="contacto-demo">${esc(ctaLabel)}</button>`}
     </div>` : '';
 
   const cuerpo = `
     <div class="cuerpo">
       ${bloques.length ? bloques.map((b, i) => `
-        <section class="bloque">
+        <section class="bloque" id="${esc(b.id || `sec-${i + 1}`)}">
           <span class="bloque__num" aria-hidden="true">${i + 1}</span>
           <div class="bloque__contenido">
             <h2 class="bloque__titulo">${esc(b.titulo)}</h2>
             ${b.html}
           </div>
-        </section>`).join('') : '<p class="doc-nota">Sumá tus proyectos desde el panel izquierdo para armar tu portfolio.</p>'}
+        </section>`).join('') : '<p class="doc-nota">Sumá tus proyectos o fotos desde el panel izquierdo para armar tu página.</p>'}
       ${pie}
     </div>`;
 
   if (animacionInicialLista) doc.classList.add('doc--estatico');
-  doc.innerHTML = portada + cuerpo + barraInferior;
+  doc.innerHTML = portada + navLanding + cuerpo + barraInferior;
   if (web) observarElementos(doc);
   if (!animacionInicialLista && web) {
     animacionInicialLista = true;
@@ -1422,8 +1697,14 @@ const renderDocumento = () => {
     : '';
 
   const colTema = resolverColoresTema(s.tema);
+  const usaLightbox = s.opciones?.lightbox !== false;
+  const opPortada = Math.min(0.85, Math.max(0.08, (Number(p.opacidadPortada) || 35) / 100));
+  const fondoFotoHTML = p.imagenPortada
+    ? `<div class="portada__fondo-img" style="--portada-img-opacidad:${opPortada}" aria-hidden="true"><img src="${esc(p.imagenPortada)}" alt=""></div>`
+    : '';
   const portada = `
-    <section class="portada portada--${esc(tipoPortada)}" aria-label="Portada">
+    <section class="portada portada--${esc(tipoPortada)}" id="sec-prop-inicio" aria-label="Portada">
+      ${fondoFotoHTML}
       <div class="portada__decoracion" style="color:${esc(colTema.colorSvg)}" aria-hidden="true">${decoracionPortadaSVG(tipoDecoracion, colTema.opacidadSvg, colTema.colorSvg)}</div>
       ${marcaAguaNumero}
       <div class="portada__superior">
@@ -1440,16 +1721,18 @@ const renderDocumento = () => {
 
   const bloques = [];
 
-  if (e.presentacion.trim()) {
+  if (e.presentacion.trim() || e.foto || e.instagram?.trim() || e.linkedin?.trim() || e.behance?.trim()) {
     bloques.push({
+      id: 'sec-prop-sobre',
+      nav: 'Sobre mí',
       titulo: e.nombre.trim() ? `Sobre ${e.nombre.trim()}` : 'Quién presenta esta propuesta',
-      html: `<div class="presentacion-bloque">${parrafos(e.presentacion)}</div>`
+      html: sobreMiBloqueHTML(e, [], web, usaLightbox)
     });
   }
 
   sincronizarPortafolioEnPropuesta();
   const pfAdjunto = s.opciones?.portafolioId ? s.opciones?.portafolio : null;
-  if (pfAdjunto && Array.isArray(pfAdjunto.proyectos) && pfAdjunto.proyectos.some(proyectoConContenido)) {
+  if (pfAdjunto && ((Array.isArray(pfAdjunto.proyectos) && pfAdjunto.proyectos.some(proyectoConContenido)) || (Array.isArray(pfAdjunto.galeria) && pfAdjunto.galeria.some(g => g?.imagen)))) {
     const htmlPf = bloquePortafolioEnPropuestaHTML(pfAdjunto, web);
     if (htmlPf) {
       bloques.push({
@@ -1539,9 +1822,39 @@ const renderDocumento = () => {
     bloques.push({ titulo: 'Inversión', html });
   }
 
+  const galeriaPropValida = (s.galeria || []).filter(g => g && g.imagen);
+  if (galeriaPropValida.length) {
+    bloques.push({
+      id: 'sec-prop-galeria',
+      nav: 'Galería',
+      titulo: s.opciones?.galeriaTitulo?.trim() || 'Galería visual y referencias',
+      html: galeriaSeccionHTML(galeriaPropValida, s.opciones, web)
+    });
+  }
+
+  const testimoniosPropValidos = (s.testimonios || []).filter(t => t && (t.texto.trim() || t.autor.trim()));
+  if (testimoniosPropValidos.length) {
+    bloques.push({
+      id: 'sec-prop-testimonios',
+      nav: 'Testimonios',
+      titulo: 'Referencias y experiencias de clientes',
+      html: testimoniosSeccionHTML(testimoniosPropValidos, web, usaLightbox)
+    });
+  }
+
+  const faqsPropValidas = (s.faqs || []).filter(f => f && (f.pregunta.trim() || f.respuesta.trim()));
+  if (faqsPropValidas.length) {
+    bloques.push({
+      id: 'sec-prop-faq',
+      nav: 'Preguntas',
+      titulo: 'Preguntas frecuentes',
+      html: faqsSeccionHTML(faqsPropValidas, web)
+    });
+  }
+
   const condiciones = lineas(s.condiciones);
   if (condiciones.length) {
-    bloques.push({ titulo: 'Condiciones', html: `<ul class="doc-lista">${condiciones.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` });
+    bloques.push({ id: 'sec-prop-condiciones', titulo: 'Condiciones', html: `<ul class="doc-lista">${condiciones.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` });
   }
 
   const pasos = lineas(s.proximosPasos);
@@ -1578,11 +1891,20 @@ const renderDocumento = () => {
 
   const aviso = web && vig.vencida ? `<p class="doc-aviso">Esta propuesta venció el ${esc(fechaLarga(vig.vence))}. Los valores pueden haber cambiado.</p>` : '';
 
+  const navLandingProp = web && s.opciones?.barraNav && bloques.length > 1
+    ? `<nav class="doc-nav" aria-label="Secciones de la propuesta">
+        <a class="doc-nav__marca" href="#sec-prop-inicio" data-scroll-interno>${esc(e.nombre.trim() || 'Propuesta')}</a>
+        <ul class="doc-nav__links">
+          ${bloques.map((b, i) => `<li><a class="doc-nav__link" href="#${esc(b.id || `sec-prop-${i + 1}`)}" data-scroll-interno>${esc(b.nav || b.titulo)}</a></li>`).join('')}
+        </ul>
+      </nav>`
+    : '';
+
   const cuerpo = `
     <div class="cuerpo">
       ${aviso}
       ${bloques.length ? bloques.map((b, i) => `
-        <section class="bloque">
+        <section class="bloque" id="${esc(b.id || `sec-prop-${i + 1}`)}">
           <span class="bloque__num" aria-hidden="true">${i + 1}</span>
           <div class="bloque__contenido">
             <h2 class="bloque__titulo">${esc(b.titulo)}</h2>
@@ -1593,7 +1915,7 @@ const renderDocumento = () => {
     </div>`;
 
   if (animacionInicialLista) doc.classList.add('doc--estatico');
-  doc.innerHTML = portada + cuerpo + (web ? barraClienteHTML(c, vig) : '');
+  doc.innerHTML = portada + navLandingProp + cuerpo + (web ? barraClienteHTML(c, vig) : '');
   if (web) observarElementos(doc);
   if (!animacionInicialLista && web) {
     animacionInicialLista = true;
@@ -1677,6 +1999,7 @@ const alEditar = ev => {
     }
     if (el.dataset.campoPf) {
       asignar(estadoPortafolio, el.dataset.campoPf, leerValor(el));
+      if (el.dataset.campoPf === 'portafolio.opacidadPortada') actualizarLogo();
       actualizar();
       return;
     }
@@ -1696,6 +2019,7 @@ const alEditar = ev => {
   if (el.dataset.campo) {
     asignar(estado, el.dataset.campo, leerValor(el));
     if (el.dataset.campo === 'opciones.portafolioId') sincronizarPortafolioEnPropuesta();
+    if (el.dataset.campo === 'propuesta.opacidadPortada') actualizarLogo();
     actualizar();
     return;
   }
@@ -2147,8 +2471,8 @@ const migrarLogo = async () => {
 };
 
 
-// Redimensiona una imagen de proyecto a máx 960x600 para que se vea nítida y liviana.
-const procesarImagenProyecto = async (archivo, paraStorage = false) => {
+// Redimensiona y optimiza cualquier foto (avatar, portada hero, proyecto o galería) para Storage o DataURL.
+const procesarImagenProyecto = async (archivo, paraStorage = false, { anchoMax: wMax, altoMax: hMax } = {}) => {
   const original = await leerComoDataURL(archivo);
   const img = await new Promise((res, rej) => {
     const i = new Image();
@@ -2156,8 +2480,8 @@ const procesarImagenProyecto = async (archivo, paraStorage = false) => {
     i.onerror = rej;
     i.src = original;
   });
-  const anchoMax = paraStorage ? 1200 : 880;
-  const altoMax = paraStorage ? 780 : 560;
+  const anchoMax = wMax || (paraStorage ? 1280 : 860);
+  const altoMax = hMax || (paraStorage ? 860 : 580);
   const escala = Math.min(1, anchoMax / (img.naturalWidth || anchoMax), altoMax / (img.naturalHeight || altoMax));
   const lienzo = document.createElement('canvas');
   lienzo.width = Math.max(1, Math.round((img.naturalWidth || anchoMax) * escala));
@@ -2168,69 +2492,339 @@ const procesarImagenProyecto = async (archivo, paraStorage = false) => {
     const webp = await aBlob('image/webp', 0.88);
     return webp && webp.type === 'image/webp' ? webp : aBlob('image/jpeg', 0.88);
   }
-  const webp = lienzo.toDataURL('image/webp', 0.84);
-  return webp.startsWith('data:image/webp') ? webp : lienzo.toDataURL('image/jpeg', 0.84);
+  const webp = lienzo.toDataURL('image/webp', 0.82);
+  return webp.startsWith('data:image/webp') ? webp : lienzo.toDataURL('image/jpeg', 0.82);
 };
 
-formulario.addEventListener('change', async ev => {
-  const inputImg = ev.target.closest('[data-pf-img-input]');
-  if (!inputImg) return;
-  const archivo = inputImg.files?.[0];
-  inputImg.value = '';
-  if (!archivo) return;
-  if (!archivo.type.startsWith('image/')) {
-    avisar('La imagen del proyecto tiene que ser PNG, JPG o WebP.');
-    return;
+const subirOComprimirFoto = async (archivo, dims = {}) => {
+  if (!archivo || !archivo.type.startsWith('image/')) {
+    avisar('Elegí una imagen en formato PNG, JPG o WebP.');
+    return '';
   }
   if (archivo.size > LOGO_MAX_ARCHIVO) {
-    avisar('La imagen pesa más de 5 MB. Probá con una más liviana.');
+    avisar('La foto pesa más de 5 MB. Probá con una más liviana.');
+    return '';
+  }
+  const db = nube();
+  if (db && db.logos) {
+    try {
+      return await db.logos.subir(await procesarImagenProyecto(archivo, true, dims));
+    } catch {
+      return procesarImagenProyecto(archivo, false, dims);
+    }
+  }
+  return procesarImagenProyecto(archivo, false, dims);
+};
+
+// Foto de perfil / equipo en Paso 1
+const campoFotoEmisor = $('#campo-foto-emisor');
+if (campoFotoEmisor) {
+  campoFotoEmisor.addEventListener('change', async () => {
+    const archivo = campoFotoEmisor.files?.[0];
+    campoFotoEmisor.value = '';
+    if (!archivo) return;
+    if ($('#foto-emisor-texto')) $('#foto-emisor-texto').textContent = 'Subiendo…';
+    campoFotoEmisor.disabled = true;
+    try {
+      const url = await subirOComprimirFoto(archivo, { anchoMax: 480, altoMax: 480 });
+      if (url) {
+        docActivo().emisor.foto = url;
+        actualizarLogo();
+        actualizar();
+      }
+    } catch {
+      avisar('No se pudo cargar la foto.');
+    } finally {
+      campoFotoEmisor.disabled = false;
+      actualizarLogo();
+    }
+  });
+}
+
+// Foto de portada Hero (Propuesta)
+const campoPortadaProp = $('#campo-portada-prop');
+if (campoPortadaProp) {
+  campoPortadaProp.addEventListener('change', async () => {
+    const archivo = campoPortadaProp.files?.[0];
+    campoPortadaProp.value = '';
+    if (!archivo) return;
+    if ($('#portada-prop-texto')) $('#portada-prop-texto').textContent = 'Subiendo…';
+    campoPortadaProp.disabled = true;
+    try {
+      const url = await subirOComprimirFoto(archivo, { anchoMax: 1400, altoMax: 900 });
+      if (url) {
+        estado.propuesta.imagenPortada = url;
+        actualizarLogo();
+        actualizar();
+      }
+    } catch {
+      avisar('No se pudo cargar la foto de portada.');
+    } finally {
+      campoPortadaProp.disabled = false;
+      actualizarLogo();
+    }
+  });
+}
+
+// Foto de portada Hero (Portfolio)
+const campoPortadaPf = $('#campo-portada-pf');
+if (campoPortadaPf) {
+  campoPortadaPf.addEventListener('change', async () => {
+    const archivo = campoPortadaPf.files?.[0];
+    campoPortadaPf.value = '';
+    if (!archivo) return;
+    if ($('#portada-pf-texto')) $('#portada-pf-texto').textContent = 'Subiendo…';
+    campoPortadaPf.disabled = true;
+    try {
+      const url = await subirOComprimirFoto(archivo, { anchoMax: 1400, altoMax: 900 });
+      if (url) {
+        estadoPortafolio.portafolio.imagenPortada = url;
+        actualizarLogo();
+        actualizar();
+      }
+    } catch {
+      avisar('No se pudo cargar la foto de portada.');
+    } finally {
+      campoPortadaPf.disabled = false;
+      actualizarLogo();
+    }
+  });
+}
+
+// Subida de imágenes en listas (proyectos, galería múltiple por proyecto, galería libre, servicios, testimonios)
+formulario.addEventListener('change', async ev => {
+  // 1) Portada principal de un proyecto
+  const inputImg = ev.target.closest('[data-pf-img-input]');
+  if (inputImg) {
+    const archivo = inputImg.files?.[0];
+    inputImg.value = '';
+    if (!archivo) return;
+    const nodo = inputImg.closest('[data-indice-pf]');
+    if (!nodo) return;
+    const idx = Number(nodo.dataset.indicePf);
+    const proyecto = estadoPortafolio.proyectos[idx];
+    if (!proyecto) return;
+    const txt = $('[data-pf-img-texto]', nodo);
+    if (txt) txt.textContent = 'Subiendo…';
+    inputImg.disabled = true;
+    try {
+      const urlImg = await subirOComprimirFoto(archivo);
+      if (urlImg && estadoPortafolio.proyectos[idx] === proyecto) {
+        proyecto.imagen = urlImg;
+        actualizarImagenProyectoItem(nodo, proyecto);
+        actualizar();
+      }
+    } catch {
+      avisar('No se pudo cargar la imagen. Probá con otra.');
+    } finally {
+      inputImg.disabled = false;
+      if (estadoPortafolio.proyectos[idx] === proyecto) actualizarImagenProyectoItem(nodo, proyecto);
+    }
     return;
   }
-  const nodo = inputImg.closest('[data-indice-pf]');
-  if (!nodo) return;
-  const idx = Number(nodo.dataset.indicePf);
-  const proyecto = estadoPortafolio.proyectos[idx];
-  if (!proyecto) return;
-  const txt = $('[data-pf-img-texto]', nodo);
-  if (txt) txt.textContent = 'Subiendo…';
-  inputImg.disabled = true;
-  try {
-    const db = nube();
-    let urlImg = '';
-    if (db && db.logos) {
-      try {
-        urlImg = await db.logos.subir(await procesarImagenProyecto(archivo, true));
-      } catch {
-        urlImg = await procesarImagenProyecto(archivo, false);
-      }
-    } else {
-      urlImg = await procesarImagenProyecto(archivo, false);
+
+  // 2) Galería adicional de un proyecto (múltiples fotos)
+  const inputGalProy = ev.target.closest('[data-pf-galeria-input]');
+  if (inputGalProy) {
+    const archivos = [...(inputGalProy.files || [])];
+    inputGalProy.value = '';
+    if (!archivos.length) return;
+    const nodo = inputGalProy.closest('[data-indice-pf]');
+    if (!nodo) return;
+    const idx = Number(nodo.dataset.indicePf);
+    const proyecto = estadoPortafolio.proyectos[idx];
+    if (!proyecto) return;
+    proyecto.galeria = Array.isArray(proyecto.galeria) ? proyecto.galeria : [];
+    const cupo = Math.max(0, 8 - proyecto.galeria.length);
+    if (!cupo) {
+      avisar('Cada proyecto admite hasta 8 fotos adicionales.');
+      return;
     }
-    if (urlImg && estadoPortafolio.proyectos[idx] === proyecto) {
-      proyecto.imagen = urlImg;
+    inputGalProy.disabled = true;
+    try {
+      for (const arch of archivos.slice(0, cupo)) {
+        const u = await subirOComprimirFoto(arch);
+        if (u) proyecto.galeria.push(u);
+      }
       actualizarImagenProyectoItem(nodo, proyecto);
       actualizar();
+    } finally {
+      inputGalProy.disabled = false;
     }
-  } catch {
-    avisar('No se pudo cargar la imagen. Probá con otra.');
-  } finally {
-    inputImg.disabled = false;
-    if (estadoPortafolio.proyectos[idx] === proyecto) actualizarImagenProyectoItem(nodo, proyecto);
+    return;
+  }
+
+  // 3) Foto individual en Galería Libre (Propuesta o Portfolio)
+  const inputGal = ev.target.closest('[data-gal-img-input]');
+  if (inputGal) {
+    const archivo = inputGal.files?.[0];
+    inputGal.value = '';
+    if (!archivo) return;
+    const nodoPf = inputGal.closest('[data-indice-pf]');
+    const nodoProp = inputGal.closest('[data-indice]');
+    const esPf = !!nodoPf;
+    const nodo = nodoPf || nodoProp;
+    if (!nodo) return;
+    const idx = Number(esPf ? nodo.dataset.indicePf : nodo.dataset.indice);
+    const item = (esPf ? estadoPortafolio.galeria : estado.galeria)?.[idx];
+    if (!item) return;
+    const txt = $('[data-gal-img-texto]', nodo);
+    if (txt) txt.textContent = 'Subiendo…';
+    inputGal.disabled = true;
+    try {
+      const urlImg = await subirOComprimirFoto(archivo);
+      if (urlImg) {
+        item.imagen = urlImg;
+        actualizarImagenGenericaItem(nodo, item.imagen, 'data-gal-img');
+        actualizar();
+      }
+    } finally {
+      inputGal.disabled = false;
+      actualizarImagenGenericaItem(nodo, item.imagen, 'data-gal-img');
+    }
+    return;
+  }
+
+  // 4) Subida masiva de varias fotos a la Galería Libre
+  const inputMultiGal = ev.target.closest('[data-galeria-multi]');
+  if (inputMultiGal) {
+    const archivos = [...(inputMultiGal.files || [])];
+    inputMultiGal.value = '';
+    if (!archivos.length) return;
+    const esPf = inputMultiGal.dataset.galeriaMulti === 'portafolio';
+    const destino = esPf ? estadoPortafolio : estado;
+    const conf = esPf ? LISTAS_PORTAFOLIO.galeria : LISTAS.galeria;
+    inputMultiGal.disabled = true;
+    try {
+      for (const arch of archivos.slice(0, 12)) {
+        const u = await subirOComprimirFoto(arch);
+        if (u) {
+          const nuevoItem = conf.nuevo();
+          nuevoItem.imagen = u;
+          nuevoItem.proporcion = destino.opciones?.galeriaProporcion || 'panoramica';
+          destino.galeria.push(nuevoItem);
+        }
+      }
+      if (esPf) renderListaPortafolio('galeria');
+      else renderLista('galeria');
+      actualizar();
+      avisar(`${archivos.length === 1 ? 'Foto agregada' : 'Fotos agregadas'} a la galería.`);
+    } finally {
+      inputMultiGal.disabled = false;
+    }
+    return;
+  }
+
+  // 5) Foto de un Servicio en Propuesta
+  const inputSrv = ev.target.closest('[data-srv-img-input]');
+  if (inputSrv) {
+    const archivo = inputSrv.files?.[0];
+    inputSrv.value = '';
+    if (!archivo) return;
+    const nodo = inputSrv.closest('[data-indice]');
+    if (!nodo) return;
+    const item = estado.servicios[Number(nodo.dataset.indice)];
+    if (!item) return;
+    const txt = $('[data-srv-img-texto]', nodo);
+    if (txt) txt.textContent = 'Subiendo…';
+    inputSrv.disabled = true;
+    try {
+      const u = await subirOComprimirFoto(archivo);
+      if (u) {
+        item.imagen = u;
+        actualizarImagenGenericaItem(nodo, item.imagen, 'data-srv-img');
+        actualizar();
+      }
+    } finally {
+      inputSrv.disabled = false;
+      actualizarImagenGenericaItem(nodo, item.imagen, 'data-srv-img');
+    }
+    return;
+  }
+
+  // 6) Foto de un Servicio Web en Portfolio
+  const inputSweb = ev.target.closest('[data-sweb-img-input]');
+  if (inputSweb) {
+    const archivo = inputSweb.files?.[0];
+    inputSweb.value = '';
+    if (!archivo) return;
+    const nodo = inputSweb.closest('[data-indice-pf]');
+    if (!nodo) return;
+    const item = estadoPortafolio.serviciosWeb[Number(nodo.dataset.indicePf)];
+    if (!item) return;
+    const txt = $('[data-sweb-img-texto]', nodo);
+    if (txt) txt.textContent = 'Subiendo…';
+    inputSweb.disabled = true;
+    try {
+      const u = await subirOComprimirFoto(archivo);
+      if (u) {
+        item.imagen = u;
+        actualizarImagenGenericaItem(nodo, item.imagen, 'data-sweb-img');
+        actualizar();
+      }
+    } finally {
+      inputSweb.disabled = false;
+      actualizarImagenGenericaItem(nodo, item.imagen, 'data-sweb-img');
+    }
+    return;
+  }
+
+  // 7) Avatar de un Testimonio
+  const inputTest = ev.target.closest('[data-test-img-input]');
+  if (inputTest) {
+    const archivo = inputTest.files?.[0];
+    inputTest.value = '';
+    if (!archivo) return;
+    const nodoPf = inputTest.closest('[data-indice-pf]');
+    const nodoProp = inputTest.closest('[data-indice]');
+    const esPf = !!nodoPf;
+    const nodo = nodoPf || nodoProp;
+    if (!nodo) return;
+    const idx = Number(esPf ? nodo.dataset.indicePf : nodo.dataset.indice);
+    const item = (esPf ? estadoPortafolio.testimonios : estado.testimonios)?.[idx];
+    if (!item) return;
+    const txt = $('[data-test-img-texto]', nodo);
+    if (txt) txt.textContent = 'Subiendo…';
+    inputTest.disabled = true;
+    try {
+      const u = await subirOComprimirFoto(archivo, { anchoMax: 320, altoMax: 320 });
+      if (u) {
+        item.avatar = u;
+        actualizarImagenGenericaItem(nodo, item.avatar, 'data-test-img');
+        actualizar();
+      }
+    } finally {
+      inputTest.disabled = false;
+      actualizarImagenGenericaItem(nodo, item.avatar, 'data-test-img');
+    }
   }
 });
 
+const limpiarImgLink = img => (img && img.length <= LOGO_MAX_LINK ? img : '');
+
 const datosParaLink = () => {
-  const sinId = arr => arr.map(({ id, ...resto }) => resto);
+  const sinId = arr => (arr || []).map(({ id, ...resto }) => resto);
   const logoEntra = estado.emisor.logo.length <= LOGO_MAX_LINK;
   return {
     logoOmitido: !!estado.emisor.logo && !logoEntra,
     datos: {
       v: 1,
       ...estado,
-      emisor: { ...estado.emisor, logo: logoEntra ? estado.emisor.logo : '' },
+      emisor: {
+        ...estado.emisor,
+        logo: limpiarImgLink(estado.emisor.logo),
+        foto: limpiarImgLink(estado.emisor.foto)
+      },
+      propuesta: {
+        ...estado.propuesta,
+        imagenPortada: limpiarImgLink(estado.propuesta.imagenPortada)
+      },
       objetivos: sinId(estado.objetivos),
-      servicios: sinId(estado.servicios),
+      servicios: sinId(estado.servicios).map(s => ({ ...s, imagen: limpiarImgLink(s.imagen) })),
       etapas: sinId(estado.etapas),
+      galeria: sinId(estado.galeria).map(g => ({ ...g, imagen: limpiarImgLink(g.imagen) })).filter(g => g.imagen),
+      testimonios: sinId(estado.testimonios).map(t => ({ ...t, avatar: limpiarImgLink(t.avatar) })),
+      faqs: sinId(estado.faqs),
       inversion: { ...estado.inversion, pagos: sinId(estado.inversion.pagos) }
     }
   };
@@ -2277,8 +2871,16 @@ const abrirCompartirPortafolio = async () => {
     linkActual = linkCortoPortafolio(portafolioId);
   } else {
     const copia = JSON.parse(JSON.stringify(estadoPortafolio));
-    if (copia.emisor.logo.length > LOGO_MAX_LINK) copia.emisor.logo = '';
-    copia.proyectos.forEach(p => { if (p.imagen.length > LOGO_MAX_LINK) p.imagen = ''; });
+    copia.emisor.logo = limpiarImgLink(copia.emisor.logo);
+    copia.emisor.foto = limpiarImgLink(copia.emisor.foto);
+    copia.portafolio.imagenPortada = limpiarImgLink(copia.portafolio.imagenPortada);
+    copia.proyectos.forEach(p => {
+      p.imagen = limpiarImgLink(p.imagen);
+      p.galeria = (p.galeria || []).map(limpiarImgLink).filter(Boolean);
+    });
+    copia.galeria = (copia.galeria || []).map(g => ({ ...g, imagen: limpiarImgLink(g.imagen) })).filter(g => g.imagen);
+    copia.serviciosWeb = (copia.serviciosWeb || []).map(sw => ({ ...sw, imagen: limpiarImgLink(sw.imagen) }));
+    copia.testimonios = (copia.testimonios || []).map(t => ({ ...t, avatar: limpiarImgLink(t.avatar) }));
     try {
       linkActual = `${location.origin}${location.pathname}${PREFIJO_PORTAFOLIO}${await comprimir(JSON.stringify(copia))}`;
     } catch {
@@ -2416,7 +3018,7 @@ const registrarVisita = id => {
   try {
     if (Date.now() - Number(localStorage.getItem(clave) || 0) < VISITA_INTERVALO) return;
     localStorage.setItem(clave, String(Date.now()));
-  } catch { }
+  } catch {}
   llamarApi('/api/visto', { id }, { keepalive: true }).catch(e => console.warn('No se pudo registrar la visita:', e));
 };
 
@@ -2545,8 +3147,82 @@ const abrirMenu = abrir => {
   document.body.classList.toggle('menu-abierto', abrir);
 };
 
+
+// Visor Lightbox a pantalla completa para todas las fotos de la página / propuesta
+const dialogoLightbox = $('#dialogo-lightbox');
+const lightboxImg = $('#lightbox-img');
+const lightboxEpigrafe = $('#lightbox-epigrafe');
+const lightboxContador = $('#lightbox-contador');
+const lightboxAnt = $('#lightbox-ant');
+const lightboxSig = $('#lightbox-sig');
+let lightboxItems = [];
+let lightboxIndice = 0;
+
+const pintarLightbox = () => {
+  if (!lightboxItems.length || !lightboxImg) return;
+  const item = lightboxItems[lightboxIndice] || lightboxItems[0];
+  lightboxImg.src = item.src;
+  lightboxImg.alt = item.caption || 'Imagen ampliada';
+  if (lightboxEpigrafe) {
+    lightboxEpigrafe.textContent = item.caption || '';
+    lightboxEpigrafe.hidden = !item.caption;
+  }
+  const varios = lightboxItems.length > 1;
+  if (lightboxContador) {
+    lightboxContador.textContent = varios ? `${lightboxIndice + 1} / ${lightboxItems.length}` : '';
+  }
+  if (lightboxAnt) lightboxAnt.hidden = !varios;
+  if (lightboxSig) lightboxSig.hidden = !varios;
+};
+
+const abrirLightboxDesdeNodo = disparador => {
+  if (!dialogoLightbox || typeof dialogoLightbox.showModal !== 'function') return;
+  const srcClick = disparador.dataset.lightboxSrc;
+  if (!srcClick) return;
+  const grupo = disparador.dataset.lightboxGroup || '';
+  const doc = $('#documento');
+  if (grupo && doc) {
+    const nodosGrupo = [...doc.querySelectorAll(`[data-lightbox-group="${CSS.escape(grupo)}"]`)];
+    const vistos = new Set();
+    lightboxItems = [];
+    nodosGrupo.forEach(n => {
+      const s = n.dataset.lightboxSrc;
+      if (s && !vistos.has(s)) {
+        vistos.add(s);
+        lightboxItems.push({ src: s, caption: n.dataset.lightboxCaption || '' });
+      }
+    });
+    lightboxIndice = Math.max(0, lightboxItems.findIndex(x => x.src === srcClick));
+  } else {
+    lightboxItems = [{ src: srcClick, caption: disparador.dataset.lightboxCaption || '' }];
+    lightboxIndice = 0;
+  }
+  pintarLightbox();
+  if (!dialogoLightbox.open) dialogoLightbox.showModal();
+};
+
+const moverLightbox = delta => {
+  if (lightboxItems.length <= 1) return;
+  lightboxIndice = (lightboxIndice + delta + lightboxItems.length) % lightboxItems.length;
+  pintarLightbox();
+};
+
 document.addEventListener('click', ev => {
   if (!panelMenu.hidden && !ev.target.closest('#menu-panel') && !ev.target.closest('[data-accion="menu"]')) abrirMenu(false);
+  const linkScroll = ev.target.closest('[data-scroll-interno]');
+  if (linkScroll) {
+    ev.preventDefault();
+    const destinoId = (linkScroll.getAttribute('href') || '').replace(/^#/, '');
+    const elDestino = destinoId ? document.getElementById(destinoId) : null;
+    if (elDestino) elDestino.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    return;
+  }
+  const nodoLb = ev.target.closest('[data-lightbox-src]');
+  if (nodoLb && !ev.target.closest('a[href]')) {
+    ev.preventDefault();
+    abrirLightboxDesdeNodo(nodoLb);
+    return;
+  }
   const enlaceCliente = ev.target.closest('[data-enlace-cliente]');
   if (enlaceCliente && !esCliente) {
     ev.preventDefault();
@@ -2555,6 +3231,10 @@ document.addEventListener('click', ev => {
 });
 
 document.addEventListener('keydown', ev => {
+  if (dialogoLightbox?.open) {
+    if (ev.key === 'ArrowLeft') { ev.preventDefault(); moverLightbox(-1); return; }
+    if (ev.key === 'ArrowRight') { ev.preventDefault(); moverLightbox(1); return; }
+  }
   if (ev.key === 'Escape' && !panelMenu.hidden) {
     abrirMenu(false);
     botonMenu.focus();
@@ -2689,7 +3369,7 @@ document.addEventListener('click', async ev => {
     case 'compartir-nativo':
       try {
         await navigator.share({ title: estado.propuesta.titulo.trim() || 'Propuesta', url: linkActual });
-      } catch { }
+      } catch {}
       break;
     case 'vista':
       cambiarVista(boton.dataset.vista);
@@ -2715,6 +3395,90 @@ document.addEventListener('click', async ev => {
       actualizar();
       break;
     }
+    case 'quitar-foto-galeria-proyecto': {
+      const nodoPf = boton.closest('[data-indice-pf]');
+      if (!nodoPf) break;
+      const itemPf = estadoPortafolio.proyectos[Number(nodoPf.dataset.indicePf)];
+      const idxFoto = Number(boton.dataset.fotoIdx);
+      if (!itemPf || !Array.isArray(itemPf.galeria)) break;
+      itemPf.galeria.splice(idxFoto, 1);
+      actualizarImagenProyectoItem(nodoPf, itemPf);
+      actualizar();
+      break;
+    }
+    case 'quitar-img-galeria': {
+      const nodoPf = boton.closest('[data-indice-pf]');
+      const nodoProp = boton.closest('[data-indice]');
+      const esPf = !!nodoPf;
+      const nodo = nodoPf || nodoProp;
+      if (!nodo) break;
+      const item = (esPf ? estadoPortafolio.galeria : estado.galeria)?.[Number(esPf ? nodo.dataset.indicePf : nodo.dataset.indice)];
+      if (!item) break;
+      item.imagen = '';
+      actualizarImagenGenericaItem(nodo, '', 'data-gal-img');
+      actualizar();
+      break;
+    }
+    case 'quitar-img-servicio': {
+      const nodo = boton.closest('[data-indice]');
+      if (!nodo) break;
+      const item = estado.servicios[Number(nodo.dataset.indice)];
+      if (!item) break;
+      item.imagen = '';
+      actualizarImagenGenericaItem(nodo, '', 'data-srv-img');
+      actualizar();
+      break;
+    }
+    case 'quitar-img-sweb': {
+      const nodo = boton.closest('[data-indice-pf]');
+      if (!nodo) break;
+      const item = estadoPortafolio.serviciosWeb[Number(nodo.dataset.indicePf)];
+      if (!item) break;
+      item.imagen = '';
+      actualizarImagenGenericaItem(nodo, '', 'data-sweb-img');
+      actualizar();
+      break;
+    }
+    case 'quitar-img-testimonio': {
+      const nodoPf = boton.closest('[data-indice-pf]');
+      const nodoProp = boton.closest('[data-indice]');
+      const esPf = !!nodoPf;
+      const nodo = nodoPf || nodoProp;
+      if (!nodo) break;
+      const item = (esPf ? estadoPortafolio.testimonios : estado.testimonios)?.[Number(esPf ? nodo.dataset.indicePf : nodo.dataset.indice)];
+      if (!item) break;
+      item.avatar = '';
+      actualizarImagenGenericaItem(nodo, '', 'data-test-img');
+      actualizar();
+      break;
+    }
+    case 'quitar-foto-emisor':
+      docActivo().emisor.foto = '';
+      actualizarLogo();
+      actualizar();
+      break;
+    case 'quitar-portada-prop':
+      estado.propuesta.imagenPortada = '';
+      actualizarLogo();
+      actualizar();
+      break;
+    case 'quitar-portada-pf':
+      estadoPortafolio.portafolio.imagenPortada = '';
+      actualizarLogo();
+      actualizar();
+      break;
+    case 'lightbox-cerrar':
+      dialogoLightbox?.close();
+      break;
+    case 'lightbox-fondo':
+      if (ev.target === boton) dialogoLightbox?.close();
+      break;
+    case 'lightbox-ant':
+      moverLightbox(-1);
+      break;
+    case 'lightbox-sig':
+      moverLightbox(1);
+      break;
     case 'contacto-demo':
       avisar('En tu portfolio compartido, este botón abre WhatsApp o email directo para contratarte.');
       break;
@@ -2786,6 +3550,11 @@ document.addEventListener('click', async ev => {
       break;
     case 'quitar-logo-cuenta':
       logoCuenta = '';
+      cuentaEditada = true;
+      pintarLogoCuenta();
+      break;
+    case 'quitar-foto-cuenta':
+      fotoCuenta = '';
       cuentaEditada = true;
       pintarLogoCuenta();
       break;
@@ -3184,7 +3953,7 @@ const irAPortafolios = ({ historial = true } = {}) => {
   cerrarEdicion();
   if (!nube() && !portafolios.length) portafolios = cargarPortafoliosLocales();
   if (historial && seccionEnUrl() !== 'portafolios') {
-    try { history.pushState(null, '', `${location.pathname}?seccion=portafolios`); } catch { }
+    try { history.pushState(null, '', `${location.pathname}?seccion=portafolios`); } catch {}
   }
   mostrarVista('portafolios');
   renderPanelPortafolios();
@@ -3199,7 +3968,7 @@ const mostrarEditorPortafolio = (id, contenido, { historial = true } = {}) => {
   errorGuardado = '';
   avisoError = false;
   if (historial) {
-    try { history.pushState(null, '', `${location.pathname}?portafolio=${encodeURIComponent(id)}`); } catch { }
+    try { history.pushState(null, '', `${location.pathname}?portafolio=${encodeURIComponent(id)}`); } catch {}
   }
   mostrarVista('editor');
   cambiarPestana(false);
@@ -3342,8 +4111,9 @@ const llenarCuenta = () => {
   const sugeridos = !perfil?.emisor && propuestas[0]?.payload;
   const emisor = perfil?.emisor || (sugeridos ? normalizar(propuestas[0].payload).emisor : {});
   $$('[data-emisor]').forEach(el => { el.value = texto(emisor[el.dataset.emisor]); });
-  // Los logos viejos guardados dentro de la propuesta no van al perfil: solo los de Storage.
+  // Los logos y fotos viejos guardados como data: no van al perfil de Firestore: solo los de Storage.
   logoCuenta = esLogoValido(texto(emisor.logo)) && !texto(emisor.logo).startsWith('data:') ? texto(emisor.logo) : '';
+  fotoCuenta = esLogoValido(texto(emisor.foto)) && !texto(emisor.foto).startsWith('data:') ? texto(emisor.foto) : '';
   pintarLogoCuenta();
   elCuentaEstado.textContent = sugeridos ? 'Completamos estos datos con los de tu última propuesta. Guardalos para usarlos siempre.' : '';
   cuentaEditada = false;
@@ -3357,7 +4127,7 @@ $('#cuenta-form').addEventListener('input', () => {
 $('#cuenta-form').addEventListener('submit', async ev => {
   ev.preventDefault();
   const displayName = campoCuentaNombre.value.trim();
-  const emisor = { ...Object.fromEntries($$('[data-emisor]').map(el => [el.dataset.emisor, el.value.trim()])), logo: logoCuenta };
+  const emisor = { ...Object.fromEntries($$('[data-emisor]').map(el => [el.dataset.emisor, el.value.trim()])), logo: logoCuenta, foto: fotoCuenta };
   botonGuardarCuenta.disabled = true;
   botonGuardarCuenta.textContent = 'Guardando…';
   try {
@@ -3375,17 +4145,30 @@ $('#cuenta-form').addEventListener('submit', async ev => {
   }
 });
 
-// Logo del negocio en Mi cuenta: se sube a Storage y se guarda con «Guardar cambios».
+// Logo y foto del negocio en Mi cuenta: se suben a Storage y se guardan con «Guardar cambios».
 let logoCuenta = '';
+let fotoCuenta = '';
 const campoLogoCuenta = $('#cuenta-logo');
+const campoFotoCuenta = $('#cuenta-foto');
 
 const pintarLogoCuenta = () => {
   const vista = $('#cuenta-logo-vista');
-  vista.hidden = !logoCuenta;
-  if (logoCuenta) vista.src = logoCuenta;
-  else vista.removeAttribute('src');
-  $('#cuenta-logo-quitar').hidden = !logoCuenta;
-  $('#cuenta-logo-texto').textContent = logoCuenta ? 'Cambiar logo' : 'Subir logo';
+  if (vista) {
+    vista.hidden = !logoCuenta;
+    if (logoCuenta) vista.src = logoCuenta;
+    else vista.removeAttribute('src');
+  }
+  if ($('#cuenta-logo-quitar')) $('#cuenta-logo-quitar').hidden = !logoCuenta;
+  if ($('#cuenta-logo-texto')) $('#cuenta-logo-texto').textContent = logoCuenta ? 'Cambiar logo' : 'Subir logo';
+
+  const vistaFoto = $('#cuenta-foto-vista');
+  if (vistaFoto) {
+    vistaFoto.hidden = !fotoCuenta;
+    if (fotoCuenta) vistaFoto.src = fotoCuenta;
+    else vistaFoto.removeAttribute('src');
+  }
+  if ($('#cuenta-foto-quitar')) $('#cuenta-foto-quitar').hidden = !fotoCuenta;
+  if ($('#cuenta-foto-texto')) $('#cuenta-foto-texto').textContent = fotoCuenta ? 'Cambiar foto' : 'Subir foto';
 };
 
 campoLogoCuenta.addEventListener('change', async () => {
@@ -3414,6 +4197,35 @@ campoLogoCuenta.addEventListener('change', async () => {
     pintarLogoCuenta();
   }
 });
+
+if (campoFotoCuenta) {
+  campoFotoCuenta.addEventListener('change', async () => {
+    const archivo = campoFotoCuenta.files?.[0];
+    campoFotoCuenta.value = '';
+    if (!archivo || !nube()) return;
+    if (!archivo.type.startsWith('image/')) {
+      avisar('La foto tiene que ser PNG, JPG o WebP.');
+      return;
+    }
+    if (archivo.size > LOGO_MAX_ARCHIVO) {
+      avisar('La foto pesa más de 5 MB. Usá una versión más liviana.');
+      return;
+    }
+    $('#cuenta-foto-texto').textContent = 'Subiendo foto…';
+    campoFotoCuenta.disabled = true;
+    try {
+      fotoCuenta = await AteneaDB.logos.subir(await procesarImagenProyecto(archivo, true, { anchoMax: 480, altoMax: 480 }));
+      cuentaEditada = true;
+      elCuentaEstado.textContent = 'Guardá los cambios para usar esta foto en tus propuestas y portfolios.';
+    } catch (e) {
+      console.error('No se pudo subir la foto:', e);
+      avisar('No se pudo subir la foto. Revisá tu conexión y probá de nuevo.');
+    } finally {
+      campoFotoCuenta.disabled = false;
+      pintarLogoCuenta();
+    }
+  });
+}
 
 // Avatar de la barra: la foto de Google, o la inicial si entró con email.
 const pintarAvatar = user => {
@@ -3627,7 +4439,7 @@ const iniciarConCuenta = async () => {
   try {
     continuar = sessionStorage.getItem(`${CLAVE}:continuar`);
     sessionStorage.removeItem(`${CLAVE}:continuar`);
-  } catch { }
+  } catch {}
   const id = idEnUrl();
   if (migrada && continuar) {
     mostrarEditor(migrada.id, migrada.contenido, { historial: false });
@@ -3641,26 +4453,26 @@ const iniciarConCuenta = async () => {
   else irAlPanel({ historial: false });
 };
 
-const authPantalla = $('#auth-pantalla');
-const authForm = $('#auth-form');
-const authGoogle = $('#auth-google');
-const authErrorG = $('#auth-error-google');
-const authError = $('#auth-error');
-const authSubmit = $('#auth-submit');
+const authPantalla   = $('#auth-pantalla');
+const authForm       = $('#auth-form');
+const authGoogle     = $('#auth-google');
+const authErrorG     = $('#auth-error-google');
+const authError      = $('#auth-error');
+const authSubmit     = $('#auth-submit');
 const authSubmitText = authSubmit?.querySelector('.auth__submit-texto');
-const authSpinner = authSubmit?.querySelector('.auth__spinner');
-const authNombre = $('#auth-nombre');
-const authEmail = $('#auth-email');
-const authPass = $('#auth-pass');
-const menuUsuario = $('#menu-usuario');
-const authOlvido = $('#auth-olvido');
-const authMensaje = $('#auth-mensaje');
-const elIngreso = $('#auth-ingreso');
-const elVerificar = $('#auth-verificar');
+const authSpinner    = authSubmit?.querySelector('.auth__spinner');
+const authNombre     = $('#auth-nombre');
+const authEmail      = $('#auth-email');
+const authPass       = $('#auth-pass');
+const menuUsuario    = $('#menu-usuario');
+const authOlvido     = $('#auth-olvido');
+const authMensaje    = $('#auth-mensaje');
+const elIngreso      = $('#auth-ingreso');
+const elVerificar    = $('#auth-verificar');
 const verificarError = $('#auth-verificar-error');
 const verificarMensaje = $('#auth-verificar-mensaje');
 let authModo = 'login';
-let entrar = () => { };
+let entrar = () => {};
 
 // Sin sesión: editor de prueba que guarda en este navegador. Al registrarse, lo que
 // armó pasa a su cuenta (migrarLocal) y sigue con lo que quería hacer.
@@ -3713,7 +4525,7 @@ const abrirRegistro = motivo => {
       guardadoParaRegistro = !invitadoEdito;
       guardarLocal();
     }
-    try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch { }
+    try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch {}
   }
   const elMotivo = $('#auth-motivo');
   elMotivo.textContent = MOTIVOS_REGISTRO[motivo] || '';
@@ -3730,7 +4542,7 @@ const cerrarRegistro = () => {
     sessionStorage.removeItem(`${CLAVE}:continuar`);
     // Si solo se guardó para el registro y al final no se registró, no queda nada guardado.
     if (guardadoParaRegistro && !invitadoEdito) localStorage.removeItem(CLAVE);
-  } catch { }
+  } catch {}
   guardadoParaRegistro = false;
 };
 $('#auth-cerrar').addEventListener('click', cerrarRegistro);
@@ -3747,14 +4559,14 @@ const mostrarMensaje = (el, texto) => {
 const mostrarErrorAuth = (el, msg) => {
   if (!el) return;
   const MENSAJES = {
-    'auth/user-not-found': 'No hay cuenta con ese email.',
-    'auth/wrong-password': 'Contraseña incorrecta.',
-    'auth/invalid-credential': 'Email o contraseña incorrectos.',
-    'auth/email-already-in-use': 'Ya existe una cuenta con ese email.',
-    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
-    'auth/invalid-email': 'El email no es válido.',
-    'auth/too-many-requests': 'Demasiados intentos. Esperá un momento.',
-    'auth/popup-closed-by-user': '',
+    'auth/user-not-found':          'No hay cuenta con ese email.',
+    'auth/wrong-password':          'Contraseña incorrecta.',
+    'auth/invalid-credential':      'Email o contraseña incorrectos.',
+    'auth/email-already-in-use':    'Ya existe una cuenta con ese email.',
+    'auth/weak-password':           'La contraseña debe tener al menos 6 caracteres.',
+    'auth/invalid-email':           'El email no es válido.',
+    'auth/too-many-requests':       'Demasiados intentos. Esperá un momento.',
+    'auth/popup-closed-by-user':    '',
     'auth/cancelled-popup-request': ''
   };
   const texto = MENSAJES[msg?.code] ?? MENSAJES[msg?.message] ?? (typeof msg === 'string' ? msg : 'Ocurrió un error. Intentá de nuevo.');
@@ -3810,7 +4622,7 @@ if (authPantalla && AteneaDB) {
   authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = authEmail?.value.trim();
-    const pass = authPass?.value;
+    const pass  = authPass?.value;
     if (!email || !pass) return;
     setAuthCargando(true);
     if (authError) authError.hidden = true;
@@ -3890,7 +4702,7 @@ if (authPantalla && AteneaDB) {
     if (document.visibilityState !== 'visible' || elVerificar.hidden || !AteneaDB.auth.getUser()) return;
     try {
       if (await AteneaDB.auth.comprobarVerificacion()) entrar(AteneaDB.auth.getUser());
-    } catch { }
+    } catch {}
   });
 }
 
@@ -3928,7 +4740,7 @@ eliminarBoton.addEventListener('click', async () => {
     try {
       Object.keys(localStorage).filter(k => k.startsWith(CLAVE)).forEach(k => localStorage.removeItem(k));
       sessionStorage.setItem(`${CLAVE}:cuenta-eliminada`, '1');
-    } catch { }
+    } catch {}
     location.replace('/');
   } catch (e) {
     console.error('No se pudo eliminar la cuenta:', e);
@@ -4052,7 +4864,7 @@ if (esLinkPortafolioCorto) {
     }
     if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
     pintarAvatar(user);
-    if (!editorIniciado) {
+      if (!editorIniciado) {
       editorIniciado = true;
       // El spinner sigue visible hasta saber qué mostrar, así no se ve un editor vacío.
       document.body.classList.add('auth-cargando');
@@ -4070,7 +4882,7 @@ if (esLinkPortafolioCorto) {
           sessionStorage.removeItem(`${CLAVE}:cuenta-eliminada`);
           avisar('Tu cuenta y todos tus datos se eliminaron.', 6000);
         }
-      } catch { }
+      } catch {}
       return;
     }
     // Al volver desde el link del email, el usuario en memoria puede estar desactualizado.

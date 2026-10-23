@@ -6,12 +6,12 @@ import 'firebase/compat/firestore';
 import 'firebase/compat/storage';
 
 const firebaseConfig = {
-  apiKey: 'AIzaSyA4fAtms8k5hOEvtFiTnf6B2ijg2jiWDtg',
-  authDomain: 'dealitnow.vercel.app',
-  projectId: 'dealit-7f735',
-  storageBucket: 'dealit-7f735.firebasestorage.app',
+  apiKey:            'AIzaSyA4fAtms8k5hOEvtFiTnf6B2ijg2jiWDtg',
+  authDomain:        'dealitnow.vercel.app',
+  projectId:         'dealit-7f735',
+  storageBucket:     'dealit-7f735.firebasestorage.app',
   messagingSenderId: '837213426465',
-  appId: '1:837213426465:web:91f1c863f453efe950e460'
+  appId:             '1:837213426465:web:91f1c863f453efe950e460'
 };
 
 const crearAteneaDB = () => {
@@ -29,7 +29,7 @@ const crearAteneaDB = () => {
 
   const auth = firebase.auth();
   auth.languageCode = 'es'; // emails de verificación y de contraseña en español
-  const db = firebase.firestore();
+  const db   = firebase.firestore();
 
   // Caché local en IndexedDB: el editor funciona sin conexión y sincroniza al volver.
   // Tiene que pedirse antes de cualquier otra operación sobre Firestore.
@@ -42,7 +42,7 @@ const crearAteneaDB = () => {
   let _unsubSnapshots = [];
 
   const getUser = () => auth.currentUser;
-  const getUid = () => { const u = getUser(); if (!u) throw new Error('No autenticado'); return u.uid; };
+  const getUid  = () => { const u = getUser(); if (!u) throw new Error('No autenticado'); return u.uid; };
 
   const onAuthChange = callback => auth.onAuthStateChanged(callback);
 
@@ -61,8 +61,8 @@ const crearAteneaDB = () => {
 
   // Perfil (users/{uid}): nombre visible y datos del negocio que se usan por defecto
   // en las propuestas nuevas.
-  const CAMPOS_EMISOR = ['nombre', 'rol', 'email', 'telefono', 'web', 'presentacion', 'logo'];
-  const LARGO_EMISOR = { presentacion: 2000, logo: 1000 };
+  const CAMPOS_EMISOR = ['nombre', 'rol', 'email', 'telefono', 'web', 'presentacion', 'logo', 'foto', 'ubicacion', 'instagram', 'linkedin', 'behance', 'github'];
+  const LARGO_EMISOR = { presentacion: 2000, logo: 1000, foto: 1000 };
 
   const obtenerPerfil = async () => {
     const snap = await db.collection('users').doc(getUid()).get();
@@ -147,12 +147,12 @@ const crearAteneaDB = () => {
   // Solo estos campos se escriben; userId y createdAt nunca vienen de quien llama.
   const _camposEditables = (data) => {
     const limpio = {};
-    if ('title' in data) limpio.title = String(data.title ?? '').slice(0, LARGO_MAX);
+    if ('title' in data)      limpio.title      = String(data.title ?? '').slice(0, LARGO_MAX);
     if ('clientName' in data) limpio.clientName = String(data.clientName ?? '').slice(0, LARGO_MAX);
-    if ('amount' in data) limpio.amount = Number.isFinite(data.amount) ? data.amount : 0;
-    if ('theme' in data) limpio.theme = String(data.theme ?? '');
-    if ('payload' in data) limpio.payload = data.payload && typeof data.payload === 'object' ? data.payload : {};
-    if ('publico' in data) limpio.publico = data.publico === true;
+    if ('amount' in data)     limpio.amount     = Number.isFinite(data.amount) ? data.amount : 0;
+    if ('theme' in data)      limpio.theme      = String(data.theme ?? '');
+    if ('payload' in data)    limpio.payload    = data.payload && typeof data.payload === 'object' ? data.payload : {};
+    if ('publico' in data)    limpio.publico    = data.publico === true;
     if ('status' in data && ESTADOS.includes(data.status)) limpio.status = data.status;
     return limpio;
   };
@@ -166,8 +166,8 @@ const crearAteneaDB = () => {
     await _colProposals().doc(id).set({
       title: '', clientName: '', amount: 0, theme: 'elegante-oscuro', payload: {},
       ..._camposEditables(data),
-      status: 'draft',
-      userId: getUid(),
+      status:    'draft',
+      userId:    getUid(),
       createdAt: ahora,
       updatedAt: ahora
     });
@@ -245,12 +245,12 @@ const crearAteneaDB = () => {
 
   const _camposEditablesPortafolio = (data) => {
     const limpio = {};
-    if ('title' in data) limpio.title = String(data.title ?? '').slice(0, LARGO_MAX);
-    if ('subtitle' in data) limpio.subtitle = String(data.subtitle ?? '').slice(0, LARGO_MAX);
+    if ('title' in data)        limpio.title        = String(data.title ?? '').slice(0, LARGO_MAX);
+    if ('subtitle' in data)     limpio.subtitle     = String(data.subtitle ?? '').slice(0, LARGO_MAX);
     if ('projectCount' in data) limpio.projectCount = Number.isFinite(data.projectCount) ? Math.max(0, Math.round(data.projectCount)) : 0;
-    if ('theme' in data) limpio.theme = String(data.theme ?? '');
-    if ('payload' in data) limpio.payload = data.payload && typeof data.payload === 'object' ? data.payload : {};
-    if ('publico' in data) limpio.publico = data.publico === true;
+    if ('theme' in data)        limpio.theme        = String(data.theme ?? '');
+    if ('payload' in data)      limpio.payload      = data.payload && typeof data.payload === 'object' ? data.payload : {};
+    if ('publico' in data)      limpio.publico      = data.publico === true;
     return limpio;
   };
 
@@ -262,7 +262,7 @@ const crearAteneaDB = () => {
       title: '', subtitle: '', projectCount: 0, theme: 'elegante-oscuro', payload: {},
       publico: false,
       ..._camposEditablesPortafolio(data),
-      userId: getUid(),
+      userId:    getUid(),
       createdAt: ahora,
       updatedAt: ahora
     });
@@ -424,25 +424,25 @@ const crearAteneaDB = () => {
     logos: { subir: subirLogo, prefijoURL: PREFIJO_URL_LOGO },
     perfil: { obtener: obtenerPerfil, guardar: guardarPerfil },
     proposals: {
-      nuevoId: nuevoIdPropuesta,
-      crear: crearPropuesta,
-      obtener: obtenerPropuesta,
+      nuevoId:    nuevoIdPropuesta,
+      crear:      crearPropuesta,
+      obtener:    obtenerPropuesta,
       obtenerPublica,
-      listar: listarPropuestas,
-      listarPor: listarPorEstado,
+      listar:     listarPropuestas,
+      listarPor:  listarPorEstado,
       actualizar: actualizarPropuesta,
-      borrar: borrarPropuesta,
-      escuchar: escucharPropuestas
+      borrar:     borrarPropuesta,
+      escuchar:   escucharPropuestas
     },
     portfolios: {
-      nuevoId: nuevoIdPortafolio,
-      crear: crearPortafolio,
-      obtener: obtenerPortafolio,
+      nuevoId:        nuevoIdPortafolio,
+      crear:          crearPortafolio,
+      obtener:        obtenerPortafolio,
       obtenerPublico: obtenerPortafolioPublico,
-      listar: listarPortafolios,
-      actualizar: actualizarPortafolio,
-      borrar: borrarPortafolio,
-      escuchar: escucharPortafolios
+      listar:         listarPortafolios,
+      actualizar:     actualizarPortafolio,
+      borrar:         borrarPortafolio,
+      escuchar:       escucharPortafolios
     }
   };
 };

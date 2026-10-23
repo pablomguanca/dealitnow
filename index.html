@@ -503,7 +503,7 @@
             <span class="campo__etiqueta">Presentación breve</span>
             <textarea class="control" rows="4" data-campo="emisor.presentacion" placeholder="Contale a tu cliente quién sos, cómo trabajás y por qué sos la persona indicada para este proyecto."></textarea>
           </label>
-          <div class="campo campo--ancho">
+          <div class="campo">
             <span class="campo__etiqueta">Logo (opcional)</span>
             <div class="logo">
               <img class="logo__vista" id="logo-vista" alt="Logo cargado" hidden>
@@ -513,8 +513,36 @@
               </label>
               <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-logo" id="logo-quitar" hidden>Quitar</button>
             </div>
-            <p class="campo__ayuda">Se adapta al tema elegido y se optimiza solo: PNG, JPG, SVG o WebP de hasta 5 MB.</p>
+            <p class="campo__ayuda">Marca o logotipo para la cabecera.</p>
           </div>
+          <div class="campo">
+            <span class="campo__etiqueta">Foto de perfil o equipo (opcional)</span>
+            <div class="logo">
+              <img class="logo__vista logo__vista--avatar" id="foto-emisor-vista" alt="Foto de perfil" hidden>
+              <label class="boton boton--secundario boton--chico">
+                <span id="foto-emisor-texto">Subir foto</span>
+                <input class="visualmente-oculto" id="campo-foto-emisor" type="file" accept="image/png,image/jpeg,image/webp">
+              </label>
+              <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-foto-emisor" id="foto-emisor-quitar" hidden>Quitar</button>
+            </div>
+            <p class="campo__ayuda">Se luce en tu presentación «Sobre mí».</p>
+          </div>
+          <label class="campo">
+            <span class="campo__etiqueta">Ubicación / Modalidad (opcional)</span>
+            <input class="control" type="text" data-campo="emisor.ubicacion" placeholder="Ej.: Buenos Aires · Remoto">
+          </label>
+          <label class="campo">
+            <span class="campo__etiqueta">Instagram (opcional)</span>
+            <input class="control" type="text" data-campo="emisor.instagram" placeholder="Ej.: @tumarca">
+          </label>
+          <label class="campo">
+            <span class="campo__etiqueta">LinkedIn (opcional)</span>
+            <input class="control" type="text" data-campo="emisor.linkedin" placeholder="linkedin.com/in/tuperfil">
+          </label>
+          <label class="campo">
+            <span class="campo__etiqueta">Behance / Dribbble / GitHub</span>
+            <input class="control" type="text" data-campo="emisor.behance" placeholder="behance.net/tuperfil o github.com/...">
+          </label>
           <div class="campo campo--ancho portafolio-vincular" id="campo-vincular-portafolio">
             <div class="portafolio-vincular__cabecera">
               <span class="campo__etiqueta">Mostrar portfolio en esta propuesta</span>
@@ -578,6 +606,24 @@
             <input class="control" type="number" min="0" step="1" inputmode="numeric" data-campo="propuesta.validez" data-tipo="numero">
           </label>
           <p class="campo__ayuda campo--ancho">El link le muestra a tu cliente cuántos días le quedan. Cuando vence, el botón de aceptar se cambia por uno para pedirte una actualización.</p>
+          <div class="campo campo--ancho">
+            <span class="campo__etiqueta">Foto de fondo en portada Hero (opcional)</span>
+            <div class="logo">
+              <img class="logo__vista proyecto-imagen__vista" id="portada-prop-vista" alt="Fondo de portada" hidden>
+              <label class="boton boton--secundario boton--chico">
+                <span id="portada-prop-texto">Subir foto de portada</span>
+                <input class="visualmente-oculto" id="campo-portada-prop" type="file" accept="image/png,image/jpeg,image/webp">
+              </label>
+              <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-portada-prop" id="portada-prop-quitar" hidden>Quitar</button>
+            </div>
+          </div>
+          <label class="campo campo--ancho" id="portada-prop-opacidad-wrap" hidden>
+            <span class="campo__etiqueta campo__etiqueta--fila">
+              <span>Intensidad de la foto de portada</span>
+              <output class="campo__valor" id="portada-prop-opacidad-val">35%</output>
+            </span>
+            <input class="rango-input" type="range" min="10" max="85" step="5" data-campo="propuesta.opacidadPortada" data-tipo="numero">
+          </label>
         </div>
       </details>
 
@@ -670,6 +716,69 @@
       <details class="paso">
         <summary class="paso__resumen">
           <span class="paso__num">8</span>
+          <span class="paso__titulo">Galería de fotos y bloques web</span>
+          <span class="paso__desc">Fotos libres, testimonios, preguntas frecuentes y navegación</span>
+        </summary>
+        <div class="paso__contenido">
+          <p class="paso__nota">Transformá tu propuesta en una verdadera Landing Page visual: sumá una galería de fotos o referencias, testimonios de clientes y preguntas frecuentes.</p>
+          <div class="grilla" style="margin-bottom:1rem">
+            <label class="campo campo--ancho">
+              <span class="campo__etiqueta">Título de la galería de fotos</span>
+              <input class="control" type="text" data-campo="opciones.galeriaTitulo" placeholder="Ej.: Galería visual y referencias">
+            </label>
+            <label class="campo">
+              <span class="campo__etiqueta">Diseño de la galería</span>
+              <select class="control" data-campo="opciones.galeriaLayout">
+                <option value="bento">Mosaico Bento (destaca la 1ª foto)</option>
+                <option value="grilla">Grilla uniforme (2 columnas)</option>
+                <option value="editorial">Editorial (1 columna grande)</option>
+                <option value="carrusel">Tira deslizable horizontal</option>
+              </select>
+            </label>
+            <label class="campo">
+              <span class="campo__etiqueta">Proporción por defecto</span>
+              <select class="control" data-campo="opciones.galeriaProporcion">
+                <option value="panoramica">Panorámica (16:9)</option>
+                <option value="cuadrada">Cuadrada (1:1)</option>
+                <option value="vertical">Vertical (4:5)</option>
+                <option value="natural">Proporción original</option>
+              </select>
+            </label>
+          </div>
+          <div class="lista" data-lista="galeria" data-vacio="Sumá fotos de tus trabajos, moodboards, productos o espacios."></div>
+          <div class="acciones-galeria">
+            <button type="button" class="boton boton--agregar" data-accion="agregar" data-lista="galeria">+ Agregar bloque de foto</button>
+            <label class="boton boton--secundario boton--chico">
+              <span>Subir varias fotos juntas</span>
+              <input class="visualmente-oculto" type="file" data-galeria-multi="propuesta" accept="image/png,image/jpeg,image/webp" multiple>
+            </label>
+          </div>
+
+          <h3 class="separador-campos">Testimonios y reseñas (opcional)</h3>
+          <div class="lista" data-lista="testimonios" data-vacio="Sumá opiniones de clientes anteriores para dar confianza."></div>
+          <button type="button" class="boton boton--agregar" data-accion="agregar" data-lista="testimonios">Agregar testimonio</button>
+
+          <h3 class="separador-campos">Preguntas frecuentes — FAQ (opcional)</h3>
+          <div class="lista" data-lista="faqs" data-vacio="Respondé de antemano las dudas habituales de tus clientes."></div>
+          <button type="button" class="boton boton--agregar" data-accion="agregar" data-lista="faqs">Agregar pregunta frecuente</button>
+
+          <h3 class="separador-campos">Experiencia tipo Landing Page</h3>
+          <div class="grilla">
+            <label class="casilla campo--ancho">
+              <input type="checkbox" data-campo="opciones.barraNav">
+              <span>Mostrar barra de navegación superior con accesos rápidos a cada sección</span>
+            </label>
+            <label class="casilla campo--ancho">
+              <input type="checkbox" data-campo="opciones.lightbox">
+              <span>Permitir ampliar todas las fotos a pantalla completa (Lightbox) al tocarlas</span>
+            </label>
+          </div>
+        </div>
+      </details>
+
+      <details class="paso">
+        <summary class="paso__resumen">
+          <span class="paso__num">9</span>
           <span class="paso__titulo">Cierre</span>
           <span class="paso__desc">Condiciones y próximos pasos</span>
         </summary>
@@ -698,30 +807,49 @@
         <details class="paso" open>
           <summary class="paso__resumen">
             <span class="paso__num">2</span>
-            <span class="paso__titulo">Portada del portfolio</span>
-            <span class="paso__desc">Nombre, enfoque y disponibilidad</span>
+            <span class="paso__titulo">Portada Hero de tu página</span>
+            <span class="paso__desc">Título, foto de fondo, enfoque y disponibilidad</span>
           </summary>
           <div class="paso__contenido grilla">
             <label class="campo campo--ancho">
               <span class="campo__etiqueta">Nombre interno (para identificarlo en tu lista)</span>
-              <input class="control" type="text" data-campo-pf="portafolio.nombreInterno" placeholder="Ej.: Portfolio E-commerce / Portfolio Fintech">
+              <input class="control" type="text" data-campo-pf="portafolio.nombreInterno" placeholder="Ej.: Portfolio E-commerce / Mi Página Web">
               <span class="campo__ayuda">Solo lo ves vos en «Mis portfolios» y en el selector al armar una propuesta.</span>
             </label>
             <label class="campo campo--ancho">
-              <span class="campo__etiqueta">Título principal de portada</span>
-              <input class="control" type="text" data-campo-pf="portafolio.titulo" placeholder="Ej.: Selección de proyectos y casos de estudio">
+              <span class="campo__etiqueta">Título principal de portada (Hero)</span>
+              <input class="control" type="text" data-campo-pf="portafolio.titulo" placeholder="Ej.: Diseño y tecnología para marcas que quieren crecer">
             </label>
             <label class="campo campo--ancho">
-              <span class="campo__etiqueta">Subtítulo o enfoque</span>
+              <span class="campo__etiqueta">Subtítulo o propuesta de valor</span>
               <input class="control" type="text" data-campo-pf="portafolio.subtitulo" placeholder="Ej.: Diseño UX/UI, identidad visual y desarrollo web a medida.">
             </label>
             <label class="campo">
               <span class="campo__etiqueta">Etiqueta superior</span>
-              <input class="control" type="text" data-campo-pf="portafolio.insignia" placeholder="Portfolio &amp; Casos">
+              <input class="control" type="text" data-campo-pf="portafolio.insignia" placeholder="Portfolio &amp; Página Web">
             </label>
             <label class="campo">
               <span class="campo__etiqueta">Disponibilidad</span>
               <input class="control" type="text" data-campo-pf="portafolio.disponibilidad" placeholder="Ej.: Disponible para nuevos proyectos">
+            </label>
+            <div class="campo campo--ancho">
+              <span class="campo__etiqueta">Foto de fondo en portada Hero (opcional)</span>
+              <div class="logo">
+                <img class="logo__vista proyecto-imagen__vista" id="portada-pf-vista" alt="Fondo de portada" hidden>
+                <label class="boton boton--secundario boton--chico">
+                  <span id="portada-pf-texto">Subir foto de portada</span>
+                  <input class="visualmente-oculto" id="campo-portada-pf" type="file" accept="image/png,image/jpeg,image/webp">
+                </label>
+                <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-portada-pf" id="portada-pf-quitar" hidden>Quitar</button>
+              </div>
+              <p class="campo__ayuda">Se combina con un velo del color de tu tema para que el texto siempre se lea perfecto.</p>
+            </div>
+            <label class="campo campo--ancho" id="portada-pf-opacidad-wrap" hidden>
+              <span class="campo__etiqueta campo__etiqueta--fila">
+                <span>Intensidad de la foto de portada</span>
+                <output class="campo__valor" id="portada-pf-opacidad-val">35%</output>
+              </span>
+              <input class="rango-input" type="range" min="10" max="85" step="5" data-campo-pf="portafolio.opacidadPortada" data-tipo="numero">
             </label>
           </div>
         </details>
@@ -729,12 +857,12 @@
         <details class="paso" open>
           <summary class="paso__resumen">
             <span class="paso__num">3</span>
-            <span class="paso__titulo">Proyectos y casos</span>
-            <span class="paso__desc">Casos reales, prototipos o muestras de expertise</span>
+            <span class="paso__titulo">Proyectos y casos con fotos</span>
+            <span class="paso__desc">Casos reales, prototipos, proporción y galería por proyecto</span>
           </summary>
           <div class="paso__contenido">
-            <p class="paso__nota">Podés cargar trabajos para clientes reales o casos de estudio conceptuales para demostrar cómo pensás y ejecutás. Si dejás vacío «Cliente o contexto» o «Resultado destacado», no se muestran.</p>
-            <div class="lista" data-lista-pf="proyectos" data-vacio="Todavía no agregaste proyectos a este portfolio."></div>
+            <p class="paso__nota">Podés cargar foto principal y sumar fotos adicionales por proyecto (para abrir en pantalla completa), elegir la proporción de recorte o usar portadas tipográficas automáticas.</p>
+            <div class="lista" data-lista-pf="proyectos" data-vacio="Todavía no agregaste proyectos a tu página."></div>
             <button type="button" class="boton boton--agregar" data-accion="agregar-pf" data-lista-pf="proyectos">Agregar proyecto o caso</button>
           </div>
         </details>
@@ -742,15 +870,86 @@
         <details class="paso">
           <summary class="paso__resumen">
             <span class="paso__num">4</span>
-            <span class="paso__titulo">Especialidades y contacto (CTA)</span>
-            <span class="paso__desc">Tus habilidades clave y botón para contratarte</span>
+            <span class="paso__titulo">Galería de fotos libre</span>
+            <span class="paso__desc">Mosaico Bento, grilla, editorial o carrusel deslizable</span>
           </summary>
           <div class="paso__contenido">
-            <h3 class="separador-campos" style="margin-top:0.2rem">Especialidades, herramientas o servicios</h3>
+            <p class="paso__nota">Ideal para mostrar fotografía de producto, arquitectura, gastronomía, detrás de escena, equipo o capturas de interfaz.</p>
+            <div class="grilla" style="margin-bottom:1rem">
+              <label class="campo campo--ancho">
+                <span class="campo__etiqueta">Título de la sección de galería</span>
+                <input class="control" type="text" data-campo-pf="opciones.galeriaTitulo" placeholder="Ej.: Galería visual / Nuestro estudio">
+              </label>
+              <label class="campo campo--ancho">
+                <span class="campo__etiqueta">Bajada o descripción (opcional)</span>
+                <input class="control" type="text" data-campo-pf="opciones.galeriaSubtitulo" placeholder="Ej.: Tocá cualquier imagen para verla en pantalla completa.">
+              </label>
+              <label class="campo">
+                <span class="campo__etiqueta">Disposición de galería</span>
+                <select class="control" data-campo-pf="opciones.galeriaLayout">
+                  <option value="bento">Mosaico Bento (destaca la 1ª foto)</option>
+                  <option value="grilla">Grilla uniforme (2 columnas)</option>
+                  <option value="editorial">Editorial (1 columna grande)</option>
+                  <option value="carrusel">Tira deslizable horizontal</option>
+                </select>
+              </label>
+              <label class="campo">
+                <span class="campo__etiqueta">Proporción por defecto</span>
+                <select class="control" data-campo-pf="opciones.galeriaProporcion">
+                  <option value="panoramica">Panorámica (16:9)</option>
+                  <option value="cuadrada">Cuadrada (1:1)</option>
+                  <option value="vertical">Vertical (4:5)</option>
+                  <option value="natural">Proporción original</option>
+                </select>
+              </label>
+            </div>
+            <div class="lista" data-lista-pf="galeria" data-vacio="Todavía no subiste fotos a la galería libre."></div>
+            <div class="acciones-galeria">
+              <button type="button" class="boton boton--agregar" data-accion="agregar-pf" data-lista-pf="galeria">+ Agregar foto</button>
+              <label class="boton boton--secundario boton--chico">
+                <span>Subir varias fotos juntas</span>
+                <input class="visualmente-oculto" type="file" data-galeria-multi="portafolio" accept="image/png,image/jpeg,image/webp" multiple>
+              </label>
+            </div>
+          </div>
+        </details>
+
+        <details class="paso">
+          <summary class="paso__resumen">
+            <span class="paso__num">5</span>
+            <span class="paso__titulo">Secciones de tu Landing Page</span>
+            <span class="paso__desc">Especialidades, packs/servicios, testimonios y FAQ</span>
+          </summary>
+          <div class="paso__contenido">
+            <h3 class="separador-campos" style="margin-top:0.2rem">Especialidades o habilidades clave</h3>
             <div class="lista" data-lista-pf="especialidades" data-vacio="Sumá las áreas, tecnologías o servicios en los que te especializás."></div>
             <button type="button" class="boton boton--agregar" data-accion="agregar-pf" data-lista-pf="especialidades">Agregar especialidad</button>
 
-            <h3 class="separador-campos">Llamado a la acción (CTA)</h3>
+            <h3 class="separador-campos">Servicios o packs ofrecidos (opcional)</h3>
+            <label class="campo" style="margin-bottom:0.75rem">
+              <span class="campo__etiqueta">Título de la sección de servicios</span>
+              <input class="control" type="text" data-campo-pf="opciones.serviciosTitulo" placeholder="Ej.: Servicios y soluciones">
+            </label>
+            <div class="lista" data-lista-pf="serviciosWeb" data-vacio="Mostrá qué servicios o paquetes ofrecés en tu página web."></div>
+            <button type="button" class="boton boton--agregar" data-accion="agregar-pf" data-lista-pf="serviciosWeb">Agregar servicio o pack</button>
+
+            <h3 class="separador-campos">Testimonios de clientes (opcional)</h3>
+            <div class="lista" data-lista-pf="testimonios" data-vacio="Sumá reseñas reales con foto o avatar de tus clientes."></div>
+            <button type="button" class="boton boton--agregar" data-accion="agregar-pf" data-lista-pf="testimonios">Agregar testimonio</button>
+
+            <h3 class="separador-campos">Preguntas frecuentes — FAQ (opcional)</h3>
+            <div class="lista" data-lista-pf="faqs" data-vacio="Respondé las preguntas más comunes antes de que te escriban."></div>
+            <button type="button" class="boton boton--agregar" data-accion="agregar-pf" data-lista-pf="faqs">Agregar pregunta frecuente</button>
+          </div>
+        </details>
+
+        <details class="paso">
+          <summary class="paso__resumen">
+            <span class="paso__num">6</span>
+            <span class="paso__titulo">Navegación y contacto (CTA)</span>
+            <span class="paso__desc">Menú de tu página, visor Lightbox y botón de contacto</span>
+          </summary>
+          <div class="paso__contenido">
             <div class="grilla">
               <label class="campo campo--ancho">
                 <span class="campo__etiqueta">Texto del botón principal (Contactar / Contratar)</span>
@@ -763,6 +962,14 @@
               <label class="campo campo--ancho">
                 <span class="campo__etiqueta">Mensaje de cierre</span>
                 <textarea class="control" rows="3" data-campo-pf="portafolio.cierreTexto" placeholder="Ej.: Contame qué necesitás resolver o construir y armamos una propuesta a medida."></textarea>
+              </label>
+              <label class="casilla campo--ancho">
+                <input type="checkbox" data-campo-pf="opciones.barraNav">
+                <span>Mostrar barra de navegación tipo Landing Page (Sobre mí · Proyectos · Galería · Servicios · Contacto)</span>
+              </label>
+              <label class="casilla campo--ancho">
+                <input type="checkbox" data-campo-pf="opciones.lightbox">
+                <span>Permitir ampliar fotos en pantalla completa (Lightbox) al hacer clic</span>
               </label>
               <label class="casilla campo--ancho">
                 <input type="checkbox" data-campo-pf="opciones.credito">
@@ -909,7 +1116,7 @@
         <p class="tarjeta__ayuda">Se completan solos en cada propuesta nueva. Podés cambiarlos en cada propuesta.</p>
       </div>
       <div class="grilla">
-        <div class="campo campo--ancho">
+        <div class="campo">
           <span class="campo__etiqueta">Logo</span>
           <div class="logo">
             <img class="logo__vista" id="cuenta-logo-vista" alt="Logo de tu negocio" hidden>
@@ -918,6 +1125,17 @@
               <input class="visualmente-oculto" id="cuenta-logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp">
             </label>
             <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-logo-cuenta" id="cuenta-logo-quitar" hidden>Quitar</button>
+          </div>
+        </div>
+        <div class="campo">
+          <span class="campo__etiqueta">Foto de perfil o equipo</span>
+          <div class="logo">
+            <img class="logo__vista logo__vista--avatar" id="cuenta-foto-vista" alt="Foto de perfil" hidden>
+            <label class="boton boton--secundario boton--chico">
+              <span id="cuenta-foto-texto">Subir foto</span>
+              <input class="visualmente-oculto" id="cuenta-foto" type="file" accept="image/png,image/jpeg,image/webp">
+            </label>
+            <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-foto-cuenta" id="cuenta-foto-quitar" hidden>Quitar</button>
           </div>
         </div>
         <label class="campo campo--ancho">
@@ -936,9 +1154,25 @@
           <span class="campo__etiqueta">WhatsApp</span>
           <input class="control" data-emisor="telefono" type="tel" maxlength="200" placeholder="+54 9 11 0000-0000">
         </label>
-        <label class="campo campo--ancho">
+        <label class="campo">
           <span class="campo__etiqueta">Sitio web o portfolio</span>
           <input class="control" data-emisor="web" type="text" maxlength="200" placeholder="tumarca.com">
+        </label>
+        <label class="campo">
+          <span class="campo__etiqueta">Ubicación / Modalidad</span>
+          <input class="control" data-emisor="ubicacion" type="text" maxlength="200" placeholder="Ej.: Buenos Aires · Remoto">
+        </label>
+        <label class="campo">
+          <span class="campo__etiqueta">Instagram</span>
+          <input class="control" data-emisor="instagram" type="text" maxlength="200" placeholder="@tumarca">
+        </label>
+        <label class="campo">
+          <span class="campo__etiqueta">LinkedIn</span>
+          <input class="control" data-emisor="linkedin" type="text" maxlength="200" placeholder="linkedin.com/in/tuperfil">
+        </label>
+        <label class="campo campo--ancho">
+          <span class="campo__etiqueta">Behance / Dribbble / GitHub</span>
+          <input class="control" data-emisor="behance" type="text" maxlength="200" placeholder="behance.net/tuperfil">
         </label>
         <label class="campo campo--ancho">
           <span class="campo__etiqueta">Presentación breve</span>
@@ -1117,6 +1351,17 @@
         <span class="campo__etiqueta">Entregables, uno por línea</span>
         <textarea class="control" rows="3" data-item="entregables" placeholder="Ej.: Diseño de cinco páginas"></textarea>
       </label>
+      <div class="campo campo--ancho">
+        <span class="campo__etiqueta">Foto o imagen del servicio (opcional)</span>
+        <div class="logo">
+          <img class="logo__vista proyecto-imagen__vista" data-srv-img-vista alt="Foto del servicio" hidden>
+          <label class="boton boton--secundario boton--chico">
+            <span data-srv-img-texto>Subir foto</span>
+            <input class="visualmente-oculto" type="file" data-srv-img-input accept="image/png,image/jpeg,image/webp">
+          </label>
+          <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-img-servicio" data-srv-img-quitar hidden>Quitar</button>
+        </div>
+      </div>
       <label class="casilla campo--ancho">
         <input type="checkbox" data-item="opcional">
         <span>Opcional: tu cliente decide si lo suma</span>
@@ -1213,21 +1458,191 @@
         <span class="campo__etiqueta">Texto del botón</span>
         <input class="control" type="text" data-item-pf="textoEnlace" placeholder="Ver proyecto">
       </label>
-      <div class="campo campo--ancho">
-        <span class="campo__etiqueta">Imagen de portada del proyecto (opcional)</span>
+      <label class="campo">
+        <span class="campo__etiqueta">Formato de imagen</span>
+        <select class="control" data-item-pf="proporcion">
+          <option value="panoramica">Panorámica (16:9)</option>
+          <option value="cuadrada">Cuadrada (1:1)</option>
+          <option value="vertical">Vertical (4:5)</option>
+          <option value="natural">Proporción original</option>
+        </select>
+      </label>
+      <div class="campo">
+        <span class="campo__etiqueta">Foto principal del proyecto</span>
         <div class="logo proyecto-imagen-control">
           <img class="logo__vista proyecto-imagen__vista" data-pf-img-vista alt="Portada del proyecto" hidden>
           <label class="boton boton--secundario boton--chico">
-            <span data-pf-img-texto>Subir imagen</span>
+            <span data-pf-img-texto>Subir portada</span>
             <input class="visualmente-oculto" type="file" data-pf-img-input accept="image/png,image/jpeg,image/webp">
           </label>
           <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-img-proyecto" data-pf-img-quitar hidden>Quitar</button>
         </div>
-        <p class="campo__ayuda">Si no subís imagen, se genera una portada tipográfica con el estilo del tema.</p>
+      </div>
+      <div class="campo campo--ancho">
+        <span class="campo__etiqueta">Galería adicional del proyecto (hasta 8 fotos)</span>
+        <div class="proyecto-galeria-mini" data-pf-galeria-lista></div>
+        <div class="logo">
+          <label class="boton boton--secundario boton--chico">
+            <span>+ Sumar fotos al proyecto</span>
+            <input class="visualmente-oculto" type="file" data-pf-galeria-input accept="image/png,image/jpeg,image/webp" multiple>
+          </label>
+        </div>
+        <p class="campo__ayuda">Si subís varias fotos, el visitante puede recorrerlas en un carrusel interactivo a pantalla completa.</p>
       </div>
     </div>
   </div>
 </template>
+
+<template id="tpl-galeria">
+  <div class="item">
+    <div class="item__cabecera">
+      <span class="item__titulo">Foto <span data-orden></span></span>
+      <div class="item__controles" data-controles></div>
+    </div>
+    <div class="grilla">
+      <div class="campo">
+        <span class="campo__etiqueta">Imagen</span>
+        <div class="logo">
+          <img class="logo__vista proyecto-imagen__vista" data-gal-img-vista alt="Foto de galería" hidden>
+          <label class="boton boton--secundario boton--chico">
+            <span data-gal-img-texto>Subir foto</span>
+            <input class="visualmente-oculto" type="file" data-gal-img-input accept="image/png,image/jpeg,image/webp">
+          </label>
+          <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-img-galeria" data-gal-img-quitar hidden>Quitar</button>
+        </div>
+      </div>
+      <label class="campo">
+        <span class="campo__etiqueta">Recorte / Proporción</span>
+        <select class="control" data-item="proporcion" data-item-pf="proporcion">
+          <option value="panoramica">Panorámica (16:9)</option>
+          <option value="cuadrada">Cuadrada (1:1)</option>
+          <option value="vertical">Vertical (4:5)</option>
+          <option value="natural">Original</option>
+        </select>
+      </label>
+      <label class="campo">
+        <span class="campo__etiqueta">Título o epígrafe (opcional)</span>
+        <input class="control" type="text" data-item="titulo" data-item-pf="titulo" placeholder="Ej.: Detalle de packaging / Vista del salón">
+      </label>
+      <label class="campo">
+        <span class="campo__etiqueta">Descripción breve (opcional)</span>
+        <input class="control" type="text" data-item="descripcion" data-item-pf="descripcion" placeholder="Ej.: Producción 2026">
+      </label>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-serviciosWeb">
+  <div class="item">
+    <div class="item__cabecera">
+      <span class="item__titulo">Servicio / Pack <span data-orden></span></span>
+      <div class="item__controles" data-controles></div>
+    </div>
+    <div class="grilla">
+      <label class="campo">
+        <span class="campo__etiqueta">Nombre del servicio o pack</span>
+        <input class="control" type="text" data-item-pf="titulo" placeholder="Ej.: Identidad Visual &amp; Manual de Marca">
+      </label>
+      <label class="campo">
+        <span class="campo__etiqueta">Precio o referencia (opcional)</span>
+        <input class="control" type="text" data-item-pf="precio" placeholder="Ej.: Desde USD 950 / A cotizar">
+      </label>
+      <label class="campo campo--ancho">
+        <span class="campo__etiqueta">Descripción</span>
+        <textarea class="control" rows="2" data-item-pf="descripcion" placeholder="Qué incluye este servicio y para quién está pensado."></textarea>
+      </label>
+      <div class="campo">
+        <span class="campo__etiqueta">Foto del servicio (opcional)</span>
+        <div class="logo">
+          <img class="logo__vista proyecto-imagen__vista" data-sweb-img-vista alt="Foto del servicio" hidden>
+          <label class="boton boton--secundario boton--chico">
+            <span data-sweb-img-texto>Subir foto</span>
+            <input class="visualmente-oculto" type="file" data-sweb-img-input accept="image/png,image/jpeg,image/webp">
+          </label>
+          <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-img-sweb" data-sweb-img-quitar hidden>Quitar</button>
+        </div>
+      </div>
+      <label class="campo">
+        <span class="campo__etiqueta">Texto del botón</span>
+        <input class="control" type="text" data-item-pf="cta" placeholder="Consultar">
+      </label>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-testimonios">
+  <div class="item">
+    <div class="item__cabecera">
+      <span class="item__titulo">Testimonio <span data-orden></span></span>
+      <div class="item__controles" data-controles></div>
+    </div>
+    <div class="grilla">
+      <label class="campo campo--ancho">
+        <span class="campo__etiqueta">Comentario del cliente</span>
+        <textarea class="control" rows="2" data-item="texto" data-item-pf="texto" placeholder="Ej.: El nuevo sitio duplicó las consultas en el primer mes."></textarea>
+      </label>
+      <label class="campo">
+        <span class="campo__etiqueta">Nombre</span>
+        <input class="control" type="text" data-item="autor" data-item-pf="autor" placeholder="Ej.: Gastón Peralta">
+      </label>
+      <label class="campo">
+        <span class="campo__etiqueta">Cargo o empresa</span>
+        <input class="control" type="text" data-item="rol" data-item-pf="rol" placeholder="Ej.: Fundador de Almacén Botánico">
+      </label>
+      <div class="campo campo--ancho">
+        <span class="campo__etiqueta">Foto de la persona o logo (opcional)</span>
+        <div class="logo">
+          <img class="logo__vista logo__vista--avatar" data-test-img-vista alt="Foto testimonio" hidden>
+          <label class="boton boton--secundario boton--chico">
+            <span data-test-img-texto>Subir foto</span>
+            <input class="visualmente-oculto" type="file" data-test-img-input accept="image/png,image/jpeg,image/webp">
+          </label>
+          <button type="button" class="boton boton--texto boton--chico" data-accion="quitar-img-testimonio" data-test-img-quitar hidden>Quitar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<template id="tpl-faqs">
+  <div class="item">
+    <div class="item__cabecera">
+      <span class="item__titulo">Pregunta <span data-orden></span></span>
+      <div class="item__controles" data-controles></div>
+    </div>
+    <div class="grilla">
+      <label class="campo campo--ancho">
+        <span class="campo__etiqueta">Pregunta</span>
+        <input class="control" type="text" data-item="pregunta" data-item-pf="pregunta" placeholder="Ej.: ¿Cuáles son los plazos y formas de pago?">
+      </label>
+      <label class="campo campo--ancho">
+        <span class="campo__etiqueta">Respuesta</span>
+        <textarea class="control" rows="2" data-item="respuesta" data-item-pf="respuesta" placeholder="Ej.: Trabajamos por etapas con un anticipo del 40% y saldo contra entregas."></textarea>
+      </label>
+    </div>
+  </div>
+</template>
+
+<dialog class="lightbox" id="dialogo-lightbox" aria-label="Visor de imagen a pantalla completa">
+  <div class="lightbox__barra">
+    <span class="lightbox__contador" id="lightbox-contador"></span>
+    <button type="button" class="icono-boton lightbox__cerrar" data-accion="lightbox-cerrar" aria-label="Cerrar visor">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg>
+    </button>
+  </div>
+  <div class="lightbox__escenario" data-accion="lightbox-fondo">
+    <button type="button" class="icono-boton lightbox__nav lightbox__nav--ant" id="lightbox-ant" data-accion="lightbox-ant" aria-label="Foto anterior">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg>
+    </button>
+    <figure class="lightbox__figura">
+      <img class="lightbox__img" id="lightbox-img" alt="">
+      <figcaption class="lightbox__epigrafe" id="lightbox-epigrafe" hidden></figcaption>
+    </figure>
+    <button type="button" class="icono-boton lightbox__nav lightbox__nav--sig" id="lightbox-sig" data-accion="lightbox-sig" aria-label="Foto siguiente">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5"/></svg>
+    </button>
+  </div>
+</dialog>
 
 <script type="module" src="/src/main.js"></script>
 </body>
