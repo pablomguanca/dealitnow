@@ -468,16 +468,8 @@ const cargarPortafoliosLocales = () => {
         });
       }
     }
-  } catch {}
-  // Por defecto inicializamos dos portfolios de muestra (uno con casos reales y otro conceptual)
-  const p1 = normalizarPf(PLANTILLAS_PORTAFOLIO['diseno-web'].crear());
-  const p2 = normalizarPf(PLANTILLAS_PORTAFOLIO['conceptos-expertise'].crear());
-  const iniciales = [
-    { id: 'pf-diseno-demo', ...datosPortafolioParaGuardar(p1), publico: true, updatedAt: new Date().toISOString() },
-    { id: 'pf-conceptos-demo', ...datosPortafolioParaGuardar(p2), publico: true, updatedAt: new Date(Date.now() - 3600000).toISOString() }
-  ];
-  try { localStorage.setItem(CLAVE_PORTAFOLIOS, JSON.stringify(iniciales)); } catch {}
-  return iniciales;
+  } catch { }
+  return [];
 };
 
 const guardarPortafoliosLocales = () => {
@@ -515,6 +507,7 @@ const registrarEscritura = (promesa, mensajeError) => {
 };
 
 const guardarLocal = () => {
+  if (cerrandoSesion || (AteneaDB && !invitado)) return;
   try {
     localStorage.setItem(CLAVE, JSON.stringify(estado));
     errorGuardado = '';
@@ -522,6 +515,19 @@ const guardarLocal = () => {
     fallarGuardado('No se pudo guardar en este navegador. Usá «Guardar borrador» para no perder los cambios.');
   }
   mostrarEstadoGuardado();
+};
+
+let cerrandoSesion = false;
+
+const limpiarAlmacenamientoLocal = () => {
+  try {
+    localStorage.removeItem(CLAVE);
+    localStorage.removeItem(CLAVE_PORTAFOLIOS);
+    Object.keys(localStorage)
+      .filter(k => k.startsWith(`${CLAVE}:borrador:`))
+      .forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem(`${CLAVE}:continuar`);
+  } catch { }
 };
 
 const sincronizarPortafolioEnPropuesta = () => {
@@ -533,13 +539,16 @@ const sincronizarPortafolioEnPropuesta = () => {
   const pfDoc = portafolios.find(x => x.id === pfId);
   if (pfDoc) {
     estado.opciones.portafolio = resumenPortafolio(pfDoc.payload, pfDoc.id, pfDoc.publico);
+  } else if (!portafoliosCargando) {
+    estado.opciones.portafolioId = '';
+    if (estado.opciones) delete estado.opciones.portafolio;
   }
 };
 
 const guardarAhora = () => {
   clearTimeout(temporizadorGuardado);
   temporizadorGuardado = null;
-  if (!editando) return;
+  if (!editando || cerrandoSesion) return;
   const db = nube();
   if (modoEditor === 'portafolio') {
     const datosPf = datosPortafolioParaGuardar(estadoPortafolio);
@@ -622,14 +631,17 @@ const crearEnCuenta = e => {
 // cuenta, y se borra del navegador recién cuando el servidor confirmó la copia.
 // Devuelve { id, contenido } de la propuesta creada, o null si no había nada que migrar.
 const migrarLocal = () => {
-  const claves = [`${CLAVE}:borrador:${AteneaDB.auth.getUid()}`, CLAVE];
-  const clave = claves.find(c => leerLocal(c));
-  if (!clave) return null;
-  const contenido = leerLocal(clave);
+  const claveUid = `${CLAVE}:borrador:${AteneaDB.auth.getUid()}`;
+  const contenido = leerLocal(claveUid);
+  try {
+    localStorage.removeItem(CLAVE);
+    localStorage.removeItem(CLAVE_PORTAFOLIOS);
+  } catch { }
+  if (!contenido) return null;
   const creada = crearEnCuenta(contenido);
   if (!creada) return null;
   creada.listo.then(ok => {
-    if (ok) try { localStorage.removeItem(clave); } catch {}
+    if (ok) try { localStorage.removeItem(claveUid); } catch { }
   });
   avisar('Guardamos en tu cuenta la propuesta que armaste.', 6000);
   return { id: creada.id, contenido };
@@ -771,11 +783,13 @@ const actualizarSelectorPortafolio = () => {
       return `<option value="${esc(pf.id)}">${esc(nombre)} (${detalle})</option>`;
     })
   ];
-  if (valorActual && !portafolios.some(pf => pf.id === valorActual) && estado.opciones?.portafolio?.titulo) {
-    opcionesHTML.push(`<option value="${esc(valorActual)}">${esc(estado.opciones.portafolio.titulo)} (vinculado)</option>`);
+  const existe = portafolios.some(pf => pf.id === valorActual);
+  if (valorActual && !existe && !portafoliosCargando) {
+    estado.opciones.portafolioId = '';
+    delete estado.opciones.portafolio;
   }
   sel.innerHTML = opcionesHTML.join('');
-  sel.value = valorActual;
+  sel.value = existe ? valorActual : '';
 };
 
 const actualizarImagenProyectoItem = (nodo, item) => {
@@ -913,8 +927,8 @@ const servicioHTML = (s, moneda, web) => {
   const boton = web && s.opcional && aceptada()
     ? (sumado ? `<span class="servicio__incluido">${ICONO_SUMADO} Incluido en la aceptación</span>` : '')
     : web && s.opcional
-    ? `<button type="button" class="servicio__sumar" data-accion="sumar" data-id="${esc(s.id)}" aria-pressed="${sumado}">${sumado ? `${ICONO_SUMADO} Sumado a la propuesta` : `${ICONO_SUMAR} Sumar a la propuesta`}</button>`
-    : '';
+      ? `<button type="button" class="servicio__sumar" data-accion="sumar" data-id="${esc(s.id)}" aria-pressed="${sumado}">${sumado ? `${ICONO_SUMADO} Sumado a la propuesta` : `${ICONO_SUMAR} Sumar a la propuesta`}</button>`
+      : '';
   const usaLightbox = web && estado.opciones?.lightbox !== false;
   const mediaSrv = s.imagen
     ? `<div class="servicio__media"${usaLightbox ? ` data-lightbox-src="${esc(s.imagen)}" data-lightbox-caption="${esc(s.nombre || 'Servicio')}"` : ''}><img src="${esc(s.imagen)}" alt="${esc(s.nombre || 'Servicio')}"></div>`
@@ -969,8 +983,8 @@ const barraClienteHTML = (c, vig) => {
   const accion = aceptada()
     ? '<span class="barra-cliente__aceptada">Propuesta aceptada</span>'
     : vig.vencida
-    ? (consulta ? `<a class="boton boton--primario" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a>` : '')
-    : `<button type="button" class="boton boton--primario" data-accion="aceptar">Aceptar propuesta</button>`;
+      ? (consulta ? `<a class="boton boton--primario" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a>` : '')
+      : `<button type="button" class="boton boton--primario" data-accion="aceptar">Aceptar propuesta</button>`;
   return `
     <div class="barra-cliente">
       <div>
@@ -1544,8 +1558,8 @@ const renderPortafolio = () => {
           </div>
           ${sw.descripcion.trim() ? `<p class="servicio-web-card__desc">${esc(sw.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
           ${web ? (linkSrv
-            ? `<a class="boton boton--secundario boton--chico servicio-web-card__cta" href="${esc(linkSrv)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(sw.cta.trim() || 'Consultar')}</a>`
-            : `<button type="button" class="boton boton--secundario boton--chico servicio-web-card__cta" data-accion="contacto-demo">${esc(sw.cta.trim() || 'Consultar')}</button>`) : ''}
+          ? `<a class="boton boton--secundario boton--chico servicio-web-card__cta" href="${esc(linkSrv)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(sw.cta.trim() || 'Consultar')}</a>`
+          : `<button type="button" class="boton boton--secundario boton--chico servicio-web-card__cta" data-accion="contacto-demo">${esc(sw.cta.trim() || 'Consultar')}</button>`) : ''}
         </article>`;
     }).join('')}</div>`;
     bloques.push({
@@ -1630,8 +1644,8 @@ const renderPortafolio = () => {
         ${e.rol.trim() ? `<span class="barra-cliente__extra">${esc(e.rol.trim())}</span>` : ''}
       </div>
       ${principalUrl
-        ? `<a class="boton boton--primario" href="${esc(principalUrl)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(ctaLabel)}</a>`
-        : `<button type="button" class="boton boton--primario" data-accion="contacto-demo">${esc(ctaLabel)}</button>`}
+      ? `<a class="boton boton--primario" href="${esc(principalUrl)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(ctaLabel)}</a>`
+      : `<button type="button" class="boton boton--primario" data-accion="contacto-demo">${esc(ctaLabel)}</button>`}
     </div>` : '';
 
   const cuerpo = `
@@ -3018,7 +3032,7 @@ const registrarVisita = id => {
   try {
     if (Date.now() - Number(localStorage.getItem(clave) || 0) < VISITA_INTERVALO) return;
     localStorage.setItem(clave, String(Date.now()));
-  } catch {}
+  } catch { }
   llamarApi('/api/visto', { id }, { keepalive: true }).catch(e => console.warn('No se pudo registrar la visita:', e));
 };
 
@@ -3369,7 +3383,7 @@ document.addEventListener('click', async ev => {
     case 'compartir-nativo':
       try {
         await navigator.share({ title: estado.propuesta.titulo.trim() || 'Propuesta', url: linkActual });
-      } catch {}
+      } catch { }
       break;
     case 'vista':
       cambiarVista(boton.dataset.vista);
@@ -3897,6 +3911,7 @@ campoBuscarPortafolios?.addEventListener('input', renderPanelPortafolios);
 const escucharPortafoliosNube = () => {
   if (!AteneaDB?.portfolios) return;
   if (dejarDeEscucharPortafolios) dejarDeEscucharPortafolios();
+  portafolios = [];
   portafoliosCargando = true;
   portafoliosError = false;
   renderPanelPortafolios();
@@ -3904,12 +3919,16 @@ const escucharPortafoliosNube = () => {
     portafolios = docs.sort((a, b) => (fechaDe(b.updatedAt) || 0) - (fechaDe(a.updatedAt) || 0));
     portafoliosCargando = false;
     portafoliosError = false;
+    sincronizarPortafolioEnPropuesta();
     renderPanelPortafolios();
     actualizarSelectorPortafolio();
+    if (editando && modoEditor === 'propuesta') renderDocumento();
   }, () => {
+    portafolios = [];
     portafoliosCargando = false;
     portafoliosError = true;
     renderPanelPortafolios();
+    actualizarSelectorPortafolio();
   });
 };
 
@@ -3953,7 +3972,7 @@ const irAPortafolios = ({ historial = true } = {}) => {
   cerrarEdicion();
   if (!nube() && !portafolios.length) portafolios = cargarPortafoliosLocales();
   if (historial && seccionEnUrl() !== 'portafolios') {
-    try { history.pushState(null, '', `${location.pathname}?seccion=portafolios`); } catch {}
+    try { history.pushState(null, '', `${location.pathname}?seccion=portafolios`); } catch { }
   }
   mostrarVista('portafolios');
   renderPanelPortafolios();
@@ -3968,7 +3987,7 @@ const mostrarEditorPortafolio = (id, contenido, { historial = true } = {}) => {
   errorGuardado = '';
   avisoError = false;
   if (historial) {
-    try { history.pushState(null, '', `${location.pathname}?portafolio=${encodeURIComponent(id)}`); } catch {}
+    try { history.pushState(null, '', `${location.pathname}?portafolio=${encodeURIComponent(id)}`); } catch { }
   }
   mostrarVista('editor');
   cambiarPestana(false);
@@ -4001,11 +4020,14 @@ const crearPortafolioEnCuentaOLocal = pf => {
 
 const nuevoPortafolio = base => {
   cerrarEdicion();
-  const nuevo = normalizarPf(base || ejemploPortafolio());
+  const nuevo = normalizarPf(base || vacioPortafolio());
   if (!base) {
-    const emisorPrevio = perfil?.emisor || estado.emisor;
-    if (emisorPrevio && Object.values(emisorPrevio).some(Boolean)) {
-      nuevo.emisor = { ...nuevo.emisor, ...emisorPrevio };
+    const ultima = propuestas[0]?.payload ? normalizar(propuestas[0].payload).emisor : null;
+    const guardados = { ...perfil?.emisor };
+    if (!guardados.logo) delete guardados.logo;
+    if (!guardados.foto) delete guardados.foto;
+    if (ultima || perfil?.emisor) {
+      nuevo.emisor = { ...nuevo.emisor, ...ultima, ...guardados };
     }
   }
   const creado = crearPortafolioEnCuentaOLocal(nuevo);
@@ -4439,7 +4461,7 @@ const iniciarConCuenta = async () => {
   try {
     continuar = sessionStorage.getItem(`${CLAVE}:continuar`);
     sessionStorage.removeItem(`${CLAVE}:continuar`);
-  } catch {}
+  } catch { }
   const id = idEnUrl();
   if (migrada && continuar) {
     mostrarEditor(migrada.id, migrada.contenido, { historial: false });
@@ -4453,26 +4475,26 @@ const iniciarConCuenta = async () => {
   else irAlPanel({ historial: false });
 };
 
-const authPantalla   = $('#auth-pantalla');
-const authForm       = $('#auth-form');
-const authGoogle     = $('#auth-google');
-const authErrorG     = $('#auth-error-google');
-const authError      = $('#auth-error');
-const authSubmit     = $('#auth-submit');
+const authPantalla = $('#auth-pantalla');
+const authForm = $('#auth-form');
+const authGoogle = $('#auth-google');
+const authErrorG = $('#auth-error-google');
+const authError = $('#auth-error');
+const authSubmit = $('#auth-submit');
 const authSubmitText = authSubmit?.querySelector('.auth__submit-texto');
-const authSpinner    = authSubmit?.querySelector('.auth__spinner');
-const authNombre     = $('#auth-nombre');
-const authEmail      = $('#auth-email');
-const authPass       = $('#auth-pass');
-const menuUsuario    = $('#menu-usuario');
-const authOlvido     = $('#auth-olvido');
-const authMensaje    = $('#auth-mensaje');
-const elIngreso      = $('#auth-ingreso');
-const elVerificar    = $('#auth-verificar');
+const authSpinner = authSubmit?.querySelector('.auth__spinner');
+const authNombre = $('#auth-nombre');
+const authEmail = $('#auth-email');
+const authPass = $('#auth-pass');
+const menuUsuario = $('#menu-usuario');
+const authOlvido = $('#auth-olvido');
+const authMensaje = $('#auth-mensaje');
+const elIngreso = $('#auth-ingreso');
+const elVerificar = $('#auth-verificar');
 const verificarError = $('#auth-verificar-error');
 const verificarMensaje = $('#auth-verificar-mensaje');
 let authModo = 'login';
-let entrar = () => {};
+let entrar = () => { };
 
 // Sin sesión: editor de prueba que guarda en este navegador. Al registrarse, lo que
 // armó pasa a su cuenta (migrarLocal) y sigue con lo que quería hacer.
@@ -4525,7 +4547,7 @@ const abrirRegistro = motivo => {
       guardadoParaRegistro = !invitadoEdito;
       guardarLocal();
     }
-    try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch {}
+    try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch { }
   }
   const elMotivo = $('#auth-motivo');
   elMotivo.textContent = MOTIVOS_REGISTRO[motivo] || '';
@@ -4542,7 +4564,7 @@ const cerrarRegistro = () => {
     sessionStorage.removeItem(`${CLAVE}:continuar`);
     // Si solo se guardó para el registro y al final no se registró, no queda nada guardado.
     if (guardadoParaRegistro && !invitadoEdito) localStorage.removeItem(CLAVE);
-  } catch {}
+  } catch { }
   guardadoParaRegistro = false;
 };
 $('#auth-cerrar').addEventListener('click', cerrarRegistro);
@@ -4559,14 +4581,14 @@ const mostrarMensaje = (el, texto) => {
 const mostrarErrorAuth = (el, msg) => {
   if (!el) return;
   const MENSAJES = {
-    'auth/user-not-found':          'No hay cuenta con ese email.',
-    'auth/wrong-password':          'Contraseña incorrecta.',
-    'auth/invalid-credential':      'Email o contraseña incorrectos.',
-    'auth/email-already-in-use':    'Ya existe una cuenta con ese email.',
-    'auth/weak-password':           'La contraseña debe tener al menos 6 caracteres.',
-    'auth/invalid-email':           'El email no es válido.',
-    'auth/too-many-requests':       'Demasiados intentos. Esperá un momento.',
-    'auth/popup-closed-by-user':    '',
+    'auth/user-not-found': 'No hay cuenta con ese email.',
+    'auth/wrong-password': 'Contraseña incorrecta.',
+    'auth/invalid-credential': 'Email o contraseña incorrectos.',
+    'auth/email-already-in-use': 'Ya existe una cuenta con ese email.',
+    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+    'auth/invalid-email': 'El email no es válido.',
+    'auth/too-many-requests': 'Demasiados intentos. Esperá un momento.',
+    'auth/popup-closed-by-user': '',
     'auth/cancelled-popup-request': ''
   };
   const texto = MENSAJES[msg?.code] ?? MENSAJES[msg?.message] ?? (typeof msg === 'string' ? msg : 'Ocurrió un error. Intentá de nuevo.');
@@ -4622,7 +4644,7 @@ if (authPantalla && AteneaDB) {
   authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = authEmail?.value.trim();
-    const pass  = authPass?.value;
+    const pass = authPass?.value;
     if (!email || !pass) return;
     setAuthCargando(true);
     if (authError) authError.hidden = true;
@@ -4702,7 +4724,7 @@ if (authPantalla && AteneaDB) {
     if (document.visibilityState !== 'visible' || elVerificar.hidden || !AteneaDB.auth.getUser()) return;
     try {
       if (await AteneaDB.auth.comprobarVerificacion()) entrar(AteneaDB.auth.getUser());
-    } catch {}
+    } catch { }
   });
 }
 
@@ -4740,7 +4762,7 @@ eliminarBoton.addEventListener('click', async () => {
     try {
       Object.keys(localStorage).filter(k => k.startsWith(CLAVE)).forEach(k => localStorage.removeItem(k));
       sessionStorage.setItem(`${CLAVE}:cuenta-eliminada`, '1');
-    } catch {}
+    } catch { }
     location.replace('/');
   } catch (e) {
     console.error('No se pudo eliminar la cuenta:', e);
@@ -4760,6 +4782,36 @@ eliminarBoton.addEventListener('click', async () => {
   }
 });
 
+const limpiarEstadoMemoria = () => {
+  clearTimeout(temporizadorGuardado);
+  temporizadorGuardado = null;
+  renderPendiente = false;
+  editando = false;
+  invitado = false;
+  invitadoIniciado = false;
+  invitadoEdito = false;
+  guardadoParaRegistro = false;
+  if (dejarDeEscuchar) { dejarDeEscuchar(); dejarDeEscuchar = null; }
+  if (dejarDeEscucharPortafolios) { dejarDeEscucharPortafolios(); dejarDeEscucharPortafolios = null; }
+  propuestaId = null;
+  portafolioId = null;
+  propuestas = [];
+  portafolios = [];
+  perfil = null;
+  logoCuenta = '';
+  fotoCuenta = '';
+  cuentaEditada = false;
+  seguimientoAnterior = null;
+  estado = vacio();
+  estadoPortafolio = vacioPortafolio();
+  seleccion = new Set();
+  if ($('#documento')) $('#documento').innerHTML = '';
+  if (elLista) elLista.innerHTML = '';
+  if (elListaPortafolios) elListaPortafolios.innerHTML = '';
+  if (menuUsuario) menuUsuario.textContent = '';
+  if ($('#barra-avatar')) $('#barra-avatar').textContent = '';
+};
+
 const cerrarSesion = async () => {
   if (!AteneaDB) return;
   if (hayCambiosSinEnviar()) guardarAhora();
@@ -4773,6 +4825,9 @@ const cerrarSesion = async () => {
     texto: 'Los últimos cambios todavía no llegaron a tu cuenta, probablemente por falta de conexión. Si cerrás sesión ahora, se pierden.',
     aceptar: 'Cerrar sesión igual'
   })) return;
+  cerrandoSesion = true;
+  limpiarEstadoMemoria();
+  limpiarAlmacenamientoLocal();
   await AteneaDB.auth.signOut();
   location.replace('/');
 };
@@ -4833,9 +4888,12 @@ if (esLinkPortafolioCorto) {
   iniciarCliente();
 } else if (AteneaDB) {
   let editorIniciado = false;
+  let ultimoUid = null;
 
   const mostrarAuth = () => {
-    document.body.classList.remove('auth-cargando');
+    document.body.classList.remove('auth-cargando', 'invitado');
+    if ($('#auth-cerrar')) $('#auth-cerrar').hidden = true;
+    if ($('#auth-motivo')) $('#auth-motivo').hidden = true;
     authPantalla.hidden = false;
     document.body.classList.add('auth-activo');
   };
@@ -4843,7 +4901,6 @@ if (esLinkPortafolioCorto) {
   // Cuentas con email y contraseña: hasta verificar el email no entran a la app
   // (las reglas de Firestore y Storage tampoco les permiten escribir).
   const mostrarVerificacion = user => {
-    if (invitado) guardarCambiosDeInvitado();
     $('#auth-cerrar').hidden = true;
     $('#auth-verificar-email').textContent = user.email;
     elIngreso.hidden = true;
@@ -4852,37 +4909,43 @@ if (esLinkPortafolioCorto) {
   };
 
   entrar = async user => {
+    cerrandoSesion = false;
     elVerificar.hidden = true;
     elIngreso.hidden = false;
     authPantalla.hidden = true;
-    document.body.classList.remove('auth-activo');
-    if (invitado) {
-      guardarCambiosDeInvitado();
-      invitado = false;
-      editando = false;
-      document.body.classList.remove('invitado');
-    }
-    if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
-    pintarAvatar(user);
-      if (!editorIniciado) {
+    document.body.classList.remove('auth-activo', 'invitado');
+    if (!editorIniciado || ultimoUid !== user.uid) {
+      limpiarEstadoMemoria();
+      limpiarAlmacenamientoLocal();
       editorIniciado = true;
+      ultimoUid = user.uid;
+      if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
+      pintarAvatar(user);
       // El spinner sigue visible hasta saber qué mostrar, así no se ve un editor vacío.
       document.body.classList.add('auth-cargando');
       await iniciarConCuenta();
+    } else {
+      if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
+      pintarAvatar(user);
     }
     document.body.classList.remove('auth-cargando');
   };
 
   AteneaDB.auth.onAuthChange(async user => {
     if (!user) {
-      // Sin sesión: se entra directo al editor para probar. La cuenta se pide al compartir.
-      iniciarInvitado();
+      editorIniciado = false;
+      ultimoUid = null;
+      limpiarEstadoMemoria();
+      limpiarAlmacenamientoLocal();
+      elVerificar.hidden = true;
+      elIngreso.hidden = false;
+      mostrarAuth();
       try {
         if (sessionStorage.getItem(`${CLAVE}:cuenta-eliminada`)) {
           sessionStorage.removeItem(`${CLAVE}:cuenta-eliminada`);
           avisar('Tu cuenta y todos tus datos se eliminaron.', 6000);
         }
-      } catch {}
+      } catch { }
       return;
     }
     // Al volver desde el link del email, el usuario en memoria puede estar desactualizado.
