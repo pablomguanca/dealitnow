@@ -316,14 +316,14 @@ const normalizarPf = datos => normalizarPortafolio(datos, { logoValido: esLogoVa
 
 const leerLocal = clave => {
   try {
-    const crudo = localStorage.getItem(clave);
+    const crudo = sessionStorage.getItem(clave);
     return crudo ? normalizar(JSON.parse(crudo)) : null;
   } catch {
     return null;
   }
 };
 
-// Sin cuenta, la propuesta vive solo en este navegador.
+// Sin cuenta, el borrador de prueba vive solo en la pestaña actual (sessionStorage).
 const cargarGuardado = () => leerLocal(CLAVE);
 
 let estado = vacio();
@@ -452,10 +452,10 @@ const datosPortafolioParaGuardar = pf => {
 
 const cargarPortafoliosLocales = () => {
   try {
-    const crudo = localStorage.getItem(CLAVE_PORTAFOLIOS);
+    const crudo = sessionStorage.getItem(CLAVE_PORTAFOLIOS);
     if (crudo) {
       const arr = JSON.parse(crudo);
-      if (Array.isArray(arr) && arr.length) {
+      if (Array.isArray(arr)) {
         return arr.map(item => {
           const payload = normalizarPf(item.payload || item);
           const meta = datosPortafolioParaGuardar(payload) || { title: 'Portfolio', subtitle: '', projectCount: 0, theme: 'elegante-oscuro', payload };
@@ -473,8 +473,9 @@ const cargarPortafoliosLocales = () => {
 };
 
 const guardarPortafoliosLocales = () => {
+  if (cerrandoSesion || (AteneaDB && !invitado)) return;
   try {
-    localStorage.setItem(CLAVE_PORTAFOLIOS, JSON.stringify(portafolios));
+    sessionStorage.setItem(CLAVE_PORTAFOLIOS, JSON.stringify(portafolios));
     errorGuardado = '';
   } catch {
     fallarGuardado('No se pudo guardar el portfolio en este navegador. Usá «Guardar borrador» para no perder los cambios.');
@@ -509,7 +510,7 @@ const registrarEscritura = (promesa, mensajeError) => {
 const guardarLocal = () => {
   if (cerrandoSesion || (AteneaDB && !invitado)) return;
   try {
-    localStorage.setItem(CLAVE, JSON.stringify(estado));
+    sessionStorage.setItem(CLAVE, JSON.stringify(estado));
     errorGuardado = '';
   } catch {
     fallarGuardado('No se pudo guardar en este navegador. Usá «Guardar borrador» para no perder los cambios.');
@@ -526,6 +527,8 @@ const limpiarAlmacenamientoLocal = () => {
     Object.keys(localStorage)
       .filter(k => k.startsWith(`${CLAVE}:borrador:`))
       .forEach(k => localStorage.removeItem(k));
+    sessionStorage.removeItem(CLAVE);
+    sessionStorage.removeItem(CLAVE_PORTAFOLIOS);
     sessionStorage.removeItem(`${CLAVE}:continuar`);
   } catch { }
 };
@@ -631,18 +634,18 @@ const crearEnCuenta = e => {
 // cuenta, y se borra del navegador recién cuando el servidor confirmó la copia.
 // Devuelve { id, contenido } de la propuesta creada, o null si no había nada que migrar.
 const migrarLocal = () => {
-  const claveUid = `${CLAVE}:borrador:${AteneaDB.auth.getUid()}`;
-  const contenido = leerLocal(claveUid);
+  let continuar = null;
+  try { continuar = sessionStorage.getItem(`${CLAVE}:continuar`); } catch { }
+  const contenido = continuar ? cargarGuardado() : null;
   try {
     localStorage.removeItem(CLAVE);
     localStorage.removeItem(CLAVE_PORTAFOLIOS);
+    sessionStorage.removeItem(CLAVE);
+    sessionStorage.removeItem(CLAVE_PORTAFOLIOS);
   } catch { }
   if (!contenido) return null;
   const creada = crearEnCuenta(contenido);
   if (!creada) return null;
-  creada.listo.then(ok => {
-    if (ok) try { localStorage.removeItem(claveUid); } catch { }
-  });
   avisar('Guardamos en tu cuenta la propuesta que armaste.', 6000);
   return { id: creada.id, contenido };
 };
@@ -881,7 +884,6 @@ const sincronizarModoEditorUI = () => {
 
 const llenarFormulario = () => {
   sincronizarModoEditorUI();
-  const actual = docActivo();
   if (modoEditor === 'portafolio') {
     $$('[data-campo^="emisor."]').forEach(el => {
       const v = obtener(estadoPortafolio, el.dataset.campo);
@@ -1444,13 +1446,6 @@ const bloquePortafolioEnPropuestaHTML = (pfResumen, web) => {
       </div>` : ''}
     ${proyectos.length ? `<div class="portafolio-grilla">${proyectos.map((p, idx) => proyectoCardHTML(p, idx, web, estado.opciones?.lightbox !== false)).join('')}</div>` : ''}
     ${galeriaPf.length ? `<div style="margin-top:${proyectos.length ? '1.6em' : '0'}">${galeriaSeccionHTML(galeriaPf, { galeriaLayout: 'bento', lightbox: estado.opciones?.lightbox !== false }, web)}</div>` : ''}`;
-};
-
-const enlaceContactoPortafolio = () => {
-  const e = estadoPortafolio.emisor;
-  const emisor = e.nombre.trim();
-  const msg = `Hola${emisor ? ` ${emisor.split(' ')[0]}` : ''}! Vi tu portfolio «${tituloPortafolio()}» y me gustaría conversar sobre un proyecto.`;
-  return enlaceWhatsApp(msg, e) || enlaceEmail(`Consulta desde tu portfolio: ${tituloPortafolio()}`, msg, e);
 };
 
 const renderPortafolio = () => {
@@ -4563,7 +4558,7 @@ const cerrarRegistro = () => {
   try {
     sessionStorage.removeItem(`${CLAVE}:continuar`);
     // Si solo se guardó para el registro y al final no se registró, no queda nada guardado.
-    if (guardadoParaRegistro && !invitadoEdito) localStorage.removeItem(CLAVE);
+    if (guardadoParaRegistro && !invitadoEdito) { localStorage.removeItem(CLAVE); sessionStorage.removeItem(CLAVE); }
   } catch { }
   guardadoParaRegistro = false;
 };
@@ -4901,6 +4896,7 @@ if (esLinkPortafolioCorto) {
   // Cuentas con email y contraseña: hasta verificar el email no entran a la app
   // (las reglas de Firestore y Storage tampoco les permiten escribir).
   const mostrarVerificacion = user => {
+    if (invitado) guardarCambiosDeInvitado();
     $('#auth-cerrar').hidden = true;
     $('#auth-verificar-email').textContent = user.email;
     elIngreso.hidden = true;
@@ -4913,10 +4909,21 @@ if (esLinkPortafolioCorto) {
     elVerificar.hidden = true;
     elIngreso.hidden = false;
     authPantalla.hidden = true;
-    document.body.classList.remove('auth-activo', 'invitado');
+    document.body.classList.remove('auth-activo');
+    if (invitado) {
+      guardarCambiosDeInvitado();
+      invitado = false;
+      editando = false;
+      document.body.classList.remove('invitado');
+    }
     if (!editorIniciado || ultimoUid !== user.uid) {
-      limpiarEstadoMemoria();
-      limpiarAlmacenamientoLocal();
+      // Si había otra sesión abierta antes, limpiamos todo antes de iniciar la cuenta
+      if (ultimoUid && ultimoUid !== user.uid) {
+        limpiarEstadoMemoria();
+        limpiarAlmacenamientoLocal();
+      } else {
+        limpiarEstadoMemoria();
+      }
       editorIniciado = true;
       ultimoUid = user.uid;
       if (menuUsuario) menuUsuario.textContent = user.displayName || user.email;
@@ -4937,9 +4944,9 @@ if (esLinkPortafolioCorto) {
       ultimoUid = null;
       limpiarEstadoMemoria();
       limpiarAlmacenamientoLocal();
-      elVerificar.hidden = true;
-      elIngreso.hidden = false;
-      mostrarAuth();
+      // Sin sesión: la plataforma queda abierta en modo prueba (invitado) sin mostrar
+      // jamás datos de sesiones anteriores. La cuenta se pide al compartir o guardar.
+      iniciarInvitado();
       try {
         if (sessionStorage.getItem(`${CLAVE}:cuenta-eliminada`)) {
           sessionStorage.removeItem(`${CLAVE}:cuenta-eliminada`);
