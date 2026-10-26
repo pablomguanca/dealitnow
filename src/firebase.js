@@ -240,8 +240,7 @@ const crearAteneaDB = () => {
 
   const _baseQueryPortfolios = () =>
     _colPortfolios()
-      .where('userId', '==', getUid())
-      .orderBy('createdAt', 'desc');
+      .where('userId', '==', getUid());
 
   const _camposEditablesPortafolio = (data) => {
     const limpio = {};
