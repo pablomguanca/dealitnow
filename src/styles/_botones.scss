@@ -1,0 +1,92 @@
+// Sistema de botones (.boton, variantes primario, secundario, texto y tamaños)
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.68rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radio-s);
+  background: none;
+  color: var(--marfil);
+  font-family: var(--fuente-texto);
+  font-size: 0.86rem;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background-color var(--transicion),
+    border-color var(--transicion),
+    color var(--transicion);
+  flex-shrink: 0;
+
+  &[hidden] {
+    display: none;
+  }
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  &--primario {
+    background: var(--dorado);
+    color: var(--negro);
+
+    &:hover {
+      background: var(--dorado-claro);
+    }
+  }
+
+  &--secundario {
+    border-color: var(--superficie-borde);
+
+    &:hover {
+      border-color: var(--dorado);
+      color: var(--dorado-claro);
+    }
+  }
+
+  &--texto {
+    padding: 0.55rem 0.6rem;
+    color: var(--marfil-apagado);
+
+    &:hover {
+      color: var(--dorado-claro);
+    }
+  }
+
+  &--chico {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  &--grande {
+    padding: 0.95rem 1.4rem;
+    font-size: 0.95rem;
+  }
+
+  &--agregar {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px dashed var(--superficie-borde);
+    color: var(--marfil-apagado);
+
+    &:hover {
+      border-color: var(--dorado);
+      color: var(--dorado-claro);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}

@@ -1,0 +1,94 @@
+// Reglas de exportación e impresión en hoja A4 (@media print)
+
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm 0 18mm;
+  }
+
+  @page :first {
+    margin: 0;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  html,
+  body,
+  body.modo-cliente {
+    display: block;
+    height: auto;
+    overflow: visible;
+    background: var(--papel);
+  }
+
+  .barra,
+  .pestanas,
+  .editor,
+  .visor__barra,
+  .aviso,
+  .dialogo,
+  .barra-cliente,
+  .servicio__sumar,
+  .cierre,
+  .pie__pdf,
+  .doc-aviso {
+    display: none;
+  }
+
+  .app,
+  .app--previa {
+    display: block;
+  }
+
+  .visor,
+  .app .visor,
+  .app--previa .visor,
+  body.modo-cliente .visor {
+    display: block;
+    overflow: visible;
+    padding: 0;
+    background: none;
+  }
+
+  .visor__escenario,
+  .visor__escenario--celular,
+  .visor__escenario--escritorio,
+  .visor__escenario--pdf {
+    width: 100%;
+    max-width: none;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .portada {
+    box-shadow: none;
+    break-after: page;
+  }
+
+  .cuerpo {
+    margin: 0;
+    padding: 0 5.8em;
+    box-shadow: none;
+  }
+
+  .bloque__titulo,
+  .doc-subtitulo {
+    break-after: avoid;
+  }
+
+  .doc-grupo,
+  .servicio,
+  .etapa,
+  .resumen,
+  .pagos tr,
+  .firmas,
+  .doc-lista li,
+  .pasos li {
+    break-inside: avoid;
+  }
+}

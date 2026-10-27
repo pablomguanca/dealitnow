@@ -1,0 +1,166 @@
+// Chips de plantillas por rubro e iconos selectores de decoración, portada y estilo de bloques
+
+/* ---------- Estudio de diseño: plantillas por rubro, decoraciones y estilos ---------- */
+
+.estudio-cabecera {
+  margin-bottom: 0.7rem;
+
+  .separador-campos {
+    margin: 0.4rem 0 0.2rem;
+  }
+}
+
+.plantillas-rubro {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+  margin-bottom: 0.4rem;
+}
+
+.plantilla-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  padding: 0.65rem 0.75rem;
+  border: 1.5px solid var(--superficie-borde);
+  border-radius: var(--radio-m);
+  background: var(--negro-2);
+  color: var(--marfil);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transicion), background-color var(--transicion), transform 0.15s ease;
+
+  &:hover {
+    border-color: var(--dorado);
+    transform: translateY(-1px);
+  }
+
+  &--activa {
+    border-color: var(--dorado);
+    background: var(--dorado-fondo);
+    box-shadow: 0 0 0 1px var(--dorado);
+  }
+
+  &__rubro {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--dorado-papel);
+  }
+
+  &__nombre {
+    font-size: 0.82rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: var(--marfil);
+  }
+}
+
+.insignia-pro,
+.tema-card__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.38rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #F59E0B, #D97706);
+  color: #FFF;
+  font-style: normal;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.tema-card {
+  &__badge {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.35rem;
+    z-index: 1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  }
+
+  &__nombre {
+    font-weight: 600;
+    color: var(--marfil);
+  }
+
+  &__sub {
+    font-size: 0.68rem;
+    text-align: center;
+    color: var(--marfil-tenue);
+    line-height: 1.1;
+  }
+}
+
+.opciones-visuales {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(5.2rem, 1fr));
+  gap: 0.5rem;
+
+  &--4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.opcion-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.55rem 0.35rem;
+  border: 1.5px solid var(--superficie-borde);
+  border-radius: var(--radio-m);
+  background: var(--negro-2);
+  color: var(--marfil-apagado);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color var(--transicion), color var(--transicion), background-color var(--transicion);
+
+  svg {
+    width: 2.25rem;
+    height: 1.5rem;
+    color: var(--marfil-apagado);
+    transition: color var(--transicion), transform 0.2s ease;
+  }
+
+  &:hover {
+    border-color: var(--marfil-tenue);
+    color: var(--marfil);
+
+    svg {
+      color: var(--dorado-papel);
+      transform: scale(1.05);
+    }
+  }
+
+  &--activa {
+    border-color: var(--dorado);
+    background: var(--dorado-fondo);
+    color: var(--dorado-papel);
+    box-shadow: 0 0 0 1px var(--dorado);
+
+    svg {
+      color: var(--dorado-papel);
+    }
+  }
+}
+
+@media (max-width: 420px) {
+  .plantillas-rubro {
+    grid-template-columns: 1fr;
+  }
+
+  .opciones-visuales--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+

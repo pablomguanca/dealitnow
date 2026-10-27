@@ -1,0 +1,198 @@
+// Barra superior fija y menú lateral deslizable (Sidebar drawer)
+
+.barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--superficie-borde);
+  background: var(--superficie);
+
+  &__marca {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  &__logo {
+    flex-shrink: 0;
+    font-family: var(--fuente-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--marfil);
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  &__producto {
+    padding-left: 0.85rem;
+    border-left: 1px solid var(--superficie-borde);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--marfil-apagado);
+    white-space: nowrap;
+  }
+
+  &__acciones {
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__separador {
+    width: 1px;
+    height: 1.6rem;
+    margin: 0 0.25rem;
+    background: var(--superficie-borde);
+    flex-shrink: 0;
+  }
+}
+.menu {
+  position: relative;
+
+  .menu__alternar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.62rem 0.85rem;
+  }
+
+  .menu__alternar[aria-expanded="true"] {
+    border-color: var(--dorado);
+    color: var(--dorado-papel);
+    background: var(--dorado-fondo);
+  }
+
+  &__velo {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    background: var(--velo);
+    backdrop-filter: blur(2px);
+    animation: aparecerSuave 0.2s ease both;
+
+    &[hidden] {
+      display: none !important;
+    }
+  }
+
+  &__panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 85;
+    width: min(21rem, 88vw);
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    border-left: 1px solid var(--superficie-borde);
+    background: var(--negro-2);
+    box-shadow: -0.8rem 0 2.8rem rgba(0, 0, 0, 0.14);
+    animation: sidebarEntrar 0.25s var(--ease-out-expo) both;
+
+    &[hidden] {
+      display: none !important;
+    }
+  }
+
+  &__cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1.15rem 1.25rem;
+    border-bottom: 1px solid var(--superficie-borde);
+    background: var(--negro);
+  }
+
+  &__identidad {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__marca {
+    font-family: var(--fuente-display);
+    font-size: 1.45rem;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: var(--marfil);
+  }
+
+  &__cuerpo {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  &__grupo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__grupo-titulo {
+    padding: 0 0.65rem 0.35rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--marfil-tenue);
+  }
+
+  &__opcion {
+    width: 100%;
+    justify-content: flex-start;
+    gap: 0.7rem;
+    padding: 0.72rem 0.75rem;
+    border-radius: var(--radio-m);
+    border-color: transparent;
+    color: var(--marfil);
+    font-size: 0.88rem;
+    font-weight: 500;
+
+    svg {
+      width: 1.05rem;
+      height: 1.05rem;
+      color: var(--marfil-apagado);
+      flex-shrink: 0;
+    }
+
+    &:hover {
+      background: var(--dorado-fondo);
+      border-color: transparent;
+      color: var(--dorado-papel);
+
+      svg {
+        color: var(--dorado-papel);
+      }
+    }
+  }
+
+  &__pie {
+    padding: 0.85rem;
+    border-top: 1px solid var(--superficie-borde);
+    background: var(--negro);
+  }
+}
+
+@keyframes sidebarEntrar {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

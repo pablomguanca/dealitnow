@@ -1,0 +1,126 @@
+// Visor Lightbox a pantalla completa (#dialogo-lightbox) y ajustes responsive/print finales
+
+/* Visor Lightbox a pantalla completa */
+.lightbox {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(6, 6, 10, 0.92);
+  backdrop-filter: blur(10px);
+  color: #F8FAFC;
+  overflow: hidden;
+}
+.lightbox[open] {
+  display: flex;
+  flex-direction: column;
+}
+.lightbox::backdrop {
+  background: rgba(0, 0, 0, 0.82);
+}
+.lightbox__barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.4rem;
+  z-index: 2;
+}
+.lightbox__contador {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #CBD5E1;
+  font-variant-numeric: tabular-nums;
+}
+.lightbox__cerrar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.lightbox__cerrar:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+.lightbox__escenario {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0 1.2rem 1.8rem;
+}
+.lightbox__figura {
+  margin: 0;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  pointer-events: none;
+}
+.lightbox__img {
+  max-width: min(92vw, 1180px);
+  max-height: calc(100dvh - 8.5rem);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radio-m);
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.55);
+  pointer-events: auto;
+}
+.lightbox__epigrafe {
+  max-width: 54ch;
+  text-align: center;
+  font-size: 0.92rem;
+  color: #E2E8F0;
+  background: rgba(15, 23, 42, 0.75);
+  padding: 0.45rem 0.95rem;
+  border-radius: 999px;
+  pointer-events: auto;
+}
+.lightbox__nav {
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+.lightbox__nav:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+}
+.lightbox__nav[hidden] {
+  visibility: hidden;
+}
+
+@container (max-width: 640px) {
+  .sobre-mi {
+    grid-template-columns: 1fr;
+  }
+  .galeria-web--bento {
+    grid-template-columns: 1fr;
+  }
+  .doc-nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4em;
+    padding: 0.65em 1.2em;
+  }
+}
+
+@media print {
+  .doc-nav,
+  .lightbox,
+  .proyecto-card__contador-fotos {
+    display: none !important;
+  }
+  .faq-item[open] > .faq-item__respuesta,
+  .faq-item > .faq-item__respuesta {
+    display: block !important;
+  }
+}

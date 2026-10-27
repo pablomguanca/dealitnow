@@ -1,0 +1,427 @@
+// Keyframes y transiciones de aparición progresiva en vista web (.doc--web)
+
+@keyframes revelar {
+  from {
+    opacity: 0;
+    transform: translateY(2.4em);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes revelarEscala {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(1.6em);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes dibujarLinea {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes dibujarBorde {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes aparecerSuave {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes deslizarArriba {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes conectorCrece {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes pulsar {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--dorado-tenue);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+.doc--web .portada {
+  &::before {
+    animation: dibujarBorde 1.2s 0.3s var(--ease-out-expo) both;
+  }
+
+  .portada__superior {
+    animation: aparecerSuave 0.8s 0.2s var(--ease-out-expo) both;
+  }
+
+  .portada__para {
+    animation: revelar 0.7s 0.5s var(--ease-out-expo) both;
+  }
+
+  .portada__titulo {
+    animation: revelar 0.9s 0.65s var(--ease-out-expo) both;
+  }
+
+  .portada__regla {
+    transform-origin: left;
+    animation: dibujarLinea 0.8s 1s var(--ease-out-expo) both;
+  }
+
+  .portada__meta {
+    animation: revelar 0.7s 1.1s var(--ease-out-expo) both;
+
+    >div {
+      animation: aparecerSuave 0.5s var(--ease-out-expo) both;
+
+      @for $i from 1 through 4 {
+        &:nth-child(#{$i}) {
+          animation-delay: #{1.15 + $i * 0.1}s;
+        }
+      }
+    }
+  }
+}
+.doc--web {
+  .bloque {
+    opacity: 0;
+    transform: translateY(2em);
+    transition: opacity 0.65s var(--ease-out-expo),
+      transform 0.65s var(--ease-out-expo);
+
+    &.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .servicio {
+    opacity: 0;
+    transform: translateY(1.2em);
+    transition: opacity 0.5s var(--ease-out-expo),
+      transform 0.5s var(--ease-out-expo);
+
+    &.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .etapa {
+    opacity: 0;
+    transform: translateX(-1em);
+    transition: opacity 0.5s var(--ease-out-expo),
+      transform 0.5s var(--ease-out-expo);
+
+    &.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    &:not(:last-child)::after {
+      transform-origin: top;
+      transform: scaleY(0);
+      transition: transform 0.6s 0.2s var(--ease-out-expo);
+    }
+
+    &.visible:not(:last-child)::after {
+      transform: scaleY(1);
+    }
+  }
+
+  .etapa__num {
+    transition: transform 0.4s var(--ease-out-back),
+      box-shadow 0.4s var(--ease-out-expo);
+  }
+
+  .etapa.visible .etapa__num {
+    animation: pulsar 1s 0.3s ease-out;
+  }
+
+  .resumen {
+    opacity: 0;
+    transform: scale(0.94) translateY(1.2em);
+    transition: opacity 0.6s var(--ease-out-expo),
+      transform 0.6s var(--ease-out-expo);
+
+    &.visible {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .cierre {
+    opacity: 0;
+    transform: translateY(1.5em);
+    transition: opacity 0.6s var(--ease-out-expo),
+      transform 0.6s var(--ease-out-expo);
+
+    &.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .pie {
+    opacity: 0;
+    transition: opacity 0.6s 0.1s var(--ease-out-expo);
+
+    &.visible {
+      opacity: 1;
+    }
+  }
+
+  .doc-aviso {
+    opacity: 0;
+    transform: translateX(-1em);
+    transition: opacity 0.5s var(--ease-out-expo),
+      transform 0.5s var(--ease-out-expo);
+
+    &.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+.doc--web .servicio {
+  padding-left: 1em;
+  padding-right: 1em;
+  margin-left: -1em;
+  margin-right: -1em;
+  border-radius: var(--radio-m);
+  transition: opacity 0.5s var(--ease-out-expo),
+    transform 0.5s var(--ease-out-expo),
+    background-color 0.25s ease,
+    box-shadow 0.25s ease;
+
+  &:hover {
+    background: rgba(201, 168, 76, 0.04);
+    box-shadow: 0 0.4em 1.6em rgba(0, 0, 0, 0.12);
+  }
+}
+
+.doc--web .etapa {
+  padding-left: 0.6em;
+  padding-right: 0.6em;
+  margin-left: -0.6em;
+  margin-right: -0.6em;
+
+  &:not(:last-child)::after {
+    left: 1.8em;
+  }
+  border-radius: var(--radio-m);
+  transition: opacity 0.5s var(--ease-out-expo),
+    transform 0.5s var(--ease-out-expo),
+    background-color 0.25s ease;
+
+  &:hover {
+    background: rgba(201, 168, 76, 0.04);
+
+    .etapa__num {
+      transform: scale(1.08);
+      box-shadow: 0 0 0 3px var(--dorado-tenue);
+    }
+  }
+}
+
+.doc--web .resumen {
+  transition: opacity 0.6s var(--ease-out-expo),
+    transform 0.6s var(--ease-out-expo),
+    box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 0.6em 2.4em rgba(0, 0, 0, 0.25);
+  }
+}
+
+.doc--web .cierre {
+  transition: opacity 0.6s var(--ease-out-expo),
+    transform 0.6s var(--ease-out-expo),
+    box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 0.6em 2em rgba(0, 0, 0, 0.2);
+  }
+}
+
+.boton--primario {
+  transition: background-color var(--transicion),
+    transform 0.15s var(--ease-out-back),
+    box-shadow 0.2s ease;
+
+  &:hover {
+    background: var(--dorado-claro);
+    transform: translateY(-1px);
+    box-shadow: 0 0.3em 1em rgba(201, 168, 76, 0.3);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.97);
+    box-shadow: none;
+  }
+}
+
+.boton--secundario {
+  transition: border-color var(--transicion),
+    color var(--transicion),
+    transform 0.15s var(--ease-out-back);
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.97);
+  }
+}
+
+.servicio__sumar {
+  transition: background-color var(--transicion),
+    color var(--transicion),
+    transform 0.2s var(--ease-out-back),
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: scale(1.03);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &[aria-pressed="true"] {
+    animation: pulsar 0.6s ease-out;
+  }
+}
+
+.barra-cliente {
+  animation: deslizarArriba 0.5s 0.3s var(--ease-out-expo) both;
+}
+
+.dialogo {
+  animation: revelarEscala 0.35s var(--ease-out-expo);
+
+  &::backdrop {
+    animation: aparecerSuave 0.3s ease;
+  }
+}
+
+.doc--web .doc-lista li {
+  opacity: 0;
+  transform: translateX(-0.8em);
+  transition: opacity 0.35s var(--ease-out-expo),
+    transform 0.35s var(--ease-out-expo);
+}
+
+.doc--web .visible .doc-lista li {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@for $i from 1 through 12 {
+  .doc--web .visible .doc-lista li:nth-child(#{$i}) {
+    transition-delay: #{$i * 0.05}s;
+  }
+}
+
+.doc--web .pasos li {
+  opacity: 0;
+  transform: translateY(0.6em);
+  transition: opacity 0.4s var(--ease-out-expo),
+    transform 0.4s var(--ease-out-expo);
+}
+
+.doc--web .visible .pasos li {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@for $i from 1 through 8 {
+  .doc--web .visible .pasos li:nth-child(#{$i}) {
+    transition-delay: #{$i * 0.08}s;
+  }
+}
+
+.doc--web .pagos tbody tr {
+  opacity: 0;
+  transform: translateY(0.5em);
+  transition: opacity 0.35s var(--ease-out-expo),
+    transform 0.35s var(--ease-out-expo);
+}
+
+.doc--web .visible .pagos tbody tr {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@for $i from 1 through 10 {
+  .doc--web .visible .pagos tbody tr:nth-child(#{$i}) {
+    transition-delay: #{0.1 + $i * 0.06}s;
+  }
+}
+
+.doc--web .firmas>div {
+  opacity: 0;
+  transform: translateY(1em);
+  transition: opacity 0.5s var(--ease-out-expo),
+    transform 0.5s var(--ease-out-expo);
+}
+
+.doc--web .visible .firmas>div {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.doc--web .visible .firmas>div:nth-child(2) {
+  transition-delay: 0.15s;
+}
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
