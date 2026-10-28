@@ -116,12 +116,12 @@
 .portafolio-grilla {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.6em;
+  gap: calc(1.6em * var(--escala-espaciado-interno, 1));
 }
 
 .doc[data-estilo="bento"] .portafolio-grilla {
   grid-template-columns: repeat(auto-fit, minmax(18em, 1fr));
-  gap: 1.35em;
+  gap: calc(1.35em * var(--escala-espaciado-interno, 1));
 }
 
 .proyecto-card {
@@ -129,7 +129,7 @@
   display: flex;
   flex-direction: column;
   border-top: 1px solid var(--d-linea);
-  padding: 1.6em 0;
+  padding: calc(1.6em * var(--escala-espaciado-interno, 1)) 0;
   transition:
     opacity 0.5s var(--ease-out-expo),
     transform 0.5s var(--ease-out-expo),
@@ -188,7 +188,7 @@
 
     &-indice {
       font-family: var(--fuente-display);
-      font-size: 2.8em;
+      font-size: calc(2.8em * var(--escala-titulos, 1));
       font-weight: 700;
       line-height: 0.9;
       color: var(--d-acento);
@@ -199,7 +199,7 @@
       position: relative;
       z-index: 1;
       font-family: var(--fuente-display);
-      font-size: 1.45em;
+      font-size: calc(1.45em * var(--escala-titulos, 1));
       line-height: 1.08;
       color: var(--d-texto);
       max-width: 18em;
@@ -250,7 +250,7 @@
 
   &__titulo {
     margin: 0;
-    font-size: 1.24em;
+    font-size: calc(1.24em * var(--escala-titulos, 1));
     font-weight: 700;
     line-height: 1.28;
     color: var(--d-texto);
@@ -324,7 +324,7 @@
 }
 
 .doc[data-estilo="tarjetas"] .proyecto-card {
-  padding: 1.45em 1.6em;
+  padding: calc(1.45em * var(--escala-espaciado-interno, 1)) calc(1.6em * var(--escala-espaciado-interno, 1));
   border: 1px solid var(--d-linea);
   border-radius: var(--radio-m);
   background: rgba(128, 128, 128, 0.03);
@@ -337,7 +337,7 @@
 }
 
 .doc[data-estilo="bento"] .proyecto-card {
-  padding: 1.45em 1.55em;
+  padding: calc(1.45em * var(--escala-espaciado-interno, 1)) calc(1.55em * var(--escala-espaciado-interno, 1));
   border: 1px solid var(--d-linea);
   border-radius: var(--radio-l);
   background: rgba(128, 128, 128, 0.04);
@@ -350,7 +350,7 @@
 }
 
 .doc[data-estilo="minimal"] .proyecto-card {
-  padding: 1.15em 0 1.15em 1.3em;
+  padding: calc(1.15em * var(--escala-espaciado-interno, 1)) 0 calc(1.15em * var(--escala-espaciado-interno, 1)) 1.3em;
   border-top: 0;
   border-left: 2px solid var(--d-linea);
 
@@ -387,5 +387,3 @@
     text-decoration: underline;
   }
 }
-
-

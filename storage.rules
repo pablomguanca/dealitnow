@@ -1,22 +1,21 @@
 rules_version = '2';
 
+// Reglas de Firebase Storage para el generador de propuestas.
+// Subilas desde la consola de Firebase → Storage → Reglas (o con `firebase deploy --only storage`).
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Logos: cada usuario solo escribe en su carpeta, solo imágenes rasterizadas
-    // y con nombre = hash SHA-256 del contenido. Los clientes ven el logo con la
-    // URL de descarga (lleva un token), que no depende de estas reglas.
-    match /users/{uid}/logos/{archivo} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow create, update: if request.auth != null && request.auth.uid == uid
-        && request.auth.token.email_verified == true
-        && archivo.matches('[a-f0-9]{64}[.](png|jpg|webp)')
-        && request.resource.size < 1024 * 1024
+    // Logos e imágenes de portada/proyectos: cada usuario sube en su carpeta; cualquiera con el link puede verlos
+    // (las propuestas compartidas los muestran sin pedir sesión).
+    match /logos/{uid}/{archivo} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
         && request.resource.contentType.matches('image/(png|jpeg|webp)');
-      allow delete: if request.auth != null && request.auth.uid == uid;
     }
 
-    match /{todo=**} {
+    match /{resto=**} {
       allow read, write: if false;
     }
   }

@@ -8,11 +8,8 @@ import {
   numero,
   texto,
   esc,
-  lineas,
-  parrafos,
   dinero,
   cantidadTexto,
-  desdeISO,
   fechaLarga
 } from './lib/formato.js';
 import {
@@ -20,8 +17,6 @@ import {
   DECORACIONES,
   PORTADAS,
   ESTILOS_BLOQUES,
-  PROPORCIONES_IMAGEN,
-  LAYOUTS_GALERIA,
   TEMAS,
   PLANTILLAS,
   PLANTILLAS_PORTAFOLIO,
@@ -43,273 +38,49 @@ import {
   descomprimir
 } from './link.js';
 import { MENSAJES_ACEPTACION, NOMBRE_MIN, limpiarNombre } from './aceptacion.js';
+import { decoracionPortadaSVG } from './lib/decoraciones.js';
+import { resolverColoresTema, aplicarTema } from './lib/tema.js';
+import {
+  LOGO_MAX_ARCHIVO,
+  FOTO_MAX_ARCHIVO,
+  LOGO_MAX_LINK,
+  reducirLogo,
+  logoParaSubir,
+  procesarImagenProyecto,
+  limpiarImgLink
+} from './lib/imagenes.js';
+import {
+  abrirLightboxDesdeNodo,
+  moverLightbox,
+  cerrarLightbox,
+  estaAbiertoLightbox
+} from './lib/lightbox.js';
+import {
+  servicioConContenido,
+  proyectoConContenido,
+  digitosWhatsApp as obtenerDigitosWhatsApp,
+  armarEnlaceWhatsApp,
+  armarEnlaceEmail,
+  fechaDeAceptacion,
+  observarElementos,
+  generarPortafolioHTML,
+  generarPropuestaHTML
+} from './lib/render.js';
+import {
+  fechaDe,
+  sinAcentos,
+  propuestaHTML,
+  filtrosHTML,
+  metricasHTML,
+  portafolioItemHTML
+} from './lib/paneles.js';
 
 const CLAVE = 'generador-propuestas-v1';
 const CLAVE_PORTAFOLIOS = 'generador-portafolios-v1';
-const LOGO_MAX_ARCHIVO = 5 * 1024 * 1024;
-const LOGO_MAX_LINK = 40000;
 const PREFIJO = '#p=';
 const PREFIJO_PORTAFOLIO = '#f=';
 const RUTA_LINK = /^\/p\/([A-Za-z0-9]{20})\/?$/; // IDs de Firestore: 20 caracteres
 const RUTA_PORTAFOLIO = /^\/portafolio\/([A-Za-z0-9]{20})\/?$/;
-
-const ICONO_SUMAR = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>';
-const ICONO_SUMADO = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
-const ICONO_CHECK = '<svg class="icono-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6.5"/></svg>';
-const ICONO_EXTERNO = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5h6.5V10M12 4L4.5 11.5"/></svg>';
-
-let svgSecuencia = 0;
-
-const decoracionPortadaSVGBase = tipo => {
-  switch (tipo) {
-    case 'organica':
-      return `
-        <svg class="portada__svg portada__svg--organica" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <linearGradient id="org-grad-a" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.22"/>
-              <stop offset="55%" stop-color="currentColor" stop-opacity="0.08"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-            </linearGradient>
-            <linearGradient id="org-grad-b" x1="100%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.18"/>
-              <stop offset="60%" stop-color="currentColor" stop-opacity="0.06"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-            </linearGradient>
-            <radialGradient id="org-halo" cx="84%" cy="16%" r="46%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.2"/>
-              <stop offset="60%" stop-color="currentColor" stop-opacity="0.05"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
-          <rect width="800" height="1000" fill="url(#org-halo)"/>
-          <path d="M510,-60 C680,-50 860,70 850,260 C840,450 690,520 575,435 C460,350 420,210 455,75 C475,-5 480,-60 510,-60 Z" fill="url(#org-grad-a)"/>
-          <path d="M600,-20 C750,10 850,150 815,310 C780,470 630,545 535,455 C440,365 450,170 530,50 C560,5 575,-25 600,-20 Z" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.24"/>
-          <path d="M645,40 C755,65 820,185 785,315 C750,445 625,490 560,415 C495,340 535,15 645,40 Z" fill="none" stroke="currentColor" stroke-width="0.8" stroke-dasharray="3 5" opacity="0.2"/>
-          <path d="M-90,740 C40,650 240,700 310,830 C380,960 270,1070 100,1055 C-70,1040 -150,795 -90,740 Z" fill="url(#org-grad-b)"/>
-          <path d="M-50,805 C75,715 235,765 285,895 C315,970 250,1040 140,1035" fill="none" stroke="currentColor" stroke-width="1.15" opacity="0.22"/>
-          <path d="M655,295 C675,220 715,150 770,95" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" opacity="0.26"/>
-          <path d="M675,245 C650,225 645,195 668,175 C692,188 692,220 675,245 Z" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1.1" opacity="0.26"/>
-          <path d="M702,195 C728,182 745,198 738,224 C714,225 702,210 702,195 Z" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1.1" opacity="0.26"/>
-          <path d="M722,152 C700,132 702,106 724,92 C742,108 738,135 722,152 Z" fill="currentColor" fill-opacity="0.1" stroke="currentColor" stroke-width="1.1" opacity="0.26"/>
-          <path d="M35,965 C75,895 130,840 205,795" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.2"/>
-          <path d="M78,910 C60,885 65,856 90,844 C108,862 100,892 78,910 Z" fill="currentColor" fill-opacity="0.09" stroke="currentColor" stroke-width="1" opacity="0.2"/>
-          <path d="M128,858 C152,850 168,868 156,892 C134,890 124,874 128,858 Z" fill="currentColor" fill-opacity="0.09" stroke="currentColor" stroke-width="1" opacity="0.2"/>
-          <circle cx="630" cy="160" r="3.5" fill="currentColor" opacity="0.3"/>
-          <circle cx="585" cy="215" r="2" fill="currentColor" opacity="0.22"/>
-          <circle cx="715" cy="275" r="2.5" fill="currentColor" opacity="0.24"/>
-          <circle cx="195" cy="845" r="3" fill="currentColor" opacity="0.24"/>
-          <circle cx="240" cy="790" r="1.8" fill="currentColor" opacity="0.18"/>
-          <rect x="36" y="36" width="728" height="928" rx="4" fill="none" stroke="currentColor" stroke-width="0.8" opacity="0.18"/>
-        </svg>`;
-    case 'geometrica':
-      return `
-        <svg class="portada__svg portada__svg--geometrica" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <linearGradient id="geo-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.22"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0.03"/>
-            </linearGradient>
-            <linearGradient id="geo-grad-2" x1="0%" y1="100%" x2="100%" y2="0%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.16"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-            </linearGradient>
-            <pattern id="geo-halftone" width="18" height="18" patternUnits="userSpaceOnUse">
-              <circle cx="9" cy="9" r="1.4" fill="currentColor" opacity="0.22"/>
-            </pattern>
-          </defs>
-          <circle cx="685" cy="165" r="195" fill="url(#geo-halftone)"/>
-          <circle cx="695" cy="155" r="210" fill="none" stroke="currentColor" stroke-width="1" opacity="0.2"/>
-          <circle cx="695" cy="155" r="165" fill="none" stroke="currentColor" stroke-width="1.2" stroke-dasharray="10 8" opacity="0.24"/>
-          <circle cx="695" cy="155" r="118" fill="url(#geo-grad-1)"/>
-          <path d="M695,37 A118,118 0 0,1 813,155 L695,155 Z" fill="currentColor" opacity="0.12"/>
-          <circle cx="695" cy="155" r="56" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.28"/>
-          <circle cx="695" cy="155" r="14" fill="currentColor" opacity="0.26"/>
-          <path d="M520,0 L800,280 M580,0 L800,220 M640,0 L800,160" stroke="currentColor" stroke-width="0.9" opacity="0.16"/>
-          <path d="M0,780 L220,1000 L0,1000 Z" fill="url(#geo-grad-2)"/>
-          <path d="M0,845 L155,1000" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.22"/>
-          <path d="M40,960 A140,140 0 0,1 180,820" fill="none" stroke="currentColor" stroke-width="1.1" stroke-dasharray="4 6" opacity="0.24"/>
-          <rect x="640" y="790" width="112" height="112" fill="none" stroke="currentColor" stroke-width="0.95" opacity="0.18"/>
-          <path d="M640,902 A112,112 0 0,1 752,790" fill="none" stroke="currentColor" stroke-width="1.1" opacity="0.22"/>
-          <rect x="44" y="44" width="712" height="912" fill="none" stroke="currentColor" stroke-width="1" opacity="0.22"/>
-          <rect x="60" y="60" width="32" height="5" fill="currentColor" opacity="0.38"/>
-          <rect x="98" y="60" width="10" height="5" fill="currentColor" opacity="0.22"/>
-          <path d="M485,62 H499 M492,55 V69 M735,442 H749 M742,435 V449 M62,745 H76 M69,738 V752" stroke="currentColor" stroke-width="1.15" opacity="0.34"/>
-        </svg>`;
-    case 'aurora':
-      return `
-        <svg class="portada__svg portada__svg--aurora" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <radialGradient id="aurora-a" cx="82%" cy="15%" r="52%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.32"/>
-              <stop offset="45%" stop-color="currentColor" stop-opacity="0.12"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-            </radialGradient>
-            <radialGradient id="aurora-b" cx="14%" cy="86%" r="48%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.24"/>
-              <stop offset="55%" stop-color="currentColor" stop-opacity="0.07"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-            </radialGradient>
-            <radialGradient id="aurora-c" cx="72%" cy="76%" r="36%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.16"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
-          <rect width="800" height="1000" fill="url(#aurora-a)"/>
-          <rect width="800" height="1000" fill="url(#aurora-b)"/>
-          <rect width="800" height="1000" fill="url(#aurora-c)"/>
-          <path d="M0,60 H800 M0,115 H800 M0,170 H800 M120,0 L55,200 M260,0 L220,200 M400,0 L400,200 M540,0 L580,200 M680,0 L745,200 M0,835 H800 M0,890 H800 M0,945 H800 M160,800 L75,1000 M300,800 L250,1000 M440,800 L440,1000 M580,800 L630,1000 M720,800 L805,1000" stroke="currentColor" stroke-width="0.75" opacity="0.15" fill="none"/>
-          <ellipse cx="655" cy="175" rx="220" ry="115" transform="rotate(-18 655 175)" fill="none" stroke="currentColor" stroke-width="1.05" opacity="0.24"/>
-          <ellipse cx="655" cy="175" rx="155" ry="76" transform="rotate(-18 655 175)" fill="none" stroke="currentColor" stroke-width="0.9" stroke-dasharray="5 7" opacity="0.22"/>
-          <path d="M510,130 C590,85 690,110 755,190 C680,235 585,220 510,130 Z" fill="currentColor" opacity="0.07"/>
-          <path d="M555,115 L635,85 L715,135 L685,215 L590,195 Z" fill="none" stroke="currentColor" stroke-width="0.95" opacity="0.24"/>
-          <path d="M635,85 L685,215 M555,115 L715,135" fill="none" stroke="currentColor" stroke-width="0.85" stroke-dasharray="2 4" opacity="0.18"/>
-          <circle cx="555" cy="115" r="3" fill="currentColor" opacity="0.4"/>
-          <circle cx="635" cy="85" r="3.5" fill="currentColor" opacity="0.45"/>
-          <circle cx="715" cy="135" r="4" fill="currentColor" opacity="0.48"/>
-          <circle cx="685" cy="215" r="3" fill="currentColor" opacity="0.38"/>
-          <circle cx="590" cy="195" r="2.5" fill="currentColor" opacity="0.32"/>
-          <path d="M690,68 L694,82 L708,86 L694,90 L690,104 L686,90 L672,86 L686,82 Z" fill="currentColor" opacity="0.48"/>
-          <path d="M530,220 L532.5,229 L541.5,231.5 L532.5,234 L530,243 L527.5,234 L518.5,231.5 L527.5,229 Z" fill="currentColor" opacity="0.34"/>
-          <path d="M125,805 L128,815 L138,818 L128,821 L125,831 L122,821 L112,818 L122,815 Z" fill="currentColor" opacity="0.34"/>
-          <rect x="38" y="38" width="724" height="924" rx="6" fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.2"/>
-        </svg>`;
-    case 'trama':
-      return `
-        <svg class="portada__svg portada__svg--trama" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <pattern id="trama-menor" width="20" height="20" patternUnits="userSpaceOnUse">
-              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.1"/>
-            </pattern>
-            <pattern id="trama-mayor" width="100" height="100" patternUnits="userSpaceOnUse">
-              <rect width="100" height="100" fill="url(#trama-menor)"/>
-              <path d="M 100 0 L 0 0 0 100" fill="none" stroke="currentColor" stroke-width="0.85" opacity="0.18"/>
-              <circle cx="0" cy="0" r="1.4" fill="currentColor" opacity="0.3"/>
-            </pattern>
-          </defs>
-          <rect x="44" y="44" width="712" height="912" fill="url(#trama-mayor)"/>
-          <g transform="translate(650, 175)" fill="none" stroke="currentColor">
-            <circle cx="0" cy="0" r="92" stroke-width="1" opacity="0.26"/>
-            <circle cx="0" cy="0" r="68" stroke-width="0.85" stroke-dasharray="3 4" opacity="0.24"/>
-            <circle cx="0" cy="0" r="34" stroke-width="0.95" opacity="0.26"/>
-            <circle cx="0" cy="0" r="3.2" fill="currentColor" stroke="none" opacity="0.4"/>
-            <path d="M-108,0 H108 M0,-108 V108" stroke-width="0.8" opacity="0.22"/>
-            <path d="M-65,-65 L65,65 M-65,65 L65,-65" stroke-width="0.65" stroke-dasharray="2 5" opacity="0.18"/>
-            <path d="M0,-92 A92,92 0 0,1 92,0" stroke-width="2.1" opacity="0.36"/>
-          </g>
-          <path d="M540,44 V956" stroke="currentColor" stroke-width="0.85" stroke-dasharray="4 6" opacity="0.2"/>
-          <path d="M44,265 H756" stroke="currentColor" stroke-width="0.85" stroke-dasharray="4 6" opacity="0.18"/>
-          <path d="M756,740 A216,216 0 0,0 540,956" fill="none" stroke="currentColor" stroke-width="0.95" opacity="0.22"/>
-          <rect x="44" y="44" width="712" height="912" fill="none" stroke="currentColor" stroke-width="1.15" opacity="0.28"/>
-          <rect x="52" y="52" width="696" height="896" fill="none" stroke="currentColor" stroke-width="0.55" opacity="0.15"/>
-          <path d="M32,44 H60 M44,32 V60 M740,44 H768 M756,32 V60 M32,956 H60 M44,940 V968 M740,956 H768 M756,940 V968" stroke="currentColor" stroke-width="1.6" opacity="0.42"/>
-          <rect x="64" y="38" width="18" height="3" fill="currentColor" opacity="0.3"/>
-          <rect x="86" y="38" width="6" height="3" fill="currentColor" opacity="0.3"/>
-          <rect x="96" y="38" width="6" height="3" fill="currentColor" opacity="0.3"/>
-          <rect x="690" y="959" width="24" height="3" fill="currentColor" opacity="0.3"/>
-          <rect x="678" y="959" width="8" height="3" fill="currentColor" opacity="0.3"/>
-        </svg>`;
-    case 'ondas':
-      return `
-        <svg class="portada__svg portada__svg--ondas" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <linearGradient id="onda-fill-top" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.18"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-            </linearGradient>
-            <linearGradient id="onda-fill-bot" x1="0%" y1="100%" x2="0%" y2="0%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.18"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-            </linearGradient>
-            <radialGradient id="onda-flare" cx="82%" cy="16%" r="38%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.24"/>
-              <stop offset="50%" stop-color="currentColor" stop-opacity="0.06"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
-          <rect width="800" height="1000" fill="url(#onda-flare)"/>
-          <path d="M0,150 C240,55 460,225 800,85 L800,0 L0,0 Z" fill="url(#onda-fill-top)"/>
-          <g fill="none" stroke="currentColor">
-            <path d="M-40,95 C210,10 450,190 840,55" stroke-width="1.5" opacity="0.32"/>
-            <path d="M-40,122 C225,35 465,205 840,82" stroke-width="1.2" opacity="0.26"/>
-            <path d="M-40,149 C240,60 480,220 840,109" stroke-width="1" opacity="0.2"/>
-            <path d="M-40,176 C255,85 495,235 840,136" stroke-width="0.85" opacity="0.15"/>
-            <path d="M-40,203 C270,110 510,250 840,163" stroke-width="0.7" opacity="0.11"/>
-          </g>
-          <path d="M0,845 C250,765 510,935 800,810 L800,1000 L0,1000 Z" fill="url(#onda-fill-bot)"/>
-          <g fill="none" stroke="currentColor">
-            <path d="M-40,785 C235,705 500,895 840,755" stroke-width="0.75" opacity="0.14"/>
-            <path d="M-40,812 C245,730 510,910 840,782" stroke-width="0.95" opacity="0.2"/>
-            <path d="M-40,839 C255,755 520,925 840,809" stroke-width="1.25" opacity="0.26"/>
-            <path d="M-40,866 C265,780 530,940 840,836" stroke-width="1.6" opacity="0.34"/>
-            <path d="M-40,893 C275,805 540,955 840,863" stroke-width="1.1" opacity="0.22"/>
-            <path d="M-40,920 C285,830 550,970 840,890" stroke-width="0.8" opacity="0.15"/>
-          </g>
-          <g transform="translate(665, 160)" fill="none" stroke="currentColor">
-            <circle cx="0" cy="0" r="64" stroke-width="0.95" opacity="0.24"/>
-            <circle cx="0" cy="0" r="42" stroke-width="0.75" stroke-dasharray="3 5" opacity="0.2"/>
-            <circle cx="0" cy="0" r="4" fill="currentColor" stroke="none" opacity="0.32"/>
-          </g>
-          <path d="M42,68 V42 H68 M732,42 H758 V68 M42,932 V958 H68 M732,958 H758 V932" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.32"/>
-        </svg>`;
-    case 'ninguna':
-      return '';
-    case 'marco':
-    default:
-      return `
-        <svg class="portada__svg portada__svg--marco" viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-          <defs>
-            <radialGradient id="marco-luz" cx="82%" cy="16%" r="50%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.18"/>
-              <stop offset="55%" stop-color="currentColor" stop-opacity="0.05"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-            </radialGradient>
-            <radialGradient id="marco-luz-pie" cx="18%" cy="88%" r="44%">
-              <stop offset="0%" stop-color="currentColor" stop-opacity="0.12"/>
-              <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
-            </radialGradient>
-          </defs>
-          <rect width="800" height="1000" fill="url(#marco-luz)"/>
-          <rect width="800" height="1000" fill="url(#marco-luz-pie)"/>
-          <g transform="translate(675, 145)" fill="none" stroke="currentColor">
-            <circle cx="0" cy="0" r="78" stroke-width="0.85" opacity="0.22"/>
-            <circle cx="0" cy="0" r="58" stroke-width="0.75" stroke-dasharray="2 5" opacity="0.2"/>
-            <ellipse cx="0" cy="0" rx="78" ry="26" transform="rotate(30)" stroke-width="0.7" opacity="0.2"/>
-            <ellipse cx="0" cy="0" rx="78" ry="26" transform="rotate(-30)" stroke-width="0.7" opacity="0.2"/>
-            <ellipse cx="0" cy="0" rx="78" ry="26" transform="rotate(90)" stroke-width="0.7" opacity="0.2"/>
-            <polygon points="0,-12 3,-3 12,0 3,3 0,12 -3,3 -12,0 -3,-3" fill="currentColor" stroke="none" opacity="0.34"/>
-          </g>
-          <rect x="36" y="36" width="728" height="928" fill="none" stroke="currentColor" stroke-width="1.15" opacity="0.3"/>
-          <rect x="46" y="46" width="708" height="908" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.18"/>
-          <path d="M36,76 L76,36 M724,36 L764,76 M36,924 L76,964 M724,964 L764,924" stroke="currentColor" stroke-width="1.1" opacity="0.32"/>
-          <path d="M46,86 L86,46 M714,46 L754,86 M46,914 L86,954 M714,954 L754,914" stroke="currentColor" stroke-width="0.7" opacity="0.22"/>
-          <g fill="currentColor" opacity="0.42">
-            <polygon points="400,29 407,36 400,43 393,36"/>
-            <polygon points="400,957 407,964 400,971 393,964"/>
-            <polygon points="29,500 36,507 43,500 36,493"/>
-            <polygon points="757,500 764,507 771,500 764,493"/>
-          </g>
-        </svg>`;
-  }
-};
-
-const decoracionPortadaSVG = (tipo, opacidadPct = 100, colorHex = '') => {
-  const escala = Math.max(0, Math.min(2.5, numero(opacidadPct) / 100));
-  const base = decoracionPortadaSVGBase(tipo);
-  if (!base || escala <= 0) return '';
-  const suf = ++svgSecuencia;
-  const tinta = /^#[0-9A-Fa-f]{6}$/.test(String(colorHex || '').trim()) ? String(colorHex).trim() : 'currentColor';
-  return base
-    .replace(/\bid="([a-z0-9-]+)"/gi, (_, id) => `id="${id}-${suf}"`)
-    .replace(/url\(#([a-z0-9-]+)\)/gi, (_, id) => `url(#${id}-${suf})`)
-    .replace(/currentColor/g, tinta)
-    .replace(/\b(stop-opacity|fill-opacity|opacity)="([\d.]+)"/g, (m, attr, val) => {
-      const num = parseFloat(val);
-      if (!Number.isFinite(num) || num === 0) return m;
-      const nuevo = Math.min(0.96, Math.max(0, +(num * escala).toFixed(3)));
-      return `${attr}="${nuevo}"`;
-    });
-};
 
 const normalizar = datos => normalizarPropuesta(datos, { logoValido: esLogoValido });
 const normalizarPf = datos => normalizarPortafolio(datos, { logoValido: esLogoValido });
@@ -343,40 +114,13 @@ const aceptada = () => !!compartida?.aceptacion;
 let vista = 'escritorio';
 let imprimiendo = false;
 
-const servicioConContenido = s => s.nombre.trim() || numero(s.precio) > 0;
-
 const calcular = (e = estado, sumados = seleccion) => calcularTotales(e, sumados);
-
-const vigencia = () => {
-  const fecha = desdeISO(estado.propuesta.fecha);
-  const dias = Math.max(0, Math.round(numero(estado.propuesta.validez)));
-  if (!fecha || !dias) return { fecha, vence: null, restantes: null, vencida: false };
-  const vence = new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate() + dias);
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  const restantes = Math.round((vence - hoy) / 86400000);
-  return { fecha, vence, restantes, vencida: restantes < 0 };
-};
-
-const digitosWhatsApp = (em = docActivo().emisor) => (em?.telefono || '').replace(/\D/g, '');
-
-const enlaceWhatsApp = (mensaje, em = docActivo().emisor) => {
-  const d = digitosWhatsApp(em);
-  return d.length >= 8 ? `https://wa.me/${d}?text=${encodeURIComponent(mensaje)}` : '';
-};
-
-const enlaceEmail = (asunto, mensaje, em = docActivo().emisor) => {
-  const mail = (em?.email || '').trim();
-  return mail ? `mailto:${mail}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(mensaje)}` : '';
-};
-
+const digitosWhatsApp = (em = docActivo().emisor) => obtenerDigitosWhatsApp(em);
+const enlaceWhatsApp = (mensaje, em = docActivo().emisor) => armarEnlaceWhatsApp(mensaje, em);
+const enlaceEmail = (asunto, mensaje, em = docActivo().emisor) => armarEnlaceEmail(asunto, mensaje, em);
 const nombreEmisor = (em = docActivo().emisor) => (em?.nombre || '').trim();
 const tituloPropuesta = () => estado.propuesta.titulo.trim() || 'la propuesta';
 const tituloPortafolio = () => estadoPortafolio.portafolio.titulo.trim() || estadoPortafolio.portafolio.nombreInterno.trim() || 'tu portfolio';
-
-const mensajeConsulta = () => `Hola${nombreEmisor() ? ` ${nombreEmisor().split(' ')[0]}` : ''}, tengo una consulta sobre la propuesta «${tituloPropuesta()}».`;
-
-const enlaceConsulta = () => enlaceWhatsApp(mensajeConsulta()) || enlaceEmail(`Consulta sobre ${tituloPropuesta()}`, mensajeConsulta());
 
 const elAviso = $('#aviso');
 let temporizadorAviso;
@@ -468,7 +212,7 @@ const cargarPortafoliosLocales = () => {
         });
       }
     }
-  } catch { }
+  } catch {}
   return [];
 };
 
@@ -530,7 +274,7 @@ const limpiarAlmacenamientoLocal = () => {
     sessionStorage.removeItem(CLAVE);
     sessionStorage.removeItem(CLAVE_PORTAFOLIOS);
     sessionStorage.removeItem(`${CLAVE}:continuar`);
-  } catch { }
+  } catch {}
 };
 
 const sincronizarPortafolioEnPropuesta = () => {
@@ -635,14 +379,14 @@ const crearEnCuenta = e => {
 // Devuelve { id, contenido } de la propuesta creada, o null si no había nada que migrar.
 const migrarLocal = () => {
   let continuar = null;
-  try { continuar = sessionStorage.getItem(`${CLAVE}:continuar`); } catch { }
+  try { continuar = sessionStorage.getItem(`${CLAVE}:continuar`); } catch {}
   const contenido = continuar ? cargarGuardado() : null;
   try {
     localStorage.removeItem(CLAVE);
     localStorage.removeItem(CLAVE_PORTAFOLIOS);
     sessionStorage.removeItem(CLAVE);
     sessionStorage.removeItem(CLAVE_PORTAFOLIOS);
-  } catch { }
+  } catch {}
   if (!contenido) return null;
   const creada = crearEnCuenta(contenido);
   if (!creada) return null;
@@ -910,755 +654,19 @@ const llenarFormulario = () => {
   llenarTemaEditor();
 };
 
-const vacioHTML = t => `<span class="doc__vacio">${esc(t)}</span>`;
-
-const servicioHTML = (s, moneda, web) => {
-  const precio = numero(s.precio);
-  const cantidad = numero(s.cantidad);
-  let modo = 'Pago único';
-  if (s.modalidad === 'mensual') modo = cantidad === 1 ? 'por mes' : `${cantidadTexto(cantidad)} × ${dinero(precio, moneda)} por mes`;
-  else if (s.modalidad === 'hora') modo = `${cantidadTexto(cantidad)} h × ${dinero(precio, moneda)}`;
-  else if (cantidad !== 1) modo = `${cantidadTexto(cantidad)} × ${dinero(precio, moneda)}`;
-  const sumado = s.opcional && seleccion.has(s.id);
-  if (sumado && !web) modo += ', sumado por el cliente';
-  const entregables = lineas(s.entregables);
-  const etiquetaModalidad = s.modalidad === 'mensual' ? 'Abono mensual' : s.modalidad === 'hora' ? 'Por hora' : 'Incluido';
-  const insignia = s.opcional
-    ? `<span class="servicio__chip servicio__chip--opcional">${sumado ? 'Opcional sumado' : 'Opcional'}</span>`
-    : `<span class="servicio__chip">${etiquetaModalidad}</span>`;
-  const boton = web && s.opcional && aceptada()
-    ? (sumado ? `<span class="servicio__incluido">${ICONO_SUMADO} Incluido en la aceptación</span>` : '')
-    : web && s.opcional
-      ? `<button type="button" class="servicio__sumar" data-accion="sumar" data-id="${esc(s.id)}" aria-pressed="${sumado}">${sumado ? `${ICONO_SUMADO} Sumado a la propuesta` : `${ICONO_SUMAR} Sumar a la propuesta`}</button>`
-      : '';
-  const usaLightbox = web && estado.opciones?.lightbox !== false;
-  const mediaSrv = s.imagen
-    ? `<div class="servicio__media"${usaLightbox ? ` data-lightbox-src="${esc(s.imagen)}" data-lightbox-caption="${esc(s.nombre || 'Servicio')}"` : ''}><img src="${esc(s.imagen)}" alt="${esc(s.nombre || 'Servicio')}"></div>`
-    : '';
-  return `
-    <div class="servicio${s.opcional ? ' servicio--opcional' : ''}${sumado ? ' servicio--sumado' : ''}">
-      ${mediaSrv}
-      <div class="servicio__cabecera">
-        <div class="servicio__titular">
-          ${insignia}
-          <h3 class="servicio__nombre">${s.nombre.trim() ? esc(s.nombre) : vacioHTML('Servicio sin nombre')}</h3>
-        </div>
-        <p class="servicio__precio">${dinero(totalServicio(s), moneda)}<span class="servicio__modo">${esc(modo)}</span></p>
-      </div>
-      ${s.descripcion.trim() ? `<p class="servicio__desc">${esc(s.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
-      ${entregables.length ? `<ul class="doc-lista servicio__entregables">${entregables.map(e => `<li>${ICONO_CHECK}<span>${esc(e)}</span></li>`).join('')}</ul>` : ''}
-      ${boton}
-    </div>`;
-};
-
-const filasResumen = (b, c, sufijo = '') => {
-  const filas = [];
-  const m = estado.inversion.moneda;
-  if (c.descuento > 0 || c.impuesto > 0) filas.push(['Subtotal', dinero(b.base, m)]);
-  if (c.descuento > 0) filas.push([`Descuento (${cantidadTexto(c.descuento * 100)}%)`, `−${dinero(b.desc, m)}`]);
-  if (c.impuesto > 0) filas.push([`${estado.inversion.impuestoNombre.trim() || 'Impuestos'} (${cantidadTexto(c.impuesto * 100)}%)`, dinero(b.imp, m)]);
-  return `
-    <dl class="resumen__filas">
-      ${filas.map(([a, v]) => `<div class="resumen__fila"><dt>${esc(a)}</dt><dd>${v}</dd></div>`).join('')}
-      <div class="resumen__fila resumen__fila--total"><dt>Total</dt><dd>${dinero(b.total, m)}${sufijo ? `<span class="resumen__sufijo"> ${sufijo}</span>` : ''}</dd></div>
-    </dl>`;
-};
-
-const textoRestantes = n => (n === 0 ? 'Vence hoy' : n === 1 ? 'Queda 1 día' : `Quedan ${n} días`);
-
-const barraClienteHTML = (c, vig) => {
-  const m = estado.inversion.moneda;
-  if (c.inicial.base <= 0 && c.mensual.base <= 0) return '';
-  let etiqueta;
-  let monto;
-  let extra = '';
-  if (c.inicial.base > 0) {
-    etiqueta = c.mensual.base > 0 ? 'Inversión inicial' : 'Inversión total';
-    monto = dinero(c.inicial.total, m);
-    if (c.mensual.base > 0) extra = `+ ${dinero(c.mensual.total, m)} por mes`;
-  } else {
-    etiqueta = 'Servicio mensual';
-    monto = dinero(c.mensual.total, m);
-    extra = 'por mes';
-  }
-  const consulta = enlaceConsulta();
-  const accion = aceptada()
-    ? '<span class="barra-cliente__aceptada">Propuesta aceptada</span>'
-    : vig.vencida
-      ? (consulta ? `<a class="boton boton--primario" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a>` : '')
-      : `<button type="button" class="boton boton--primario" data-accion="aceptar">Aceptar propuesta</button>`;
-  return `
-    <div class="barra-cliente">
-      <div>
-        <span class="barra-cliente__etiqueta">${etiqueta}</span>
-        <span class="barra-cliente__monto">${monto}</span>
-        ${extra ? `<span class="barra-cliente__extra">${extra}</span>` : ''}
-      </div>
-      ${accion}
-    </div>`;
-};
-
-const fechaDeAceptacion = a => {
-  const f = a?.fecha;
-  const d = f && typeof f.toDate === 'function' ? f.toDate() : f ? new Date(f) : null;
-  return d && !Number.isNaN(d.getTime()) ? d : null;
-};
-
-const cierreHTML = vig => {
-  const consulta = enlaceConsulta();
-  const emisor = nombreEmisor();
-  if (aceptada()) {
-    const a = compartida.aceptacion;
-    const fecha = fechaDeAceptacion(a);
-    return `
-      <div class="cierre cierre--aceptada">
-        <p class="cierre__titulo">Propuesta aceptada</p>
-        <p class="cierre__texto">Aceptada por ${esc(a.nombre)}${fecha ? ` el ${esc(fechaLarga(fecha))}` : ''}. Esta es la versión que se aceptó.</p>
-        ${consulta ? `<div class="cierre__acciones"><a class="boton boton--secundario boton--grande" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a></div>` : ''}
-      </div>`;
-  }
-  if (vig.vencida) {
-    return `
-      <div class="cierre">
-        <p class="cierre__titulo">Esta propuesta venció</p>
-        <p class="cierre__texto">Los valores y plazos pueden haber cambiado. Pedile ${emisor ? `a ${esc(emisor)} ` : ''}una versión actualizada.</p>
-        ${consulta ? `<div class="cierre__acciones"><a class="boton boton--primario boton--grande" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a></div>` : ''}
-      </div>`;
-  }
-  const textoCierre = compartida
-    ? `Al aceptar, ${emisor ? esc(emisor) : 'quien te la mandó'} recibe tu confirmación con lo que elegiste.`
-    : `Al aceptar se abre un mensaje con el resumen de lo que elegiste${emisor ? `, listo para mandárselo a ${esc(emisor)}` : ''}.`;
-  return `
-    <div class="cierre">
-      <p class="cierre__titulo">¿Avanzamos?</p>
-      <p class="cierre__texto">${textoCierre}</p>
-      <div class="cierre__acciones">
-        <button type="button" class="boton boton--primario boton--grande" data-accion="aceptar">Aceptar propuesta</button>
-        ${consulta ? `<a class="boton boton--secundario boton--grande" href="${esc(consulta)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a>` : ''}
-      </div>
-    </div>`;
-};
-
-let observador;
-const OBS_SEL = '.bloque, .resumen, .cierre, .pie, .doc-aviso';
-const HIJO_SEL = '.servicio, .etapa, .proyecto-card, .galeria-item, .testimonio-card, .faq-item, .servicio-web-card';
 let animacionInicialLista = false;
-const observarElementos = raiz => {
-  if (observador) observador.disconnect();
-  const todos = raiz.querySelectorAll(`${OBS_SEL}, ${HIJO_SEL}`);
-  const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if (prefersReduced || raiz.classList.contains('doc--estatico')) {
-    todos.forEach(el => {
-      el.style.transitionDelay = '0s';
-      el.classList.add('visible');
-    });
-    return;
-  }
-  const scrollRoot = esCliente ? null : raiz.closest('.visor');
-  observador = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        entry.target.querySelectorAll(HIJO_SEL).forEach((h, i) => {
-          h.style.transitionDelay = `${i * 0.08}s`;
-          h.classList.add('visible');
-        });
-        observador.unobserve(entry.target);
-      }
-    });
-  }, { root: scrollRoot, rootMargin: '0px 0px 300px 0px', threshold: 0.01 });
-  const viewH = scrollRoot ? scrollRoot.clientHeight : window.innerHeight;
-  const rootTop = scrollRoot ? scrollRoot.getBoundingClientRect().top : 0;
-  const targets = raiz.querySelectorAll(OBS_SEL);
-  let delay = 0;
-  targets.forEach(el => {
-    const rect = el.getBoundingClientRect();
-    const enVista = rect.top - rootTop < viewH;
-    if (enVista) {
-      el.style.transitionDelay = `${delay}s`;
-      delay += 0.07;
-      el.querySelectorAll(HIJO_SEL).forEach((h, i) => {
-        h.style.transitionDelay = `${delay + i * 0.08}s`;
-      });
-    }
-    observador.observe(el);
-  });
-};
-
-const hexARgb = hex => {
-  const h = hex.replace('#', '');
-  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
-};
-
-const rgbAHex = (r, g, b) => '#' + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, '0')).join('');
-
-const mezclar = (hex, blanco, t) => {
-  const [r, g, b] = hexARgb(hex);
-  const f = blanco ? 255 : 0;
-  return rgbAHex(r + (f - r) * t, g + (f - g) * t, b + (f - b) * t);
-};
-
-const conAlpha = (hex, a) => { const [r, g, b] = hexARgb(hex); return `rgba(${r}, ${g}, ${b}, ${a})`; };
-
-const luminancia = hex => { const [r, g, b] = hexARgb(hex).map(v => v / 255); return 0.2126 * r + 0.7152 * g + 0.0722 * b; };
-
-const fuentesEnUso = new Set();
-const cargarFuente = nombre => {
-  if (fuentesEnUso.has(nombre)) return;
-  fuentesEnUso.add(nombre);
-  const pesos = nombre === 'Bebas Neue' || nombre === 'Archivo Black' ? '400' : '400;500;700';
-  const link = document.createElement('link');
-  link.rel = 'stylesheet';
-  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(nombre)}:wght@${pesos}&display=swap`;
-  document.head.append(link);
-};
-
-const esHexValido = v => /^#[0-9A-Fa-f]{6}$/.test(String(v || '').trim());
-
-const mezclarColores = (hex1, hex2, peso) => {
-  const [r1, g1, b1] = hexARgb(hex1);
-  const [r2, g2, b2] = hexARgb(hex2);
-  return rgbAHex(r1 + (r2 - r1) * peso, g1 + (g2 - g1) * peso, b1 + (b2 - b1) * peso);
-};
-
-const resolverColoresTema = (t = docActivo().tema) => {
-  const preset = TEMAS[t.preset] || TEMAS['elegante-oscuro'];
-  const esClaro = preset.modo === 'claro';
-  const acento = esHexValido(t.acento) ? t.acento : preset.acento;
-  const lumAcento = luminancia(acento);
-  const lumFondo = luminancia(preset.fondo);
-
-  // Tinta de contraste para botones y chips rellenos con el color de marca
-  const acentoTinta = lumAcento > 0.42 ? '#0A0A0F' : '#FFFFFF';
-  const acentoBordeContraste = Math.abs(lumAcento - lumFondo) < 0.14
-    ? (esClaro ? 'rgba(0, 0, 0, 0.22)' : 'rgba(255, 255, 255, 0.28)')
-    : 'transparent';
-
-  // Versión legible del acento para textos, montos y numeración sobre el fondo del documento
-  let acentoLectura = acento;
-  if (!esClaro && lumAcento < 0.24) {
-    const factorLuz = Math.min(0.76, Math.max(0.46, (0.3 - lumAcento) * 2.4));
-    acentoLectura = mezclar(acento, true, factorLuz);
-  } else if (esClaro && lumAcento > 0.72) {
-    acentoLectura = mezclar(acento, false, 0.45);
-  }
-
-  // Fondo de portada
-  let portadaBg = esClaro ? mezclar(acento, false, 0.72) : preset.fondo;
-  const colorTextoPersonalizado = esHexValido(t.colorTexto) ? t.colorTexto : '';
-  if (esClaro && colorTextoPersonalizado && luminancia(colorTextoPersonalizado) < 0.3) {
-    portadaBg = mezclar(acento, true, 0.88);
-  }
-  const lumPortada = luminancia(portadaBg);
-
-  // Color de tipografía en portada y en cuerpo
-  const portadaTexto = colorTextoPersonalizado
-    || (esClaro ? (lumPortada > 0.4 ? '#111111' : '#F5F5F0') : preset.texto);
-
-  let cuerpoTexto = colorTextoPersonalizado || preset.texto;
-  if (colorTextoPersonalizado && Math.abs(luminancia(colorTextoPersonalizado) - lumFondo) < 0.18) {
-    cuerpoTexto = esClaro ? mezclar(colorTextoPersonalizado, false, 0.78) : mezclar(colorTextoPersonalizado, true, 0.78);
-  }
-  const cuerpoApagado = colorTextoPersonalizado ? mezclarColores(cuerpoTexto, preset.fondo, 0.36) : preset.textoApagado;
-  const cuerpoTenue = colorTextoPersonalizado ? mezclarColores(cuerpoTexto, preset.fondo, 0.58) : preset.textoTenue;
-
-  // Color de acento en portada (para reglas, bordes y chips)
-  let portadaAcento = esClaro ? mezclar(acento, true, 0.18) : acentoLectura;
-  if (lumPortada < 0.35 && luminancia(portadaAcento) < 0.24) {
-    portadaAcento = mezclar(acento, true, 0.62);
-  } else if (lumPortada >= 0.35 && luminancia(portadaAcento) > 0.72) {
-    portadaAcento = mezclar(acento, false, 0.45);
-  }
-
-  // Color de decoración SVG y marca de agua
-  let colorSvg = esHexValido(t.colorSvg) ? t.colorSvg : '';
-  if (!colorSvg) {
-    if (lumPortada < 0.35) {
-      colorSvg = lumAcento < 0.26
-        ? mezclar(acento, true, Math.min(0.72, Math.max(0.45, (0.32 - lumAcento) * 2.2)))
-        : (esClaro ? mezclar(acento, true, 0.18) : acento);
-    } else {
-      colorSvg = lumAcento > 0.72 ? mezclar(acento, false, 0.45) : acento;
-    }
-  }
-
-  const opacidadSvg = t.opacidadSvg !== undefined && t.opacidadSvg !== null && t.opacidadSvg !== ''
-    ? Math.min(200, Math.max(0, Math.round(numero(t.opacidadSvg))))
-    : 100;
-
-  return {
-    preset,
-    esClaro,
-    acento,
-    acentoTinta,
-    acentoBordeContraste,
-    acentoLectura,
-    portadaBg,
-    portadaTexto,
-    portadaAcento,
-    cuerpoTexto,
-    cuerpoApagado,
-    cuerpoTenue,
-    colorSvg,
-    opacidadSvg
-  };
-};
-
-const aplicarTema = doc => {
-  const t = docActivo().tema;
-  const col = resolverColoresTema(t);
-  const { preset, esClaro, acento } = col;
-
-  doc.style.setProperty('--negro', preset.fondo);
-  doc.style.setProperty('--negro-2', preset.fondo2);
-  doc.style.setProperty('--superficie', preset.superficie);
-  doc.style.setProperty('--superficie-borde', preset.superficieBorde);
-  doc.style.setProperty('--marfil', col.cuerpoTexto);
-  doc.style.setProperty('--marfil-apagado', col.cuerpoApagado);
-  doc.style.setProperty('--marfil-tenue', col.cuerpoTenue);
-
-  doc.style.setProperty('--dorado', acento);
-  doc.style.setProperty('--dorado-lectura', col.acentoLectura);
-  doc.style.setProperty('--acento-tinta', col.acentoTinta);
-  doc.style.setProperty('--acento-borde-contraste', col.acentoBordeContraste);
-  doc.style.setProperty('--dorado-claro', mezclar(col.acentoLectura, true, 0.3));
-  doc.style.setProperty('--dorado-papel', mezclar(col.acentoLectura, false, 0.2));
-  doc.style.setProperty('--dorado-tenue', conAlpha(col.acentoLectura, 0.32));
-  doc.style.setProperty('--dorado-fondo', conAlpha(col.acentoLectura, 0.1));
-
-  doc.style.setProperty('--portada-svg-color', col.colorSvg);
-  doc.style.setProperty('--svg-opacidad', String(+(col.opacidadSvg / 100).toFixed(2)));
-
-  const ft = t.fuenteTitulos || preset.fuenteTitulos;
-  const fc = t.fuenteCuerpo || preset.fuenteCuerpo;
-  cargarFuente(ft);
-  cargarFuente(fc);
-  doc.style.setProperty('--fuente-display', `'${ft}', 'Georgia', serif`);
-  doc.style.setProperty('--fuente-texto', `'${fc}', 'Helvetica Neue', Arial, sans-serif`);
-
-  doc.dataset.tema = t.preset || 'elegante-oscuro';
-  doc.dataset.portada = PORTADAS[t.portada] ? t.portada : (preset.portada || 'editorial');
-  doc.dataset.decoracion = DECORACIONES[t.decoracion] ? t.decoracion : (preset.decoracion || 'marco');
-  doc.dataset.estilo = ESTILOS_BLOQUES[t.estilo] ? t.estilo : (preset.estilo || 'editorial');
-  doc.dataset.modo = preset.modo;
-
-  doc.style.setProperty('--portada-fondo', col.portadaBg);
-  doc.style.setProperty('--portada-texto', col.portadaTexto);
-  doc.style.setProperty('--portada-acento', col.portadaAcento);
-  doc.style.setProperty('--portada-apagado', conAlpha(col.portadaTexto, 0.64));
-  doc.style.setProperty('--portada-borde', conAlpha(col.portadaAcento, 0.28));
-  doc.style.setProperty('--portada-linea', conAlpha(col.portadaTexto, 0.18));
-  doc.style.setProperty('--portada-acento-claro', mezclar(col.portadaAcento, true, 0.32));
-
-  if (esClaro) {
-    doc.style.setProperty('--papel', preset.fondo);
-    doc.style.setProperty('--tinta', col.cuerpoTexto);
-    doc.style.setProperty('--tinta-suave', col.cuerpoApagado);
-    doc.style.setProperty('--tinta-tenue', col.cuerpoTenue);
-    doc.style.setProperty('--linea-papel', preset.superficie);
-  }
-};
-
-
-const proyectoConContenido = p => p && (p.titulo.trim() || p.descripcion.trim() || p.imagen || (Array.isArray(p.galeria) && p.galeria.length > 0));
-
-const normalizarUrlRed = (valor, tipo) => {
-  const v = texto(valor).trim();
-  if (!v) return '';
-  if (/^https?:\/\//i.test(v)) return v;
-  const limpio = v.replace(/^@/, '');
-  if (tipo === 'instagram' && !limpio.includes('/')) return `https://instagram.com/${limpio}`;
-  if (tipo === 'linkedin' && !limpio.includes('.')) return `https://linkedin.com/in/${limpio}`;
-  if (tipo === 'behance' && !limpio.includes('.')) return `https://behance.net/${limpio}`;
-  return `https://${limpio}`;
-};
-
-const redesEmisorHTML = (e, web) => {
-  const items = [];
-  if (e.instagram?.trim()) {
-    const u = normalizarUrlRed(e.instagram, 'instagram');
-    const etq = e.instagram.trim().startsWith('@') ? e.instagram.trim() : `@${e.instagram.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/\/$/, '')}`;
-    items.push({ url: u, texto: etq, icono: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.2" y="2.2" width="11.6" height="11.6" rx="3.2"/><circle cx="8" cy="8" r="2.6"/><circle cx="11.4" cy="4.6" r="0.6" fill="currentColor"/></svg>' });
-  }
-  if (e.linkedin?.trim()) {
-    const u = normalizarUrlRed(e.linkedin, 'linkedin');
-    items.push({ url: u, texto: 'LinkedIn', icono: '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.2" y="2.2" width="11.6" height="11.6" rx="2"/><path d="M5.2 7v4.2M5.2 4.9v.1M8 11.2V8.6c0-1 .7-1.7 1.6-1.7s1.5.6 1.5 1.7v2.6"/></svg>' });
-  }
-  if (e.behance?.trim()) {
-    const u = normalizarUrlRed(e.behance, 'behance');
-    const esGh = /github/i.test(e.behance);
-    items.push({ url: u, texto: esGh ? 'GitHub' : 'Portfolio / Red', icono: ICONO_EXTERNO });
-  }
-  if (e.web?.trim()) {
-    const u = /^https?:\/\//i.test(e.web.trim()) ? e.web.trim() : `https://${e.web.trim()}`;
-    items.push({ url: u, texto: e.web.trim().replace(/^https?:\/\//i, ''), icono: ICONO_EXTERNO });
-  }
-  if (!items.length) return '';
-  return `<ul class="sobre-mi__redes">${items.map(it => `<li><a class="sobre-mi__red" href="${esc(it.url)}" target="_blank" rel="noopener"${web ? ' data-enlace-cliente' : ''}>${it.icono}<span>${esc(it.texto)}</span></a></li>`).join('')}</ul>`;
-};
-
-const sobreMiBloqueHTML = (e, especialidades = [], web = true, lightbox = true) => {
-  const tieneFoto = !!e.foto;
-  const tieneTexto = !!e.presentacion?.trim();
-  const espValidas = (especialidades || []).filter(x => x.texto?.trim());
-  const redes = redesEmisorHTML(e, web);
-  const ubic = e.ubicacion?.trim()
-    ? `<span class="sobre-mi__ubicacion"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M8 14s4.5-4.2 4.5-7.5a4.5 4.5 0 1 0-9 0C3.5 9.8 8 14 8 14z"/><circle cx="8" cy="6.5" r="1.5"/></svg>${esc(e.ubicacion.trim())}</span>`
-    : '';
-  const avatarHTML = tieneFoto
-    ? `<div class="sobre-mi__avatar-wrap">
-        <img class="sobre-mi__avatar" src="${esc(e.foto)}" alt="${esc(e.nombre || 'Foto de perfil')}"${web && lightbox ? ` data-lightbox-src="${esc(e.foto)}" data-lightbox-caption="${esc(e.nombre || '')}"` : ''}>
-        ${ubic}
-      </div>`
-    : '';
-  return `
-    <div class="sobre-mi${tieneFoto ? '' : ' sobre-mi--sin-foto'}">
-      ${avatarHTML}
-      <div class="sobre-mi__cuerpo">
-        ${!tieneFoto && ubic ? `<div style="margin-bottom:0.65em">${ubic}</div>` : ''}
-        ${tieneTexto ? `<div class="presentacion-bloque">${parrafos(e.presentacion)}</div>` : ''}
-        ${espValidas.length ? `<ul class="especialidades-chips">${espValidas.map(esp => `<li class="especialidad-chip">${esc(esp.texto.trim())}</li>`).join('')}</ul>` : ''}
-        ${redes}
-      </div>
-    </div>`;
-};
-
-const galeriaSeccionHTML = (fotos = [], opciones = {}, web = true) => {
-  const validas = (fotos || []).filter(g => g && g.imagen);
-  if (!validas.length) return '';
-  const layout = LAYOUTS_GALERIA[opciones.galeriaLayout] ? opciones.galeriaLayout : 'bento';
-  const propDef = PROPORCIONES_IMAGEN[opciones.galeriaProporcion] ? opciones.galeriaProporcion : 'panoramica';
-  const usaLightbox = web && opciones.lightbox !== false;
-  const sub = opciones.galeriaSubtitulo?.trim() ? `<p class="galeria-subtitulo">${esc(opciones.galeriaSubtitulo.trim())}</p>` : '';
-  const items = validas.map((g, idx) => {
-    const prop = PROPORCIONES_IMAGEN[g.proporcion] ? g.proporcion : propDef;
-    const cap = [g.titulo?.trim(), g.descripcion?.trim()].filter(Boolean).join(' — ');
-    return `
-      <figure class="galeria-item">
-        <div class="galeria-item__media media-ratio--${esc(prop)}"${usaLightbox ? ` data-lightbox-src="${esc(g.imagen)}" data-lightbox-caption="${esc(cap)}" data-lightbox-group="galeria"` : ''}>
-          <img src="${esc(g.imagen)}" alt="${esc(g.titulo?.trim() || `Imagen ${idx + 1}`)}">
-        </div>
-        ${(g.titulo?.trim() || g.descripcion?.trim()) ? `
-          <figcaption class="galeria-item__pie">
-            ${g.titulo?.trim() ? `<p class="galeria-item__titulo">${esc(g.titulo.trim())}</p>` : ''}
-            ${g.descripcion?.trim() ? `<p class="galeria-item__desc">${esc(g.descripcion.trim())}</p>` : ''}
-          </figcaption>` : ''}
-      </figure>`;
-  }).join('');
-  return `${sub}<div class="galeria-web galeria-web--${esc(layout)}">${items}</div>`;
-};
-
-const testimoniosSeccionHTML = (lista = [], web = true, lightbox = true) => {
-  const validos = (lista || []).filter(t => t && (t.texto?.trim() || t.autor?.trim()));
-  if (!validos.length) return '';
-  return `<div class="testimonios-grilla">${validos.map(t => {
-    const inicial = (t.autor?.trim() || 'C').charAt(0).toUpperCase();
-    const avatar = t.avatar
-      ? `<img class="testimonio-card__avatar" src="${esc(t.avatar)}" alt="${esc(t.autor || 'Cliente')}"${web && lightbox ? ` data-lightbox-src="${esc(t.avatar)}" data-lightbox-caption="${esc(t.autor || '')}"` : ''}>`
-      : `<span class="testimonio-card__inicial" aria-hidden="true">${esc(inicial)}</span>`;
-    return `
-      <blockquote class="testimonio-card">
-        ${t.texto?.trim() ? `<p class="testimonio-card__texto">“${esc(t.texto.trim()).replace(/\n/g, '<br>')}”</p>` : ''}
-        <footer class="testimonio-card__autor">
-          ${avatar}
-          <div>
-            <span class="testimonio-card__nombre">${esc(t.autor?.trim() || 'Cliente')}</span>
-            ${t.rol?.trim() ? `<span class="testimonio-card__rol">${esc(t.rol.trim())}</span>` : ''}
-          </div>
-        </footer>
-      </blockquote>`;
-  }).join('')}</div>`;
-};
-
-const faqsSeccionHTML = (lista = [], web = true) => {
-  const validas = (lista || []).filter(f => f && (f.pregunta?.trim() || f.respuesta?.trim()));
-  if (!validas.length) return '';
-  return `<div class="faqs-lista">${validas.map((f, i) => `
-    <details class="faq-item"${!web || i === 0 ? ' open' : ''}>
-      <summary class="faq-item__pregunta">${esc(f.pregunta?.trim() || 'Pregunta frecuente')}</summary>
-      <div class="faq-item__respuesta">${parrafos(f.respuesta || '')}</div>
-    </details>`).join('')}</div>`;
-};
-
-const proyectoCardHTML = (p, idx, web, lightbox = true) => {
-  const tags = texto(p.tags).split(/[,\n]/).map(t => t.trim()).filter(Boolean);
-  const urlRaw = texto(p.enlace).trim();
-  const url = urlRaw ? (/^https?:\/\//i.test(urlRaw) ? urlRaw : `https://${urlRaw}`) : '';
-  const prop = PROPORCIONES_IMAGEN[p.proporcion] ? p.proporcion : 'panoramica';
-  const extras = Array.isArray(p.galeria) ? p.galeria.filter(Boolean) : [];
-  const imagenPrincipal = p.imagen || extras[0] || '';
-  const todasLasFotos = [p.imagen, ...extras].filter(Boolean);
-  const grupoLb = `proy-${p.id || idx}`;
-  const usaLb = web && lightbox;
-  const capBase = [p.titulo?.trim(), p.subtitulo?.trim(), p.destacado?.trim()].filter(Boolean).join(' · ');
-
-  const media = imagenPrincipal
-    ? `<div class="proyecto-card__media media-ratio--${esc(prop)}"${usaLb ? ` data-lightbox-src="${esc(imagenPrincipal)}" data-lightbox-caption="${esc(capBase)}" data-lightbox-group="${esc(grupoLb)}"` : ''}>
-        <img src="${esc(imagenPrincipal)}" alt="${esc(p.titulo || 'Proyecto')}">
-        ${todasLasFotos.length > 1 ? `<span class="proyecto-card__contador-fotos">${todasLasFotos.length} fotos</span>` : ''}
-      </div>`
-    : `<div class="proyecto-card__arte" aria-hidden="true">
-        <div class="proyecto-card__arte-top">
-          <span class="proyecto-card__arte-indice">${String(idx + 1).padStart(2, '0')}</span>
-          ${p.destacado.trim() ? `<span class="proyecto-card__destacado">${esc(p.destacado.trim())}</span>` : ''}
-        </div>
-        <span class="proyecto-card__arte-titular">${esc(p.titulo.trim() || 'Proyecto destacado')}</span>
-      </div>`;
-
-  const tiraExtras = extras.length
-    ? `<div class="proyecto-card__tira">${extras.map((imgUrl, iEx) => `
-        <button type="button" class="proyecto-card__mini"${usaLb ? ` data-lightbox-src="${esc(imgUrl)}" data-lightbox-caption="${esc(capBase ? `${capBase} (${iEx + 2}/${todasLasFotos.length})` : '')}" data-lightbox-group="${esc(grupoLb)}"` : ''} aria-label="Ver foto ${iEx + 2} de ${esc(p.titulo || 'proyecto')}">
-          <img src="${esc(imgUrl)}" alt="">
-        </button>`).join('')}</div>`
-    : '';
-
-  return `
-    <article class="proyecto-card">
-      ${media}
-      ${tiraExtras}
-      <div class="proyecto-card__cuerpo">
-        ${(p.categoria.trim() || (imagenPrincipal && p.destacado.trim())) ? `
-          <div class="proyecto-card__chips">
-            ${p.categoria.trim() ? `<span class="proyecto-card__chip">${esc(p.categoria.trim())}</span>` : ''}
-            ${imagenPrincipal && p.destacado.trim() ? `<span class="proyecto-card__destacado">${esc(p.destacado.trim())}</span>` : ''}
-          </div>` : ''}
-        <h3 class="proyecto-card__titulo">${p.titulo.trim() ? esc(p.titulo) : vacioHTML('Proyecto sin título')}</h3>
-        ${p.subtitulo.trim() ? `<p class="proyecto-card__subtitulo">${esc(p.subtitulo.trim())}</p>` : ''}
-        ${p.descripcion.trim() ? `<p class="proyecto-card__desc">${esc(p.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
-        ${tags.length ? `<ul class="proyecto-card__tags">${tags.map(t => `<li class="proyecto-card__tag">${esc(t)}</li>`).join('')}</ul>` : ''}
-        ${url ? `<div class="proyecto-card__pie"><a class="proyecto-card__link" href="${esc(url)}" target="_blank" rel="noopener" data-enlace-cliente><span>${esc(p.textoEnlace.trim() || 'Ver proyecto')}</span>${ICONO_EXTERNO}</a></div>` : ''}
-      </div>
-    </article>`;
-};
-
-const bloquePortafolioEnPropuestaHTML = (pfResumen, web) => {
-  const proyectos = (pfResumen?.proyectos || []).filter(proyectoConContenido);
-  const galeriaPf = (pfResumen?.galeria || []).filter(g => g && g.imagen);
-  if (!proyectos.length && !galeriaPf.length) return '';
-  const linkPublico = pfResumen.publico && pfResumen.id && /^[A-Za-z0-9]{20}$/.test(pfResumen.id)
-    ? `${location.origin}/portafolio/${pfResumen.id}`
-    : '';
-  return `
-    ${(pfResumen.subtitulo || linkPublico) ? `
-      <div class="portafolio-embebido__cabecera">
-        ${pfResumen.subtitulo ? `<p class="portafolio-embebido__sub">${esc(pfResumen.subtitulo)}</p>` : '<span></span>'}
-        ${web && linkPublico ? `<a class="portafolio-embebido__ver-mas" href="${esc(linkPublico)}" target="_blank" rel="noopener" data-enlace-cliente><span>Ver página completa</span>${ICONO_EXTERNO}</a>` : ''}
-      </div>` : ''}
-    ${proyectos.length ? `<div class="portafolio-grilla">${proyectos.map((p, idx) => proyectoCardHTML(p, idx, web, estado.opciones?.lightbox !== false)).join('')}</div>` : ''}
-    ${galeriaPf.length ? `<div style="margin-top:${proyectos.length ? '1.6em' : '0'}">${galeriaSeccionHTML(galeriaPf, { galeriaLayout: 'bento', lightbox: estado.opciones?.lightbox !== false }, web)}</div>` : ''}`;
-};
 
 const renderPortafolio = () => {
   const web = !imprimiendo && (esCliente || vista !== 'pdf');
   const doc = $('#documento');
   doc.classList.toggle('doc--web', web);
-  aplicarTema(doc);
-  const s = estadoPortafolio;
-  const e = s.emisor;
-  const pf = s.portafolio;
-  const usaLightbox = s.opciones?.lightbox !== false;
+  aplicarTema(doc, estadoPortafolio.tema);
   const tipoDecoracion = doc.dataset.decoracion || 'marco';
   const tipoPortada = doc.dataset.portada || 'editorial';
 
-  const marca = e.logo
-    ? `<img class="portada__logo" src="${esc(e.logo)}" alt="${esc(e.nombre || 'Logo')}">`
-    : `<span class="portada__marca">${e.nombre.trim() ? esc(e.nombre) : vacioHTML('Tu marca')}</span>`;
-
-  const proyectosValidos = s.proyectos.filter(proyectoConContenido);
-  const especialidadesValidas = s.especialidades.filter(x => x.texto.trim());
-  const galeriaValida = (s.galeria || []).filter(g => g && g.imagen);
-  const serviciosWebValidos = (s.serviciosWeb || []).filter(sw => sw && (sw.titulo.trim() || sw.descripcion.trim() || sw.imagen));
-  const testimoniosValidos = (s.testimonios || []).filter(t => t && (t.texto.trim() || t.autor.trim()));
-  const faqsValidas = (s.faqs || []).filter(f => f && (f.pregunta.trim() || f.respuesta.trim()));
-
-  const meta = [];
-  if (e.nombre.trim()) meta.push(['Presentado por', `${esc(e.nombre)}${e.rol.trim() ? `<span>${esc(e.rol)}</span>` : ''}`]);
-  if (proyectosValidos.length) meta.push(['Casos seleccionados', `${proyectosValidos.length} ${proyectosValidos.length === 1 ? 'proyecto destacado' : 'proyectos destacados'}`]);
-  if (pf.disponibilidad.trim()) meta.push(['Estado', `<span class="portada__urgente">${esc(pf.disponibilidad.trim())}</span>`]);
-  if (e.ubicacion?.trim() || e.web.trim() || e.email.trim()) meta.push(['Ubicación / Web', esc(e.ubicacion?.trim() || e.web.trim() || e.email.trim())]);
-
-  const marcaAgua = tipoPortada === 'impacto'
-    ? `<span class="portada__marca-agua" aria-hidden="true">${esc(String(proyectosValidos.length || '01').padStart(2, '0'))}</span>`
-    : '';
-
-  const colTema = resolverColoresTema(s.tema);
-  const opPortada = Math.min(0.85, Math.max(0.08, (Number(pf.opacidadPortada) || 35) / 100));
-  const fondoFotoHTML = pf.imagenPortada
-    ? `<div class="portada__fondo-img" style="--portada-img-opacidad:${opPortada}" aria-hidden="true"><img src="${esc(pf.imagenPortada)}" alt=""></div>`
-    : '';
-
-  const portada = `
-    <section class="portada portada--${esc(tipoPortada)}" id="sec-inicio" aria-label="Portada del portfolio">
-      ${fondoFotoHTML}
-      <div class="portada__decoracion" style="color:${esc(colTema.colorSvg)}" aria-hidden="true">${decoracionPortadaSVG(tipoDecoracion, colTema.opacidadSvg, colTema.colorSvg)}</div>
-      ${marcaAgua}
-      <div class="portada__superior">
-        ${marca}
-        ${pf.disponibilidad.trim() ? `<p class="portada__numero">${esc(pf.disponibilidad.trim())}</p>` : ''}
-      </div>
-      <div class="portada__centro">
-        <p class="portada__para"><span class="portada__para-chip">${esc(pf.insignia.trim() || 'Portfolio & Página Web')}</span></p>
-        <h1 class="portada__titulo">${pf.titulo.trim() ? esc(pf.titulo) : vacioHTML('Título de tu página o portfolio')}</h1>
-        ${pf.subtitulo.trim() ? `<p class="portada__subtitulo">${esc(pf.subtitulo.trim())}</p>` : ''}
-        <hr class="portada__regla">
-      </div>
-      ${meta.length ? `<dl class="portada__meta">${meta.map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join('')}</dl>` : ''}
-    </section>`;
-
-  const bloques = [];
-
-  if (e.presentacion.trim() || e.foto || especialidadesValidas.length || e.instagram?.trim() || e.linkedin?.trim() || e.behance?.trim()) {
-    bloques.push({
-      id: 'sec-sobre-mi',
-      nav: 'Sobre mí',
-      titulo: e.nombre.trim() ? `Sobre ${e.nombre.trim()}` : 'Perfil y especialidades',
-      html: sobreMiBloqueHTML(e, especialidadesValidas, web, usaLightbox)
-    });
-  }
-
-  if (proyectosValidos.length) {
-    bloques.push({
-      id: 'sec-proyectos',
-      nav: 'Proyectos',
-      titulo: 'Proyectos y casos seleccionados',
-      html: `<div class="portafolio-grilla">${proyectosValidos.map((p, idx) => proyectoCardHTML(p, idx, web, usaLightbox)).join('')}</div>`
-    });
-  }
-
-  if (galeriaValida.length) {
-    bloques.push({
-      id: 'sec-galeria',
-      nav: 'Galería',
-      titulo: s.opciones?.galeriaTitulo?.trim() || 'Galería visual',
-      html: galeriaSeccionHTML(galeriaValida, s.opciones, web)
-    });
-  }
-
-  const ctaLabel = pf.ctaTexto.trim() || 'Contactar';
-  const msgContacto = `Hola${e.nombre.trim() ? ` ${e.nombre.trim().split(' ')[0]}` : ''}! Vi tu página «${tituloPortafolio()}» y me gustaría conversar sobre un proyecto.`;
-  const waUrl = enlaceWhatsApp(msgContacto, e);
-  const mailUrl = enlaceEmail(`Consulta desde tu página: ${tituloPortafolio()}`, msgContacto, e);
-  const principalUrl = waUrl || mailUrl;
-
-  if (serviciosWebValidos.length) {
-    const htmlSrv = `<div class="servicios-web-grilla">${serviciosWebValidos.map(sw => {
-      const msgSrv = `Hola${e.nombre.trim() ? ` ${e.nombre.trim().split(' ')[0]}` : ''}! Me interesa consultar por «${sw.titulo.trim() || 'tu servicio'}» que vi en tu página.`;
-      const linkSrv = enlaceWhatsApp(msgSrv, e) || enlaceEmail(`Consulta por ${sw.titulo.trim() || 'servicio'}`, msgSrv, e);
-      return `
-        <article class="servicio-web-card">
-          ${sw.imagen ? `<div class="servicio-web-card__media"${web && usaLightbox ? ` data-lightbox-src="${esc(sw.imagen)}" data-lightbox-caption="${esc(sw.titulo || '')}"` : ''}><img src="${esc(sw.imagen)}" alt="${esc(sw.titulo || 'Servicio')}"></div>` : ''}
-          <div class="servicio-web-card__cabecera">
-            <h3 class="servicio-web-card__titulo">${sw.titulo.trim() ? esc(sw.titulo) : vacioHTML('Servicio')}</h3>
-            ${sw.precio.trim() ? `<span class="servicio-web-card__precio">${esc(sw.precio.trim())}</span>` : ''}
-          </div>
-          ${sw.descripcion.trim() ? `<p class="servicio-web-card__desc">${esc(sw.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
-          ${web ? (linkSrv
-          ? `<a class="boton boton--secundario boton--chico servicio-web-card__cta" href="${esc(linkSrv)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(sw.cta.trim() || 'Consultar')}</a>`
-          : `<button type="button" class="boton boton--secundario boton--chico servicio-web-card__cta" data-accion="contacto-demo">${esc(sw.cta.trim() || 'Consultar')}</button>`) : ''}
-        </article>`;
-    }).join('')}</div>`;
-    bloques.push({
-      id: 'sec-servicios',
-      nav: 'Servicios',
-      titulo: s.opciones?.serviciosTitulo?.trim() || 'Servicios y soluciones',
-      html: htmlSrv
-    });
-  }
-
-  if (testimoniosValidos.length) {
-    bloques.push({
-      id: 'sec-testimonios',
-      nav: 'Testimonios',
-      titulo: 'Qué dicen quienes trabajaron conmigo',
-      html: testimoniosSeccionHTML(testimoniosValidos, web, usaLightbox)
-    });
-  }
-
-  if (faqsValidas.length) {
-    bloques.push({
-      id: 'sec-faq',
-      nav: 'Preguntas',
-      titulo: 'Preguntas frecuentes',
-      html: faqsSeccionHTML(faqsValidas, web)
-    });
-  }
-
-  if (web) {
-    const botonesCierre = [];
-    if (waUrl) {
-      botonesCierre.push(`<a class="boton boton--primario boton--grande" href="${esc(waUrl)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(ctaLabel)} por WhatsApp</a>`);
-    }
-    if (mailUrl) {
-      botonesCierre.push(`<a class="boton ${waUrl ? 'boton--secundario' : 'boton--primario'} boton--grande" href="${esc(mailUrl)}" data-enlace-cliente>${waUrl ? 'Escribir por email' : esc(ctaLabel)}</a>`);
-    }
-    if (!botonesCierre.length) {
-      botonesCierre.push(`<button type="button" class="boton boton--primario boton--grande" data-accion="contacto-demo">${esc(ctaLabel)}</button>`);
-    }
-    bloques.push({
-      id: 'sec-contacto',
-      nav: 'Contacto',
-      titulo: 'Contacto',
-      html: `
-        <div class="cierre">
-          <p class="cierre__titulo">${esc(pf.cierreTitulo.trim() || '¿Trabajamos juntos?')}</p>
-          <p class="cierre__texto">${esc(pf.cierreTexto.trim() || 'Contame qué tenés en mente y armamos una propuesta a medida.')}</p>
-          <div class="cierre__acciones">${botonesCierre.join('')}</div>
-        </div>`
-    });
-  }
-
-  const navLanding = web && s.opciones?.barraNav !== false && bloques.length > 1
-    ? `<nav class="doc-nav" aria-label="Secciones de la página">
-        <a class="doc-nav__marca" href="#sec-inicio" data-scroll-interno>${esc(e.nombre.trim() || pf.insignia.trim() || 'Inicio')}</a>
-        <ul class="doc-nav__links">
-          ${bloques.filter(b => b.nav).map(b => `<li><a class="doc-nav__link" href="#${esc(b.id)}" data-scroll-interno>${esc(b.nav)}</a></li>`).join('')}
-        </ul>
-      </nav>`
-    : '';
-
-  const contactos = [];
-  if (e.email.trim()) contactos.push(web ? `<a href="mailto:${esc(e.email.trim())}" data-enlace-cliente>${esc(e.email.trim())}</a>` : esc(e.email.trim()));
-  if (e.telefono.trim()) contactos.push(esc(e.telefono.trim()));
-  if (e.web.trim()) {
-    const url = /^https?:\/\//i.test(e.web.trim()) ? e.web.trim() : `https://${e.web.trim()}`;
-    contactos.push(web ? `<a href="${esc(url)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(e.web.trim())}</a>` : esc(e.web.trim()));
-  }
-  const pie = `
-    <footer class="pie">
-      ${e.nombre.trim() ? `<span class="pie__nombre">${esc(e.nombre)}</span>` : ''}
-      ${contactos.map(x => `<span>${x}</span>`).join('')}
-      ${web ? '<button type="button" class="pie__pdf" data-accion="pdf">Descargar en PDF</button>' : ''}
-      ${s.opciones.credito ? '<span class="pie__credito">Página creada con Dealit</span>' : ''}
-    </footer>`;
-
-  const barraInferior = web ? `
-    <div class="barra-cliente">
-      <div>
-        <span class="barra-cliente__etiqueta">${esc(pf.disponibilidad.trim() || 'Página profesional')}</span>
-        <span class="barra-cliente__monto">${esc(e.nombre.trim() || pf.titulo.trim() || 'Disponible')}</span>
-        ${e.rol.trim() ? `<span class="barra-cliente__extra">${esc(e.rol.trim())}</span>` : ''}
-      </div>
-      ${principalUrl
-      ? `<a class="boton boton--primario" href="${esc(principalUrl)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(ctaLabel)}</a>`
-      : `<button type="button" class="boton boton--primario" data-accion="contacto-demo">${esc(ctaLabel)}</button>`}
-    </div>` : '';
-
-  const cuerpo = `
-    <div class="cuerpo">
-      ${bloques.length ? bloques.map((b, i) => `
-        <section class="bloque" id="${esc(b.id || `sec-${i + 1}`)}">
-          <span class="bloque__num" aria-hidden="true">${i + 1}</span>
-          <div class="bloque__contenido">
-            <h2 class="bloque__titulo">${esc(b.titulo)}</h2>
-            ${b.html}
-          </div>
-        </section>`).join('') : '<p class="doc-nota">Sumá tus proyectos o fotos desde el panel izquierdo para armar tu página.</p>'}
-      ${pie}
-    </div>`;
-
   if (animacionInicialLista) doc.classList.add('doc--estatico');
-  doc.innerHTML = portada + navLanding + cuerpo + barraInferior;
-  if (web) observarElementos(doc);
+  doc.innerHTML = generarPortafolioHTML(estadoPortafolio, { web, tipoDecoracion, tipoPortada });
+  if (web) observarElementos(doc, esCliente);
   if (!animacionInicialLista && web) {
     animacionInicialLista = true;
     setTimeout(() => doc.classList.add('doc--estatico'), 1400);
@@ -1670,262 +678,20 @@ const renderDocumento = () => {
   const web = !imprimiendo && (esCliente || vista !== 'pdf');
   const doc = $('#documento');
   doc.classList.toggle('doc--web', web);
-  aplicarTema(doc);
-  const s = estado;
-  const m = s.inversion.moneda;
-  const c = calcular();
-  const e = s.emisor;
-  const cl = s.cliente;
-  const p = s.propuesta;
-  const vig = vigencia();
-  const destinatario = cl.empresa.trim() || cl.nombre.trim();
+  aplicarTema(doc, estado.tema);
   const tipoDecoracion = doc.dataset.decoracion || 'marco';
   const tipoPortada = doc.dataset.portada || 'editorial';
 
-  const marca = e.logo
-    ? `<img class="portada__logo" src="${esc(e.logo)}" alt="${esc(e.nombre || 'Logo')}">`
-    : `<span class="portada__marca">${e.nombre.trim() ? esc(e.nombre) : vacioHTML('Tu marca')}</span>`;
-
-  const meta = [];
-  if (cl.nombre.trim() || cl.empresa.trim()) {
-    const sec = [cl.cargo.trim(), cl.empresa.trim() && cl.nombre.trim() ? cl.empresa.trim() : ''].filter(Boolean).join(', ');
-    meta.push(['Preparada para', `${esc(cl.nombre.trim() || cl.empresa.trim())}${sec ? `<span>${esc(sec)}</span>` : ''}`]);
-  }
-  if (e.nombre.trim()) meta.push(['Preparada por', `${esc(e.nombre)}${e.rol.trim() ? `<span>${esc(e.rol)}</span>` : ''}`]);
-  if (vig.fecha) meta.push(['Fecha', esc(fechaLarga(vig.fecha))]);
-  if (vig.vence) {
-    if (web && vig.vencida) meta.push(['Venció el', esc(fechaLarga(vig.vence))]);
-    else {
-      const urgente = web && vig.restantes !== null && vig.restantes <= 30 ? `<span class="portada__urgente">${textoRestantes(vig.restantes)}</span>` : '';
-      meta.push(['Válida hasta', `${esc(fechaLarga(vig.vence))}${urgente}`]);
-    }
-  }
-
-  const marcaAguaNumero = tipoPortada === 'impacto' && p.numero.trim()
-    ? `<span class="portada__marca-agua" aria-hidden="true">${esc(p.numero.trim())}</span>`
-    : '';
-
-  const colTema = resolverColoresTema(s.tema);
-  const usaLightbox = s.opciones?.lightbox !== false;
-  const opPortada = Math.min(0.85, Math.max(0.08, (Number(p.opacidadPortada) || 35) / 100));
-  const fondoFotoHTML = p.imagenPortada
-    ? `<div class="portada__fondo-img" style="--portada-img-opacidad:${opPortada}" aria-hidden="true"><img src="${esc(p.imagenPortada)}" alt=""></div>`
-    : '';
-  const portada = `
-    <section class="portada portada--${esc(tipoPortada)}" id="sec-prop-inicio" aria-label="Portada">
-      ${fondoFotoHTML}
-      <div class="portada__decoracion" style="color:${esc(colTema.colorSvg)}" aria-hidden="true">${decoracionPortadaSVG(tipoDecoracion, colTema.opacidadSvg, colTema.colorSvg)}</div>
-      ${marcaAguaNumero}
-      <div class="portada__superior">
-        ${marca}
-        ${p.numero.trim() ? `<p class="portada__numero">Propuesta ${esc(p.numero)}</p>` : ''}
-      </div>
-      <div class="portada__centro">
-        <p class="portada__para"><span class="portada__para-chip">${destinatario ? `Propuesta para ${esc(destinatario)}` : 'Propuesta comercial'}</span></p>
-        <h1 class="portada__titulo">${p.titulo.trim() ? esc(p.titulo) : vacioHTML('Título de la propuesta')}</h1>
-        <hr class="portada__regla">
-      </div>
-      ${meta.length ? `<dl class="portada__meta">${meta.map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join('')}</dl>` : ''}
-    </section>`;
-
-  const bloques = [];
-
-  if (e.presentacion.trim() || e.foto || e.instagram?.trim() || e.linkedin?.trim() || e.behance?.trim()) {
-    bloques.push({
-      id: 'sec-prop-sobre',
-      nav: 'Sobre mí',
-      titulo: e.nombre.trim() ? `Sobre ${e.nombre.trim()}` : 'Quién presenta esta propuesta',
-      html: sobreMiBloqueHTML(e, [], web, usaLightbox)
-    });
-  }
-
   sincronizarPortafolioEnPropuesta();
-  const pfAdjunto = s.opciones?.portafolioId ? s.opciones?.portafolio : null;
-  if (pfAdjunto && ((Array.isArray(pfAdjunto.proyectos) && pfAdjunto.proyectos.some(proyectoConContenido)) || (Array.isArray(pfAdjunto.galeria) && pfAdjunto.galeria.some(g => g?.imagen)))) {
-    const htmlPf = bloquePortafolioEnPropuestaHTML(pfAdjunto, web);
-    if (htmlPf) {
-      bloques.push({
-        titulo: pfAdjunto.titulo?.trim() || 'Trabajos y casos destacados',
-        html: htmlPf
-      });
-    }
-  }
-
-  if (s.contexto.trim()) {
-    bloques.push({
-      titulo: 'El punto de partida',
-      html: `<div class="contexto-bloque">${parrafos(s.contexto)}</div>`
-    });
-  }
-
-  const objetivos = s.objetivos.filter(o => o.texto.trim());
-  if (objetivos.length) {
-    bloques.push({
-      titulo: 'Qué queremos lograr',
-      html: `<ul class="doc-lista objetivos-lista">${objetivos.map((o, i) => `
-        <li class="objetivo-item">
-          <span class="objetivo-item__indice" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span>
-          <span class="objetivo-item__texto">${esc(o.texto.trim())}</span>
-        </li>`).join('')}</ul>`
-    });
-  }
-
-  const incluidos = s.servicios.filter(x => !x.opcional && servicioConContenido(x));
-  const opcionales = s.servicios.filter(x => x.opcional && servicioConContenido(x));
-  if (incluidos.length || opcionales.length) {
-    let html = `<div class="servicios-grilla">${incluidos.map(x => servicioHTML(x, m, web)).join('')}</div>`;
-    if (opcionales.length) {
-      const nota = web
-        ? 'No están incluidos en la inversión base. Sumá los que quieras con un toque y el total se actualiza en el momento.'
-        : 'No están incluidos en la inversión, salvo los que figuran como sumados. Se pueden agregar en cualquier momento del proyecto.';
-      html += `
-        <div class="doc-grupo">
-          <div class="doc-grupo__cabecera">
-            <h3 class="doc-subtitulo">Para sumar, si querés</h3>
-            <span class="doc-grupo__badge">Interactivo</span>
-          </div>
-          <p class="doc-nota">${nota}</p>
-          <div class="servicios-grilla servicios-grilla--opcionales">
-            ${opcionales.map(x => servicioHTML(x, m, web)).join('')}
-          </div>
-        </div>`;
-    }
-    bloques.push({ titulo: 'Qué incluye la propuesta', html });
-  }
-
-  const etapas = s.etapas.filter(x => x.nombre.trim() || x.descripcion.trim() || x.duracion.trim());
-  if (etapas.length) {
-    bloques.push({
-      titulo: 'Cómo vamos a trabajar',
-      html: `<ol class="etapas">${etapas.map((x, i) => `
-        <li class="etapa">
-          <span class="etapa__num" aria-hidden="true">${i + 1}</span>
-          <div class="etapa__cuerpo">
-            <p class="etapa__nombre">${x.nombre.trim() ? esc(x.nombre) : vacioHTML('Etapa sin nombre')}</p>
-            ${x.descripcion.trim() ? `<p class="etapa__desc">${esc(x.descripcion.trim())}</p>` : ''}
-          </div>
-          ${x.duracion.trim() ? `<p class="etapa__duracion"><span class="etapa__chip">${esc(x.duracion.trim())}</span></p>` : '<p class="etapa__duracion etapa__duracion--vacia"></p>'}
-        </li>`).join('')}</ol>`
-    });
-  }
-
-  if (c.inicial.base > 0 || c.mensual.base > 0) {
-    const columnas = [];
-    if (c.inicial.base > 0) columnas.push(`<div class="resumen__columna"><h3 class="resumen__titulo">${c.mensual.base > 0 ? 'Inversión inicial' : 'Inversión total'}</h3>${filasResumen(c.inicial, c)}</div>`);
-    if (c.mensual.base > 0) columnas.push(`<div class="resumen__columna"><h3 class="resumen__titulo">Servicio mensual</h3>${filasResumen(c.mensual, c, 'por mes')}</div>`);
-    let html = `<div class="resumen">${columnas.join('')}</div>`;
-    const pagos = s.inversion.pagos.filter(x => x.concepto.trim() || numero(x.porcentaje) > 0);
-    if (pagos.length && c.inicial.total > 0) {
-      const barraSegmentos = pagos
-        .filter(x => numero(x.porcentaje) > 0)
-        .map((x, idx) => `<span class="pagos-barra__seg pagos-barra__seg--${(idx % 4) + 1}" style="flex:${Math.max(5, numero(x.porcentaje))}" title="${esc(x.concepto.trim() || `Pago ${idx + 1}`)}: ${cantidadTexto(numero(x.porcentaje))}%"><span>${cantidadTexto(numero(x.porcentaje))}%</span></span>`)
-        .join('');
-      html += `<h3 class="doc-subtitulo">Forma de pago</h3>
-        ${barraSegmentos ? `<div class="pagos-barra" aria-hidden="true">${barraSegmentos}</div>` : ''}
-        <table class="pagos">
-          <thead><tr><th scope="col">Momento</th><th scope="col" class="pagos__num">Porcentaje</th><th scope="col" class="pagos__num">Monto</th></tr></thead>
-          <tbody>${pagos.map(x => `<tr><td>${x.concepto.trim() ? esc(x.concepto) : vacioHTML('Pago sin descripción')}</td><td class="pagos__num"><span class="pagos__pct">${cantidadTexto(numero(x.porcentaje))}%</span></td><td class="pagos__num pagos__monto">${dinero(c.inicial.total * numero(x.porcentaje) / 100, m)}</td></tr>`).join('')}</tbody>
-        </table>`;
-      if (c.mensual.base > 0) html += '<p class="doc-nota">El servicio mensual se factura por mes adelantado, desde que empieza ese servicio.</p>';
-    }
-    bloques.push({ titulo: 'Inversión', html });
-  }
-
-  const galeriaPropValida = (s.galeria || []).filter(g => g && g.imagen);
-  if (galeriaPropValida.length) {
-    bloques.push({
-      id: 'sec-prop-galeria',
-      nav: 'Galería',
-      titulo: s.opciones?.galeriaTitulo?.trim() || 'Galería visual y referencias',
-      html: galeriaSeccionHTML(galeriaPropValida, s.opciones, web)
-    });
-  }
-
-  const testimoniosPropValidos = (s.testimonios || []).filter(t => t && (t.texto.trim() || t.autor.trim()));
-  if (testimoniosPropValidos.length) {
-    bloques.push({
-      id: 'sec-prop-testimonios',
-      nav: 'Testimonios',
-      titulo: 'Referencias y experiencias de clientes',
-      html: testimoniosSeccionHTML(testimoniosPropValidos, web, usaLightbox)
-    });
-  }
-
-  const faqsPropValidas = (s.faqs || []).filter(f => f && (f.pregunta.trim() || f.respuesta.trim()));
-  if (faqsPropValidas.length) {
-    bloques.push({
-      id: 'sec-prop-faq',
-      nav: 'Preguntas',
-      titulo: 'Preguntas frecuentes',
-      html: faqsSeccionHTML(faqsPropValidas, web)
-    });
-  }
-
-  const condiciones = lineas(s.condiciones);
-  if (condiciones.length) {
-    bloques.push({ id: 'sec-prop-condiciones', titulo: 'Condiciones', html: `<ul class="doc-lista">${condiciones.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` });
-  }
-
-  const pasos = lineas(s.proximosPasos);
-  const firmas = !web && s.opciones.firmas;
-  if (pasos.length || firmas || web) {
-    let html = pasos.length ? `<ol class="pasos">${pasos.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : '';
-    if (web) html += cierreHTML(vig);
-    if (firmas) {
-      const quienCliente = cl.nombre.trim() || cl.empresa.trim() || 'Cliente';
-      const quienEmisor = e.nombre.trim() || 'Responsable de la propuesta';
-      html += `
-        <div class="firmas">
-          <div class="firma__linea"><p class="firma__quien">${esc(quienCliente)}</p><p class="firma__datos">Firma, aclaración y fecha</p></div>
-          <div class="firma__linea"><p class="firma__quien">${esc(quienEmisor)}</p><p class="firma__datos">Firma, aclaración y fecha</p></div>
-        </div>`;
-    }
-    bloques.push({ titulo: pasos.length ? 'Próximos pasos' : (web ? 'Siguiente paso' : 'Aceptación'), html });
-  }
-
-  const contactos = [];
-  if (e.email.trim()) contactos.push(web ? `<a href="mailto:${esc(e.email.trim())}" data-enlace-cliente>${esc(e.email.trim())}</a>` : esc(e.email.trim()));
-  if (e.telefono.trim()) contactos.push(esc(e.telefono.trim()));
-  if (e.web.trim()) {
-    const url = /^https?:\/\//i.test(e.web.trim()) ? e.web.trim() : `https://${e.web.trim()}`;
-    contactos.push(web ? `<a href="${esc(url)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(e.web.trim())}</a>` : esc(e.web.trim()));
-  }
-  const pie = `
-    <footer class="pie">
-      ${e.nombre.trim() ? `<span class="pie__nombre">${esc(e.nombre)}</span>` : ''}
-      ${contactos.map(x => `<span>${x}</span>`).join('')}
-      ${web ? '<button type="button" class="pie__pdf" data-accion="pdf">Descargar en PDF</button>' : ''}
-      ${s.opciones.credito ? '<span class="pie__credito">Propuesta armada con la plantilla de AteneaGen</span>' : ''}
-    </footer>`;
-
-  const aviso = web && vig.vencida ? `<p class="doc-aviso">Esta propuesta venció el ${esc(fechaLarga(vig.vence))}. Los valores pueden haber cambiado.</p>` : '';
-
-  const navLandingProp = web && s.opciones?.barraNav && bloques.length > 1
-    ? `<nav class="doc-nav" aria-label="Secciones de la propuesta">
-        <a class="doc-nav__marca" href="#sec-prop-inicio" data-scroll-interno>${esc(e.nombre.trim() || 'Propuesta')}</a>
-        <ul class="doc-nav__links">
-          ${bloques.map((b, i) => `<li><a class="doc-nav__link" href="#${esc(b.id || `sec-prop-${i + 1}`)}" data-scroll-interno>${esc(b.nav || b.titulo)}</a></li>`).join('')}
-        </ul>
-      </nav>`
-    : '';
-
-  const cuerpo = `
-    <div class="cuerpo">
-      ${aviso}
-      ${bloques.length ? bloques.map((b, i) => `
-        <section class="bloque" id="${esc(b.id || `sec-prop-${i + 1}`)}">
-          <span class="bloque__num" aria-hidden="true">${i + 1}</span>
-          <div class="bloque__contenido">
-            <h2 class="bloque__titulo">${esc(b.titulo)}</h2>
-            ${b.html}
-          </div>
-        </section>`).join('') : '<p class="doc-nota">Completá las secciones del editor para armar el cuerpo de la propuesta.</p>'}
-      ${pie}
-    </div>`;
-
   if (animacionInicialLista) doc.classList.add('doc--estatico');
-  doc.innerHTML = portada + navLandingProp + cuerpo + (web ? barraClienteHTML(c, vig) : '');
-  if (web) observarElementos(doc);
+  doc.innerHTML = generarPropuestaHTML(estado, {
+    web,
+    seleccion,
+    compartida,
+    tipoDecoracion,
+    tipoPortada
+  });
+  if (web) observarElementos(doc, esCliente);
   if (!animacionInicialLista && web) {
     animacionInicialLista = true;
     setTimeout(() => doc.classList.add('doc--estatico'), 1400);
@@ -1943,8 +709,8 @@ const actualizarTemaEnVivo = () => {
   }
   doc.classList.add('doc--estatico');
   animacionInicialLista = true;
-  aplicarTema(doc);
   const actual = docActivo();
+  aplicarTema(doc, actual.tema);
   const col = resolverColoresTema(actual.tema);
   const tipoDecoracion = doc.dataset.decoracion || 'marco';
   const tipoPortada = doc.dataset.portada || 'editorial';
@@ -2062,22 +828,53 @@ const llenarTemaEditor = () => {
   $$('[data-estilo]').forEach(el => el.classList.toggle('opcion-visual--activa', el.dataset.estilo === estiloActivo));
   const acento = $('#tema-acento');
   const colorTexto = $('#tema-color-texto');
+  const colorPortada = $('#tema-color-portada');
+  const colorFondo = $('#tema-color-fondo');
   const colorSvg = $('#tema-color-svg');
   const opacidadSvg = $('#tema-opacidad-svg');
   const opacidadValor = $('#tema-opacidad-valor');
+  const escalaPortada = $('#tema-escala-portada');
+  const escalaPortadaValor = $('#tema-escala-portada-valor');
+  const escalaTitulos = $('#tema-escala-titulos');
+  const escalaTitulosValor = $('#tema-escala-titulos-valor');
+  const escalaTexto = $('#tema-escala-texto');
+  const escalaTextoValor = $('#tema-escala-texto-valor');
+  const espaciadoSecciones = $('#tema-espaciado-secciones');
+  const espaciadoSeccionesValor = $('#tema-espaciado-secciones-valor');
+  const espaciadoInterno = $('#tema-espaciado-interno');
+  const espaciadoInternoValor = $('#tema-espaciado-interno-valor');
   const btnReset = $('#tema-restablecer-colores');
   const ft = $('#tema-fuente-titulos');
   const fc = $('#tema-fuente-cuerpo');
   if (acento) acento.value = col.acento;
   if (colorTexto) colorTexto.value = col.portadaTexto;
+  if (colorPortada) colorPortada.value = col.portadaBg;
+  if (colorFondo) colorFondo.value = col.fondoBase;
   if (colorSvg) colorSvg.value = col.colorSvg;
   if (opacidadSvg) opacidadSvg.value = String(col.opacidadSvg);
   if (opacidadValor) opacidadValor.textContent = `${col.opacidadSvg}%`;
+  if (escalaPortada) escalaPortada.value = String(col.escalaTituloPortada);
+  if (escalaPortadaValor) escalaPortadaValor.textContent = `${col.escalaTituloPortada}%`;
+  if (escalaTitulos) escalaTitulos.value = String(col.escalaTitulos);
+  if (escalaTitulosValor) escalaTitulosValor.textContent = `${col.escalaTitulos}%`;
+  if (escalaTexto) escalaTexto.value = String(col.escalaTexto);
+  if (escalaTextoValor) escalaTextoValor.textContent = `${col.escalaTexto}%`;
+  if (espaciadoSecciones) espaciadoSecciones.value = String(col.espaciadoSecciones);
+  if (espaciadoSeccionesValor) espaciadoSeccionesValor.textContent = `${col.espaciadoSecciones}%`;
+  if (espaciadoInterno) espaciadoInterno.value = String(col.espaciadoInterno);
+  if (espaciadoInternoValor) espaciadoInternoValor.textContent = `${col.espaciadoInterno}%`;
   if (btnReset) {
     const cambiado = (t.acento && t.acento.toLowerCase() !== preset.acento.toLowerCase())
       || !!t.colorTexto
+      || !!t.colorPortada
+      || !!t.colorFondo
       || !!t.colorSvg
-      || (t.opacidadSvg !== undefined && Number(t.opacidadSvg) !== 100);
+      || (t.opacidadSvg !== undefined && Number(t.opacidadSvg) !== 100)
+      || (t.escalaTituloPortada !== undefined && Number(t.escalaTituloPortada) !== 100)
+      || (t.escalaTitulos !== undefined && Number(t.escalaTitulos) !== 100)
+      || (t.escalaTexto !== undefined && Number(t.escalaTexto) !== 100)
+      || (t.espaciadoSecciones !== undefined && Number(t.espaciadoSecciones) !== 100)
+      || (t.espaciadoInterno !== undefined && Number(t.espaciadoInterno) !== 100);
     btnReset.hidden = !cambiado;
   }
   if (ft) ft.value = t.fuenteTitulos || preset.fuenteTitulos || 'Bebas Neue';
@@ -2096,6 +893,8 @@ if (contenedorTemas) {
     t.preset = id;
     t.acento = preset.acento;
     t.colorTexto = '';
+    t.colorPortada = '';
+    t.colorFondo = '';
     t.colorSvg = '';
     t.opacidadSvg = 100;
     t.fuenteTitulos = preset.fuenteTitulos;
@@ -2213,6 +1012,24 @@ if (temaColorTexto) {
   });
 }
 
+const temaColorPortada = $('#tema-color-portada');
+if (temaColorPortada) {
+  temaColorPortada.addEventListener('input', ev => {
+    docActivo().tema.colorPortada = ev.target.value;
+    llenarTemaEditor();
+    actualizarTemaEnVivo();
+  });
+}
+
+const temaColorFondo = $('#tema-color-fondo');
+if (temaColorFondo) {
+  temaColorFondo.addEventListener('input', ev => {
+    docActivo().tema.colorFondo = ev.target.value;
+    llenarTemaEditor();
+    actualizarTemaEnVivo();
+  });
+}
+
 const temaColorSvg = $('#tema-color-svg');
 if (temaColorSvg) {
   temaColorSvg.addEventListener('input', ev => {
@@ -2231,6 +1048,21 @@ if (temaOpacidadSvg) {
   });
 }
 
+const vincularRangoTema = (selector, propiedad) => {
+  const el = $(selector);
+  if (!el) return;
+  el.addEventListener('input', ev => {
+    docActivo().tema[propiedad] = Number(ev.target.value);
+    llenarTemaEditor();
+    actualizarTemaEnVivo();
+  });
+};
+vincularRangoTema('#tema-escala-portada', 'escalaTituloPortada');
+vincularRangoTema('#tema-escala-titulos', 'escalaTitulos');
+vincularRangoTema('#tema-escala-texto', 'escalaTexto');
+vincularRangoTema('#tema-espaciado-secciones', 'espaciadoSecciones');
+vincularRangoTema('#tema-espaciado-interno', 'espaciadoInterno');
+
 const temaRestablecerColores = $('#tema-restablecer-colores');
 if (temaRestablecerColores) {
   temaRestablecerColores.addEventListener('click', () => {
@@ -2238,11 +1070,18 @@ if (temaRestablecerColores) {
     const preset = TEMAS[t.preset] || TEMAS['elegante-oscuro'];
     t.acento = preset.acento;
     t.colorTexto = '';
+    t.colorPortada = '';
+    t.colorFondo = '';
     t.colorSvg = '';
     t.opacidadSvg = 100;
+    t.escalaTituloPortada = 100;
+    t.escalaTitulos = 100;
+    t.escalaTexto = 100;
+    t.espaciadoSecciones = 100;
+    t.espaciadoInterno = 100;
     llenarTemaEditor();
     actualizarTemaEnVivo();
-    avisar('Colores e intensidad del SVG restablecidos al tema original.');
+    avisar('Colores, tamaños de tipografía y espaciados restablecidos al tema original.');
   });
 }
 
@@ -2366,51 +1205,6 @@ campoBorrador.addEventListener('change', () => {
   lector.readAsText(archivo);
 });
 
-const leerComoDataURL = archivo => new Promise((res, rej) => {
-  const lector = new FileReader();
-  lector.onload = () => res(lector.result);
-  lector.onerror = rej;
-  lector.readAsDataURL(archivo);
-});
-
-// Dibuja el logo en un lienzo de hasta 360×140 px por la densidad pedida.
-const lienzoLogo = async (archivo, densidad) => {
-  const original = await leerComoDataURL(archivo);
-  const img = await new Promise((res, rej) => {
-    const i = new Image();
-    i.onload = () => res(i);
-    i.onerror = rej;
-    i.src = original;
-  });
-  const anchoMax = 360 * densidad;
-  const altoMax = 140 * densidad;
-  const escala = Math.min(1, anchoMax / (img.naturalWidth || anchoMax), altoMax / (img.naturalHeight || altoMax));
-  const lienzo = document.createElement('canvas');
-  lienzo.width = Math.max(1, Math.round((img.naturalWidth || anchoMax) * escala));
-  lienzo.height = Math.max(1, Math.round((img.naturalHeight || altoMax) * escala));
-  lienzo.getContext('2d').drawImage(img, 0, 0, lienzo.width, lienzo.height);
-  return { lienzo, original };
-};
-
-// Sin cuenta: el logo viaja dentro de la propuesta, así que se guarda lo más liviano posible.
-const reducirLogo = async archivo => {
-  const { lienzo, original } = await lienzoLogo(archivo, 1);
-  if (archivo.type === 'image/svg+xml' && original.length < 20000) return original;
-  const png = lienzo.toDataURL('image/png');
-  const webp = lienzo.toDataURL('image/webp', 0.86);
-  return webp.startsWith('data:image/webp') && webp.length < png.length ? webp : png;
-};
-
-// Con cuenta: se sube a Storage al doble de resolución para que se vea nítido en pantallas
-// de alta densidad. Los SVG también se rasterizan: un SVG servido como archivo puede
-// ejecutar scripts si alguien abre su URL directo.
-const logoParaSubir = async archivo => {
-  const { lienzo } = await lienzoLogo(archivo, 2);
-  const aBlob = (tipo, calidad) => new Promise(res => lienzo.toBlob(res, tipo, calidad));
-  const webp = await aBlob('image/webp', 0.9);
-  return webp && webp.type === 'image/webp' ? webp : aBlob('image/png');
-};
-
 const esLogoValido = logo => /^data:image\//.test(logo)
   || (!!AteneaDB?.logos && logo.startsWith(AteneaDB.logos.prefijoURL));
 
@@ -2429,7 +1223,7 @@ campoLogo.addEventListener('change', async () => {
     return;
   }
   if (archivo.size > LOGO_MAX_ARCHIVO) {
-    avisar('El logo pesa más de 5 MB. Usá una versión más liviana.');
+    avisar('El logo supera los 25 MB. Elegí un archivo más liviano.');
     return;
   }
   const db = nube();
@@ -2480,38 +1274,13 @@ const migrarLogo = async () => {
 };
 
 
-// Redimensiona y optimiza cualquier foto (avatar, portada hero, proyecto o galería) para Storage o DataURL.
-const procesarImagenProyecto = async (archivo, paraStorage = false, { anchoMax: wMax, altoMax: hMax } = {}) => {
-  const original = await leerComoDataURL(archivo);
-  const img = await new Promise((res, rej) => {
-    const i = new Image();
-    i.onload = () => res(i);
-    i.onerror = rej;
-    i.src = original;
-  });
-  const anchoMax = wMax || (paraStorage ? 1280 : 860);
-  const altoMax = hMax || (paraStorage ? 860 : 580);
-  const escala = Math.min(1, anchoMax / (img.naturalWidth || anchoMax), altoMax / (img.naturalHeight || altoMax));
-  const lienzo = document.createElement('canvas');
-  lienzo.width = Math.max(1, Math.round((img.naturalWidth || anchoMax) * escala));
-  lienzo.height = Math.max(1, Math.round((img.naturalHeight || altoMax) * escala));
-  lienzo.getContext('2d').drawImage(img, 0, 0, lienzo.width, lienzo.height);
-  if (paraStorage) {
-    const aBlob = (tipo, calidad) => new Promise(res => lienzo.toBlob(res, tipo, calidad));
-    const webp = await aBlob('image/webp', 0.88);
-    return webp && webp.type === 'image/webp' ? webp : aBlob('image/jpeg', 0.88);
-  }
-  const webp = lienzo.toDataURL('image/webp', 0.82);
-  return webp.startsWith('data:image/webp') ? webp : lienzo.toDataURL('image/jpeg', 0.82);
-};
-
 const subirOComprimirFoto = async (archivo, dims = {}) => {
   if (!archivo || !archivo.type.startsWith('image/')) {
     avisar('Elegí una imagen en formato PNG, JPG o WebP.');
     return '';
   }
-  if (archivo.size > LOGO_MAX_ARCHIVO) {
-    avisar('La foto pesa más de 5 MB. Probá con una más liviana.');
+  if (archivo.size > FOTO_MAX_ARCHIVO) {
+    avisar('La imagen supera los 50 MB. Probá con un archivo de hasta 50 MB.');
     return '';
   }
   const db = nube();
@@ -2560,7 +1329,7 @@ if (campoPortadaProp) {
     if ($('#portada-prop-texto')) $('#portada-prop-texto').textContent = 'Subiendo…';
     campoPortadaProp.disabled = true;
     try {
-      const url = await subirOComprimirFoto(archivo, { anchoMax: 1400, altoMax: 900 });
+      const url = await subirOComprimirFoto(archivo, { anchoMax: 1920, altoMax: 1080, calidad: 0.88 });
       if (url) {
         estado.propuesta.imagenPortada = url;
         actualizarLogo();
@@ -2585,7 +1354,7 @@ if (campoPortadaPf) {
     if ($('#portada-pf-texto')) $('#portada-pf-texto').textContent = 'Subiendo…';
     campoPortadaPf.disabled = true;
     try {
-      const url = await subirOComprimirFoto(archivo, { anchoMax: 1400, altoMax: 900 });
+      const url = await subirOComprimirFoto(archivo, { anchoMax: 1920, altoMax: 1080, calidad: 0.88 });
       if (url) {
         estadoPortafolio.portafolio.imagenPortada = url;
         actualizarLogo();
@@ -2809,8 +1578,6 @@ formulario.addEventListener('change', async ev => {
   }
 });
 
-const limpiarImgLink = img => (img && img.length <= LOGO_MAX_LINK ? img : '');
-
 const datosParaLink = () => {
   const sinId = arr => (arr || []).map(({ id, ...resto }) => resto);
   const logoEntra = estado.emisor.logo.length <= LOGO_MAX_LINK;
@@ -3027,7 +1794,7 @@ const registrarVisita = id => {
   try {
     if (Date.now() - Number(localStorage.getItem(clave) || 0) < VISITA_INTERVALO) return;
     localStorage.setItem(clave, String(Date.now()));
-  } catch { }
+  } catch {}
   llamarApi('/api/visto', { id }, { keepalive: true }).catch(e => console.warn('No se pudo registrar la visita:', e));
 };
 
@@ -3157,65 +1924,6 @@ const abrirMenu = abrir => {
 };
 
 
-// Visor Lightbox a pantalla completa para todas las fotos de la página / propuesta
-const dialogoLightbox = $('#dialogo-lightbox');
-const lightboxImg = $('#lightbox-img');
-const lightboxEpigrafe = $('#lightbox-epigrafe');
-const lightboxContador = $('#lightbox-contador');
-const lightboxAnt = $('#lightbox-ant');
-const lightboxSig = $('#lightbox-sig');
-let lightboxItems = [];
-let lightboxIndice = 0;
-
-const pintarLightbox = () => {
-  if (!lightboxItems.length || !lightboxImg) return;
-  const item = lightboxItems[lightboxIndice] || lightboxItems[0];
-  lightboxImg.src = item.src;
-  lightboxImg.alt = item.caption || 'Imagen ampliada';
-  if (lightboxEpigrafe) {
-    lightboxEpigrafe.textContent = item.caption || '';
-    lightboxEpigrafe.hidden = !item.caption;
-  }
-  const varios = lightboxItems.length > 1;
-  if (lightboxContador) {
-    lightboxContador.textContent = varios ? `${lightboxIndice + 1} / ${lightboxItems.length}` : '';
-  }
-  if (lightboxAnt) lightboxAnt.hidden = !varios;
-  if (lightboxSig) lightboxSig.hidden = !varios;
-};
-
-const abrirLightboxDesdeNodo = disparador => {
-  if (!dialogoLightbox || typeof dialogoLightbox.showModal !== 'function') return;
-  const srcClick = disparador.dataset.lightboxSrc;
-  if (!srcClick) return;
-  const grupo = disparador.dataset.lightboxGroup || '';
-  const doc = $('#documento');
-  if (grupo && doc) {
-    const nodosGrupo = [...doc.querySelectorAll(`[data-lightbox-group="${CSS.escape(grupo)}"]`)];
-    const vistos = new Set();
-    lightboxItems = [];
-    nodosGrupo.forEach(n => {
-      const s = n.dataset.lightboxSrc;
-      if (s && !vistos.has(s)) {
-        vistos.add(s);
-        lightboxItems.push({ src: s, caption: n.dataset.lightboxCaption || '' });
-      }
-    });
-    lightboxIndice = Math.max(0, lightboxItems.findIndex(x => x.src === srcClick));
-  } else {
-    lightboxItems = [{ src: srcClick, caption: disparador.dataset.lightboxCaption || '' }];
-    lightboxIndice = 0;
-  }
-  pintarLightbox();
-  if (!dialogoLightbox.open) dialogoLightbox.showModal();
-};
-
-const moverLightbox = delta => {
-  if (lightboxItems.length <= 1) return;
-  lightboxIndice = (lightboxIndice + delta + lightboxItems.length) % lightboxItems.length;
-  pintarLightbox();
-};
-
 document.addEventListener('click', ev => {
   if (!panelMenu.hidden && !ev.target.closest('#menu-panel') && !ev.target.closest('[data-accion="menu"]')) abrirMenu(false);
   const linkScroll = ev.target.closest('[data-scroll-interno]');
@@ -3240,7 +1948,7 @@ document.addEventListener('click', ev => {
 });
 
 document.addEventListener('keydown', ev => {
-  if (dialogoLightbox?.open) {
+  if (estaAbiertoLightbox()) {
     if (ev.key === 'ArrowLeft') { ev.preventDefault(); moverLightbox(-1); return; }
     if (ev.key === 'ArrowRight') { ev.preventDefault(); moverLightbox(1); return; }
   }
@@ -3378,7 +2086,7 @@ document.addEventListener('click', async ev => {
     case 'compartir-nativo':
       try {
         await navigator.share({ title: estado.propuesta.titulo.trim() || 'Propuesta', url: linkActual });
-      } catch { }
+      } catch {}
       break;
     case 'vista':
       cambiarVista(boton.dataset.vista);
@@ -3477,10 +2185,10 @@ document.addEventListener('click', async ev => {
       actualizar();
       break;
     case 'lightbox-cerrar':
-      dialogoLightbox?.close();
+      cerrarLightbox();
       break;
     case 'lightbox-fondo':
-      if (ev.target === boton) dialogoLightbox?.close();
+      if (ev.target === boton) cerrarLightbox();
       break;
     case 'lightbox-ant':
       moverLightbox(-1);
@@ -3627,133 +2335,11 @@ const elMetricas = $('#panel-metricas');
 const elFiltros = $('#panel-filtros');
 const campoBuscar = $('#panel-buscar');
 const elCuenta = $('#cuenta');
-const ESTADOS_PROPUESTA = { draft: 'Borrador', sent: 'Enviada', accepted: 'Aceptada', rejected: 'Rechazada' };
-
 let propuestas = [];
 let panelCargando = true;
 let panelError = false;
 let dejarDeEscuchar = null;
-
-const fechaDe = ts => (ts && typeof ts.toDate === 'function' ? ts.toDate() : null);
-const sinAcentos = t => texto(t).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-
-const haceCuanto = fecha => {
-  if (!fecha) return '';
-  const segundos = Math.round((fecha - Date.now()) / 1000);
-  const rtf = new Intl.RelativeTimeFormat('es', { numeric: 'auto' });
-  const unidades = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]];
-  for (const [unidad, s] of unidades) {
-    if (Math.abs(segundos) >= s) return rtf.format(Math.round(segundos / s), unidad);
-  }
-  return 'recién';
-};
-
-const tiempoHTML = (fecha, etiqueta) => `<time datetime="${fecha.toISOString()}" title="${esc(fecha.toLocaleString('es-AR'))}">${esc(etiqueta)}</time>`;
-
-// Qué pasó con la propuesta, en una línea: aceptada, vista, sin abrir o solo editada.
-const seguimientoHTML = p => {
-  if (p.aceptacion) {
-    const fecha = fechaDeAceptacion(p.aceptacion);
-    const nombre = texto(p.aceptacion.nombre).split(' ')[0];
-    return `<strong class="propuesta__hito">${fecha ? tiempoHTML(fecha, `Aceptada por ${nombre} ${haceCuanto(fecha)}`) : `Aceptada por ${esc(nombre)}`}</strong>`;
-  }
-  const vistas = Number(p.vistas) || 0;
-  const vista = fechaDe(p.vistoUltimo);
-  if (vistas > 0 && vista) return tiempoHTML(vista, `${vistas === 1 ? 'Vista 1 vez' : `Vista ${vistas} veces`} · ${haceCuanto(vista)}`);
-  if (p.publico === true) return 'Sin abrir todavía';
-  const editada = fechaDe(p.updatedAt);
-  return editada ? tiempoHTML(editada, `Editada ${haceCuanto(editada)}`) : '';
-};
-
-// Color estable por cliente para el avatar con su inicial.
-const tonoDe = nombre => [...texto(nombre)].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 997, 7) % 6;
-const estadoDe = p => (ESTADOS_PROPUESTA[p.status] ? p.status : 'draft');
-
-const propuestaHTML = p => {
-  const titulo = texto(p.title).trim() || 'Sin título';
-  const cliente = texto(p.clientName).trim();
-  const moneda = p.aceptacion?.moneda || p.payload?.inversion?.moneda || 'USD';
-  const importe = p.aceptacion ? Number(p.aceptacion.inicial) : Number(p.amount);
-  const monto = importe > 0 ? dinero(importe, moneda) : '';
-  const estadoP = estadoDe(p);
-  const inicial = (cliente || titulo).trim().charAt(0).toUpperCase() || '·';
-  return `
-    <li class="propuesta">
-      <a class="propuesta__abrir" href="?propuesta=${encodeURIComponent(p.id)}" data-accion="abrir-propuesta" data-id="${esc(p.id)}">
-        <span class="propuesta__avatar" data-tono="${tonoDe(cliente || titulo)}" aria-hidden="true">${esc(inicial)}</span>
-        <span class="propuesta__textos">
-          <span class="propuesta__titulo">${esc(titulo)}</span>
-          <span class="propuesta__cliente">${cliente ? esc(cliente) : 'Sin cliente'}</span>
-        </span>
-      </a>
-      <span class="propuesta__monto">${esc(monto)}</span>
-      <span class="propuesta__estado propuesta__estado--${estadoP}">${ESTADOS_PROPUESTA[estadoP]}</span>
-      <span class="propuesta__fecha">${seguimientoHTML(p)}</span>
-      <span class="propuesta__acciones">
-        ${p.publico === true ? `<button type="button" class="icono-boton icono-boton--activo" data-accion="copiar-link-propuesta" data-id="${esc(p.id)}" aria-label="Copiar el link de «${esc(titulo)}»" title="Link activo: copiar">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.3 0l2-2a3 3 0 0 0-4.3-4.3l-.9.9M9.2 6.8a3 3 0 0 0-4.3 0l-2 2a3 3 0 0 0 4.3 4.3l.9-.9"/></svg>
-        </button>` : ''}
-        <button type="button" class="icono-boton" data-accion="duplicar-propuesta" data-id="${esc(p.id)}" aria-label="Duplicar «${esc(titulo)}»" title="Duplicar">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.2"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
-        </button>
-        <button type="button" class="icono-boton icono-boton--peligro" data-accion="borrar-propuesta" data-id="${esc(p.id)}" aria-label="Borrar «${esc(titulo)}»" title="Borrar">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>
-        </button>
-      </span>
-    </li>`;
-};
-
-const FILTROS = [['todas', 'Todas'], ['draft', 'Borradores'], ['sent', 'Enviadas'], ['accepted', 'Aceptadas'], ['rejected', 'Rechazadas']];
 let filtroEstado = 'todas';
-
-const filtrosHTML = () => {
-  const cuenta = id => (id === 'todas' ? propuestas.length : propuestas.filter(p => estadoDe(p) === id).length);
-  return FILTROS
-    .filter(([id]) => id !== 'rejected' || cuenta(id) > 0)
-    .map(([id, nombre]) => `<button type="button" class="filtro" data-accion="filtrar" data-estado="${id}" aria-pressed="${filtroEstado === id}">${nombre} <span class="filtro__cuenta">${cuenta(id)}</span></button>`)
-    .join('');
-};
-
-// Montos por moneda: el principal grande y el resto debajo.
-const montosPorMoneda = lista => {
-  const sumas = new Map();
-  lista.forEach(p => {
-    const m = p.aceptacion.moneda || 'USD';
-    sumas.set(m, (sumas.get(m) || 0) + (Number(p.aceptacion.inicial) || 0));
-  });
-  return [...sumas].sort((a, b) => b[1] - a[1]).map(([m, total]) => dinero(total, m));
-};
-
-const metricaHTML = (valor, etiqueta, detalle, destacada = false) => `
-  <div class="metrica${destacada ? ' metrica--destacada' : ''}">
-    <span class="metrica__etiqueta">${esc(etiqueta)}</span>
-    <span class="metrica__valor">${esc(valor)}</span>
-    <span class="metrica__detalle">${esc(detalle)}</span>
-  </div>`;
-
-const metricasHTML = () => {
-  const ahora = Date.now();
-  const esperando = propuestas.filter(p => p.status === 'sent' && !p.aceptacion);
-  const sinAbrir = esperando.filter(p => !(Number(p.vistas) > 0)).length;
-  const abiertasSemana = propuestas.filter(p => {
-    const f = fechaDe(p.vistoUltimo);
-    return f && ahora - f < 7 * 86400000;
-  }).length;
-  const aceptadas = propuestas.filter(p => p.aceptacion);
-  const inicioMes = new Date();
-  inicioMes.setDate(1);
-  inicioMes.setHours(0, 0, 0, 0);
-  const delMes = aceptadas.filter(p => (fechaDeAceptacion(p.aceptacion) || 0) >= inicioMes);
-  const enviadas = propuestas.filter(p => ['sent', 'accepted', 'rejected'].includes(p.status)).length;
-  const tasa = enviadas ? Math.round((aceptadas.length / enviadas) * 100) : null;
-  const [montoPrincipal, ...otrosMontos] = montosPorMoneda(delMes);
-  return [
-    metricaHTML(esperando.length, 'Esperando respuesta', esperando.length ? (sinAbrir ? `${sinAbrir} sin abrir todavía` : 'Todas abiertas') : 'Nada pendiente'),
-    metricaHTML(abiertasSemana, 'Abiertas esta semana', 'Propuestas que tus clientes miraron'),
-    metricaHTML(delMes.length, 'Aceptadas este mes', tasa === null ? 'Todavía no enviaste ninguna' : `${tasa} % de las que enviaste`),
-    metricaHTML(montoPrincipal || '—', 'Aceptado este mes', otrosMontos.length ? `y ${otrosMontos.join(' · ')}` : 'Total inicial aceptado', true)
-  ].join('');
-};
 
 const primerNombre = () => nombreVisible().split(' ')[0];
 
@@ -3761,16 +2347,16 @@ const renderPanel = () => {
   if (elPanel.hidden) return;
   const filtro = sinAcentos(campoBuscar.value.trim());
   const visibles = propuestas
-    .filter(p => filtroEstado === 'todas' || estadoDe(p) === filtroEstado)
+    .filter(p => filtroEstado === 'todas' || (p.status || 'draft') === filtroEstado)
     .filter(p => !filtro || sinAcentos(`${p.title} ${p.clientName}`).includes(filtro));
   const hay = propuestas.length > 0;
 
   $('#panel-saludo').textContent = primerNombre() ? `Hola, ${primerNombre()}` : 'Hola';
   elPanelResumen.textContent = hay ? `${propuestas.length} ${propuestas.length === 1 ? 'propuesta' : 'propuestas'}` : '';
   elMetricas.hidden = !hay;
-  if (hay) elMetricas.innerHTML = metricasHTML();
+  if (hay) elMetricas.innerHTML = metricasHTML(propuestas);
   elHerramientas.hidden = propuestas.length < 2;
-  elFiltros.innerHTML = filtrosHTML();
+  elFiltros.innerHTML = filtrosHTML(propuestas, filtroEstado);
   elPanelVacio.hidden = panelCargando || panelError || hay;
 
   if (panelError) {
@@ -3844,42 +2430,6 @@ const elPortafoliosVacio = $('#portafolios-vacio');
 const elPortafoliosHerramientas = $('#portafolios-herramientas');
 const campoBuscarPortafolios = $('#portafolios-buscar');
 
-const portafolioItemHTML = pf => {
-  const titulo = texto(pf.title).trim() || 'Portfolio sin título';
-  const subtitulo = texto(pf.subtitle).trim() || 'Sin subtítulo';
-  const cant = Number(pf.projectCount) || (pf.payload?.proyectos?.length || 0);
-  const cantTexto = cant === 1 ? '1 proyecto' : `${cant} proyectos`;
-  const temaNombre = TEMAS[pf.theme]?.nombre || 'Elegante oscuro';
-  const inicial = titulo.charAt(0).toUpperCase() || 'P';
-  const editada = fechaDe(pf.updatedAt) || (typeof pf.updatedAt === 'string' ? new Date(pf.updatedAt) : null);
-  const tiempo = editada && !Number.isNaN(editada.getTime()) ? tiempoHTML(editada, `Editado ${haceCuanto(editada)}`) : '';
-  const esNube = !!(nube() && /^[A-Za-z0-9]{20}$/.test(pf.id));
-  return `
-    <li class="propuesta">
-      <a class="propuesta__abrir" href="?portafolio=${encodeURIComponent(pf.id)}" data-accion="abrir-portafolio" data-id="${esc(pf.id)}">
-        <span class="propuesta__avatar" data-tono="${tonoDe(titulo)}" aria-hidden="true">${esc(inicial)}</span>
-        <span class="propuesta__textos">
-          <span class="propuesta__titulo">${esc(titulo)}</span>
-          <span class="propuesta__cliente">${esc(subtitulo)}</span>
-        </span>
-      </a>
-      <span class="propuesta__monto">${esc(cantTexto)}</span>
-      <span class="propuesta__estado propuesta__estado--sent">${esc(temaNombre)}</span>
-      <span class="propuesta__fecha">${tiempo}</span>
-      <span class="propuesta__acciones">
-        ${esNube && pf.publico === true ? `<button type="button" class="icono-boton icono-boton--activo" data-accion="copiar-link-portafolio" data-id="${esc(pf.id)}" aria-label="Copiar link de «${esc(titulo)}»" title="Link activo: copiar">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.3 0l2-2a3 3 0 0 0-4.3-4.3l-.9.9M9.2 6.8a3 3 0 0 0-4.3 0l-2 2a3 3 0 0 0 4.3 4.3l.9-.9"/></svg>
-        </button>` : ''}
-        <button type="button" class="icono-boton" data-accion="duplicar-portafolio" data-id="${esc(pf.id)}" aria-label="Duplicar «${esc(titulo)}»" title="Duplicar para otro tipo de cliente">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.2"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
-        </button>
-        <button type="button" class="icono-boton icono-boton--peligro" data-accion="borrar-portafolio" data-id="${esc(pf.id)}" aria-label="Borrar «${esc(titulo)}»" title="Borrar">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>
-        </button>
-      </span>
-    </li>`;
-};
-
 const renderPanelPortafolios = () => {
   if (!elPortafolios || elPortafolios.hidden) return;
   const filtro = sinAcentos(campoBuscarPortafolios?.value.trim() || '');
@@ -3898,7 +2448,7 @@ const renderPanelPortafolios = () => {
   } else {
     elPortafoliosEstado.textContent = '';
   }
-  if (elListaPortafolios) elListaPortafolios.innerHTML = visibles.map(portafolioItemHTML).join('');
+  if (elListaPortafolios) elListaPortafolios.innerHTML = visibles.map(pf => portafolioItemHTML(pf, { conNube: !!nube() })).join('');
 };
 
 campoBuscarPortafolios?.addEventListener('input', renderPanelPortafolios);
@@ -3967,7 +2517,7 @@ const irAPortafolios = ({ historial = true } = {}) => {
   cerrarEdicion();
   if (!nube() && !portafolios.length) portafolios = cargarPortafoliosLocales();
   if (historial && seccionEnUrl() !== 'portafolios') {
-    try { history.pushState(null, '', `${location.pathname}?seccion=portafolios`); } catch { }
+    try { history.pushState(null, '', `${location.pathname}?seccion=portafolios`); } catch {}
   }
   mostrarVista('portafolios');
   renderPanelPortafolios();
@@ -3982,7 +2532,7 @@ const mostrarEditorPortafolio = (id, contenido, { historial = true } = {}) => {
   errorGuardado = '';
   avisoError = false;
   if (historial) {
-    try { history.pushState(null, '', `${location.pathname}?portafolio=${encodeURIComponent(id)}`); } catch { }
+    try { history.pushState(null, '', `${location.pathname}?portafolio=${encodeURIComponent(id)}`); } catch {}
   }
   mostrarVista('editor');
   cambiarPestana(false);
@@ -4456,7 +3006,7 @@ const iniciarConCuenta = async () => {
   try {
     continuar = sessionStorage.getItem(`${CLAVE}:continuar`);
     sessionStorage.removeItem(`${CLAVE}:continuar`);
-  } catch { }
+  } catch {}
   const id = idEnUrl();
   if (migrada && continuar) {
     mostrarEditor(migrada.id, migrada.contenido, { historial: false });
@@ -4470,26 +3020,26 @@ const iniciarConCuenta = async () => {
   else irAlPanel({ historial: false });
 };
 
-const authPantalla = $('#auth-pantalla');
-const authForm = $('#auth-form');
-const authGoogle = $('#auth-google');
-const authErrorG = $('#auth-error-google');
-const authError = $('#auth-error');
-const authSubmit = $('#auth-submit');
+const authPantalla   = $('#auth-pantalla');
+const authForm       = $('#auth-form');
+const authGoogle     = $('#auth-google');
+const authErrorG     = $('#auth-error-google');
+const authError      = $('#auth-error');
+const authSubmit     = $('#auth-submit');
 const authSubmitText = authSubmit?.querySelector('.auth__submit-texto');
-const authSpinner = authSubmit?.querySelector('.auth__spinner');
-const authNombre = $('#auth-nombre');
-const authEmail = $('#auth-email');
-const authPass = $('#auth-pass');
-const menuUsuario = $('#menu-usuario');
-const authOlvido = $('#auth-olvido');
-const authMensaje = $('#auth-mensaje');
-const elIngreso = $('#auth-ingreso');
-const elVerificar = $('#auth-verificar');
+const authSpinner    = authSubmit?.querySelector('.auth__spinner');
+const authNombre     = $('#auth-nombre');
+const authEmail      = $('#auth-email');
+const authPass       = $('#auth-pass');
+const menuUsuario    = $('#menu-usuario');
+const authOlvido     = $('#auth-olvido');
+const authMensaje    = $('#auth-mensaje');
+const elIngreso      = $('#auth-ingreso');
+const elVerificar    = $('#auth-verificar');
 const verificarError = $('#auth-verificar-error');
 const verificarMensaje = $('#auth-verificar-mensaje');
 let authModo = 'login';
-let entrar = () => { };
+let entrar = () => {};
 
 // Sin sesión: editor de prueba que guarda en este navegador. Al registrarse, lo que
 // armó pasa a su cuenta (migrarLocal) y sigue con lo que quería hacer.
@@ -4542,7 +3092,7 @@ const abrirRegistro = motivo => {
       guardadoParaRegistro = !invitadoEdito;
       guardarLocal();
     }
-    try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch { }
+    try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch {}
   }
   const elMotivo = $('#auth-motivo');
   elMotivo.textContent = MOTIVOS_REGISTRO[motivo] || '';
@@ -4559,7 +3109,7 @@ const cerrarRegistro = () => {
     sessionStorage.removeItem(`${CLAVE}:continuar`);
     // Si solo se guardó para el registro y al final no se registró, no queda nada guardado.
     if (guardadoParaRegistro && !invitadoEdito) { localStorage.removeItem(CLAVE); sessionStorage.removeItem(CLAVE); }
-  } catch { }
+  } catch {}
   guardadoParaRegistro = false;
 };
 $('#auth-cerrar').addEventListener('click', cerrarRegistro);
@@ -4576,14 +3126,14 @@ const mostrarMensaje = (el, texto) => {
 const mostrarErrorAuth = (el, msg) => {
   if (!el) return;
   const MENSAJES = {
-    'auth/user-not-found': 'No hay cuenta con ese email.',
-    'auth/wrong-password': 'Contraseña incorrecta.',
-    'auth/invalid-credential': 'Email o contraseña incorrectos.',
-    'auth/email-already-in-use': 'Ya existe una cuenta con ese email.',
-    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
-    'auth/invalid-email': 'El email no es válido.',
-    'auth/too-many-requests': 'Demasiados intentos. Esperá un momento.',
-    'auth/popup-closed-by-user': '',
+    'auth/user-not-found':          'No hay cuenta con ese email.',
+    'auth/wrong-password':          'Contraseña incorrecta.',
+    'auth/invalid-credential':      'Email o contraseña incorrectos.',
+    'auth/email-already-in-use':    'Ya existe una cuenta con ese email.',
+    'auth/weak-password':           'La contraseña debe tener al menos 6 caracteres.',
+    'auth/invalid-email':           'El email no es válido.',
+    'auth/too-many-requests':       'Demasiados intentos. Esperá un momento.',
+    'auth/popup-closed-by-user':    '',
     'auth/cancelled-popup-request': ''
   };
   const texto = MENSAJES[msg?.code] ?? MENSAJES[msg?.message] ?? (typeof msg === 'string' ? msg : 'Ocurrió un error. Intentá de nuevo.');
@@ -4639,7 +3189,7 @@ if (authPantalla && AteneaDB) {
   authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = authEmail?.value.trim();
-    const pass = authPass?.value;
+    const pass  = authPass?.value;
     if (!email || !pass) return;
     setAuthCargando(true);
     if (authError) authError.hidden = true;
@@ -4719,7 +3269,7 @@ if (authPantalla && AteneaDB) {
     if (document.visibilityState !== 'visible' || elVerificar.hidden || !AteneaDB.auth.getUser()) return;
     try {
       if (await AteneaDB.auth.comprobarVerificacion()) entrar(AteneaDB.auth.getUser());
-    } catch { }
+    } catch {}
   });
 }
 
@@ -4757,7 +3307,7 @@ eliminarBoton.addEventListener('click', async () => {
     try {
       Object.keys(localStorage).filter(k => k.startsWith(CLAVE)).forEach(k => localStorage.removeItem(k));
       sessionStorage.setItem(`${CLAVE}:cuenta-eliminada`, '1');
-    } catch { }
+    } catch {}
     location.replace('/');
   } catch (e) {
     console.error('No se pudo eliminar la cuenta:', e);
@@ -4952,7 +3502,7 @@ if (esLinkPortafolioCorto) {
           sessionStorage.removeItem(`${CLAVE}:cuenta-eliminada`);
           avisar('Tu cuenta y todos tus datos se eliminaron.', 6000);
         }
-      } catch { }
+      } catch {}
       return;
     }
     // Al volver desde el link del email, el usuario en memoria puede estar desactualizado.

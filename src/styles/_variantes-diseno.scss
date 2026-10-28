@@ -5,7 +5,7 @@
 .portada {
   background-image:
     radial-gradient(circle at 88% 14%, rgba(255, 255, 255, 0.035) 0%, transparent 52%),
-    radial-gradient(circle at 12% 88%, rgba(0, 0, 0, 0.22) 0%, transparent 58%);
+    radial-gradient(circle at 12% 88%, rgba(0, 0, 0, 0.08) 0%, transparent 58%);
 
   &::before {
     display: none;
@@ -66,7 +66,7 @@
     padding: 0.28em 0.75em;
     border: 1px solid var(--portada-linea, rgba(255, 255, 255, 0.14));
     border-radius: 999px;
-    background: rgba(255, 255, 255, 0.03);
+    background: var(--portada-superficie, rgba(255, 255, 255, 0.03));
     backdrop-filter: blur(6px);
     font-size: 0.82em;
     letter-spacing: 0.04em;
@@ -106,7 +106,7 @@
       padding: 0.32em 0.9em;
       border-left: 3px solid var(--portada-acento, var(--dorado));
       border-radius: 0 var(--radio-s) var(--radio-s) 0;
-      background: rgba(255, 255, 255, 0.055);
+      background: var(--portada-superficie, rgba(255, 255, 255, 0.055));
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
       backdrop-filter: blur(6px);
       letter-spacing: 0.04em;
@@ -119,8 +119,8 @@
       padding: 1.5em 1.8em;
       border: 1px solid var(--portada-borde, var(--dorado-tenue));
       border-radius: var(--radio-m);
-      background: rgba(0, 0, 0, 0.22);
-      box-shadow: 0 0.8em 2.4em rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      background: var(--portada-superficie, rgba(0, 0, 0, 0.22));
+      box-shadow: 0 0.8em 2.4em rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.07);
       backdrop-filter: blur(10px);
     }
   }
@@ -155,7 +155,7 @@
       padding: 0.38em 1.2em;
       border: 1px solid var(--portada-borde, var(--dorado-tenue));
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.055);
+      background: var(--portada-superficie, rgba(255, 255, 255, 0.055));
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(8px);
       font-size: 0.86em;
@@ -165,7 +165,7 @@
     }
 
     .portada__titulo {
-      max-width: 13em;
+      max-width: calc(13em / var(--escala-titulo-portada, 1));
       margin-left: auto;
       margin-right: auto;
     }
@@ -184,8 +184,8 @@
       padding: 1.45em 1.85em;
       border: 1px solid var(--portada-linea, var(--superficie));
       border-radius: var(--radio-l);
-      background: rgba(0, 0, 0, 0.18);
-      box-shadow: 0 0.8em 2.2em rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      background: var(--portada-superficie, rgba(0, 0, 0, 0.18));
+      box-shadow: 0 0.8em 2.2em rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.06);
       backdrop-filter: blur(10px);
     }
   }
@@ -198,7 +198,7 @@
       border-radius: var(--radio-s);
       background: var(--dorado);
       color: var(--acento-tinta, var(--portada-fondo, var(--negro)));
-      box-shadow: 0 0.35em 1.2em rgba(0, 0, 0, 0.22);
+      box-shadow: 0 0.35em 1.2em rgba(0, 0, 0, 0.14);
       font-weight: 700;
       font-size: 0.82em;
       text-transform: uppercase;
@@ -220,7 +220,7 @@
         border: 1px solid var(--portada-linea, var(--superficie));
         border-top: 2px solid var(--portada-acento, var(--dorado));
         border-radius: var(--radio-m);
-        background: rgba(0, 0, 0, 0.2);
+        background: var(--portada-superficie, rgba(0, 0, 0, 0.2));
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
         backdrop-filter: blur(8px);
       }
@@ -410,11 +410,11 @@
   .objetivos-lista {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(15em, 1fr));
-    gap: 0.9em;
+    gap: calc(0.9em * var(--escala-espaciado-interno, 1));
 
     .objetivo-item {
       margin: 0;
-      padding: 1.1em 1.25em;
+      padding: calc(1.1em * var(--escala-espaciado-interno, 1)) calc(1.25em * var(--escala-espaciado-interno, 1));
       border: 1px solid var(--d-linea);
       border-radius: var(--radio-m);
       background: var(--dorado-fondo);
@@ -425,12 +425,12 @@
   .servicios-grilla {
     display: flex;
     flex-direction: column;
-    gap: 1em;
+    gap: calc(1em * var(--escala-espaciado-interno, 1));
   }
 
   .servicio {
     margin: 0;
-    padding: 1.45em 1.6em;
+    padding: calc(1.45em * var(--escala-espaciado-interno, 1)) calc(1.6em * var(--escala-espaciado-interno, 1));
     border: 1px solid var(--d-linea);
     border-radius: var(--radio-m);
     background: rgba(128, 128, 128, 0.03);
@@ -449,12 +449,12 @@
   .etapas {
     display: flex;
     flex-direction: column;
-    gap: 0.85em;
+    gap: calc(0.85em * var(--escala-espaciado-interno, 1));
   }
 
   .etapa {
     margin: 0;
-    padding: 1.15em 1.35em;
+    padding: calc(1.15em * var(--escala-espaciado-interno, 1)) calc(1.35em * var(--escala-espaciado-interno, 1));
     border: 1px solid var(--d-linea);
     border-radius: var(--radio-m);
     background: rgba(128, 128, 128, 0.03);
@@ -490,7 +490,7 @@
 
   .presentacion-bloque,
   .contexto-bloque {
-    padding: 1.4em 1.6em;
+    padding: calc(1.4em * var(--escala-espaciado-interno, 1)) calc(1.6em * var(--escala-espaciado-interno, 1));
     border: 1px solid var(--d-linea);
     border-radius: var(--radio-l);
     background: rgba(128, 128, 128, 0.04);
@@ -503,13 +503,13 @@
   .objetivos-lista {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(13.5em, 1fr));
-    gap: 0.9em;
+    gap: calc(0.9em * var(--escala-espaciado-interno, 1));
 
     .objetivo-item {
       flex-direction: column;
       gap: 0.55em;
       margin: 0;
-      padding: 1.25em 1.35em;
+      padding: calc(1.25em * var(--escala-espaciado-interno, 1)) calc(1.35em * var(--escala-espaciado-interno, 1));
       border: 1px solid var(--d-linea);
       border-radius: var(--radio-l);
       background: var(--dorado-fondo);
@@ -524,12 +524,12 @@
   .servicios-grilla {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1.1em;
+    gap: calc(1.1em * var(--escala-espaciado-interno, 1));
   }
 
   .servicio {
     margin: 0;
-    padding: 1.6em 1.75em;
+    padding: calc(1.6em * var(--escala-espaciado-interno, 1)) calc(1.75em * var(--escala-espaciado-interno, 1));
     border: 1px solid var(--d-linea);
     border-radius: var(--radio-l);
     background: rgba(128, 128, 128, 0.04);
@@ -570,14 +570,14 @@
   .etapas {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(14em, 1fr));
-    gap: 0.9em;
+    gap: calc(0.9em * var(--escala-espaciado-interno, 1));
   }
 
   .etapa {
     grid-template-columns: 2.4em 1fr;
     gap: 0.65em 0.75em;
     margin: 0;
-    padding: 1.25em 1.35em;
+    padding: calc(1.25em * var(--escala-espaciado-interno, 1)) calc(1.35em * var(--escala-espaciado-interno, 1));
     border: 1px solid var(--d-linea);
     border-radius: var(--radio-l);
     background: rgba(128, 128, 128, 0.04);
@@ -619,7 +619,7 @@
 .doc[data-estilo="minimal"] {
   .bloque {
     border-top: 0;
-    padding: 2em 0;
+    padding: calc(2em * var(--escala-espaciado, 1)) 0;
 
     &__titulo {
       padding-left: 0.55em;
@@ -636,7 +636,7 @@
   .servicio {
     margin-left: 0;
     margin-right: 0;
-    padding: 1.15em 0 1.15em 1.25em;
+    padding: calc(1.15em * var(--escala-espaciado-interno, 1)) 0 calc(1.15em * var(--escala-espaciado-interno, 1)) 1.25em;
     border-top: 0;
     border-left: 2px solid var(--d-linea);
     border-radius: 0;
@@ -706,5 +706,3 @@
     animation: none !important;
   }
 }
-
-

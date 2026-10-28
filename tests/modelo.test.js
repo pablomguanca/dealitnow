@@ -14,6 +14,7 @@ import {
   normalizarPropuesta,
   vacio
 } from '../src/modelo.js';
+import { LOGO_MAX_ARCHIVO, FOTO_MAX_ARCHIVO } from '../src/lib/imagenes.js';
 
 const conServicios = (servicios, inversion = {}) => ({
   ...vacio(),
@@ -63,6 +64,11 @@ describe('normalizarPropuesta', () => {
       expect(n.tema.portada).toBe('editorial');
       expect(n.tema.decoracion).toBe('marco');
       expect(n.tema.estilo).toBe('editorial');
+      expect(n.tema.escalaTituloPortada).toBe(100);
+      expect(n.tema.escalaTitulos).toBe(100);
+      expect(n.tema.escalaTexto).toBe(100);
+      expect(n.tema.espaciadoSecciones).toBe(100);
+      expect(n.tema.espaciadoInterno).toBe(100);
       expect(n.inversion.moneda).toBe('USD');
     }
   });
@@ -80,13 +86,34 @@ describe('normalizarPropuesta', () => {
     expect(n.servicios[0]).toMatchObject({ nombre: '5', modalidad: 'unico' });
     expect(n.servicios[0].id).toBeTruthy();
 
-    const aurora = normalizarPropuesta({ tema: { preset: 'aurora-tech', colorTexto: '#F8FAFC', colorSvg: '#38BDF8', opacidadSvg: 160 } });
+    const aurora = normalizarPropuesta({
+      tema: {
+        preset: 'aurora-tech',
+        colorTexto: '#F8FAFC',
+        colorSvg: '#38BDF8',
+        colorFondo: '#FFFFFF',
+        colorPortada: '#0F172A',
+        opacidadSvg: 160,
+        escalaTituloPortada: 125,
+        escalaTitulos: 115,
+        escalaTexto: 105,
+        espaciadoSecciones: 130,
+        espaciadoInterno: 90
+      }
+    });
     expect(aurora.tema.portada).toBe('impacto');
     expect(aurora.tema.decoracion).toBe('aurora');
     expect(aurora.tema.estilo).toBe('bento');
     expect(aurora.tema.colorTexto).toBe('#F8FAFC');
     expect(aurora.tema.colorSvg).toBe('#38BDF8');
+    expect(aurora.tema.colorFondo).toBe('#FFFFFF');
+    expect(aurora.tema.colorPortada).toBe('#0F172A');
     expect(aurora.tema.opacidadSvg).toBe(160);
+    expect(aurora.tema.escalaTituloPortada).toBe(125);
+    expect(aurora.tema.escalaTitulos).toBe(115);
+    expect(aurora.tema.escalaTexto).toBe(105);
+    expect(aurora.tema.espaciadoSecciones).toBe(130);
+    expect(aurora.tema.espaciadoInterno).toBe(90);
   });
 
   it('descarta logos que no pasan la validación', () => {
@@ -118,7 +145,12 @@ describe('normalizarPortafolio', () => {
     for (const [id, tpl] of Object.entries(PLANTILLAS_PORTAFOLIO)) {
       const creado = normalizarPortafolio(tpl.crear());
       expect(normalizarPortafolio(creado), `plantilla portafolio ${id}`).toEqual(creado);
-      expect(creado.proyectos.length).toBeGreaterThan(0);
+      if (id === 'en-blanco') {
+        expect(creado.proyectos).toHaveLength(0);
+        expect(creado.tema.preset).toBe('lienzo-blanco');
+      } else {
+        expect(creado.proyectos.length).toBeGreaterThan(0);
+      }
     }
   });
 
@@ -169,5 +201,67 @@ describe('normalizarPortafolio', () => {
     expect(prop.testimonios).toHaveLength(1);
     expect(prop.faqs).toHaveLength(1);
     expect(normalizarPropuesta(prop)).toEqual(prop);
+  });
+});
+
+import { decoracionPortadaSVG } from '../src/lib/decoraciones.js';
+import { resolverColoresTema } from '../src/lib/tema.js';
+import { generarPropuestaHTML, generarPortafolioHTML } from '../src/lib/render.js';
+import { filtrosHTML, metricasHTML } from '../src/lib/paneles.js';
+
+describe('módulos de render, tema, imágenes y decoraciones', () => {
+  it('admite archivos de portada y galería mayores a 5 MB (hasta 50 MB)', () => {
+    expect(LOGO_MAX_ARCHIVO).toBeGreaterThan(5 * 1024 * 1024);
+    expect(FOTO_MAX_ARCHIVO).toBeGreaterThanOrEqual(50 * 1024 * 1024);
+  });
+
+  it('genera decoraciones SVG con color e intensidad personalizados y IDs únicos', () => {
+    const svg1 = decoracionPortadaSVG('aurora', 150, '#FF5500');
+    const svg2 = decoracionPortadaSVG('aurora', 80, '#00AAFF');
+    expect(svg1).toContain('#FF5500');
+    expect(svg2).toContain('#00AAFF');
+    expect(svg1).not.toEqual(svg2);
+    expect(decoracionPortadaSVG('ninguna', 100)).toBe('');
+    expect(decoracionPortadaSVG('marco', 0)).toBe('');
+  });
+
+  it('resuelve colores del tema garantizando contraste, tema en blanco y escalas personalizadas', () => {
+    const col = resolverColoresTema({ preset: 'elegante-oscuro', acento: '#C9A84C', opacidadSvg: 135 });
+    expect(col.acento).toBe('#C9A84C');
+    expect(col.opacidadSvg).toBe(135);
+    expect(col.esClaro).toBe(false);
+
+    const blanco = resolverColoresTema({
+      preset: 'lienzo-blanco',
+      escalaTituloPortada: 120,
+      escalaTitulos: 110,
+      escalaTexto: 105,
+      espaciadoSecciones: 80,
+      espaciadoInterno: 90
+    });
+    expect(blanco.esClaro).toBe(true);
+    expect(blanco.portadaClara).toBe(true);
+    expect(blanco.portadaBg).toBe('#FFFFFF');
+    expect(blanco.fondoBase).toBe('#FFFFFF');
+    expect(blanco.escalaTituloPortada).toBe(120);
+    expect(blanco.escalaTitulos).toBe(110);
+    expect(blanco.escalaTexto).toBe(105);
+    expect(blanco.espaciadoSecciones).toBe(80);
+    expect(blanco.espaciadoInterno).toBe(90);
+  });
+
+  it('genera el HTML de una propuesta y de un portfolio / landing page', () => {
+    const htmlProp = generarPropuestaHTML(ejemplo(), { web: true });
+    expect(htmlProp).toContain('portada');
+    expect(htmlProp).toContain('barra-cliente');
+
+    const htmlPf = generarPortafolioHTML(ejemploPortafolio(), { web: true });
+    expect(htmlPf).toContain('portada');
+    expect(htmlPf).toContain('sec-proyectos');
+  });
+
+  it('genera métricas y filtros del panel de propuestas', () => {
+    expect(filtrosHTML([], 'todas')).toContain('Todas');
+    expect(metricasHTML([])).toContain('Esperando respuesta');
   });
 });

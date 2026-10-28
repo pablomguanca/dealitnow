@@ -59,6 +59,13 @@ export const LAYOUTS_GALERIA = {
 };
 
 export const TEMAS = {
+  'lienzo-blanco': {
+    nombre: 'Lienzo en blanco', etiqueta: '100% Blanco', plan: 'gratis', acento: '#111827', modo: 'claro', portadaClara: true,
+    fondo: '#FFFFFF', fondo2: '#F8FAFC', superficie: '#F1F5F9', superficieBorde: '#E2E8F0',
+    texto: '#0F172A', textoApagado: '#475569', textoTenue: '#94A3B8',
+    fuenteTitulos: 'Inter', fuenteCuerpo: 'Inter',
+    portada: 'editorial', decoracion: 'ninguna', estilo: 'minimal'
+  },
   'elegante-oscuro': {
     nombre: 'Elegante oscuro', etiqueta: 'Noir & Oro', plan: 'gratis', acento: '#C9A84C', modo: 'oscuro',
     fondo: '#06060A', fondo2: '#0E0E18', superficie: '#1A1A2E', superficieBorde: '#2A2A44',
@@ -139,6 +146,12 @@ export const hoyISO = () => {
   return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}`;
 };
 
+const rangoEntero = (valor, min, max, defecto = 100) => {
+  if (valor === undefined || valor === null || valor === '') return defecto;
+  const num = Number(valor);
+  return Number.isFinite(num) ? Math.min(max, Math.max(min, Math.round(num))) : defecto;
+};
+
 export const LISTAS = {
   objetivos: { ruta: 'objetivos', nombre: 'objetivo', nuevo: () => ({ id: uid(), texto: '' }) },
   servicios: { ruta: 'servicios', nombre: 'servicio', nuevo: () => ({ id: uid(), nombre: '', modalidad: 'unico', cantidad: 1, precio: 0, descripcion: '', entregables: '', opcional: false, imagen: '' }) },
@@ -181,12 +194,19 @@ export const vacio = () => ({
     acento: '#C9A84C',
     colorTexto: '',
     colorSvg: '',
+    colorFondo: '',
+    colorPortada: '',
     opacidadSvg: 100,
     fuenteTitulos: 'Bebas Neue',
     fuenteCuerpo: 'Montserrat',
     portada: 'editorial',
     decoracion: 'marco',
-    estilo: 'editorial'
+    estilo: 'editorial',
+    escalaTituloPortada: 100,
+    escalaTitulos: 100,
+    escalaTexto: 100,
+    espaciadoSecciones: 100,
+    espaciadoInterno: 100
   }
 });
 
@@ -242,16 +262,43 @@ export const ejemplo = () => ({
     acento: '#C9A84C',
     colorTexto: '',
     colorSvg: '',
+    colorFondo: '',
+    colorPortada: '',
     opacidadSvg: 100,
     fuenteTitulos: 'Bebas Neue',
     fuenteCuerpo: 'Montserrat',
     portada: 'editorial',
     decoracion: 'marco',
-    estilo: 'editorial'
+    estilo: 'editorial',
+    escalaTituloPortada: 100,
+    escalaTitulos: 100,
+    escalaTexto: 100,
+    espaciadoSecciones: 100,
+    espaciadoInterno: 100
   }
 });
 
 export const PLANTILLAS = {
+  'en-blanco': {
+    nombre: 'En blanco (desde cero)',
+    rubro: 'Lienzo limpio',
+    desc: 'Tema 100% blanco sin decoración ni textos precargados para armar todo a tu medida.',
+    plan: 'gratis',
+    crear: () => {
+      const base = vacio();
+      base.tema = {
+        ...base.tema,
+        preset: 'lienzo-blanco',
+        acento: '#111827',
+        fuenteTitulos: 'Inter',
+        fuenteCuerpo: 'Inter',
+        portada: 'editorial',
+        decoracion: 'ninguna',
+        estilo: 'minimal'
+      };
+      return base;
+    }
+  },
   'diseno-web': {
     nombre: 'Branding y Tienda Online',
     rubro: 'Diseño & Web',
@@ -278,23 +325,22 @@ export const PLANTILLAS = {
       propuesta: { titulo: 'Portal de clientes y trazabilidad de envíos en tiempo real', numero: 'P-2026-089', fecha: hoyISO(), validez: 15 },
       contexto: 'Hoy el equipo de atención responde más de 180 consultas diarias por WhatsApp sobre el estado de los despachos, y la carga de remitos se concilia en planillas separadas al final del día.\n\nNecesitan un portal autogestionable donde cada cliente corporativo consulte sus envíos en vivo, descargue comprobantes y solicite retiros sin depender de soporte manual.',
       objetivos: [
-        { id: uid(), texto: 'Reducir en un 70% las consultas manuales de seguimiento por WhatsApp y teléfono.' },
-        { id: uid(), texto: 'Centralizar órdenes de retiro, estados de entrega y remitos firmados en un único panel.' },
-        { id: uid(), texto: 'Integrar notificaciones automáticas por WhatsApp e email en cada cambio de estado.' }
+        { id: uid(), texto: 'Reducir en un 70% las consultas operativas por WhatsApp durante el primer trimestre.' },
+        { id: uid(), texto: 'Centralizar órdenes, estados de entrega y comprobantes firmados en un único panel web.' },
+        { id: uid(), texto: 'Integrar notificaciones automáticas por WhatsApp y correo en cada hito del envío.' }
       ],
       servicios: [
-        { id: uid(), nombre: 'Arquitectura UX/UI y prototipo interactivo', modalidad: 'unico', cantidad: 1, precio: 950, descripcion: 'Diseño completo de pantallas para choferes, operadores y clientes corporativos, validado antes de programar.', entregables: 'Flujos de usuario completos\nPrototipo navegable en Figma\nSistema de componentes UI', opcional: false },
-        { id: uid(), nombre: 'Portal web de clientes y panel administrador', modalidad: 'unico', cantidad: 1, precio: 3400, descripcion: 'Aplicación web responsiva con acceso por roles, historial de envíos, descarga de remitos y tablero de métricas.', entregables: 'Portal de clientes con login seguro\nPanel operativo para administración\nCarga masiva por Excel/CSV\nExportación de reportes contables', opcional: false },
-        { id: uid(), nombre: 'API y sincronización con sistema actual', modalidad: 'unico', cantidad: 1, precio: 1100, descripcion: 'Conexión segura con la base de datos de despachos y generación automática de etiquetas con código QR.', entregables: 'Endpoints REST documentados\nGenerador de etiquetas QR en PDF\nPruebas de carga y seguridad', opcional: false },
-        { id: uid(), nombre: 'Infraestructura cloud, monitoreo y evolución', modalidad: 'mensual', cantidad: 1, precio: 420, descripcion: 'Mantenimiento preventivo, copias de seguridad diarias, monitoreo 24/7 y bolsa mensual de mejoras.', entregables: 'Backups automáticos diarios\nMonitoreo de disponibilidad\nHasta 8 horas mensuales de mejoras', opcional: false },
-        { id: uid(), nombre: 'Bot de avisos por WhatsApp Business API', modalidad: 'unico', cantidad: 1, precio: 780, descripcion: 'Envío automático de mensajes al destinatario cuando el pedido sale a reparto y cuando se entrega.', entregables: 'Integración oficial con Meta Cloud API\nPlantillas de mensajes aprobadas\nPanel de historial de envíos', opcional: true },
-        { id: uid(), nombre: 'Modo offline para choferes en ruta', modalidad: 'unico', cantidad: 1, precio: 640, descripcion: 'Permite registrar entregas y firmas digitales sin señal celular, sincronizando al recuperar conexión.', entregables: 'PWA instalable en celulares\nCaptura de firma y foto en entrega\nSincronización automática en segundo plano', opcional: true }
+        { id: uid(), nombre: 'Arquitectura UX/UI y prototipo interactivo', modalidad: 'unico', cantidad: 1, precio: 950, descripcion: 'Relevamiento de flujos operativos, diseño de pantallas para clientes y administradores, y prototipo navegable en Figma.', entregables: 'Mapa de flujos y perfiles de usuario\nSistema de diseño UI adaptable (móvil y escritorio)\nPrototipo interactivo validado', opcional: false },
+        { id: uid(), nombre: 'Desarrollo de plataforma web y panel operativo', modalidad: 'unico', cantidad: 1, precio: 3200, descripcion: 'Construcción del portal de clientes, buscador de guías en tiempo real, carga de comprobantes y panel de administración.', entregables: 'Portal web para clientes con acceso seguro\nPanel de administración y gestión de despachos\nBase de datos en la nube con backups diarios\nDespliegue en servidor de producción con SSL', opcional: false },
+        { id: uid(), nombre: 'Integración con API de WhatsApp y alertas automáticas', modalidad: 'unico', cantidad: 1, precio: 680, descripcion: 'Conexión oficial para enviar avisos automáticos cuando el pedido sale a reparto y cuando se entrega.', entregables: 'Configuración de plantillas de WhatsApp Business\nWebhooks de actualización de estado\nHistorial de envíos y lecturas', opcional: false },
+        { id: uid(), nombre: 'Mantenimiento evolutivo, monitoreo y soporte', modalidad: 'mensual', cantidad: 1, precio: 420, descripcion: 'Monitoreo de servidores, actualizaciones de seguridad, soporte prioritario y hasta 8 horas mensuales de mejoras.', entregables: 'Monitoreo de disponibilidad 24/7\nSoporte técnico con respuesta en el día\n8 horas mensuales para nuevas funciones', opcional: false },
+        { id: uid(), nombre: 'App móvil progresiva (PWA) para choferes', modalidad: 'unico', cantidad: 1, precio: 890, descripcion: 'Aplicación instalable en el celular de los repartidores para escanear códigos QR, capturar firma digital y subir foto de entrega.', entregables: 'App móvil instalable en Android e iOS\nEscaneo de código de barras / QR\nCarga de foto y geolocalización de entrega', opcional: true }
       ],
       etapas: [
-        { id: uid(), nombre: 'Relevamiento y prototipo UX', duracion: '2 semanas', descripcion: 'Mapeo de procesos operativos, diseño de pantallas y validación con el equipo.' },
-        { id: uid(), nombre: 'Desarrollo del núcleo y API', duracion: '4 semanas', descripcion: 'Construcción de base de datos, panel operativo, roles y sincronización.' },
-        { id: uid(), nombre: 'Portal de clientes y pruebas', duracion: '2 semanas', descripcion: 'Pruebas con usuarios reales, ajustes de rendimiento y capacitación.' },
-        { id: uid(), nombre: 'Puesta en marcha asistida', duracion: '1 semana', descripcion: 'Despliegue a producción y acompañamiento en vivo durante la primera semana.' }
+        { id: uid(), nombre: 'Relevamiento y prototipo UX', duracion: '2 semanas', descripcion: 'Definición de requerimientos técnicos y validación de pantallas.' },
+        { id: uid(), nombre: 'Desarrollo del núcleo y base de datos', duracion: '3 semanas', descripcion: 'Panel de administración, carga de envíos y autenticación.' },
+        { id: uid(), nombre: 'Portal de clientes y alertas', duracion: '2 semanas', descripcion: 'Vista pública de seguimiento, notificaciones y pruebas de carga.' },
+        { id: uid(), nombre: 'Puesta en marcha y capacitación', duracion: '1 semana', descripcion: 'Despliegue final, migración inicial de clientes y entrenamiento al equipo.' }
       ],
       inversion: {
         moneda: 'USD',
@@ -302,13 +348,13 @@ export const PLANTILLAS = {
         impuestoNombre: 'IVA',
         impuesto: 0,
         pagos: [
-          { id: uid(), concepto: 'Al dar inicio al proyecto', porcentaje: 40 },
-          { id: uid(), concepto: 'Contra aprobación del prototipo y avance funcional', porcentaje: 30 },
-          { id: uid(), concepto: 'Contra puesta en producción y entrega final', porcentaje: 30 }
+          { id: uid(), concepto: 'Al aprobar la propuesta y dar inicio', porcentaje: 40 },
+          { id: uid(), concepto: 'Contra entrega del prototipo y entorno de pruebas', porcentaje: 30 },
+          { id: uid(), concepto: 'En la puesta en producción final', porcentaje: 30 }
         ]
       },
-      condiciones: 'El código fuente desarrollado a medida pasa a ser propiedad del cliente una vez completados los pagos.\nCada etapa cuenta con una instancia de revisión y validación conjunta.\nLos costos directos de servidores o consumo de mensajes de WhatsApp corren por cuenta del cliente.\nGarantía técnica de 60 días sobre todo el alcance entregado.',
-      proximosPasos: 'Aceptar la propuesta seleccionando los módulos opcionales deseados.\nCoordinar el pago inicial para reservar el equipo de desarrollo.\nRealizar la reunión de kickoff técnico este jueves.',
+      condiciones: 'El código fuente y la base de datos quedan a nombre del cliente una vez completado el pago.\nLos costos de consumo de servidor en la nube y mensajes de WhatsApp corren por cuenta del cliente.\nIncluye 30 días de garantía técnica sin cargo sobre todo el alcance entregado.',
+      proximosPasos: 'Aceptar la propuesta desde este link.\nCoordinar la reunión técnica de inicio para accesos y dominios.\nAbonar el anticipo para reservar el equipo de desarrollo.',
       opciones: { firmas: true, credito: true },
       tema: {
         preset: 'aurora-tech',
@@ -325,53 +371,51 @@ export const PLANTILLAS = {
     })
   },
   'marketing-redes': {
-    nombre: 'Marketing Digital & Contenido',
+    nombre: 'Marketing Digital & Redes',
     rubro: 'Agencia & Redes',
-    desc: 'Gestión mensual de redes, producción de Reels y pauta publicitaria.',
+    desc: 'Estrategia de contenido, producción de Reels, pauta en Meta/Google Ads.',
     plan: 'pro',
     crear: () => ({
       emisor: {
         nombre: 'Pulso Estudio Creativo',
-        rol: 'Estrategia digital, contenido audiovisual y performance',
+        rol: 'Estrategia digital, creación de contenido y campañas de pago',
         email: 'hola@pulsoestudio.ar',
         telefono: '+54 9 11 6120-3344',
         web: 'pulsoestudio.ar',
-        presentacion: 'Acompañamos a marcas gastronómicas y de estilo de vida a transformar su presencia en redes en reservas y ventas reales. Combinamos dirección de arte, rodaje ágil en locación y campañas de anuncios orientadas a conversión.',
+        presentacion: 'Acompañamos a marcas gastronómicas, de moda y servicios a crecer en redes con contenido audiovisual que retiene la atención y campañas de anuncios enfocadas en retorno real.',
         logo: ''
       },
-      cliente: { nombre: 'Valentina Giménez', empresa: 'Casa Brava Bistró', cargo: 'Socia Gerente' },
-      propuesta: { titulo: 'Relanzamiento digital, producción de Reels y campañas de reservas', numero: 'P-2026-042', fecha: hoyISO(), validez: 10 },
-      contexto: 'Casa Brava renovó su carta de noche y sumó coctelería de autor, pero el perfil de Instagram sigue mostrando fotos estáticas del menú anterior y las reservas de miércoles a viernes dependen solo del público de paso.\n\nEl objetivo es transmitir la experiencia real del salón en video corto y activar campañas segmentadas en un radio de 5 km para llenar los dos turnos de cena.',
+      cliente: { nombre: 'Camila Aguirre', empresa: 'Casa Brava Bistró', cargo: 'Socia Gerente' },
+      propuesta: { titulo: 'Estrategia de contenidos, Reels y campañas de reservas', numero: 'P-2026-042', fecha: hoyISO(), validez: 10 },
+      contexto: 'Casa Brava renovó su carta de noche y coctelería, pero su presencia en Instagram sigue mostrando platos de la temporada anterior y depende del boca en boca para llenar las mesas de miércoles a viernes.',
       objetivos: [
-        { id: uid(), texto: 'Posicionar la nueva propuesta nocturna y de coctelería con contenido audiovisual de alto impacto.' },
-        { id: uid(), texto: 'Generar un flujo constante de reservas directas por WhatsApp y link de reservas de miércoles a domingo.' },
-        { id: uid(), texto: 'Construir una comunidad activa con identidad visual reconocible y tono propio.' }
+        { id: uid(), texto: 'Posicionar la nueva propuesta nocturna de coctelería y tapeo en el público de la zona.' },
+        { id: uid(), texto: 'Generar un flujo constante de reservas directas por WhatsApp y link de reservas.' },
+        { id: uid(), texto: 'Construir una estética audiovisual reconocible con producción mensual en el local.' }
       ],
       servicios: [
-        { id: uid(), nombre: 'Manual de contenido y dirección estética', modalidad: 'unico', cantidad: 1, precio: 420000, descripcion: 'Definición de pilares narrativos, estética de video, tipografías en pantalla y guía visual del feed.', entregables: 'Playbook creativo de la marca\nGuía de estilo para Reels e historias\nOptimización integral de biografía y destacados', opcional: false },
-        { id: uid(), nombre: 'Gestión mensual de redes y producción de Reels', modalidad: 'mensual', cantidad: 1, precio: 890000, descripcion: 'Jornada de rodaje mensual en el bistró, edición dinámica, redacción creativa y publicación programada.', entregables: '1 jornada de rodaje mensual (4 horas)\n8 Reels editados con diseño sonoro\n8 secuencias de historias estratégicas\nCalendario editorial y reporte mensual', opcional: false },
-        { id: uid(), nombre: 'Gestión de campañas Meta Ads (Instagram & Facebook)', modalidad: 'mensual', cantidad: 1, precio: 360000, descripcion: 'Configuración, segmentación geográfica y optimización semanal de anuncios para reservas y eventos.', entregables: 'Estructura de campañas por turno y audiencia\nTest A/B de piezas ganadoras\nTablero de resultados y costo por reserva', opcional: false },
-        { id: uid(), nombre: 'Cobertura especial de noche de degustación / evento', modalidad: 'unico', cantidad: 1, precio: 310000, descripcion: 'Cobertura en vivo durante el evento de lanzamiento con entrega de material editado en 24 horas.', entregables: 'Cobertura en tiempo real en historias\n1 Reel resumen de alto impacto\n25 fotografías editadas para prensa y redes', opcional: true },
-        { id: uid(), nombre: 'Diseño de carta digital interactiva y QR en mesa', modalidad: 'unico', cantidad: 1, precio: 280000, descripcion: 'Rediseño visual del menú móvil rápido con fotos destacadas de platos insignia y maridajes.', entregables: 'Carta web adaptable al celular\nPiezas gráficas para mesa con QR\nArchivo editable para cambios de precios', opcional: true }
+        { id: uid(), nombre: 'Estrategia creativa y manual de estilo para redes', modalidad: 'unico', cantidad: 1, precio: 420, descripcion: 'Definición de pilares de contenido, tono de comunicación, estética visual del feed y guiones base para video corto.', entregables: 'Pilares y calendario editorial\nGuía visual y plantillas editables\nOptimización completa de biografía y destacados', opcional: false },
+        { id: uid(), nombre: 'Gestión mensual de redes y producción de Reels', modalidad: 'mensual', cantidad: 1, precio: 780, descripcion: 'Incluye una jornada mensual de grabación en el local, edición dinámica de Reels, diseño de carruseles y publicación.', entregables: '1 jornada de rodaje mensual (4 horas)\n8 Reels editados con subtítulos y color\n6 carruseles o posteos de alto impacto\nCalendario mensual y reporte de métricas', opcional: false },
+        { id: uid(), nombre: 'Gestión de campañas en Meta Ads (Instagram & Facebook)', modalidad: 'mensual', cantidad: 1, precio: 350, descripcion: 'Segmentación por radio geográfico e intereses gastronómicos para llevar reservas todos los días. La pauta publicitaria se abona directo a Meta.', entregables: 'Estructura de campañas por objetivo\nTesteo A/B de anuncios en video\nOptimización semanal de presupuesto\nTablero de resultados en vivo', opcional: false },
+        { id: uid(), nombre: 'Gestión de colaboraciones con creadores gastronómicos', modalidad: 'mensual', cantidad: 1, precio: 260, descripcion: 'Selección, invitación y coordinación de 4 micro-influencers mensuales afines a la marca para cobertura en el bistró.', entregables: 'Curaduría y contacto de perfiles\nCoordinación de visitas y entregables\nDerechos de uso de contenido (UGC) para anuncios', opcional: true }
       ],
       etapas: [
-        { id: uid(), nombre: 'Estrategia y preproducción', duracion: 'Semana 1', descripcion: 'Definición de estética, guiones técnicos y armado del calendario del primer mes.' },
-        { id: uid(), nombre: 'Día de rodaje y edición', duracion: 'Semana 2', descripcion: 'Producción en el local de platos, barra y ambiente, y posproducción de las primeras piezas.' },
-        { id: uid(), nombre: 'Lanzamiento y campañas activas', duracion: 'Semana 3 en adelante', descripcion: 'Publicación continua, activación de pauta publicitaria y optimización semanal.' }
+        { id: uid(), nombre: 'Estrategia y preproducción', duracion: 'Semana 1', descripcion: 'Definición de pilares, guiones de los primeros videos y armado de calendario.' },
+        { id: uid(), nombre: 'Jornada de rodaje y edición', duracion: 'Semana 2', descripcion: 'Grabación en el local, fotografía de platos y edición de la primera tanda.' },
+        { id: uid(), nombre: 'Lanzamiento y campañas activas', duracion: 'Semana 3 en adelante', descripcion: 'Publicación continua, activación de anuncios y optimización semanal.' }
       ],
       inversion: {
-        moneda: 'ARS',
+        moneda: 'USD',
         descuento: 0,
         impuestoNombre: 'IVA',
         impuesto: 0,
         pagos: [
-          { id: uid(), concepto: 'Al confirmar el inicio del proyecto', porcentaje: 50 },
-          { id: uid(), concepto: 'Al realizar la primera jornada de rodaje', porcentaje: 50 }
+          { id: uid(), concepto: 'Al confirmar el inicio (estrategia + mes 1)', porcentaje: 100 }
         ]
       },
-      condiciones: 'Los abonos mensuales se facturan del 1 al 5 de cada mes por mes adelantado.\nLa inversión publicitaria en Meta Ads no está incluida en los honorarios y se abona directo con tarjeta de la marca.\nSe sugiere una permanencia mínima de 3 meses para consolidar el aprendizaje de las campañas.\nLos valores en pesos se actualizan trimestralmente según IPC.',
-      proximosPasos: 'Aceptar la propuesta desde el botón inferior.\nDefinir la fecha de la primera jornada de rodaje en el local.\nCompartir accesos al Business Manager e Instagram.',
-      opciones: { firmas: true, credito: true },
+      condiciones: 'Los servicios mensuales tienen una permanencia sugerida de 3 meses para consolidar resultados.\nEl presupuesto publicitario en Meta Ads se abona con tarjeta del cliente directamente en su cuenta publicitaria.\nLas jornadas de grabación se agendan con al menos 7 días de anticipación.',
+      proximosPasos: 'Aceptar la propuesta desde este link.\nFijar la fecha de la primera jornada de grabación en el local.\nCompartir accesos al Business Manager e Instagram.',
+      opciones: { firmas: false, credito: true },
       tema: {
         preset: 'editorial-studio',
         acento: '#E11D48',
@@ -382,44 +426,43 @@ export const PLANTILLAS = {
         fuenteCuerpo: 'Source Sans 3',
         portada: 'dividida',
         decoracion: 'geometrica',
-        estilo: 'bento'
+        estilo: 'tarjetas'
       }
     })
   },
   'arquitectura-interiorismo': {
-    nombre: 'Arquitectura e Interiorismo',
+    nombre: 'Arquitectura & Interiorismo',
     rubro: 'Arquitectura & Obra',
-    desc: 'Anteproyecto, legajo técnico, renders 3D y dirección ejecutiva.',
+    desc: 'Anteproyecto, renders 3D, documentación ejecutiva y dirección de obra.',
     plan: 'pro',
     crear: () => ({
       emisor: {
-        nombre: 'Estudio Vértice Arquitectura',
-        rol: 'Arquitectura comercial, interiorismo y dirección de obra',
-        email: 'estudio@verticearq.com',
+        nombre: 'Estudio Sur Arquitectura',
+        rol: 'Proyecto arquitectónico, interiorismo comercial y dirección de obra',
+        email: 'estudio@surarquitectura.com',
         telefono: '+54 9 11 5012-7788',
-        web: 'verticearq.com',
-        presentacion: 'Proyectamos espacios comerciales y gastronómicos pensados para durar y potenciar la experiencia de marca. Cuidamos tanto la espacialidad y la iluminación como la precisión técnica del legajo para evitar imprevistos en obra.',
+        web: 'surarquitectura.com',
+        presentacion: 'Proyectamos espacios comerciales y residenciales donde cada material, luminaria y circulación están pensados para durar. Acompañamos desde los primeros croquis hasta la entrega final de obra.',
         logo: ''
       },
-      cliente: { nombre: 'Lucía Fernández', empresa: 'Origen Café de Especialidad', cargo: 'Fundadora' },
-      propuesta: { titulo: 'Proyecto de interiorismo y reforma integral de local (85 m²)', numero: 'P-2026-031', fecha: hoyISO(), validez: 20 },
-      contexto: 'El nuevo local de Colegiales cuenta con 85 m² en planta libre y un patio interno, pero requiere reubicar por completo la barra de máquinas expreso, adecuar las instalaciones eléctricas y sanitarias, y crear sectores de permanencia cálidos y acústicamente confortables.',
+      cliente: { nombre: 'Nicolás Ferreyra', empresa: 'Tostadores del Parque', cargo: 'Socio' },
+      propuesta: { titulo: 'Proyecto de interiorismo y reforma integral de local comercial', numero: 'P-2026-031', fecha: hoyISO(), validez: 20 },
+      contexto: 'El nuevo local de 110 m² en esquina cuenta con doble altura y gran entrada de luz natural, pero requiere redistribuir por completo la barra de despacho, el sector de tostado a la vista y el salón para 38 cubiertos.',
       objetivos: [
-        { id: uid(), texto: 'Optimizar el flujo operativo detrás de la barra y la circulación de clientes para horas pico.' },
-        { id: uid(), texto: 'Lograr una identidad espacial cálida y luminosa que integre el salón con el patio verde.' },
-        { id: uid(), texto: 'Contar con cómputo y documentación ejecutiva exacta para licitar rubros con presupuesto cerrado.' }
+        { id: uid(), texto: 'Diseñar una barra protagónica que agilice el despacho de café para llevar y el servicio de salón.' },
+        { id: uid(), texto: 'Contar con documentación técnica completa para licitar la obra con contratistas sin imprevistos.' },
+        { id: uid(), texto: 'Ejecutar la reforma y el montaje de equipamiento en un plazo máximo de 8 semanas.' }
       ],
       servicios: [
-        { id: uid(), nombre: 'Relevamiento, layout funcional y anteproyecto 3D', modalidad: 'unico', cantidad: 1, precio: 1650, descripcion: 'Medición exhaustiva del local, opciones de zonificación, modelado 3D y selección de materiales e iluminación.', entregables: 'Plano de relevamiento y demolición\nDos propuestas de layout operativo\nMaqueta 3D y 6 renders fotorrealistas\nMoodboard de materiales y luminarias', opcional: false },
-        { id: uid(), nombre: 'Proyecto ejecutivo y legajo técnico de obra', modalidad: 'unico', cantidad: 1, precio: 2200, descripcion: 'Documentación completa a escala para que los gremios coticen y ejecuten sin dudas en obra.', entregables: 'Planos de replanteo, cielorrasos y solados\nPlanos de instalaciones eléctrica, sanitaria y termomecánica\nDetalles constructivos de barra y mobiliario fijo\nPlanilla de cómputo de materiales', opcional: false },
-        { id: uid(), nombre: 'Licitación de gremios y comparativa de presupuestos', modalidad: 'unico', cantidad: 1, precio: 680, descripcion: 'Armado de pliegos, pedido de cotización a contratistas de confianza y análisis técnico-económico.', entregables: 'Pliego de condiciones por rubro\nCuadro comparativo de al menos 3 oferentes\nCronograma físico-financiero de obra', opcional: false },
-        { id: uid(), nombre: 'Dirección de obra y coordinación de gremios (estimado 8 semanas)', modalidad: 'mensual', cantidad: 2, precio: 1100, descripcion: 'Visitas semanales a obra, control de calidad de ejecución, certificaciones de avance y coordinación de entregas.', entregables: '2 a 3 visitas semanales de control\nActas de avance y certificación de pagos a gremios\nResolución técnica en obra', opcional: true },
-        { id: uid(), nombre: 'Diseño de fachada, cartelería corpórea y mobiliario exterior', modalidad: 'unico', cantidad: 1, precio: 540, descripcion: 'Intervención integral de la vidriera sobre vereda, toldos, deck exterior e iluminación escénica nocturna.', entregables: 'Planos y detalles de herrería y cartelería\nRender diurno y nocturno de fachada', opcional: true }
+        { id: uid(), nombre: 'Relevamiento y anteproyecto arquitectónico + Renders 3D', modalidad: 'unico', cantidad: 1, precio: 1450, descripcion: 'Medición exhaustiva en sitio, propuestas de zonificación, modelado 3D y selección de paleta de materiales e iluminación.', entregables: 'Planta de arquitectura y equipamiento amoblado\n6 renders fotorrealistas diurnos y nocturnos\nMuestrario físico de revestimientos, maderas y herrajes', opcional: false },
+        { id: uid(), nombre: 'Proyecto ejecutivo y pliego de licitación', modalidad: 'unico', cantidad: 1, precio: 1850, descripcion: 'Planos técnicos detallados para que cada gremio cotice y construya con precisión milimétrica.', entregables: 'Planos de demolición, mampostería y solados\nInstalación eléctrica, iluminación y datos\nPlanos de carpintería y herrería a medida (barra y mobiliario)\nPlanilla de cómputo de materiales para licitar', opcional: false },
+        { id: uid(), nombre: 'Dirección ejecutiva y coordinación de gremios en obra', modalidad: 'mensual', cantidad: 2, precio: 1100, descripcion: 'Visitas semanales a obra, control de calidad de ejecución, certificación de avances y coordinación de entregas de proveedores.', entregables: '2 a 3 visitas técnicas semanales a obra\nActas de avance y control de certificaciones\nCoordinación en sitio de gremios y mobiliario', opcional: false },
+        { id: uid(), nombre: 'Diseño y gestión de cartelería exterior y fachada', modalidad: 'unico', cantidad: 1, precio: 540, descripcion: 'Desarrollo técnico de marquesina, corpóreos retroiluminados, toldos y gráfica en vidriera según normativa.', entregables: 'Planos constructivos de fachada y herrería\nEspecificación lumínica LED\nSeguimiento de fabricación y montaje', opcional: true }
       ],
       etapas: [
-        { id: uid(), nombre: 'Anteproyecto e imagen', duracion: '3 semanas', descripcion: 'Relevamiento, definición de layout y renders de validación espacial.' },
-        { id: uid(), nombre: 'Legajo ejecutivo y detalles', duracion: '3 semanas', descripcion: 'Desarrollo de planos técnicos de instalaciones y carpinterías a medida.' },
-        { id: uid(), nombre: 'Licitación y adjudicación', duracion: '2 semanas', descripcion: 'Visita a obra con contratistas, cierre de presupuestos y firma de inicio.' }
+        { id: uid(), nombre: 'Anteproyecto e imagen 3D', duracion: '3 semanas', descripcion: 'Relevamiento, distribución funcional, renders y aprobación de materiales.' },
+        { id: uid(), nombre: 'Documentación ejecutiva y presupuestos', duracion: '3 semanas', descripcion: 'Desarrollo de planos de detalle y comparativa de cotizaciones de gremios.' },
+        { id: uid(), nombre: 'Obra civil, instalaciones y montaje', duracion: '8 semanas', descripcion: 'Seguimiento en obra hasta la habilitación e inauguración del local.' }
       ],
       inversion: {
         moneda: 'USD',
@@ -427,13 +470,13 @@ export const PLANTILLAS = {
         impuestoNombre: 'IVA',
         impuesto: 0,
         pagos: [
-          { id: uid(), concepto: 'Al encomendar el proyecto y realizar el relevamiento', porcentaje: 40 },
-          { id: uid(), concepto: 'Contra entrega del anteproyecto 3D aprobado', porcentaje: 35 },
-          { id: uid(), concepto: 'Contra entrega del legajo técnico ejecutivo completo', porcentaje: 25 }
+          { id: uid(), concepto: 'Al encomendar el anteproyecto', porcentaje: 35 },
+          { id: uid(), concepto: 'Contra entrega de renders y aprobación de anteproyecto', porcentaje: 35 },
+          { id: uid(), concepto: 'Contra entrega de la carpeta ejecutiva completa', porcentaje: 30 }
         ]
       },
-      condiciones: 'Los honorarios no incluyen tasas municipales, gestiones de habilitación comercial ni derechos de construcción.\nEl plazo de cada etapa contempla hasta dos instancias de revisión sobre la propuesta.\nLa dirección de obra se abona mensualmente durante los meses efectivos de ejecución.',
-      proximosPasos: 'Confirmar la propuesta desde este enlace.\nCoordinar el acceso al local para el relevamiento métrico y fotográfico.\nRealizar la reunión de programa de necesidades y equipamiento gastronómico.',
+      condiciones: 'Los honorarios corresponden al proyecto y dirección; la mano de obra, materiales y tasas municipales se contratan y abonan de forma directa a cada proveedor.\nLos honorarios de dirección de obra se abonan mensualmente durante los meses que dure la ejecución.',
+      proximosPasos: 'Aceptar la propuesta desde este link.\nCoordinar la visita de relevamiento técnico y medición láser en el local.\nAbonar el anticipo de inicio de anteproyecto.',
       opciones: { firmas: true, credito: true },
       tema: {
         preset: 'arquitectura',
@@ -584,14 +627,8 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
   const presetValido = TEMAS[temaEntrada.preset] ? temaEntrada.preset : 'elegante-oscuro';
   const presetDef = TEMAS[presetValido];
   const esColorHex = c => /^#[0-9A-Fa-f]{6}$/.test(texto(c).trim());
-  const opacidadCruda = temaEntrada.opacidadSvg;
-  const opacidadValida = opacidadCruda !== undefined && opacidadCruda !== null && opacidadCruda !== '' && Number.isFinite(Number(opacidadCruda))
-    ? Math.min(200, Math.max(0, Math.round(Number(opacidadCruda))))
-    : 100;
-  const opPortadaCruda = d.propuesta?.opacidadPortada;
-  const opPortadaValida = opPortadaCruda !== undefined && opPortadaCruda !== null && opPortadaCruda !== '' && Number.isFinite(Number(opPortadaCruda))
-    ? Math.min(90, Math.max(0, Math.round(Number(opPortadaCruda))))
-    : 35;
+  const opacidadValida = rangoEntero(temaEntrada.opacidadSvg, 0, 200, 100);
+  const opPortadaValida = rangoEntero(d.propuesta?.opacidadPortada, 0, 90, 35);
   const n = {
     emisor: limpiar(d.emisor, base.emisor),
     cliente: limpiar(d.cliente, base.cliente),
@@ -628,10 +665,17 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
       acento: esColorHex(temaEntrada.acento) ? texto(temaEntrada.acento).trim() : (presetDef.acento || base.tema.acento),
       colorTexto: esColorHex(temaEntrada.colorTexto) ? texto(temaEntrada.colorTexto).trim() : '',
       colorSvg: esColorHex(temaEntrada.colorSvg) ? texto(temaEntrada.colorSvg).trim() : '',
+      colorFondo: esColorHex(temaEntrada.colorFondo) ? texto(temaEntrada.colorFondo).trim() : '',
+      colorPortada: esColorHex(temaEntrada.colorPortada) ? texto(temaEntrada.colorPortada).trim() : '',
       opacidadSvg: opacidadValida,
       portada: PORTADAS[temaEntrada.portada] ? temaEntrada.portada : (presetDef.portada || 'editorial'),
       decoracion: DECORACIONES[temaEntrada.decoracion] ? temaEntrada.decoracion : (presetDef.decoracion || 'marco'),
-      estilo: ESTILOS_BLOQUES[temaEntrada.estilo] ? temaEntrada.estilo : (presetDef.estilo || 'editorial')
+      estilo: ESTILOS_BLOQUES[temaEntrada.estilo] ? temaEntrada.estilo : (presetDef.estilo || 'editorial'),
+      escalaTituloPortada: rangoEntero(temaEntrada.escalaTituloPortada, 60, 150, 100),
+      escalaTitulos: rangoEntero(temaEntrada.escalaTitulos, 70, 140, 100),
+      escalaTexto: rangoEntero(temaEntrada.escalaTexto, 85, 125, 100),
+      espaciadoSecciones: rangoEntero(temaEntrada.espaciadoSecciones, 40, 170, 100),
+      espaciadoInterno: rangoEntero(temaEntrada.espaciadoInterno, 60, 150, 100)
     }
   };
   n.servicios.forEach(s => {
@@ -774,12 +818,19 @@ export const vacioPortafolio = () => ({
     acento: '#C9A84C',
     colorTexto: '',
     colorSvg: '',
+    colorFondo: '',
+    colorPortada: '',
     opacidadSvg: 100,
     fuenteTitulos: 'Bebas Neue',
     fuenteCuerpo: 'Montserrat',
     portada: 'editorial',
     decoracion: 'marco',
-    estilo: 'bento'
+    estilo: 'bento',
+    escalaTituloPortada: 100,
+    escalaTitulos: 100,
+    escalaTexto: 100,
+    espaciadoSecciones: 100,
+    espaciadoInterno: 100
   }
 });
 
@@ -923,16 +974,43 @@ export const ejemploPortafolio = () => ({
     acento: '#C9A84C',
     colorTexto: '',
     colorSvg: '',
+    colorFondo: '',
+    colorPortada: '',
     opacidadSvg: 100,
     fuenteTitulos: 'Bebas Neue',
     fuenteCuerpo: 'Montserrat',
     portada: 'editorial',
     decoracion: 'marco',
-    estilo: 'bento'
+    estilo: 'bento',
+    escalaTituloPortada: 100,
+    escalaTitulos: 100,
+    escalaTexto: 100,
+    espaciadoSecciones: 100,
+    espaciadoInterno: 100
   }
 });
 
 export const PLANTILLAS_PORTAFOLIO = {
+  'en-blanco': {
+    nombre: 'En blanco (desde cero)',
+    rubro: 'Lienzo limpio',
+    desc: 'Empezá tu página o portfolio con fondo 100% blanco y sin bloques precargados.',
+    plan: 'gratis',
+    crear: () => {
+      const base = vacioPortafolio();
+      base.tema = {
+        ...base.tema,
+        preset: 'lienzo-blanco',
+        acento: '#111827',
+        fuenteTitulos: 'Inter',
+        fuenteCuerpo: 'Inter',
+        portada: 'editorial',
+        decoracion: 'ninguna',
+        estilo: 'minimal'
+      };
+      return base;
+    }
+  },
   'diseno-web': {
     nombre: 'Diseño, Branding & Web',
     rubro: 'Diseño & Estudio',
@@ -1233,14 +1311,8 @@ export const normalizarPortafolio = (datos, { logoValido = logo => /^data:image\
   const presetValido = TEMAS[temaEntrada.preset] ? temaEntrada.preset : 'elegante-oscuro';
   const presetDef = TEMAS[presetValido];
   const esColorHex = c => /^#[0-9A-Fa-f]{6}$/.test(texto(c).trim());
-  const opacidadCruda = temaEntrada.opacidadSvg;
-  const opacidadValida = opacidadCruda !== undefined && opacidadCruda !== null && opacidadCruda !== '' && Number.isFinite(Number(opacidadCruda))
-    ? Math.min(200, Math.max(0, Math.round(Number(opacidadCruda))))
-    : 100;
-  const opPortadaCruda = d.portafolio?.opacidadPortada;
-  const opPortadaValida = opPortadaCruda !== undefined && opPortadaCruda !== null && opPortadaCruda !== '' && Number.isFinite(Number(opPortadaCruda))
-    ? Math.min(90, Math.max(0, Math.round(Number(opPortadaCruda))))
-    : 35;
+  const opacidadValida = rangoEntero(temaEntrada.opacidadSvg, 0, 200, 100);
+  const opPortadaValida = rangoEntero(d.portafolio?.opacidadPortada, 0, 90, 35);
   const n = {
     emisor: limpiar(d.emisor, base.emisor),
     portafolio: {
@@ -1272,10 +1344,17 @@ export const normalizarPortafolio = (datos, { logoValido = logo => /^data:image\
       acento: esColorHex(temaEntrada.acento) ? texto(temaEntrada.acento).trim() : (presetDef.acento || base.tema.acento),
       colorTexto: esColorHex(temaEntrada.colorTexto) ? texto(temaEntrada.colorTexto).trim() : '',
       colorSvg: esColorHex(temaEntrada.colorSvg) ? texto(temaEntrada.colorSvg).trim() : '',
+      colorFondo: esColorHex(temaEntrada.colorFondo) ? texto(temaEntrada.colorFondo).trim() : '',
+      colorPortada: esColorHex(temaEntrada.colorPortada) ? texto(temaEntrada.colorPortada).trim() : '',
       opacidadSvg: opacidadValida,
       portada: PORTADAS[temaEntrada.portada] ? temaEntrada.portada : (presetDef.portada || 'editorial'),
       decoracion: DECORACIONES[temaEntrada.decoracion] ? temaEntrada.decoracion : (presetDef.decoracion || 'marco'),
-      estilo: ESTILOS_BLOQUES[temaEntrada.estilo] ? temaEntrada.estilo : (presetDef.estilo || 'bento')
+      estilo: ESTILOS_BLOQUES[temaEntrada.estilo] ? temaEntrada.estilo : (presetDef.estilo || 'bento'),
+      escalaTituloPortada: rangoEntero(temaEntrada.escalaTituloPortada, 60, 150, 100),
+      escalaTitulos: rangoEntero(temaEntrada.escalaTitulos, 70, 140, 100),
+      escalaTexto: rangoEntero(temaEntrada.escalaTexto, 85, 125, 100),
+      espaciadoSecciones: rangoEntero(temaEntrada.espaciadoSecciones, 40, 170, 100),
+      espaciadoInterno: rangoEntero(temaEntrada.espaciadoInterno, 60, 150, 100)
     }
   };
   n.especialidades.forEach(e => { e.texto = texto(e.texto); });
