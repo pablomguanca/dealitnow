@@ -212,7 +212,7 @@ const cargarPortafoliosLocales = () => {
         });
       }
     }
-  } catch {}
+  } catch { }
   return [];
 };
 
@@ -274,7 +274,7 @@ const limpiarAlmacenamientoLocal = () => {
     sessionStorage.removeItem(CLAVE);
     sessionStorage.removeItem(CLAVE_PORTAFOLIOS);
     sessionStorage.removeItem(`${CLAVE}:continuar`);
-  } catch {}
+  } catch { }
 };
 
 const sincronizarPortafolioEnPropuesta = () => {
@@ -379,14 +379,14 @@ const crearEnCuenta = e => {
 // Devuelve { id, contenido } de la propuesta creada, o null si no había nada que migrar.
 const migrarLocal = () => {
   let continuar = null;
-  try { continuar = sessionStorage.getItem(`${CLAVE}:continuar`); } catch {}
+  try { continuar = sessionStorage.getItem(`${CLAVE}:continuar`); } catch { }
   const contenido = continuar ? cargarGuardado() : null;
   try {
     localStorage.removeItem(CLAVE);
     localStorage.removeItem(CLAVE_PORTAFOLIOS);
     sessionStorage.removeItem(CLAVE);
     sessionStorage.removeItem(CLAVE_PORTAFOLIOS);
-  } catch {}
+  } catch { }
   if (!contenido) return null;
   const creada = crearEnCuenta(contenido);
   if (!creada) return null;
@@ -709,6 +709,7 @@ const actualizarTemaEnVivo = () => {
   }
   doc.classList.add('doc--estatico');
   animacionInicialLista = true;
+  observarElementos(doc, esCliente);
   const actual = docActivo();
   aplicarTema(doc, actual.tema);
   const col = resolverColoresTema(actual.tema);
@@ -1794,7 +1795,7 @@ const registrarVisita = id => {
   try {
     if (Date.now() - Number(localStorage.getItem(clave) || 0) < VISITA_INTERVALO) return;
     localStorage.setItem(clave, String(Date.now()));
-  } catch {}
+  } catch { }
   llamarApi('/api/visto', { id }, { keepalive: true }).catch(e => console.warn('No se pudo registrar la visita:', e));
 };
 
@@ -2086,7 +2087,7 @@ document.addEventListener('click', async ev => {
     case 'compartir-nativo':
       try {
         await navigator.share({ title: estado.propuesta.titulo.trim() || 'Propuesta', url: linkActual });
-      } catch {}
+      } catch { }
       break;
     case 'vista':
       cambiarVista(boton.dataset.vista);
@@ -2517,7 +2518,7 @@ const irAPortafolios = ({ historial = true } = {}) => {
   cerrarEdicion();
   if (!nube() && !portafolios.length) portafolios = cargarPortafoliosLocales();
   if (historial && seccionEnUrl() !== 'portafolios') {
-    try { history.pushState(null, '', `${location.pathname}?seccion=portafolios`); } catch {}
+    try { history.pushState(null, '', `${location.pathname}?seccion=portafolios`); } catch { }
   }
   mostrarVista('portafolios');
   renderPanelPortafolios();
@@ -2532,7 +2533,7 @@ const mostrarEditorPortafolio = (id, contenido, { historial = true } = {}) => {
   errorGuardado = '';
   avisoError = false;
   if (historial) {
-    try { history.pushState(null, '', `${location.pathname}?portafolio=${encodeURIComponent(id)}`); } catch {}
+    try { history.pushState(null, '', `${location.pathname}?portafolio=${encodeURIComponent(id)}`); } catch { }
   }
   mostrarVista('editor');
   cambiarPestana(false);
@@ -3006,7 +3007,7 @@ const iniciarConCuenta = async () => {
   try {
     continuar = sessionStorage.getItem(`${CLAVE}:continuar`);
     sessionStorage.removeItem(`${CLAVE}:continuar`);
-  } catch {}
+  } catch { }
   const id = idEnUrl();
   if (migrada && continuar) {
     mostrarEditor(migrada.id, migrada.contenido, { historial: false });
@@ -3020,26 +3021,26 @@ const iniciarConCuenta = async () => {
   else irAlPanel({ historial: false });
 };
 
-const authPantalla   = $('#auth-pantalla');
-const authForm       = $('#auth-form');
-const authGoogle     = $('#auth-google');
-const authErrorG     = $('#auth-error-google');
-const authError      = $('#auth-error');
-const authSubmit     = $('#auth-submit');
+const authPantalla = $('#auth-pantalla');
+const authForm = $('#auth-form');
+const authGoogle = $('#auth-google');
+const authErrorG = $('#auth-error-google');
+const authError = $('#auth-error');
+const authSubmit = $('#auth-submit');
 const authSubmitText = authSubmit?.querySelector('.auth__submit-texto');
-const authSpinner    = authSubmit?.querySelector('.auth__spinner');
-const authNombre     = $('#auth-nombre');
-const authEmail      = $('#auth-email');
-const authPass       = $('#auth-pass');
-const menuUsuario    = $('#menu-usuario');
-const authOlvido     = $('#auth-olvido');
-const authMensaje    = $('#auth-mensaje');
-const elIngreso      = $('#auth-ingreso');
-const elVerificar    = $('#auth-verificar');
+const authSpinner = authSubmit?.querySelector('.auth__spinner');
+const authNombre = $('#auth-nombre');
+const authEmail = $('#auth-email');
+const authPass = $('#auth-pass');
+const menuUsuario = $('#menu-usuario');
+const authOlvido = $('#auth-olvido');
+const authMensaje = $('#auth-mensaje');
+const elIngreso = $('#auth-ingreso');
+const elVerificar = $('#auth-verificar');
 const verificarError = $('#auth-verificar-error');
 const verificarMensaje = $('#auth-verificar-mensaje');
 let authModo = 'login';
-let entrar = () => {};
+let entrar = () => { };
 
 // Sin sesión: editor de prueba que guarda en este navegador. Al registrarse, lo que
 // armó pasa a su cuenta (migrarLocal) y sigue con lo que quería hacer.
@@ -3092,7 +3093,7 @@ const abrirRegistro = motivo => {
       guardadoParaRegistro = !invitadoEdito;
       guardarLocal();
     }
-    try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch {}
+    try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch { }
   }
   const elMotivo = $('#auth-motivo');
   elMotivo.textContent = MOTIVOS_REGISTRO[motivo] || '';
@@ -3109,7 +3110,7 @@ const cerrarRegistro = () => {
     sessionStorage.removeItem(`${CLAVE}:continuar`);
     // Si solo se guardó para el registro y al final no se registró, no queda nada guardado.
     if (guardadoParaRegistro && !invitadoEdito) { localStorage.removeItem(CLAVE); sessionStorage.removeItem(CLAVE); }
-  } catch {}
+  } catch { }
   guardadoParaRegistro = false;
 };
 $('#auth-cerrar').addEventListener('click', cerrarRegistro);
@@ -3126,14 +3127,14 @@ const mostrarMensaje = (el, texto) => {
 const mostrarErrorAuth = (el, msg) => {
   if (!el) return;
   const MENSAJES = {
-    'auth/user-not-found':          'No hay cuenta con ese email.',
-    'auth/wrong-password':          'Contraseña incorrecta.',
-    'auth/invalid-credential':      'Email o contraseña incorrectos.',
-    'auth/email-already-in-use':    'Ya existe una cuenta con ese email.',
-    'auth/weak-password':           'La contraseña debe tener al menos 6 caracteres.',
-    'auth/invalid-email':           'El email no es válido.',
-    'auth/too-many-requests':       'Demasiados intentos. Esperá un momento.',
-    'auth/popup-closed-by-user':    '',
+    'auth/user-not-found': 'No hay cuenta con ese email.',
+    'auth/wrong-password': 'Contraseña incorrecta.',
+    'auth/invalid-credential': 'Email o contraseña incorrectos.',
+    'auth/email-already-in-use': 'Ya existe una cuenta con ese email.',
+    'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+    'auth/invalid-email': 'El email no es válido.',
+    'auth/too-many-requests': 'Demasiados intentos. Esperá un momento.',
+    'auth/popup-closed-by-user': '',
     'auth/cancelled-popup-request': ''
   };
   const texto = MENSAJES[msg?.code] ?? MENSAJES[msg?.message] ?? (typeof msg === 'string' ? msg : 'Ocurrió un error. Intentá de nuevo.');
@@ -3189,7 +3190,7 @@ if (authPantalla && AteneaDB) {
   authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = authEmail?.value.trim();
-    const pass  = authPass?.value;
+    const pass = authPass?.value;
     if (!email || !pass) return;
     setAuthCargando(true);
     if (authError) authError.hidden = true;
@@ -3269,7 +3270,7 @@ if (authPantalla && AteneaDB) {
     if (document.visibilityState !== 'visible' || elVerificar.hidden || !AteneaDB.auth.getUser()) return;
     try {
       if (await AteneaDB.auth.comprobarVerificacion()) entrar(AteneaDB.auth.getUser());
-    } catch {}
+    } catch { }
   });
 }
 
@@ -3307,7 +3308,7 @@ eliminarBoton.addEventListener('click', async () => {
     try {
       Object.keys(localStorage).filter(k => k.startsWith(CLAVE)).forEach(k => localStorage.removeItem(k));
       sessionStorage.setItem(`${CLAVE}:cuenta-eliminada`, '1');
-    } catch {}
+    } catch { }
     location.replace('/');
   } catch (e) {
     console.error('No se pudo eliminar la cuenta:', e);
@@ -3502,7 +3503,7 @@ if (esLinkPortafolioCorto) {
           sessionStorage.removeItem(`${CLAVE}:cuenta-eliminada`);
           avisar('Tu cuenta y todos tus datos se eliminaron.', 6000);
         }
-      } catch {}
+      } catch { }
       return;
     }
     // Al volver desde el link del email, el usuario en memoria puede estar desactualizado.

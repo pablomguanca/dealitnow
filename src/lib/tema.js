@@ -110,12 +110,13 @@ export const resolverColoresTema = t => {
     ? (esClaro ? '#0F172A' : '#F8FAFC')
     : preset.texto;
   if (textoPersonalizado) {
-    cuerpoTexto = contrasteRatio(textoPersonalizado, fondoBase) >= 2.6
+    cuerpoTexto = contrasteRatio(textoPersonalizado, fondoBase) >= 1.6
       ? textoPersonalizado
       : mezclar(textoPersonalizado, !esClaro, 0.78);
   }
-  const cuerpoApagado = mezclarDos(cuerpoTexto, fondoBase, 0.38);
-  const cuerpoTenue = mezclarDos(cuerpoTexto, fondoBase, 0.56);
+  const usaCuerpoPersonalizado = !!(textoPersonalizado || fondoPersonalizado);
+  const cuerpoApagado = usaCuerpoPersonalizado ? mezclarDos(cuerpoTexto, fondoBase, 0.38) : preset.textoApagado;
+  const cuerpoTenue = usaCuerpoPersonalizado ? mezclarDos(cuerpoTexto, fondoBase, 0.56) : preset.textoTenue;
 
   // Acento legible sobre portada y sobre cuerpo
   const portadaAcento = asegurarContraste(acento, portadaBg, 2.8);
