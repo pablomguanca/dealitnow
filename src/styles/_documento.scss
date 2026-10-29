@@ -48,7 +48,6 @@
     }
   }
 }
-
 .portada {
   position: relative;
   display: flex;
@@ -162,7 +161,6 @@
     }
   }
 }
-
 .cuerpo {
   margin-top: 2.6em;
   padding: calc(4.8em * var(--escala-espaciado, 1)) 5.8em calc(4em * var(--escala-espaciado, 1));
@@ -178,7 +176,6 @@
   background: var(--dorado-fondo);
   color: var(--dorado-claro);
 }
-
 .bloque {
   display: grid;
   grid-template-columns: 3.2em 1fr;
@@ -252,7 +249,6 @@
     }
   }
 }
-
 .servicio {
   padding: calc(1.35em * var(--escala-espaciado-interno, 1)) 0;
   border-top: 1px solid var(--d-linea);
@@ -357,7 +353,6 @@
     }
   }
 }
-
 .etapas {
   margin: 0;
   padding: 0;
@@ -416,7 +411,6 @@
     white-space: nowrap;
   }
 }
-
 .resumen {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(15em, 1fr));
@@ -480,7 +474,6 @@
     color: var(--marfil-apagado);
   }
 }
-
 .pagos {
   width: 100%;
   margin-top: 0.4em;
@@ -505,7 +498,6 @@
     text-align: right;
   }
 }
-
 .pasos {
   margin: 0;
   padding: 0;
@@ -531,7 +523,6 @@
     }
   }
 }
-
 .firmas {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -556,7 +547,6 @@
     color: var(--d-suave);
   }
 }
-
 .cierre {
   margin-top: calc(2.8em * var(--escala-espaciado, 1));
   padding: calc(2.2em * var(--escala-espaciado-interno, 1)) calc(2.4em * var(--escala-espaciado-interno, 1));
@@ -584,7 +574,6 @@
     margin-top: 1.4em;
   }
 }
-
 .pie {
   display: flex;
   flex-wrap: wrap;
@@ -634,8 +623,9 @@
     color: var(--d-tenue);
   }
 }
-
 .barra-cliente {
+  position: sticky;
+  bottom: 0;
   z-index: 5;
   display: flex;
   align-items: center;
@@ -667,7 +657,6 @@
     color: var(--marfil-apagado);
   }
 }
-
 .doc--web {
   .portada {
     aspect-ratio: auto;
@@ -708,7 +697,6 @@
     margin-top: calc(3.6em * var(--escala-espaciado, 1));
   }
 }
-
 .doc-error {
   display: grid;
   place-items: center;
@@ -730,7 +718,6 @@
     color: var(--marfil-apagado);
   }
 }
-
 @container (max-width: 760px) {
   .doc--web .portada__meta {
     grid-template-columns: 1fr 1fr;
@@ -869,7 +856,6 @@
     font-size: 1.4rem;
   }
 }
-
 body.modo-cliente {
   display: block;
   height: auto;
@@ -906,22 +892,18 @@ body.modo-cliente {
     min-height: calc((100svh - 5.5rem) * var(--escala-espaciado, 1));
   }
 }
-
 @media (max-width: 1100px) {
   .barra__producto {
     display: none;
   }
 }
-
 @media (max-width: 640px) {
   .barra__pdf {
     display: none;
   }
-
   .menu__alternar-texto {
     display: none;
   }
-
   .menu .menu__alternar {
     padding: 0.62rem 0.7rem;
   }

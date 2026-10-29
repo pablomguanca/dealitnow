@@ -6,7 +6,7 @@ Repo: `github.com/pablomguanca/dealitnow`. Hosting en Vercel; datos en Firebase 
 
 ## Stack
 
-- **Frontend:** JavaScript sin framework (módulos ES) + SCSS, empaquetado con Vite. Toda la interfaz vive en `src/main.js` (editor, panel «Mis propuestas», vista del cliente, Mi cuenta).
+- **Frontend:** React 18 + Vite (JSX + Hooks + Context) + SCSS Partials, empaquetado con Vite. Toda la interfaz vive en `src/main.jsx`, `src/App.jsx`, `src/components/` y `src/hooks/useDealitController.js` (editor, panel «Mis propuestas», vista del cliente, Mi cuenta).
 - **Firebase:** Auth (Google y email/contraseña, con `signInWithPopup`), Firestore, Storage (logos) y App Check. Se usa el SDK **compat** (`firebase/compat/*`, estilo `db.collection(...)`), no el modular.
 - **Servidor:** funciones de Vercel en `api/` (Node 22) con `firebase-admin/firestore`. El token de sesión se verifica con `jose`, **no** con `firebase-admin/auth` (arrastra `jwks-rsa`, que rompe la función en Vercel).
 - **Tests:** Vitest. **Lint:** ESLint. **CI:** GitHub Actions corre lint + tests + build en cada push a `main`.
@@ -26,7 +26,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 
 | Ruta | Qué hay |
 | --- | --- |
-| `src/main.js` | Toda la interfaz |
+| `src/main.jsx`, `src/App.jsx`, `src/components/` y `src/hooks/useDealitController.js` | Toda la interfaz |
 | `src/modelo.js` | Temas, valores por defecto, normalización y cálculo de totales |
 | `src/aceptacion.js` | Reglas de aceptación, compartidas por la app y el servidor |
 | `src/firebase.js` | Auth, Firestore, Storage, App Check y operaciones de datos |

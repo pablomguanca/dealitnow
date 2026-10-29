@@ -215,7 +215,7 @@
       padding-top: 0;
       gap: 0.9em;
 
-      >div {
+      > div {
         padding: 1.05em 1.25em;
         border: 1px solid var(--portada-linea, var(--superficie));
         border-top: 2px solid var(--portada-acento, var(--dorado));
@@ -676,14 +676,13 @@
 
 /* Evita que el documento vuelva a ejecutar animaciones de fade-up al editar o cambiar tipografía/colores */
 .doc--web.doc--estatico {
-
   .portada::before,
   .portada .portada__superior,
   .portada .portada__para,
   .portada .portada__titulo,
   .portada .portada__regla,
   .portada .portada__meta,
-  .portada .portada__meta>div,
+  .portada .portada__meta > div,
   .barra-cliente {
     animation: none !important;
   }
@@ -705,7 +704,7 @@
   .doc-lista li,
   .pasos li,
   .pagos tbody tr,
-  .firmas>div {
+  .firmas > div {
     opacity: 1 !important;
     transform: none !important;
     transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;

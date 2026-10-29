@@ -20,7 +20,7 @@ npm run check    # lint + tests + build, lo mismo que corre CI
 
 | Ruta | Qué hay |
 | --- | --- |
-| `src/main.js` | Interfaz: editor, panel «Mis propuestas», vista del cliente y cuenta |
+| `src/main.jsx`, `src/App.jsx`, `src/components/` y `src/hooks/useDealitController.js` | Interfaz: editor, panel «Mis propuestas», vista del cliente y cuenta |
 | `src/modelo.js` | Temas, valores por defecto, normalización y cálculo de totales |
 | `src/link.js` | Links largos (`#p=…`) con la propuesta comprimida |
 | `src/firebase.js` | Auth, Firestore, Storage y App Check |
