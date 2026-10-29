@@ -62,6 +62,17 @@ const clampNumero = (val, min, max, def = 100) => {
   return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : def;
 };
 
+const fuentesEnUso = new Set();
+export const cargarFuente = nombre => {
+  if (!nombre || fuentesEnUso.has(nombre) || typeof document === 'undefined') return;
+  fuentesEnUso.add(nombre);
+  const pesos = nombre === 'Bebas Neue' || nombre === 'Archivo Black' ? '400' : '400;500;700';
+  const link = document.createElement('link');
+  link.rel = 'stylesheet';
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(nombre)}:wght@${pesos}&display=swap`;
+  document.head.append(link);
+};
+
 // Resuelve todos los colores efectivos del tema (incluyendo portada, texto, SVG, fondos y escalas tipográficas/espaciados)
 export const resolverColoresTema = t => {
   const preset = TEMAS[t?.preset] || TEMAS['elegante-oscuro'];
@@ -71,7 +82,9 @@ export const resolverColoresTema = t => {
   const portadaPersonalizada = esHex(t?.colorPortada) ? t.colorPortada.trim() : '';
 
   const fondoBase = fondoPersonalizado || preset.fondo;
-  const esClaro = fondoPersonalizado ? luminancia(fondoBase) > 0.42 : preset.modo === 'claro';
+  const presetClaro = preset.modo === 'claro';
+  const esClaro = fondoPersonalizado ? luminancia(fondoBase) > 0.42 : presetClaro;
+  const cambioModoFondo = esClaro !== presetClaro;
   const fondo2 = fondoPersonalizado ? mezclar(fondoBase, !esClaro, 0.04) : preset.fondo2;
   const superficie = fondoPersonalizado ? mezclar(fondoBase, !esClaro, 0.1) : preset.superficie;
   const superficieBorde = fondoPersonalizado ? mezclar(fondoBase, !esClaro, 0.16) : preset.superficieBorde;
@@ -104,17 +117,10 @@ export const resolverColoresTema = t => {
   const portadaApagado = mezclarDos(portadaTexto, portadaBg, 0.36);
   const portadaLinea = mezclarDos(portadaTexto, portadaBg, 0.82);
 
-  // Tinta de texto del cuerpo: si el usuario eligió un colorTexto y contrasta con el fondo del cuerpo, se usa;
-  // si no contrasta (ej. eligió blanco para la portada en un tema claro), se adapta automáticamente para que se lea.
-  let cuerpoTexto = fondoPersonalizado
-    ? (esClaro ? '#0F172A' : '#F8FAFC')
-    : preset.texto;
-  if (textoPersonalizado) {
-    cuerpoTexto = contrasteRatio(textoPersonalizado, fondoBase) >= 1.6
-      ? textoPersonalizado
-      : mezclar(textoPersonalizado, !esClaro, 0.78);
-  }
-  const usaCuerpoPersonalizado = !!(textoPersonalizado || fondoPersonalizado);
+  // Tinta de texto del cuerpo: conserva los colores exactos del preset salvo que el usuario elija un color de texto propio o invierta el modo del fondo
+  const cuerpoTexto = textoPersonalizado
+    || (cambioModoFondo ? (esClaro ? '#0F172A' : '#F8FAFC') : preset.texto);
+  const usaCuerpoPersonalizado = !!(textoPersonalizado || cambioModoFondo);
   const cuerpoApagado = usaCuerpoPersonalizado ? mezclarDos(cuerpoTexto, fondoBase, 0.38) : preset.textoApagado;
   const cuerpoTenue = usaCuerpoPersonalizado ? mezclarDos(cuerpoTexto, fondoBase, 0.56) : preset.textoTenue;
 
@@ -175,6 +181,22 @@ export const resolverColoresTema = t => {
   };
 };
 
+// Actualiza únicamente las variables CSS de tamaños tipográficos y espaciados
+// sin tocar ni recalcular ningún color del documento.
+export const aplicarEscalasTema = (doc, t) => {
+  if (!doc) return;
+  const escalaTituloPortada = clampNumero(t?.escalaTituloPortada, 60, 150, 100);
+  const escalaTitulos = clampNumero(t?.escalaTitulos, 70, 140, 100);
+  const escalaTexto = clampNumero(t?.escalaTexto, 85, 125, 100);
+  const espaciadoSecciones = clampNumero(t?.espaciadoSecciones, 40, 170, 100);
+  const espaciadoInterno = clampNumero(t?.espaciadoInterno, 60, 150, 100);
+  doc.style.setProperty('--escala-titulo-portada', (escalaTituloPortada / 100).toFixed(3));
+  doc.style.setProperty('--escala-titulos', (escalaTitulos / 100).toFixed(3));
+  doc.style.setProperty('--escala-texto', (escalaTexto / 100).toFixed(3));
+  doc.style.setProperty('--escala-espaciado', (espaciadoSecciones / 100).toFixed(3));
+  doc.style.setProperty('--escala-espaciado-interno', (espaciadoInterno / 100).toFixed(3));
+};
+
 // Aplica las variables CSS del tema elegido sobre el contenedor #documento (.doc)
 export const aplicarTema = (doc, t) => {
   if (!doc) return;
@@ -183,6 +205,8 @@ export const aplicarTema = (doc, t) => {
   const [r, g, b] = hexARgb(acento);
   const ft = t?.fuenteTitulos || preset.fuenteTitulos || 'Bebas Neue';
   const fc = t?.fuenteCuerpo || preset.fuenteCuerpo || 'Montserrat';
+  cargarFuente(ft);
+  cargarFuente(fc);
 
   const vars = {
     '--dorado': acento,
@@ -216,14 +240,10 @@ export const aplicarTema = (doc, t) => {
     '--portada-svg-color': col.colorSvg,
     '--svg-opacidad': (col.opacidadSvg / 100).toFixed(2),
     '--fuente-display': `'${ft}', Georgia, serif`,
-    '--fuente-texto': `'${fc}', system-ui, sans-serif`,
-    '--escala-titulo-portada': (col.escalaTituloPortada / 100).toFixed(3),
-    '--escala-titulos': (col.escalaTitulos / 100).toFixed(3),
-    '--escala-texto': (col.escalaTexto / 100).toFixed(3),
-    '--escala-espaciado': (col.espaciadoSecciones / 100).toFixed(3),
-    '--escala-espaciado-interno': (col.espaciadoInterno / 100).toFixed(3)
+    '--fuente-texto': `'${fc}', system-ui, sans-serif`
   };
   Object.entries(vars).forEach(([k, v]) => doc.style.setProperty(k, v));
+  aplicarEscalasTema(doc, t);
   doc.dataset.tema = t?.preset || 'elegante-oscuro';
   doc.dataset.modo = esClaro ? 'claro' : 'oscuro';
   doc.dataset.portada = PORTADAS[t?.portada] ? t.portada : (preset.portada || 'editorial');

@@ -39,7 +39,7 @@ import {
 } from './link.js';
 import { MENSAJES_ACEPTACION, NOMBRE_MIN, limpiarNombre } from './aceptacion.js';
 import { decoracionPortadaSVG } from './lib/decoraciones.js';
-import { resolverColoresTema, aplicarTema } from './lib/tema.js';
+import { resolverColoresTema, aplicarTema, aplicarEscalasTema } from './lib/tema.js';
 import {
   LOGO_MAX_ARCHIVO,
   FOTO_MAX_ARCHIVO,
@@ -848,7 +848,7 @@ const llenarTemaEditor = () => {
   const ft = $('#tema-fuente-titulos');
   const fc = $('#tema-fuente-cuerpo');
   if (acento) acento.value = col.acento;
-  if (colorTexto) colorTexto.value = col.portadaTexto;
+  if (colorTexto) colorTexto.value = col.cuerpoTexto;
   if (colorPortada) colorPortada.value = col.portadaBg;
   if (colorFondo) colorFondo.value = col.fondoBase;
   if (colorSvg) colorSvg.value = col.colorSvg;
@@ -995,11 +995,30 @@ $('#plantilla-completa')?.addEventListener('click', () => {
   dialogoPlantilla?.close();
 });
 
+const actualizarVisibilidadResetTema = () => {
+  const btnReset = $('#tema-restablecer-colores');
+  if (!btnReset) return;
+  const t = docActivo().tema;
+  const preset = TEMAS[t.preset] || TEMAS['elegante-oscuro'];
+  const cambiado = (t.acento && t.acento.toLowerCase() !== preset.acento.toLowerCase())
+    || !!t.colorTexto
+    || !!t.colorPortada
+    || !!t.colorFondo
+    || !!t.colorSvg
+    || (t.opacidadSvg !== undefined && Number(t.opacidadSvg) !== 100)
+    || (t.escalaTituloPortada !== undefined && Number(t.escalaTituloPortada) !== 100)
+    || (t.escalaTitulos !== undefined && Number(t.escalaTitulos) !== 100)
+    || (t.escalaTexto !== undefined && Number(t.escalaTexto) !== 100)
+    || (t.espaciadoSecciones !== undefined && Number(t.espaciadoSecciones) !== 100)
+    || (t.espaciadoInterno !== undefined && Number(t.espaciadoInterno) !== 100);
+  btnReset.hidden = !cambiado;
+};
+
 const temaAcento = $('#tema-acento');
 if (temaAcento) {
   temaAcento.addEventListener('input', ev => {
     docActivo().tema.acento = ev.target.value;
-    llenarTemaEditor();
+    actualizarVisibilidadResetTema();
     actualizarTemaEnVivo();
   });
 }
@@ -1008,7 +1027,7 @@ const temaColorTexto = $('#tema-color-texto');
 if (temaColorTexto) {
   temaColorTexto.addEventListener('input', ev => {
     docActivo().tema.colorTexto = ev.target.value;
-    llenarTemaEditor();
+    actualizarVisibilidadResetTema();
     actualizarTemaEnVivo();
   });
 }
@@ -1017,7 +1036,7 @@ const temaColorPortada = $('#tema-color-portada');
 if (temaColorPortada) {
   temaColorPortada.addEventListener('input', ev => {
     docActivo().tema.colorPortada = ev.target.value;
-    llenarTemaEditor();
+    actualizarVisibilidadResetTema();
     actualizarTemaEnVivo();
   });
 }
@@ -1026,7 +1045,7 @@ const temaColorFondo = $('#tema-color-fondo');
 if (temaColorFondo) {
   temaColorFondo.addEventListener('input', ev => {
     docActivo().tema.colorFondo = ev.target.value;
-    llenarTemaEditor();
+    actualizarVisibilidadResetTema();
     actualizarTemaEnVivo();
   });
 }
@@ -1035,7 +1054,7 @@ const temaColorSvg = $('#tema-color-svg');
 if (temaColorSvg) {
   temaColorSvg.addEventListener('input', ev => {
     docActivo().tema.colorSvg = ev.target.value;
-    llenarTemaEditor();
+    actualizarVisibilidadResetTema();
     actualizarTemaEnVivo();
   });
 }
@@ -1043,26 +1062,40 @@ if (temaColorSvg) {
 const temaOpacidadSvg = $('#tema-opacidad-svg');
 if (temaOpacidadSvg) {
   temaOpacidadSvg.addEventListener('input', ev => {
-    docActivo().tema.opacidadSvg = Number(ev.target.value);
-    llenarTemaEditor();
+    const valor = Number(ev.target.value);
+    docActivo().tema.opacidadSvg = valor;
+    const opacidadValor = $('#tema-opacidad-valor');
+    if (opacidadValor) opacidadValor.textContent = `${valor}%`;
+    actualizarVisibilidadResetTema();
     actualizarTemaEnVivo();
   });
 }
 
-const vincularRangoTema = (selector, propiedad) => {
+const vincularRangoTema = (selector, selectorValor, propiedad) => {
   const el = $(selector);
   if (!el) return;
   el.addEventListener('input', ev => {
-    docActivo().tema[propiedad] = Number(ev.target.value);
-    llenarTemaEditor();
-    actualizarTemaEnVivo();
+    if (invitado) invitadoEdito = true;
+    const valor = Number(ev.target.value);
+    const actual = docActivo();
+    actual.tema[propiedad] = valor;
+    const salida = $(selectorValor);
+    if (salida) salida.textContent = `${valor}%`;
+    const doc = $('#documento');
+    if (doc) {
+      doc.classList.add('doc--estatico');
+      animacionInicialLista = true;
+      aplicarEscalasTema(doc, actual.tema);
+    }
+    actualizarVisibilidadResetTema();
+    guardarLuego();
   });
 };
-vincularRangoTema('#tema-escala-portada', 'escalaTituloPortada');
-vincularRangoTema('#tema-escala-titulos', 'escalaTitulos');
-vincularRangoTema('#tema-escala-texto', 'escalaTexto');
-vincularRangoTema('#tema-espaciado-secciones', 'espaciadoSecciones');
-vincularRangoTema('#tema-espaciado-interno', 'espaciadoInterno');
+vincularRangoTema('#tema-escala-portada', '#tema-escala-portada-valor', 'escalaTituloPortada');
+vincularRangoTema('#tema-escala-titulos', '#tema-escala-titulos-valor', 'escalaTitulos');
+vincularRangoTema('#tema-escala-texto', '#tema-escala-texto-valor', 'escalaTexto');
+vincularRangoTema('#tema-espaciado-secciones', '#tema-espaciado-secciones-valor', 'espaciadoSecciones');
+vincularRangoTema('#tema-espaciado-interno', '#tema-espaciado-interno-valor', 'espaciadoInterno');
 
 const temaRestablecerColores = $('#tema-restablecer-colores');
 if (temaRestablecerColores) {
