@@ -1,6 +1,7 @@
-// Contexto global de React para compartir el estado y controlador de Dealit en toda la jerarquía de componentes.
+// Contexto global de React integrado con React Router v6 para Dealit.
 
 import { createContext, useContext } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { useDealitController } from '../hooks/useDealitController.js';
 import {
   TEMAS,
@@ -14,9 +15,16 @@ import {
 const DealitContext = createContext(null);
 
 export function DealitProvider({ children }) {
-  useDealitController();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams();
+
+  useDealitController(navigate);
 
   const valor = {
+    navigate,
+    location,
+    params,
     temas: TEMAS,
     portadas: PORTADAS,
     decoraciones: DECORACIONES,

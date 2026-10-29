@@ -13,6 +13,22 @@
       "destination": "https://dealit-7f735.firebaseapp.com/__/firebase/:path*"
     },
     {
+      "source": "/portafolios",
+      "destination": "/"
+    },
+    {
+      "source": "/cuenta",
+      "destination": "/"
+    },
+    {
+      "source": "/propuesta/:id",
+      "destination": "/"
+    },
+    {
+      "source": "/editar-portafolio/:id",
+      "destination": "/"
+    },
+    {
       "source": "/p/:id",
       "destination": "/"
     },

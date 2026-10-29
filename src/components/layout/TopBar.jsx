@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 // Barra superior de navegación, selector de secciones, acciones de compartir/PDF y menú de usuario.
 
 export function TopBar() {
@@ -5,13 +6,13 @@ export function TopBar() {
     <>
       <header className="barra">
   <div className="barra__marca">
-    <a className="barra__logo" href="/" data-accion="ir-panel" aria-label="Dealit, ir a Mis propuestas">Dealit</a>
+    <Link className="barra__logo" to="/" data-accion="ir-panel" aria-label="Dealit, ir a Mis propuestas">Dealit</Link>
     <span className="barra__producto solo-editor" id="barra-subtitulo">Generá tu propuesta</span>
   </div>
   <nav className="barra__nav solo-inicio" aria-label="Secciones">
-    <a className="barra__nav-link" href="/" data-accion="ir-panel" data-seccion="panel">Propuestas</a>
-    <a className="barra__nav-link" href="/?seccion=portafolios" data-accion="ir-portafolios" data-seccion="portafolios">Portfolios</a>
-    <a className="barra__nav-link solo-cuenta" href="/?seccion=cuenta" data-accion="ir-cuenta" data-seccion="cuenta">Mi cuenta</a>
+    <Link className="barra__nav-link" to="/" data-accion="ir-panel" data-seccion="panel">Propuestas</Link>
+    <Link className="barra__nav-link" to="/portafolios" data-accion="ir-portafolios" data-seccion="portafolios">Portfolios</Link>
+    <Link className="barra__nav-link solo-cuenta" to="/cuenta" data-accion="ir-cuenta" data-seccion="cuenta">Mi cuenta</Link>
   </nav>
   <div className="barra__acciones">
     <button type="button" className="boton boton--secundario solo-invitado" data-accion="ingresar">Iniciar sesión</button>
@@ -23,7 +24,7 @@ export function TopBar() {
       <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.3 0l2-2a3 3 0 0 0-4.3-4.3l-.9.9M9.2 6.8a3 3 0 0 0-4.3 0l-2 2a3 3 0 0 0 4.3 4.3l.9-.9"/></svg>
       <span className="boton__extra">Compartir</span><span>link</span>
     </button>
-    <a className="barra__avatar solo-cuenta" id="barra-avatar" href="/?seccion=cuenta" data-accion="ir-cuenta" aria-label="Mi cuenta" title="Mi cuenta"></a>
+    <Link className="barra__avatar solo-cuenta" id="barra-avatar" to="/cuenta" data-accion="ir-cuenta" aria-label="Mi cuenta" title="Mi cuenta"></Link>
     <div className="menu" id="menu">
       <button type="button" className="boton boton--secundario menu__alternar" data-accion="menu" aria-expanded="false" aria-controls="menu-panel" aria-label="Abrir menú lateral">
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg>

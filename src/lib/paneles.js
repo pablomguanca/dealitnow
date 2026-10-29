@@ -76,7 +76,7 @@ export const propuestaHTML = p => {
   const inicial = (cliente || titulo).trim().charAt(0).toUpperCase() || '·';
   return `
     <li class="propuesta">
-      <a class="propuesta__abrir" href="?propuesta=${encodeURIComponent(p.id)}" data-accion="abrir-propuesta" data-id="${esc(p.id)}">
+      <a class="propuesta__abrir" href="/propuesta/${encodeURIComponent(p.id)}" data-accion="abrir-propuesta" data-id="${esc(p.id)}">
         <span class="propuesta__avatar" data-tono="${tonoDe(cliente || titulo)}" aria-hidden="true">${esc(inicial)}</span>
         <span class="propuesta__textos">
           <span class="propuesta__titulo">${esc(titulo)}</span>
@@ -161,7 +161,7 @@ export const portafolioItemHTML = (pf, { conNube = false } = {}) => {
   const esNube = !!(conNube && /^[A-Za-z0-9]{20}$/.test(pf.id));
   return `
     <li class="propuesta">
-      <a class="propuesta__abrir" href="?portafolio=${encodeURIComponent(pf.id)}" data-accion="abrir-portafolio" data-id="${esc(pf.id)}">
+      <a class="propuesta__abrir" href="/editar-portafolio/${encodeURIComponent(pf.id)}" data-accion="abrir-portafolio" data-id="${esc(pf.id)}">
         <span class="propuesta__avatar" data-tono="${tonoDe(titulo)}" aria-hidden="true">${esc(inicial)}</span>
         <span class="propuesta__textos">
           <span class="propuesta__titulo">${esc(titulo)}</span>

@@ -80,6 +80,24 @@ import {
 
 
 let controladorIniciado = false;
+let navegarReactRouter = null;
+
+export const registrarNavegadorReact = fn => {
+  navegarReactRouter = fn;
+};
+
+const irRuta = (ruta, { reemplazar = false } = {}) => {
+  if (typeof navegarReactRouter === 'function') {
+    try {
+      navegarReactRouter(ruta, { replace: reemplazar });
+      return;
+    } catch {}
+  }
+  try {
+    if (reemplazar) history.replaceState(null, '', ruta);
+    else history.pushState(null, '', ruta);
+  } catch {}
+};
 
 export const inicializarControladorDealit = () => {
   if (controladorIniciado) return;
@@ -625,7 +643,7 @@ export const inicializarControladorDealit = () => {
     }
     if (volverLink) {
       volverLink.dataset.accion = esPf ? 'ir-portafolios' : 'ir-panel';
-      volverLink.href = esPf ? '/?seccion=portafolios' : '/';
+      volverLink.href = esPf ? '/portafolios' : '/';
     }
     if (volverTexto) volverTexto.textContent = esPf ? 'Mis portfolios' : 'Mis propuestas';
     if (btnOtraSeccion) {
@@ -2520,9 +2538,24 @@ export const inicializarControladorDealit = () => {
     });
   };
 
-  const idEnUrl = () => new URLSearchParams(location.search).get('propuesta');
-  const idPortafolioEnUrl = () => new URLSearchParams(location.search).get('portafolio');
-  const seccionEnUrl = () => new URLSearchParams(location.search).get('seccion');
+  const RUTA_EDITAR_PROPUESTA = /^\/propuesta\/([^/]+)\/?$/;
+  const RUTA_EDITAR_PORTAFOLIO = /^\/editar-portafolio\/([^/]+)\/?$/;
+
+  const idEnUrl = () => {
+    const m = location.pathname.match(RUTA_EDITAR_PROPUESTA);
+    if (m) return decodeURIComponent(m[1]);
+    return new URLSearchParams(location.search).get('propuesta');
+  };
+  const idPortafolioEnUrl = () => {
+    const m = location.pathname.match(RUTA_EDITAR_PORTAFOLIO);
+    if (m) return decodeURIComponent(m[1]);
+    return new URLSearchParams(location.search).get('portafolio');
+  };
+  const seccionEnUrl = () => {
+    if (location.pathname === '/portafolios' || location.pathname === '/portafolios/') return 'portafolios';
+    if (location.pathname === '/cuenta' || location.pathname === '/cuenta/') return 'cuenta';
+    return new URLSearchParams(location.search).get('seccion');
+  };
 
   // Vistas: 'panel' (Mis propuestas), 'portafolios' (Mis portfolios), 'cuenta' (Mi cuenta) y 'editor'.
   const TITULOS_VISTA = {
@@ -2559,8 +2592,8 @@ export const inicializarControladorDealit = () => {
   const irAPortafolios = ({ historial = true } = {}) => {
     cerrarEdicion();
     if (!nube() && !portafolios.length) portafolios = cargarPortafoliosLocales();
-    if (historial && seccionEnUrl() !== 'portafolios') {
-      try { history.pushState(null, '', `${location.pathname}?seccion=portafolios`); } catch {}
+    if (historial && location.pathname !== '/portafolios') {
+      irRuta('/portafolios');
     }
     mostrarVista('portafolios');
     renderPanelPortafolios();
@@ -2575,7 +2608,7 @@ export const inicializarControladorDealit = () => {
     errorGuardado = '';
     avisoError = false;
     if (historial) {
-      try { history.pushState(null, '', `${location.pathname}?portafolio=${encodeURIComponent(id)}`); } catch {}
+      irRuta(`/editar-portafolio/${encodeURIComponent(id)}`);
     }
     mostrarVista('editor');
     cambiarPestana(false);
@@ -2684,7 +2717,7 @@ export const inicializarControladorDealit = () => {
 
   const irAlPanel = ({ historial = true } = {}) => {
     cerrarEdicion();
-    if (historial && location.search) history.pushState(null, '', location.pathname);
+    if (historial && (location.pathname !== '/' || location.search)) irRuta('/');
     mostrarVista('panel');
     renderPanel();
     elPanel.scrollTop = 0;
@@ -2864,7 +2897,7 @@ export const inicializarControladorDealit = () => {
 
   const irACuenta = ({ historial = true } = {}) => {
     cerrarEdicion();
-    if (historial && seccionEnUrl() !== 'cuenta') history.pushState(null, '', `${location.pathname}?seccion=cuenta`);
+    if (historial && location.pathname !== '/cuenta') irRuta('/cuenta');
     mostrarVista('cuenta');
     if (!cuentaEditada) llenarCuenta();
     elCuenta.scrollTop = 0;
@@ -2878,7 +2911,7 @@ export const inicializarControladorDealit = () => {
     seleccion = new Set();
     errorGuardado = '';
     avisoError = false;
-    if (historial) history.pushState(null, '', `${location.pathname}?propuesta=${encodeURIComponent(id)}`);
+    if (historial) irRuta(`/propuesta/${encodeURIComponent(id)}`);
     mostrarVista('editor');
     cambiarPestana(false);
     llenarFormulario();
@@ -2901,7 +2934,7 @@ export const inicializarControladorDealit = () => {
     });
     if (!doc) {
       avisar('No encontramos esa propuesta. Puede que se haya borrado.');
-      history.replaceState(null, '', location.pathname);
+      irRuta('/', { reemplazar: true });
       irAlPanel({ historial: false });
       return;
     }
@@ -3053,7 +3086,7 @@ export const inicializarControladorDealit = () => {
     const id = idEnUrl();
     if (migrada && continuar) {
       mostrarEditor(migrada.id, migrada.contenido, { historial: false });
-      history.replaceState(null, '', `${location.pathname}?propuesta=${encodeURIComponent(migrada.id)}`);
+      irRuta(`/propuesta/${encodeURIComponent(migrada.id)}`, { reemplazar: true });
       if (continuar === 'compartir') abrirCompartir();
       else if (continuar === 'pdf') descargarPDF();
     } else if (idPortafolioEnUrl()) await abrirPortafolio(idPortafolioEnUrl(), { historial: false });
@@ -3099,7 +3132,7 @@ export const inicializarControladorDealit = () => {
     if (invitadoIniciado) return;
     invitadoIniciado = true;
     const pideIngresar = new URLSearchParams(location.search).has('ingresar');
-    if (location.search) history.replaceState(null, '', location.pathname);
+    if (location.search) irRuta('/', { reemplazar: true });
     portafolios = cargarPortafoliosLocales();
     const guardada = cargarGuardado();
     invitadoEdito = !!guardada;
@@ -3573,8 +3606,12 @@ export const inicializarControladorDealit = () => {
   });
 };
 
-export function useDealitController() {
+export function useDealitController(navigate) {
   const montadoRef = useRef(false);
+
+  useEffect(() => {
+    if (navigate) registrarNavegadorReact(navigate);
+  }, [navigate]);
 
   useEffect(() => {
     if (montadoRef.current) return;
