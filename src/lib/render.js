@@ -25,7 +25,7 @@ export const ICONO_EXTERNO = '<svg viewBox="0 0 16 16" aria-hidden="true"><path 
 
 export const vacioHTML = t => `<span class="doc__vacio">${esc(t)}</span>`;
 
-export const servicioConContenido = s => s && (s.nombre.trim() || numero(s.precio) > 0);
+export const servicioConContenido = s => s && (s.nombre.trim() || s.descripcion?.trim() || s.entregables?.trim() || numero(s.precio) > 0);
 
 export const proyectoConContenido = p => p && (p.titulo.trim() || p.descripcion.trim() || p.imagen || (Array.isArray(p.galeria) && p.galeria.length > 0));
 
@@ -272,6 +272,11 @@ export const servicioHTML = (s, moneda, web, { seleccion = new Set(), esAceptada
   const mediaSrv = s.imagen
     ? `<div class="servicio__media"${usaLightbox ? ` data-lightbox-src="${esc(s.imagen)}" data-lightbox-caption="${esc(s.nombre || 'Servicio')}"` : ''}><img src="${esc(s.imagen)}" alt="${esc(s.nombre || 'Servicio')}"></div>`
     : '';
+  const totalItem = totalServicio(s);
+  const mostrarPrecio = s.modalidad !== 'incluido' && totalItem > 0;
+  const bloquePrecio = mostrarPrecio
+    ? `<p class="servicio__precio">${dinero(totalItem, moneda)}<span class="servicio__modo">${esc(modo)}</span></p>`
+    : '';
   return `
     <div class="servicio${s.opcional ? ' servicio--opcional' : ''}${sumado ? ' servicio--sumado' : ''}">
       ${mediaSrv}
@@ -280,7 +285,7 @@ export const servicioHTML = (s, moneda, web, { seleccion = new Set(), esAceptada
           ${insignia}
           <h3 class="servicio__nombre">${s.nombre.trim() ? esc(s.nombre) : vacioHTML('Servicio sin nombre')}</h3>
         </div>
-        <p class="servicio__precio">${dinero(totalServicio(s), moneda)}<span class="servicio__modo">${esc(modo)}</span></p>
+        ${bloquePrecio}
       </div>
       ${s.descripcion.trim() ? `<p class="servicio__desc">${esc(s.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
       ${entregables.length ? `<ul class="doc-lista servicio__entregables">${entregables.map(e => `<li>${ICONO_CHECK}<span>${esc(e)}</span></li>`).join('')}</ul>` : ''}

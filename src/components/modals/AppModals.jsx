@@ -23,16 +23,17 @@ const TPL_SERVICIOS = `<div class="item">
       <label class="campo campo--ancho">
         <span class="campo__etiqueta">Modalidad de cobro</span>
         <select class="control" data-item="modalidad">
+          <option value="incluido">Incluido en el fee / abono (sin precio individual)</option>
           <option value="unico">Pago único</option>
-          <option value="mensual">Mensual</option>
+          <option value="mensual">Mensual (con precio individual)</option>
           <option value="hora">Por hora</option>
         </select>
       </label>
-      <label class="campo">
+      <label class="campo" data-campo-cantidad>
         <span class="campo__etiqueta" data-etiqueta-cantidad>Cantidad</span>
         <input class="control" type="number" min="0" step="any" inputmode="decimal" data-item="cantidad" data-tipo="numero">
       </label>
-      <label class="campo">
+      <label class="campo" data-campo-precio>
         <span class="campo__etiqueta" data-etiqueta-precio>Precio</span>
         <input class="control" type="number" min="0" step="any" inputmode="decimal" data-item="precio" data-tipo="numero">
       </label>

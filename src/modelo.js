@@ -8,7 +8,8 @@ import {
 export const MODALIDADES = {
   unico: { cantidad: 'Cantidad', precio: 'Precio' },
   mensual: { cantidad: 'Cantidad', precio: 'Precio por mes' },
-  hora: { cantidad: 'Horas', precio: 'Tarifa por hora' }
+  hora: { cantidad: 'Horas', precio: 'Tarifa por hora' },
+  incluido: { cantidad: 'Cantidad', precio: 'Incluido en el fee' }
 };
 
 export const FUENTES_TITULOS = [
@@ -176,7 +177,7 @@ export const vacio = () => ({
   galeria: [],
   testimonios: [],
   faqs: [],
-  inversion: { moneda: 'USD', descuento: 0, impuestoNombre: 'IVA', impuesto: 0, pagos: [] },
+  inversion: { moneda: 'USD', abonoMensual: 0, montoGlobal: 0, descuento: 0, impuestoNombre: 'IVA', impuesto: 0, pagos: [] },
   condiciones: '',
   proximosPasos: '',
   opciones: {
@@ -712,12 +713,13 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
   return n;
 };
 
-export const totalServicio = s => numero(s.cantidad) * numero(s.precio);
+export const totalServicio = s => (s?.modalidad === 'incluido' ? 0 : numero(s?.cantidad) * numero(s?.precio));
 
 export const calcularTotales = (e, sumados = new Set()) => {
-  let inicial = 0;
-  let mensual = 0;
+  let inicial = Math.max(0, numero(e.inversion?.montoGlobal));
+  let mensual = Math.max(0, numero(e.inversion?.abonoMensual));
   e.servicios.forEach(s => {
+    if (s.modalidad === 'incluido') return;
     if (s.opcional && !sumados.has(s.id)) return;
     if (s.modalidad === 'mensual') mensual += totalServicio(s);
     else inicial += totalServicio(s);

@@ -201,7 +201,7 @@ export const inicializarControladorDealit = () => {
     return {
       title: e.propuesta.titulo.trim(),
       clientName: e.cliente.empresa.trim() || e.cliente.nombre.trim(),
-      amount: calcular(e, new Set()).inicial.total, // sin opcionales
+      amount: calcular(e, new Set()).inicial.total || calcular(e, new Set()).mensual.total, // sin opcionales
       theme: e.tema.preset,
       payload: JSON.parse(payload)
     };
@@ -439,10 +439,20 @@ export const inicializarControladorDealit = () => {
 
   const actualizarItemServicio = (nodo, s) => {
     const modo = MODALIDADES[s.modalidad] || MODALIDADES.unico;
+    const esIncluido = s.modalidad === 'incluido';
+    const wrapCant = $('[data-campo-cantidad]', nodo);
+    const wrapPrecio = $('[data-campo-precio]', nodo);
+    if (wrapCant) wrapCant.hidden = esIncluido;
+    if (wrapPrecio) wrapPrecio.hidden = esIncluido;
     $('[data-etiqueta-cantidad]', nodo).textContent = modo.cantidad;
     $('[data-etiqueta-precio]', nodo).textContent = modo.precio;
     const sufijo = s.modalidad === 'mensual' ? ' por mes' : '';
-    $('[data-subtotal]', nodo).textContent = dinero(totalServicio(s), estado.inversion.moneda) + sufijo;
+    const subEl = $('[data-subtotal]', nodo);
+    if (subEl) {
+      subEl.textContent = esIncluido
+        ? 'Incluido en el fee / inversión general'
+        : (totalServicio(s) > 0 ? dinero(totalServicio(s), estado.inversion.moneda) + sufijo : 'Sin precio individual (incluido)');
+    }
     nodo.classList.toggle('item--opcional', !!s.opcional);
     actualizarImagenGenericaItem(nodo, s.imagen, 'data-srv-img');
   };

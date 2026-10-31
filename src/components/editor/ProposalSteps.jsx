@@ -134,6 +134,15 @@ export function ProposalSteps() {
               </select>
             </label>
             <label className="campo">
+              <span className="campo__etiqueta">Fee / Abono mensual global</span>
+              <input className="control" type="number" min="0" step="any" inputMode="decimal" placeholder="0" data-campo="inversion.abonoMensual" data-tipo="numero" />
+            </label>
+            <label className="campo">
+              <span className="campo__etiqueta">Monto único global</span>
+              <input className="control" type="number" min="0" step="any" inputMode="decimal" placeholder="0" data-campo="inversion.montoGlobal" data-tipo="numero" />
+            </label>
+            <p className="campo__ayuda campo--ancho">Si trabajás con un único fee mensual o monto fijo que abarca todos los servicios (sin ponerles precio por separado), ingresalo acá y se mostrará como total al final en la sección Inversión.</p>
+            <label className="campo">
               <span className="campo__etiqueta">Descuento</span>
               <span className="porcentaje"><input className="control" type="number" min="0" max="100" step="any" inputMode="decimal" data-campo="inversion.descuento" data-tipo="numero" /></span>
             </label>
