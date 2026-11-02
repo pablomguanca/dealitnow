@@ -62,15 +62,23 @@
   &__numero {
     display: inline-flex;
     align-items: center;
-    gap: 0.45em;
-    padding: 0.28em 0.75em;
-    border: 1px solid var(--portada-linea, rgba(255, 255, 255, 0.14));
+    justify-content: center;
+    width: fit-content;
+    max-width: min(100%, 22em);
+    gap: 0.4em;
+    padding: 0.36em 0.88em;
+    border: 1px solid var(--portada-linea, rgba(255, 255, 255, 0.16));
     border-radius: 999px;
-    background: var(--portada-superficie, rgba(255, 255, 255, 0.03));
+    background: var(--portada-superficie, rgba(255, 255, 255, 0.04));
     backdrop-filter: blur(6px);
-    font-size: 0.82em;
-    letter-spacing: 0.04em;
+    font-family: var(--fuente-texto);
+    font-size: clamp(0.62rem, 0.72em, 0.78rem);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
+    text-align: center;
+    text-wrap: balance;
   }
 
   &__regla {

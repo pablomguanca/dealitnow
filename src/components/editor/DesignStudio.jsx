@@ -290,6 +290,13 @@ export function DesignStudio() {
             </label>
             <label className="campo">
               <span className="campo__etiqueta campo__etiqueta--fila">
+                <span>Tamaño del logo</span>
+                <output className="campo__valor" id="tema-escala-logo-valor" htmlFor="tema-escala-logo">100%</output>
+              </span>
+              <input className="rango-input" type="range" id="tema-escala-logo" min="50" max="250" step="5" defaultValue="100" />
+            </label>
+            <label className="campo">
+              <span className="campo__etiqueta campo__etiqueta--fila">
                 <span>Tamaño título de portada</span>
                 <output className="campo__valor" id="tema-escala-portada-valor" htmlFor="tema-escala-portada">100%</output>
               </span>

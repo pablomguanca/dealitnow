@@ -142,6 +142,7 @@ export const resolverColoresTema = t => {
   const opacidadSvg = clampNumero(opCruda, 0, 200, 100);
 
   // Escalas de tipografía y espaciado de secciones
+  const escalaLogo = clampNumero(t?.escalaLogo, 50, 250, 100);
   const escalaTituloPortada = clampNumero(t?.escalaTituloPortada, 60, 150, 100);
   const escalaTitulos = clampNumero(t?.escalaTitulos, 70, 140, 100);
   const escalaTexto = clampNumero(t?.escalaTexto, 85, 125, 100);
@@ -173,6 +174,7 @@ export const resolverColoresTema = t => {
     cuerpoAcento,
     acentoTinta,
     acentoBordeContraste,
+    escalaLogo,
     escalaTituloPortada,
     escalaTitulos,
     escalaTexto,
@@ -185,11 +187,13 @@ export const resolverColoresTema = t => {
 // sin tocar ni recalcular ningún color del documento.
 export const aplicarEscalasTema = (doc, t) => {
   if (!doc) return;
+  const escalaLogo = clampNumero(t?.escalaLogo, 50, 250, 100);
   const escalaTituloPortada = clampNumero(t?.escalaTituloPortada, 60, 150, 100);
   const escalaTitulos = clampNumero(t?.escalaTitulos, 70, 140, 100);
   const escalaTexto = clampNumero(t?.escalaTexto, 85, 125, 100);
   const espaciadoSecciones = clampNumero(t?.espaciadoSecciones, 40, 170, 100);
   const espaciadoInterno = clampNumero(t?.espaciadoInterno, 60, 150, 100);
+  doc.style.setProperty('--escala-logo', (escalaLogo / 100).toFixed(3));
   doc.style.setProperty('--escala-titulo-portada', (escalaTituloPortada / 100).toFixed(3));
   doc.style.setProperty('--escala-titulos', (escalaTitulos / 100).toFixed(3));
   doc.style.setProperty('--escala-texto', (escalaTexto / 100).toFixed(3));

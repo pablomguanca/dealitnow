@@ -87,17 +87,23 @@
 
   &__logo {
     display: block;
-    max-width: 14em;
-    max-height: 4.6em;
+    height: calc(3.2em * var(--escala-logo, 1));
+    width: auto;
+    max-width: min(100%, calc(14em * var(--escala-logo, 1)));
+    max-height: calc(5.8em * var(--escala-logo, 1));
     object-fit: contain;
     object-position: left center;
+    transition: height 0.15s ease, max-width 0.15s ease, max-height 0.15s ease;
   }
 
   &__numero {
     margin: 0;
-    font-size: 0.95em;
+    font-family: var(--fuente-texto);
+    font-size: clamp(0.62rem, 0.72em, 0.8rem);
+    font-weight: 600;
+    line-height: 1.25;
     color: var(--portada-apagado, var(--marfil-apagado));
-    text-align: right;
+    text-align: center;
   }
 
   &__centro {
@@ -624,6 +630,8 @@
   }
 }
 .barra-cliente {
+  position: sticky;
+  bottom: 0;
   z-index: 5;
   display: flex;
   align-items: center;
@@ -904,6 +912,45 @@ body.modo-cliente {
   }
   .menu .menu__alternar {
     padding: 0.62rem 0.7rem;
+  }
+  .doc--web {
+    font-size: calc(15px * var(--escala-texto, 1));
+
+    .portada {
+      min-height: auto;
+      padding: calc(2.2em * var(--escala-espaciado, 1)) 1.4em calc(2.2em * var(--escala-espaciado, 1));
+    }
+
+    .portada__superior {
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75em 1em;
+      margin-bottom: 1.8em;
+    }
+
+    .portada__numero {
+      font-size: 0.64rem;
+      padding: 0.32em 0.75em;
+      line-height: 1.2;
+      max-width: 100%;
+    }
+
+    .portada__centro {
+      margin: 1.5em 0 2em;
+    }
+
+    .portada__titulo {
+      font-size: calc(2.85em * var(--escala-titulo-portada, 1));
+    }
+
+    .portada__meta {
+      grid-template-columns: 1fr 1fr;
+      gap: 1.15em 1.25em;
+    }
+
+    .cuerpo {
+      padding: calc(3em * var(--escala-espaciado, 1)) 1.25em calc(2.6em * var(--escala-espaciado, 1));
+    }
   }
 }
 

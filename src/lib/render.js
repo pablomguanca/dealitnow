@@ -681,7 +681,7 @@ export const generarPropuestaHTML = (
       ${marcaAguaNumero}
       <div class="portada__superior">
         ${marca}
-        ${p.numero.trim() ? `<p class="portada__numero">Propuesta ${esc(p.numero)}</p>` : ''}
+        ${p.numero.trim() ? `<p class="portada__numero">${esc(/^propuesta\b/i.test(p.numero.trim()) ? p.numero.trim() : `Propuesta ${p.numero.trim()}`)}</p>` : ''}
       </div>
       <div class="portada__centro">
         <p class="portada__para"><span class="portada__para-chip">${destinatario ? `Propuesta para ${esc(destinatario)}` : 'Propuesta comercial'}</span></p>

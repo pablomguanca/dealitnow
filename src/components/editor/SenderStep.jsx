@@ -45,6 +45,13 @@ export function SenderStep() {
               <button type="button" className="boton boton--texto boton--chico" data-accion="quitar-logo" id="logo-quitar" hidden>Quitar</button>
             </div>
             <p className="campo__ayuda">Marca o logotipo para la cabecera.</p>
+            <div className="campo" id="logo-escala-wrap" style={{ marginTop: '0.55rem' }}>
+              <span className="campo__etiqueta campo__etiqueta--fila">
+                <span>Tamaño del logo</span>
+                <output className="campo__valor" id="logo-escala-valor" htmlFor="logo-escala-input">100%</output>
+              </span>
+              <input className="rango-input" type="range" id="logo-escala-input" min="50" max="250" step="5" defaultValue="100" />
+            </div>
           </div>
           <div className="campo">
             <span className="campo__etiqueta">Foto de perfil o equipo (opcional)</span>

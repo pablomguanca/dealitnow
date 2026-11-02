@@ -871,6 +871,10 @@ export const inicializarControladorDealit = () => {
     const colorSvg = $('#tema-color-svg');
     const opacidadSvg = $('#tema-opacidad-svg');
     const opacidadValor = $('#tema-opacidad-valor');
+    const escalaLogo = $('#tema-escala-logo');
+    const escalaLogoValor = $('#tema-escala-logo-valor');
+    const logoEscalaInput = $('#logo-escala-input');
+    const logoEscalaValor = $('#logo-escala-valor');
     const escalaPortada = $('#tema-escala-portada');
     const escalaPortadaValor = $('#tema-escala-portada-valor');
     const escalaTitulos = $('#tema-escala-titulos');
@@ -891,6 +895,10 @@ export const inicializarControladorDealit = () => {
     if (colorSvg) colorSvg.value = col.colorSvg;
     if (opacidadSvg) opacidadSvg.value = String(col.opacidadSvg);
     if (opacidadValor) opacidadValor.textContent = `${col.opacidadSvg}%`;
+    if (escalaLogo) escalaLogo.value = String(col.escalaLogo);
+    if (escalaLogoValor) escalaLogoValor.textContent = `${col.escalaLogo}%`;
+    if (logoEscalaInput) logoEscalaInput.value = String(col.escalaLogo);
+    if (logoEscalaValor) logoEscalaValor.textContent = `${col.escalaLogo}%`;
     if (escalaPortada) escalaPortada.value = String(col.escalaTituloPortada);
     if (escalaPortadaValor) escalaPortadaValor.textContent = `${col.escalaTituloPortada}%`;
     if (escalaTitulos) escalaTitulos.value = String(col.escalaTitulos);
@@ -908,7 +916,8 @@ export const inicializarControladorDealit = () => {
         || !!t.colorFondo
         || !!t.colorSvg
         || (t.opacidadSvg !== undefined && Number(t.opacidadSvg) !== 100)
-        || (t.escalaTituloPortada !== undefined && Number(t.escalaTituloPortada) !== 100)
+        || (t.escalaLogo !== undefined && Number(t.escalaLogo) !== 100)
+      || (t.escalaTituloPortada !== undefined && Number(t.escalaTituloPortada) !== 100)
         || (t.escalaTitulos !== undefined && Number(t.escalaTitulos) !== 100)
         || (t.escalaTexto !== undefined && Number(t.escalaTexto) !== 100)
         || (t.espaciadoSecciones !== undefined && Number(t.espaciadoSecciones) !== 100)
@@ -1043,6 +1052,7 @@ export const inicializarControladorDealit = () => {
       || !!t.colorFondo
       || !!t.colorSvg
       || (t.opacidadSvg !== undefined && Number(t.opacidadSvg) !== 100)
+      || (t.escalaLogo !== undefined && Number(t.escalaLogo) !== 100)
       || (t.escalaTituloPortada !== undefined && Number(t.escalaTituloPortada) !== 100)
       || (t.escalaTitulos !== undefined && Number(t.escalaTitulos) !== 100)
       || (t.escalaTexto !== undefined && Number(t.escalaTexto) !== 100)
@@ -1128,6 +1138,31 @@ export const inicializarControladorDealit = () => {
       guardarLuego();
     });
   };
+  const sincronizarEscalaLogo = valor => {
+    const num = Number(valor);
+    const actual = docActivo();
+    actual.tema.escalaLogo = num;
+    if ($('#tema-escala-logo')) $('#tema-escala-logo').value = String(num);
+    if ($('#tema-escala-logo-valor')) $('#tema-escala-logo-valor').textContent = `${num}%`;
+    if ($('#logo-escala-input')) $('#logo-escala-input').value = String(num);
+    if ($('#logo-escala-valor')) $('#logo-escala-valor').textContent = `${num}%`;
+    const doc = $('#documento');
+    if (doc) {
+      doc.classList.add('doc--estatico');
+      animacionInicialLista = true;
+      aplicarEscalasTema(doc, actual.tema);
+    }
+    actualizarVisibilidadResetTema();
+    guardarLuego();
+  };
+  $('#tema-escala-logo')?.addEventListener('input', ev => {
+    if (invitado) invitadoEdito = true;
+    sincronizarEscalaLogo(ev.target.value);
+  });
+  $('#logo-escala-input')?.addEventListener('input', ev => {
+    if (invitado) invitadoEdito = true;
+    sincronizarEscalaLogo(ev.target.value);
+  });
   vincularRangoTema('#tema-escala-portada', '#tema-escala-portada-valor', 'escalaTituloPortada');
   vincularRangoTema('#tema-escala-titulos', '#tema-escala-titulos-valor', 'escalaTitulos');
   vincularRangoTema('#tema-escala-texto', '#tema-escala-texto-valor', 'escalaTexto');
@@ -1145,6 +1180,7 @@ export const inicializarControladorDealit = () => {
       t.colorFondo = '';
       t.colorSvg = '';
       t.opacidadSvg = 100;
+      t.escalaLogo = 100;
       t.escalaTituloPortada = 100;
       t.escalaTitulos = 100;
       t.escalaTexto = 100;
@@ -2583,7 +2619,7 @@ export const inicializarControladorDealit = () => {
     if (elPortafolios) elPortafolios.hidden = vista !== 'portafolios';
     elCuenta.hidden = vista !== 'cuenta';
     app.hidden = inicio;
-    $$('.barra__nav-link').forEach(a => {
+    $$('.barra__nav-link, .menu__opcion[data-seccion]').forEach(a => {
       if (a.dataset.seccion === vista) a.setAttribute('aria-current', 'page');
       else a.removeAttribute('aria-current');
     });

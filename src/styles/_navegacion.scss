@@ -6,6 +6,9 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 0.75rem 1.5rem;
+  width: 100%;
+  max-width: 100vw;
+  box-sizing: border-box;
   border-bottom: 1px solid var(--superficie-borde);
   background: var(--superficie);
 
@@ -168,10 +171,12 @@
       flex-shrink: 0;
     }
 
-    &:hover {
+    &:hover,
+    &[aria-current="page"] {
       background: var(--dorado-fondo);
       border-color: transparent;
       color: var(--dorado-papel);
+      font-weight: 600;
 
       svg {
         color: var(--dorado-papel);
