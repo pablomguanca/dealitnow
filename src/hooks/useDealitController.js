@@ -91,12 +91,12 @@ const irRuta = (ruta, { reemplazar = false } = {}) => {
     try {
       navegarReactRouter(ruta, { replace: reemplazar });
       return;
-    } catch {}
+    } catch { }
   }
   try {
     if (reemplazar) history.replaceState(null, '', ruta);
     else history.pushState(null, '', ruta);
-  } catch {}
+  } catch { }
 };
 
 export const inicializarControladorDealit = () => {
@@ -239,7 +239,7 @@ export const inicializarControladorDealit = () => {
           });
         }
       }
-    } catch {}
+    } catch { }
     return [];
   };
 
@@ -301,7 +301,7 @@ export const inicializarControladorDealit = () => {
       sessionStorage.removeItem(CLAVE);
       sessionStorage.removeItem(CLAVE_PORTAFOLIOS);
       sessionStorage.removeItem(`${CLAVE}:continuar`);
-    } catch {}
+    } catch { }
   };
 
   const sincronizarPortafolioEnPropuesta = () => {
@@ -406,14 +406,14 @@ export const inicializarControladorDealit = () => {
   // Devuelve { id, contenido } de la propuesta creada, o null si no había nada que migrar.
   const migrarLocal = () => {
     let continuar = null;
-    try { continuar = sessionStorage.getItem(`${CLAVE}:continuar`); } catch {}
+    try { continuar = sessionStorage.getItem(`${CLAVE}:continuar`); } catch { }
     const contenido = continuar ? cargarGuardado() : null;
     try {
       localStorage.removeItem(CLAVE);
       localStorage.removeItem(CLAVE_PORTAFOLIOS);
       sessionStorage.removeItem(CLAVE);
       sessionStorage.removeItem(CLAVE_PORTAFOLIOS);
-    } catch {}
+    } catch { }
     if (!contenido) return null;
     const creada = crearEnCuenta(contenido);
     if (!creada) return null;
@@ -917,7 +917,7 @@ export const inicializarControladorDealit = () => {
         || !!t.colorSvg
         || (t.opacidadSvg !== undefined && Number(t.opacidadSvg) !== 100)
         || (t.escalaLogo !== undefined && Number(t.escalaLogo) !== 100)
-      || (t.escalaTituloPortada !== undefined && Number(t.escalaTituloPortada) !== 100)
+        || (t.escalaTituloPortada !== undefined && Number(t.escalaTituloPortada) !== 100)
         || (t.escalaTitulos !== undefined && Number(t.escalaTitulos) !== 100)
         || (t.escalaTexto !== undefined && Number(t.escalaTexto) !== 100)
         || (t.espaciadoSecciones !== undefined && Number(t.espaciadoSecciones) !== 100)
@@ -1003,8 +1003,14 @@ export const inicializarControladorDealit = () => {
       if (perfil?.emisor && Object.values(perfil.emisor).some(Boolean)) {
         generada.emisor = { ...generada.emisor, ...perfil.emisor };
       }
-      reemplazarEstado(generada);
-      avisar(`Plantilla «${tpl.nombre}» cargada. Editá lo que quieras.`);
+      const actualEnLista = propuestas.find(p => p.id === propuestaId);
+      if (nube() && actualEnLista?.publico) {
+        nuevaPropuesta(generada);
+        avisar(`Se creó una propuesta nueva con «${tpl.nombre}» para no modificar el link que ya compartiste.`);
+      } else {
+        reemplazarEstado(generada);
+        avisar(`Plantilla «${tpl.nombre}» cargada. Editá lo que quieras.`);
+      }
     }
     $$('.plantilla-chip').forEach(c => c.classList.toggle('plantilla-chip--activa', c.dataset.plantilla === id));
   };
@@ -1296,7 +1302,20 @@ export const inicializarControladorDealit = () => {
         }
         const abierto = normalizar(crudo);
         if (nube()) {
-          // Con cuenta, el borrador entra como propuesta nueva: no pisa ninguna existente.
+          if (editando && modoEditor === 'propuesta' && propuestaId) {
+            const pisarActual = window.confirm(
+              '¿Querés restaurar este borrador dentro de la propuesta abierta (manteniendo el MISMO link compartido) o crear una propuesta nueva?\n\nAceptar = Restaurar en esta propuesta (mismo link)\nCancelar = Crear como propuesta nueva (nuevo link)'
+            );
+            if (pisarActual) {
+              if (!abierto.emisor.logo && (estado.emisor.logo || perfil?.emisor?.logo)) {
+                abierto.emisor.logo = estado.emisor.logo || perfil.emisor.logo;
+              }
+              reemplazarEstado(abierto);
+              guardarAhora();
+              avisar('Propuesta restaurada en el mismo link.');
+              return;
+            }
+          }
           nuevaPropuesta(abierto);
           avisar('Borrador abierto como propuesta nueva.');
         } else {
@@ -1901,7 +1920,7 @@ export const inicializarControladorDealit = () => {
     try {
       if (Date.now() - Number(localStorage.getItem(clave) || 0) < VISITA_INTERVALO) return;
       localStorage.setItem(clave, String(Date.now()));
-    } catch {}
+    } catch { }
     llamarApi('/api/visto', { id }, { keepalive: true }).catch(e => console.warn('No se pudo registrar la visita:', e));
   };
 
@@ -2193,7 +2212,7 @@ export const inicializarControladorDealit = () => {
       case 'compartir-nativo':
         try {
           await navigator.share({ title: estado.propuesta.titulo.trim() || 'Propuesta', url: linkActual });
-        } catch {}
+        } catch { }
         break;
       case 'vista':
         cambiarVista(boton.dataset.vista);
@@ -3128,7 +3147,7 @@ export const inicializarControladorDealit = () => {
     try {
       continuar = sessionStorage.getItem(`${CLAVE}:continuar`);
       sessionStorage.removeItem(`${CLAVE}:continuar`);
-    } catch {}
+    } catch { }
     const id = idEnUrl();
     if (migrada && continuar) {
       mostrarEditor(migrada.id, migrada.contenido, { historial: false });
@@ -3142,26 +3161,26 @@ export const inicializarControladorDealit = () => {
     else irAlPanel({ historial: false });
   };
 
-  const authPantalla   = $('#auth-pantalla');
-  const authForm       = $('#auth-form');
-  const authGoogle     = $('#auth-google');
-  const authErrorG     = $('#auth-error-google');
-  const authError      = $('#auth-error');
-  const authSubmit     = $('#auth-submit');
+  const authPantalla = $('#auth-pantalla');
+  const authForm = $('#auth-form');
+  const authGoogle = $('#auth-google');
+  const authErrorG = $('#auth-error-google');
+  const authError = $('#auth-error');
+  const authSubmit = $('#auth-submit');
   const authSubmitText = authSubmit?.querySelector('.auth__submit-texto');
-  const authSpinner    = authSubmit?.querySelector('.auth__spinner');
-  const authNombre     = $('#auth-nombre');
-  const authEmail      = $('#auth-email');
-  const authPass       = $('#auth-pass');
-  const menuUsuario    = $('#menu-usuario');
-  const authOlvido     = $('#auth-olvido');
-  const authMensaje    = $('#auth-mensaje');
-  const elIngreso      = $('#auth-ingreso');
-  const elVerificar    = $('#auth-verificar');
+  const authSpinner = authSubmit?.querySelector('.auth__spinner');
+  const authNombre = $('#auth-nombre');
+  const authEmail = $('#auth-email');
+  const authPass = $('#auth-pass');
+  const menuUsuario = $('#menu-usuario');
+  const authOlvido = $('#auth-olvido');
+  const authMensaje = $('#auth-mensaje');
+  const elIngreso = $('#auth-ingreso');
+  const elVerificar = $('#auth-verificar');
   const verificarError = $('#auth-verificar-error');
   const verificarMensaje = $('#auth-verificar-mensaje');
   let authModo = 'login';
-  let entrar = () => {};
+  let entrar = () => { };
 
   // Sin sesión: editor de prueba que guarda en este navegador. Al registrarse, lo que
   // armó pasa a su cuenta (migrarLocal) y sigue con lo que quería hacer.
@@ -3214,7 +3233,7 @@ export const inicializarControladorDealit = () => {
         guardadoParaRegistro = !invitadoEdito;
         guardarLocal();
       }
-      try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch {}
+      try { sessionStorage.setItem(`${CLAVE}:continuar`, motivo); } catch { }
     }
     const elMotivo = $('#auth-motivo');
     elMotivo.textContent = MOTIVOS_REGISTRO[motivo] || '';
@@ -3231,7 +3250,7 @@ export const inicializarControladorDealit = () => {
       sessionStorage.removeItem(`${CLAVE}:continuar`);
       // Si solo se guardó para el registro y al final no se registró, no queda nada guardado.
       if (guardadoParaRegistro && !invitadoEdito) { localStorage.removeItem(CLAVE); sessionStorage.removeItem(CLAVE); }
-    } catch {}
+    } catch { }
     guardadoParaRegistro = false;
   };
   $('#auth-cerrar').addEventListener('click', cerrarRegistro);
@@ -3248,14 +3267,14 @@ export const inicializarControladorDealit = () => {
   const mostrarErrorAuth = (el, msg) => {
     if (!el) return;
     const MENSAJES = {
-      'auth/user-not-found':          'No hay cuenta con ese email.',
-      'auth/wrong-password':          'Contraseña incorrecta.',
-      'auth/invalid-credential':      'Email o contraseña incorrectos.',
-      'auth/email-already-in-use':    'Ya existe una cuenta con ese email.',
-      'auth/weak-password':           'La contraseña debe tener al menos 6 caracteres.',
-      'auth/invalid-email':           'El email no es válido.',
-      'auth/too-many-requests':       'Demasiados intentos. Esperá un momento.',
-      'auth/popup-closed-by-user':    '',
+      'auth/user-not-found': 'No hay cuenta con ese email.',
+      'auth/wrong-password': 'Contraseña incorrecta.',
+      'auth/invalid-credential': 'Email o contraseña incorrectos.',
+      'auth/email-already-in-use': 'Ya existe una cuenta con ese email.',
+      'auth/weak-password': 'La contraseña debe tener al menos 6 caracteres.',
+      'auth/invalid-email': 'El email no es válido.',
+      'auth/too-many-requests': 'Demasiados intentos. Esperá un momento.',
+      'auth/popup-closed-by-user': '',
       'auth/cancelled-popup-request': ''
     };
     const texto = MENSAJES[msg?.code] ?? MENSAJES[msg?.message] ?? (typeof msg === 'string' ? msg : 'Ocurrió un error. Intentá de nuevo.');
@@ -3311,7 +3330,7 @@ export const inicializarControladorDealit = () => {
     authForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const email = authEmail?.value.trim();
-      const pass  = authPass?.value;
+      const pass = authPass?.value;
       if (!email || !pass) return;
       setAuthCargando(true);
       if (authError) authError.hidden = true;
@@ -3391,7 +3410,7 @@ export const inicializarControladorDealit = () => {
       if (document.visibilityState !== 'visible' || elVerificar.hidden || !AteneaDB.auth.getUser()) return;
       try {
         if (await AteneaDB.auth.comprobarVerificacion()) entrar(AteneaDB.auth.getUser());
-      } catch {}
+      } catch { }
     });
   }
 
@@ -3429,7 +3448,7 @@ export const inicializarControladorDealit = () => {
       try {
         Object.keys(localStorage).filter(k => k.startsWith(CLAVE)).forEach(k => localStorage.removeItem(k));
         sessionStorage.setItem(`${CLAVE}:cuenta-eliminada`, '1');
-      } catch {}
+      } catch { }
       location.replace('/');
     } catch (e) {
       console.error('No se pudo eliminar la cuenta:', e);
@@ -3624,7 +3643,7 @@ export const inicializarControladorDealit = () => {
             sessionStorage.removeItem(`${CLAVE}:cuenta-eliminada`);
             avisar('Tu cuenta y todos tus datos se eliminaron.', 6000);
           }
-        } catch {}
+        } catch { }
         return;
       }
       // Al volver desde el link del email, el usuario en memoria puede estar desactualizado.
