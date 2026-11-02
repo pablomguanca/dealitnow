@@ -543,3 +543,9 @@
     }
   }
 }
+
+@container (max-width: 1300px) {
+  .doc--web {
+    display: none;
+  }
+}
