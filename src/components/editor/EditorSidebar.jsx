@@ -35,7 +35,7 @@ export function EditorSidebar() {
       <div className="editor__pie">
         <p className="editor__estado" id="estado-guardado" aria-live="polite">Los cambios se guardan en tu cuenta.</p>
         <p>Tu cliente abre la propuesta desde el link, sin crear una cuenta.</p>
-        <p>Plantilla creada por Dealit.</p>
+        <p>Plantilla creada con Dealit.</p>
       </div>
     </section>
   );

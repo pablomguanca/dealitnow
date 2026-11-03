@@ -597,7 +597,7 @@ export const generarPortafolioHTML = (s, { web = true, tipoDecoracion = 'marco',
       ${e.nombre.trim() ? `<span class="pie__nombre">${esc(e.nombre)}</span>` : ''}
       ${contactos.map(x => `<span>${x}</span>`).join('')}
       ${web ? '<button type="button" class="pie__pdf" data-accion="pdf">Descargar en PDF</button>' : ''}
-      ${s.opciones.credito ? '<span class="pie__credito">Página creada con Dealit</span>' : ''}
+      ${s.opciones.credito ? '<span class="pie__credito">Plantilla creada con Dealit</span>' : ''}
     </footer>`;
 
   const barraInferior = web ? `
@@ -864,7 +864,7 @@ export const generarPropuestaHTML = (
       ${e.nombre.trim() ? `<span class="pie__nombre">${esc(e.nombre)}</span>` : ''}
       ${contactos.map(x => `<span>${x}</span>`).join('')}
       ${web ? '<button type="button" class="pie__pdf" data-accion="pdf">Descargar en PDF</button>' : ''}
-      ${s.opciones.credito ? '<span class="pie__credito">Propuesta armada con la plantilla de AteneaGen</span>' : ''}
+      ${s.opciones.credito ? '<span class="pie__credito">Plantilla creada con Dealit</span>' : ''}
     </footer>`;
 
   const aviso = web && vig.vencida ? `<p class="doc-aviso">Esta propuesta venció el ${esc(fechaLarga(vig.vence))}. Los valores pueden haber cambiado.</p>` : '';

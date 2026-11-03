@@ -249,7 +249,7 @@ export function ProposalSteps() {
           </label>
           <label className="casilla campo--ancho">
             <input type="checkbox" data-campo="opciones.credito" />
-            <span>Mencionar al autor de la plantilla al pie</span>
+            <span>Mostrar «Plantilla creada con Dealit» al pie</span>
           </label>
         </div>
       </details>

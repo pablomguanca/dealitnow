@@ -980,7 +980,7 @@ body.invitado .editor__invitado {
   }
 }
 
-.propuestas,
+#lista-propuestas,
 .galeria-plantillas {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
@@ -988,6 +988,14 @@ body.invitado .editor__invitado {
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+// La lista de propuestas pasa de caja con filas a grilla de tarjetas sueltas.
+#lista-propuestas {
+  border: 0;
+  border-radius: 0;
+  background: none;
+  overflow: visible;
 }
 
 .propuesta-card {

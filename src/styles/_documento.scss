@@ -700,6 +700,15 @@
   .pie {
     margin-top: calc(3.6em * var(--escala-espaciado, 1));
   }
+
+  // En la propuesta el pie va fuera de .cuerpo: se alinea con su columna (.cuerpo > *).
+  // Tiene la letra al 85 %, así que sus em se dividen por 0.85 para medir lo mismo.
+  // En el portfolio va dentro de .cuerpo, que ya lo centra.
+  > .pie {
+    margin-left: max(clamp(1.4em / 0.85, 6cqw, 4em / 0.85), calc((100% - 50em / 0.85) / 2));
+    margin-right: max(clamp(1.4em / 0.85, 6cqw, 4em / 0.85), calc((100% - 50em / 0.85) / 2));
+    padding-bottom: calc(2.4em * var(--escala-espaciado, 1));
+  }
 }
 .doc-error {
   display: grid;
