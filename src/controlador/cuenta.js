@@ -3,7 +3,7 @@
 
 import { $, $$, texto } from '../lib/formato.js';
 import { LOGO_MAX_ARCHIVO, logoParaSubir, procesarImagenProyecto } from '../lib/imagenes.js';
-import { ctx, AteneaDB, CLAVE, nube, normalizar, esLogoValido } from './contexto.js';
+import { ctx, AteneaDB, CLAVE, nube, esLogoValido } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { avisarError, avisarExito } from './avisos.js';
 import { irRuta, mostrarVista, cerrarEdicion } from './navegacion.js';
@@ -13,6 +13,15 @@ let cuentaEditada = false;
 // Logo y foto del negocio: se suben a Storage y se guardan con «Guardar cambios».
 let logoCuenta = '';
 let fotoCuenta = '';
+
+// Datos del negocio para una propuesta o un portfolio nuevo: salen solo de Mi cuenta,
+// nunca de una plantilla ni de otra propuesta. Lo que no cargó queda vacío para completarlo.
+// Sin cuenta (modo prueba) se dejan los de ejemplo.
+export const emisorDeCuenta = emisor => {
+  if (!nube()) return emisor;
+  const propio = ctx.perfil?.emisor || {};
+  return Object.fromEntries(Object.keys(emisor).map(k => [k, texto(propio[k])]));
+};
 
 export const nombreVisible = () => texto(ctx.perfil?.displayName || AteneaDB?.auth.getUser()?.displayName).trim();
 
@@ -32,20 +41,19 @@ const pintarLogoCuenta = () => {
 const llenarCuenta = () => {
   const user = AteneaDB.auth.getUser();
   const conPassword = AteneaDB.auth.usaPassword();
-  const { perfil, propuestas } = ctx;
+  const { perfil } = ctx;
   $('#cuenta-nombre').value = nombreVisible();
   $('#cuenta-email').textContent = user?.email || '';
   $('#cuenta-acceso').textContent = conPassword ? 'Con email y contraseña.' : 'Con tu cuenta de Google.';
   $('[data-accion="cambiar-password"]').hidden = !conPassword;
-  // Si todavía no guardó los datos del negocio, se sugieren los de su última propuesta.
-  const sugeridos = !perfil?.emisor && propuestas[0]?.payload;
-  const emisor = perfil?.emisor || (sugeridos ? normalizar(propuestas[0].payload).emisor : {});
+  // Solo lo que el usuario guardó acá: nunca se completa con datos de propuestas o plantillas.
+  const emisor = perfil?.emisor || {};
   $$('[data-emisor]').forEach(el => { el.value = texto(emisor[el.dataset.emisor]); });
   // Los logos y fotos viejos guardados como data: no van al perfil de Firestore: solo los de Storage.
   logoCuenta = esLogoValido(texto(emisor.logo)) && !texto(emisor.logo).startsWith('data:') ? texto(emisor.logo) : '';
   fotoCuenta = esLogoValido(texto(emisor.foto)) && !texto(emisor.foto).startsWith('data:') ? texto(emisor.foto) : '';
   pintarLogoCuenta();
-  $('#cuenta-estado').textContent = sugeridos ? 'Completamos estos datos con los de tu última propuesta. Guardalos para usarlos siempre.' : '';
+  $('#cuenta-estado').textContent = perfil?.emisor ? '' : 'Completá los datos de tu negocio: se usan en cada propuesta y portfolio nuevo.';
   cuentaEditada = false;
 };
 

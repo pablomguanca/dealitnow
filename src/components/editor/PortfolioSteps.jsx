@@ -3,7 +3,7 @@
 export function PortfolioSteps() {
   return (
     <div id="pasos-portafolio" hidden>
-        <details className="paso" open>
+        <details className="paso" data-corto="Portada" open>
           <summary className="paso__resumen">
             <span className="paso__num">2</span>
             <span className="paso__titulo">Portada Hero de tu página</span>
@@ -53,7 +53,7 @@ export function PortfolioSteps() {
           </div>
         </details>
 
-        <details className="paso" open>
+        <details className="paso" data-corto="Proyectos" open>
           <summary className="paso__resumen">
             <span className="paso__num">3</span>
             <span className="paso__titulo">Proyectos y casos con fotos</span>
@@ -66,7 +66,7 @@ export function PortfolioSteps() {
           </div>
         </details>
 
-        <details className="paso">
+        <details className="paso" data-corto="Galería">
           <summary className="paso__resumen">
             <span className="paso__num">4</span>
             <span className="paso__titulo">Galería de fotos libre</span>
@@ -113,7 +113,7 @@ export function PortfolioSteps() {
           </div>
         </details>
 
-        <details className="paso">
+        <details className="paso" data-corto="Secciones">
           <summary className="paso__resumen">
             <span className="paso__num">5</span>
             <span className="paso__titulo">Secciones de tu Landing Page</span>
@@ -142,7 +142,7 @@ export function PortfolioSteps() {
           </div>
         </details>
 
-        <details className="paso">
+        <details className="paso" data-corto="Contacto">
           <summary className="paso__resumen">
             <span className="paso__num">6</span>
             <span className="paso__titulo">Navegación y contacto (CTA)</span>

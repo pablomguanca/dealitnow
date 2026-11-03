@@ -6,6 +6,7 @@ import { AteneaDB, AteneaDBError } from '../firebase.js';
 import { usarBase, PREFIJO, PREFIJO_PORTAFOLIO } from './contexto.js';
 import { instalarAcciones } from './acciones.js';
 import { instalarNavegacion } from './navegacion.js';
+import { instalarHoja } from './hoja.js';
 import { instalarVista } from './vista.js';
 import { instalarGuardado } from './guardado.js';
 import { instalarFormulario } from './formulario.js';
@@ -41,6 +42,7 @@ export const inicializarControladorDealit = () => {
   instalarCompartir();
   instalarAceptar();
   instalarNavegacion();
+  instalarHoja();
   instalarVista();
   instalarAcciones();
   instalarPropuestas();

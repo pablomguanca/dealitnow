@@ -963,7 +963,7 @@ body.modo-cliente {
 
 @media (max-width: 900px) {
   body {
-    grid-template-rows: auto auto 1fr;
+    grid-template-rows: auto 1fr;
   }
 
   .barra {
@@ -975,10 +975,6 @@ body.modo-cliente {
     font-size: 1.4rem;
   }
 
-  .pestanas {
-    display: flex;
-  }
-
   .app {
     grid-template-columns: 1fr;
   }
@@ -988,7 +984,6 @@ body.modo-cliente {
   }
 
   .visor {
-    display: none;
     padding: 0 0.8rem 3rem;
   }
 
@@ -1003,16 +998,6 @@ body.modo-cliente {
 
   .segmentos {
     margin: 0 auto;
-  }
-
-  .app--previa {
-    .editor {
-      display: none;
-    }
-
-    .visor {
-      display: block;
-    }
   }
 
   .paso__resumen,

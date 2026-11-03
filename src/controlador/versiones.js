@@ -138,7 +138,7 @@ const abrirArchivoViejo = archivo => {
       return;
     }
     if (crudo && (crudo.tipo === 'portafolio' || crudo.portafolio)) {
-      nuevoPortafolio(normalizarPf(crudo));
+      nuevoPortafolio(normalizarPf(crudo), { conDatosDeCuenta: false });
       avisarExito('Abrimos el portfolio del archivo. Ya quedó guardado en tu cuenta.');
     } else {
       nuevaPropuesta(normalizar(crudo));

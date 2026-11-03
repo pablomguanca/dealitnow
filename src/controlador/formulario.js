@@ -18,6 +18,7 @@ import { registrarAcciones } from './acciones.js';
 import { sincronizarPortafolioEnPropuesta } from './guardado.js';
 import { actualizar } from './documento.js';
 import { llenarTemaEditor } from './diseno.js';
+import { actualizarSeccionesHoja } from './hoja.js';
 
 export const actualizarImagenGenericaItem = (nodo, urlImg, prefijo, textoSubir = 'Subir foto', textoCambiar = 'Cambiar foto') => {
   const img = $(`[${prefijo}-vista]`, nodo);
@@ -233,6 +234,7 @@ const sincronizarModoEditorUI = () => {
     btnOtraSeccion.textContent = esPf ? 'Ir a Mis propuestas →' : 'Ir a Mis portfolios →';
   }
   if (grupoActual) grupoActual.textContent = esPf ? 'Portfolio actual' : 'Propuesta actual';
+  actualizarSeccionesHoja();
 };
 
 export const llenarFormulario = () => {

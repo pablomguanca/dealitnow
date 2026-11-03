@@ -4,7 +4,7 @@
 import { $, texto } from '../lib/formato.js';
 import { vacioPortafolio, ejemploPortafolio, PLANTILLAS_PORTAFOLIO } from '../modelo.js';
 import { fechaDe, sinAcentos, portafolioItemHTML } from '../lib/paneles.js';
-import { ctx, AteneaDB, nube, normalizar, normalizarPf } from './contexto.js';
+import { ctx, AteneaDB, nube, normalizarPf } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { avisarExito, avisarError, confirmar } from './avisos.js';
 import {
@@ -17,6 +17,7 @@ import {
 } from './guardado.js';
 import { llenarFormulario, actualizarSelectorPortafolio } from './formulario.js';
 import { renderDocumento } from './vista.js';
+import { emisorDeCuenta } from './cuenta.js';
 import { irRuta, mostrarVista, cerrarEdicion, cambiarPestana, clicComun } from './navegacion.js';
 
 let dejarDeEscucharPortafolios = null;
@@ -109,25 +110,17 @@ const mostrarEditorPortafolio = (id, contenido, { historial = true } = {}) => {
   renderDocumento();
   const { portafolio } = ctx.estadoPortafolio;
   document.title = `${portafolio.nombreInterno.trim() || portafolio.titulo.trim() || 'Portfolio'} | Dealit`;
-  $('.editor').scrollTop = 0;
+  $('#editor-cuerpo').scrollTop = 0;
   ctx.editando = true;
   mostrarEstadoGuardado();
   $('#editor-aceptada').hidden = true;
 };
 
-export const nuevoPortafolio = base => {
+// conDatosDeCuenta: false solo al abrir un archivo o duplicar, que traen sus propios datos.
+export const nuevoPortafolio = (base, { conDatosDeCuenta = true } = {}) => {
   cerrarEdicion();
   const nuevo = normalizarPf(base || vacioPortafolio());
-  if (!base) {
-    const { propuestas, perfil } = ctx;
-    const ultima = propuestas[0]?.payload ? normalizar(propuestas[0].payload).emisor : null;
-    const guardados = { ...perfil?.emisor };
-    if (!guardados.logo) delete guardados.logo;
-    if (!guardados.foto) delete guardados.foto;
-    if (ultima || perfil?.emisor) {
-      nuevo.emisor = { ...nuevo.emisor, ...ultima, ...guardados };
-    }
-  }
+  if (conDatosDeCuenta) nuevo.emisor = emisorDeCuenta(nuevo.emisor);
   const creado = crearPortafolioEnCuentaOLocal(nuevo);
   if (creado) mostrarEditorPortafolio(creado.id, nuevo);
 };

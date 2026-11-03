@@ -18,7 +18,7 @@ import { crearEnCuenta, registrarEscritura, mostrarEstadoGuardado } from './guar
 import { llenarFormulario, actualizarAvisoPagos } from './formulario.js';
 import { renderDocumento } from './vista.js';
 import { irRuta, mostrarVista, cerrarEdicion, cambiarPestana, clicComun } from './navegacion.js';
-import { nombreVisible } from './cuenta.js';
+import { nombreVisible, emisorDeCuenta } from './cuenta.js';
 import { migrarLogo } from './subidas.js';
 import { renderGaleriaPlantillas } from './galeria-plantillas.js';
 import { linkCorto } from './compartir.js';
@@ -163,7 +163,7 @@ export const mostrarEditor = (id, contenido, { historial = true } = {}) => {
   renderDocumento();
   actualizarAvisoPagos();
   document.title = `${ctx.estado.propuesta.titulo.trim() || 'Propuesta sin título'} | Dealit`;
-  $('.editor').scrollTop = 0;
+  $('#editor-cuerpo').scrollTop = 0;
   ctx.editando = true;
   mostrarEstadoGuardado();
   actualizarAvisoAceptada();
@@ -191,13 +191,7 @@ export const abrirPropuesta = async (id, opciones) => {
 export const nuevaPropuesta = base => {
   cerrarEdicion();
   const nueva = base ? normalizar(base) : vacio();
-  if (!base) {
-    const { propuestas, perfil } = ctx;
-    const ultima = propuestas[0]?.payload ? normalizar(propuestas[0].payload).emisor : null;
-    const guardados = { ...perfil?.emisor };
-    if (!guardados.logo) delete guardados.logo; // sin logo en Mi cuenta, se usa el de la última
-    if (ultima || perfil?.emisor) nueva.emisor = { ...nueva.emisor, ...ultima, ...guardados };
-  }
+  if (!base) nueva.emisor = emisorDeCuenta(nueva.emisor);
   const creada = crearEnCuenta(nueva);
   if (creada) mostrarEditor(creada.id, nueva);
 };
@@ -255,7 +249,10 @@ export const instalarPropuestas = () => {
       }
     },
     'nueva-ejemplo': () => {
-      if (nube()) nuevaPropuesta(ejemplo());
+      if (!nube()) return;
+      const conDatos = normalizar(ejemplo());
+      conDatos.emisor = emisorDeCuenta(conDatos.emisor);
+      nuevaPropuesta(conDatos);
     },
     'duplicar-propuesta': boton => duplicarPropuesta(boton.dataset.id),
     'borrar-propuesta': boton => borrarPropuesta(boton.dataset.id),

@@ -1,47 +1,25 @@
 // Layout de la aplicación (.app), formulario por pasos (.editor) y controles del visor (.visor)
 
-.pestanas {
-  display: none;
-  border-bottom: 1px solid var(--superficie);
-  background: var(--negro);
-}
-
-.pestana {
-  flex: 1;
-  padding: 0.8rem 1rem;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  background: none;
-  color: var(--marfil-apagado);
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-
-  &[aria-selected="true"] {
-    color: var(--marfil);
-    border-bottom-color: var(--dorado);
-  }
-}
 .app {
   display: grid;
   grid-template-columns: minmax(340px, 440px) 1fr;
   min-height: 0;
-
-  &--previa {
-    .editor {
-      display: none;
-    }
-
-    .visor {
-      display: block;
-    }
-  }
 }
+// El scroll va en .editor__cuerpo: en celular la cabecera de la hoja queda fija arriba.
 .editor {
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
   border-right: 1px solid var(--superficie);
   background: var(--negro);
-  scrollbar-color: var(--superficie-borde) transparent;
+
+  &__cuerpo {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    scrollbar-color: var(--superficie-borde) transparent;
+  }
 
   &__intro {
     padding: 1.6rem 1.5rem 1.2rem;

@@ -3,7 +3,7 @@
 export function ProposalSteps() {
   return (
     <div id="pasos-propuesta">
-      <details className="paso">
+      <details className="paso" data-corto="Cliente">
         <summary className="paso__resumen">
           <span className="paso__num">2</span>
           <span className="paso__titulo">Tu cliente</span>
@@ -25,7 +25,7 @@ export function ProposalSteps() {
         </div>
       </details>
 
-      <details className="paso">
+      <details className="paso" data-corto="Propuesta">
         <summary className="paso__resumen">
           <span className="paso__num">3</span>
           <span className="paso__titulo">La propuesta</span>
@@ -70,7 +70,7 @@ export function ProposalSteps() {
         </div>
       </details>
 
-      <details className="paso">
+      <details className="paso" data-corto="Objetivos">
         <summary className="paso__resumen">
           <span className="paso__num">4</span>
           <span className="paso__titulo">Contexto y objetivos</span>
@@ -87,7 +87,7 @@ export function ProposalSteps() {
         </div>
       </details>
 
-      <details className="paso">
+      <details className="paso" data-corto="Servicios">
         <summary className="paso__resumen">
           <span className="paso__num">5</span>
           <span className="paso__titulo">Alcance</span>
@@ -100,7 +100,7 @@ export function ProposalSteps() {
         </div>
       </details>
 
-      <details className="paso">
+      <details className="paso" data-corto="Etapas">
         <summary className="paso__resumen">
           <span className="paso__num">6</span>
           <span className="paso__titulo">Etapas</span>
@@ -112,7 +112,7 @@ export function ProposalSteps() {
         </div>
       </details>
 
-      <details className="paso">
+      <details className="paso" data-corto="Inversión">
         <summary className="paso__resumen">
           <span className="paso__num">7</span>
           <span className="paso__titulo">Inversión</span>
@@ -165,7 +165,7 @@ export function ProposalSteps() {
         </div>
       </details>
 
-      <details className="paso">
+      <details className="paso" data-corto="Galería">
         <summary className="paso__resumen">
           <span className="paso__num">8</span>
           <span className="paso__titulo">Galería de fotos y bloques web</span>
@@ -228,7 +228,7 @@ export function ProposalSteps() {
         </div>
       </details>
 
-      <details className="paso">
+      <details className="paso" data-corto="Cierre">
         <summary className="paso__resumen">
           <span className="paso__num">9</span>
           <span className="paso__titulo">Cierre</span>

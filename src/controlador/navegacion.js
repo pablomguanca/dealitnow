@@ -69,10 +69,8 @@ const menuAbierto = () => {
   return !!panelMenu && !panelMenu.hidden;
 };
 
-export const cambiarPestana = previa => {
-  $('#app').classList.toggle('app--previa', previa);
-  $$('.pestana').forEach(t => t.setAttribute('aria-selected', String((t.dataset.accion === 'ver-previa') === previa)));
-};
+// En celular, «vista previa» es bajar la hoja del editor (ver hoja.js).
+export { cambiarPestana } from './hoja.js';
 
 // Vistas: 'panel' (Mis propuestas), 'portafolios' (Mis portfolios), 'cuenta' (Mi cuenta) y 'editor'.
 const TITULOS_VISTA = {
@@ -166,8 +164,6 @@ export const instalarNavegacion = () => {
   registrarAcciones({
     'menu': () => abrirMenu(!menuAbierto()),
     'cerrar-menu': () => abrirMenu(false),
-    'ver-editor': () => cambiarPestana(false),
-    'ver-previa': () => cambiarPestana(true),
     'ir-panel': conLink(() => {
       if (nube()) irAlPanel();
       else volverAEditorPropuestaInvitado();

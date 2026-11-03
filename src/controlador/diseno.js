@@ -163,10 +163,8 @@ const aplicarPlantillaRubro = (id, soloDiseno = false) => {
     actualizarTemaEnVivo();
     avisarExito(`Diseño de «${tpl.nombre}» aplicado a tu propuesta.`);
   } else {
-    // Si ya tenía sus propios datos de emisor guardados en Mi cuenta, los conserva
-    if (ctx.perfil?.emisor && Object.values(ctx.perfil.emisor).some(Boolean)) {
-      generada.emisor = { ...generada.emisor, ...ctx.perfil.emisor };
-    }
+    // La plantilla no toca los datos del negocio: se quedan los que ya tenía la propuesta.
+    if (nube() || ctx.invitadoEdito) generada.emisor = { ...ctx.estado.emisor };
     const actualEnLista = ctx.propuestas.find(p => p.id === ctx.propuestaId);
     if (nube() && actualEnLista?.publico) {
       nuevaPropuesta(generada);
@@ -189,9 +187,7 @@ const aplicarPlantillaPortafolio = (id, soloDiseno = false) => {
     actualizarTemaEnVivo();
     avisarExito(`Diseño de «${tpl.nombre}» aplicado a tu portfolio.`);
   } else {
-    if (ctx.perfil?.emisor && Object.values(ctx.perfil.emisor).some(Boolean)) {
-      generada.emisor = { ...generada.emisor, ...ctx.perfil.emisor };
-    }
+    if (nube() || ctx.invitadoEdito) generada.emisor = { ...ctx.estadoPortafolio.emisor };
     ctx.estadoPortafolio = generada;
     llenarFormulario();
     actualizar();

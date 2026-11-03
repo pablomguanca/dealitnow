@@ -5,10 +5,11 @@ import { $, esc } from '../lib/formato.js';
 import { PLANTILLAS } from '../modelo.js';
 import { aplicarTema } from '../lib/tema.js';
 import { generarPropuestaHTML, mostrarSinAnimar } from '../lib/render.js';
-import { ctx, normalizar } from './contexto.js';
+import { normalizar } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { avisarExito } from './avisos.js';
 import { nuevaPropuesta } from './propuestas.js';
+import { emisorDeCuenta } from './cuenta.js';
 
 let galeriaLista = false;
 
@@ -85,13 +86,12 @@ const verPlantilla = id => {
   dibujarPlantilla(lienzo.querySelector('article'), id);
 };
 
-// Los datos de Mi cuenta reemplazan a los de ejemplo, menos los campos que tenga vacíos.
+// La plantilla aporta textos, servicios y diseño; los datos del negocio salen de Mi cuenta.
 const usarPlantilla = id => {
   const tpl = PLANTILLAS[id];
   if (!tpl) return;
   const datos = normalizar(tpl.crear());
-  const propios = Object.fromEntries(Object.entries(ctx.perfil?.emisor || {}).filter(([, v]) => v));
-  datos.emisor = { ...datos.emisor, ...propios };
+  datos.emisor = emisorDeCuenta(datos.emisor);
   $('#dialogo-plantilla-vista')?.close();
   nuevaPropuesta(datos);
   avisarExito(`Plantilla «${tpl.nombre}» lista. Cambiá los datos por los de tu proyecto.`);

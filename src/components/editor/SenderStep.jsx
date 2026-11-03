@@ -2,7 +2,7 @@
 
 export function SenderStep() {
   return (
-    <details className="paso">
+    <details className="paso" data-corto="Tus datos">
         <summary className="paso__resumen">
           <span className="paso__num">1</span>
           <span className="paso__titulo">Tus datos</span>

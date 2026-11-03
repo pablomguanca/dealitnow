@@ -4,7 +4,7 @@ import { FUENTES_TITULOS, FUENTES_CUERPO, COMBINACIONES_FUENTES } from '../../mo
 
 export function DesignStudio() {
   return (
-    <details className="paso" open>
+    <details className="paso" data-corto="Diseño" open>
         <summary className="paso__resumen">
           <span className="paso__num icono-pincel"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.5 1.5l3 3-8.5 8.5H3v-3l8.5-8.5z"/></svg></span>
           <span className="paso__titulo">Diseño y plantillas</span>

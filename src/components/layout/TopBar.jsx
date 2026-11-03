@@ -102,10 +102,6 @@ export function TopBar() {
         </div>
       </header>
 
-      <nav className="pestanas" role="tablist" aria-label="Cambiar vista">
-        <button type="button" className="pestana" role="tab" aria-selected="true" data-accion="ver-editor">Editar</button>
-        <button type="button" className="pestana" role="tab" aria-selected="false" data-accion="ver-previa">Vista previa</button>
-      </nav>
     </>
   );
 }

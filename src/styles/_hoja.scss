@@ -1,0 +1,133 @@
+// Editor en celular (ver src/controlador/hoja.js): el documento queda siempre a la vista
+// y el editor es una hoja que sube desde abajo, estilo Canva. body[data-hoja] solo existe
+// en la app del dueño, así que la vista del cliente no cambia.
+
+.hoja__cabecera {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  body[data-hoja] {
+    --hoja-alto: 56dvh;
+
+    &[data-hoja="cerrada"] {
+      --hoja-alto: calc(5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    &[data-hoja="completa"] {
+      --hoja-alto: calc(100dvh - 4.5rem);
+    }
+
+    // Lo que queda detrás de la hoja se puede scrollear hasta arriba.
+    .visor {
+      padding-bottom: calc(var(--hoja-alto) + 1rem);
+    }
+
+    // Las vistas computadora / celular / PDF no aportan en un celular.
+    .visor__barra {
+      display: none;
+    }
+
+    .visor .doc {
+      margin-top: 0.8rem;
+    }
+
+    .editor {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 25;
+      height: var(--hoja-alto);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+      border: 1px solid var(--superficie-borde);
+      border-bottom: 0;
+      border-radius: 1.2rem 1.2rem 0 0;
+      box-shadow: 0 -0.8rem 2.4rem rgba(0, 0, 0, 0.2);
+      transition: height 0.32s var(--ease-out-expo);
+    }
+
+    &[data-hoja="cerrada"] .editor__cuerpo {
+      visibility: hidden;
+    }
+
+    .hoja__cabecera {
+      display: block;
+      flex: none;
+      padding: 0.3rem 0 0.6rem;
+      border-bottom: 1px solid var(--superficie-borde);
+      touch-action: none;
+      user-select: none;
+    }
+
+    .hoja__asa {
+      display: block;
+      width: 100%;
+      height: 1.5rem;
+      padding: 0;
+      border: 0;
+      background: none;
+      cursor: grab;
+
+      &::before {
+        content: '';
+        display: block;
+        width: 2.8rem;
+        height: 0.3rem;
+        margin: 0 auto;
+        border-radius: 999px;
+        background: var(--marfil-tenue);
+        opacity: 0.6;
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--dorado);
+        outline-offset: -2px;
+      }
+    }
+
+    .hoja__secciones {
+      display: flex;
+      gap: 0.4rem;
+      padding: 0 1rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      touch-action: pan-x;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    .hoja__seccion {
+      flex: none;
+      padding: 0.45rem 0.85rem;
+      border: 1px solid var(--superficie-borde);
+      border-radius: 999px;
+      background: var(--negro-2);
+      color: var(--marfil-apagado);
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+
+      &[aria-current="true"] {
+        border-color: var(--dorado);
+        background: var(--dorado-fondo);
+        color: var(--dorado-papel);
+      }
+    }
+
+    // Los avisos aparecen arriba de la hoja, no debajo.
+    &:not(.vista-inicio) .avisos {
+      bottom: calc(var(--hoja-alto) + 0.75rem) !important;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-hoja] .editor {
+    transition: none;
+  }
+}
