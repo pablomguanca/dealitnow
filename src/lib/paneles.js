@@ -5,6 +5,7 @@ import {
 } from './formato.js';
 import { TEMAS } from '../modelo.js';
 import { fechaDeAceptacion } from './render.js';
+import { resolverColoresTema } from './tema.js';
 
 export const ESTADOS_PROPUESTA = {
   draft: 'Borrador',
@@ -66,6 +67,26 @@ export const tonoDe = nombre => [...texto(nombre)].reduce((h, c) => (h * 31 + c.
 
 export const estadoDe = p => (ESTADOS_PROPUESTA[p.status] ? p.status : 'draft');
 
+const ICONO_LINK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.3 0l2-2a3 3 0 0 0-4.3-4.3l-.9.9M9.2 6.8a3 3 0 0 0-4.3 0l-2 2a3 3 0 0 0 4.3 4.3l.9-.9"/></svg>';
+const ICONO_DUPLICAR = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.2"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>';
+const ICONO_BORRAR = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>';
+const ICONO_VER = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg>';
+
+// Colores y tipografía de la portada de cada propuesta, para reconocerla en la grilla.
+export const estiloPortadaTarjeta = tema => {
+  const col = resolverColoresTema(tema || {});
+  const fuente = texto(tema?.fuenteTitulos).trim() || col.preset.fuenteTitulos || 'Bebas Neue';
+  return [
+    `--tarjeta-fondo:${col.portadaBg}`,
+    `--tarjeta-texto:${col.portadaTexto}`,
+    `--tarjeta-apagado:${col.portadaApagado}`,
+    `--tarjeta-acento:${col.portadaAcento}`,
+    `--tarjeta-fuente:'${fuente.replace(/['"\\;]/g, '')}'`
+  ].join(';');
+};
+
+// Tarjeta de «Mis propuestas»: portada en miniatura, estado, monto, última actualización
+// y accesos para editar, ver como el cliente, copiar el link, duplicar y borrar.
 export const propuestaHTML = p => {
   const titulo = texto(p.title).trim() || 'Sin título';
   const cliente = texto(p.clientName).trim();
@@ -73,30 +94,32 @@ export const propuestaHTML = p => {
   const importe = p.aceptacion ? Number(p.aceptacion.inicial) : Number(p.amount);
   const monto = importe > 0 ? dinero(importe, moneda) : '';
   const estadoP = estadoDe(p);
-  const inicial = (cliente || titulo).trim().charAt(0).toUpperCase() || '·';
+  const numero = texto(p.payload?.propuesta?.numero).trim();
+  const editada = fechaDe(p.updatedAt);
+  const seguimiento = p.aceptacion || Number(p.vistas) > 0 || p.publico === true ? seguimientoHTML(p) : '';
+  const id = esc(p.id);
   return `
-    <li class="propuesta">
-      <a class="propuesta__abrir" href="/propuesta/${encodeURIComponent(p.id)}" data-accion="abrir-propuesta" data-id="${esc(p.id)}">
-        <span class="propuesta__avatar" data-tono="${tonoDe(cliente || titulo)}" aria-hidden="true">${esc(inicial)}</span>
-        <span class="propuesta__textos">
-          <span class="propuesta__titulo">${esc(titulo)}</span>
-          <span class="propuesta__cliente">${cliente ? esc(cliente) : 'Sin cliente'}</span>
-        </span>
+    <li class="propuesta-card">
+      <a class="propuesta-card__portada" href="/propuesta/${encodeURIComponent(p.id)}" data-accion="abrir-propuesta" data-id="${id}" style="${esc(estiloPortadaTarjeta(p.payload?.tema))}" aria-label="Editar «${esc(titulo)}»">
+        ${numero ? `<span class="propuesta-card__numero">${esc(numero)}</span>` : ''}
+        <span class="propuesta-card__titulo">${esc(titulo)}</span>
+        <span class="propuesta-card__cliente">${cliente ? esc(cliente) : 'Sin cliente'}</span>
       </a>
-      <span class="propuesta__monto">${esc(monto)}</span>
-      <span class="propuesta__estado propuesta__estado--${estadoP}">${ESTADOS_PROPUESTA[estadoP]}</span>
-      <span class="propuesta__fecha">${seguimientoHTML(p)}</span>
-      <span class="propuesta__acciones">
-        ${p.publico === true ? `<button type="button" class="icono-boton icono-boton--activo" data-accion="copiar-link-propuesta" data-id="${esc(p.id)}" aria-label="Copiar el link de «${esc(titulo)}»" title="Link activo: copiar">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.3 0l2-2a3 3 0 0 0-4.3-4.3l-.9.9M9.2 6.8a3 3 0 0 0-4.3 0l-2 2a3 3 0 0 0 4.3 4.3l.9-.9"/></svg>
-        </button>` : ''}
-        <button type="button" class="icono-boton" data-accion="duplicar-propuesta" data-id="${esc(p.id)}" aria-label="Duplicar «${esc(titulo)}»" title="Duplicar">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.2"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
-        </button>
-        <button type="button" class="icono-boton icono-boton--peligro" data-accion="borrar-propuesta" data-id="${esc(p.id)}" aria-label="Borrar «${esc(titulo)}»" title="Borrar">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>
-        </button>
-      </span>
+      <div class="propuesta-card__cuerpo">
+        <div class="propuesta-card__fila">
+          <span class="propuesta__estado propuesta__estado--${estadoP}">${ESTADOS_PROPUESTA[estadoP]}</span>
+          <span class="propuesta-card__monto">${esc(monto)}</span>
+        </div>
+        <p class="propuesta-card__fecha">${editada ? tiempoHTML(editada, `Actualizada ${haceCuanto(editada)}`) : 'Sin cambios todavía'}</p>
+        ${seguimiento ? `<p class="propuesta-card__seguimiento">${seguimiento}</p>` : ''}
+        <div class="propuesta-card__acciones">
+          <a class="boton boton--secundario boton--chico" href="/propuesta/${encodeURIComponent(p.id)}" data-accion="abrir-propuesta" data-id="${id}">Editar</a>
+          <button type="button" class="icono-boton" data-accion="previsualizar-propuesta" data-id="${id}" aria-label="Ver «${esc(titulo)}» como tu cliente" title="Vista previa">${ICONO_VER}</button>
+          ${p.publico === true ? `<button type="button" class="icono-boton icono-boton--activo" data-accion="copiar-link-propuesta" data-id="${id}" aria-label="Copiar el link de «${esc(titulo)}»" title="Copiar link">${ICONO_LINK}</button>` : ''}
+          <button type="button" class="icono-boton" data-accion="duplicar-propuesta" data-id="${id}" aria-label="Duplicar «${esc(titulo)}»" title="Duplicar">${ICONO_DUPLICAR}</button>
+          <button type="button" class="icono-boton icono-boton--peligro" data-accion="borrar-propuesta" data-id="${id}" aria-label="Borrar «${esc(titulo)}»" title="Borrar">${ICONO_BORRAR}</button>
+        </div>
+      </div>
     </li>`;
 };
 

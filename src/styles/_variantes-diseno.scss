@@ -720,3 +720,210 @@
     animation: none !important;
   }
 }
+
+/* ---------- Portadas nuevas: tarjeta flotante, franja de color y minimal ---------- */
+
+.portada--tarjeta {
+  &::before {
+    display: none;
+  }
+
+  .portada__centro {
+    max-width: 36em;
+    margin: auto 0;
+    padding: 2.2em 2.4em;
+    border: 1px solid var(--portada-linea, rgba(255, 255, 255, 0.16));
+    border-radius: 1.4em;
+    background: var(--portada-superficie, rgba(255, 255, 255, 0.07));
+    box-shadow: 0 1.4em 3.4em rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(12px);
+  }
+
+  .portada__para-chip {
+    font-size: 0.84em;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--portada-acento, var(--dorado));
+  }
+
+  .portada__regla {
+    width: 5em;
+    height: 3px;
+    border-radius: 3px;
+  }
+}
+
+.portada--franja {
+  background-image: linear-gradient(var(--portada-acento, var(--dorado)), var(--portada-acento, var(--dorado)));
+  background-repeat: no-repeat;
+  background-size: 100% 0.8em;
+
+  &::before {
+    display: none;
+  }
+
+  .portada__para-chip {
+    display: inline-block;
+    padding-bottom: 0.3em;
+    border-bottom: 2px solid var(--portada-acento, var(--dorado));
+    font-size: 0.84em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .portada__regla {
+    display: none;
+  }
+
+  .portada__meta {
+    gap: 0;
+    border-top: 1px solid var(--portada-linea, rgba(255, 255, 255, 0.16));
+
+    > div {
+      padding: 1em 1.2em 0 0;
+
+      & + div {
+        padding-left: 1.2em;
+        border-left: 1px solid var(--portada-linea, rgba(255, 255, 255, 0.16));
+      }
+    }
+  }
+}
+
+.portada--minimal {
+  background-image: none;
+
+  &::before {
+    display: none;
+  }
+
+  .portada__decoracion {
+    opacity: 0.6;
+  }
+
+  .portada__numero {
+    border: 0;
+    background: none;
+    padding: 0;
+    backdrop-filter: none;
+    color: var(--portada-apagado, var(--marfil-apagado));
+  }
+
+  .portada__para-chip {
+    font-size: 0.86em;
+    letter-spacing: 0.02em;
+    color: var(--portada-apagado, var(--marfil-apagado));
+  }
+
+  .portada__titulo {
+    letter-spacing: -0.015em;
+  }
+
+  .portada__regla {
+    width: 100%;
+    height: 1px;
+    background: var(--portada-linea, rgba(255, 255, 255, 0.2));
+  }
+}
+
+/* ---------- Estilos de bloques nuevos: contorno y suave ---------- */
+
+.doc[data-estilo="contorno"] {
+  .objetivos-lista {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14em, 1fr));
+    gap: calc(0.8em * var(--escala-espaciado-interno, 1));
+
+    .objetivo-item {
+      margin: 0;
+      padding: calc(1em * var(--escala-espaciado-interno, 1)) calc(1.2em * var(--escala-espaciado-interno, 1));
+      border: 1.5px solid var(--d-linea);
+      border-radius: 1.2em;
+      max-width: none;
+    }
+  }
+
+  .servicios-grilla,
+  .etapas {
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.9em * var(--escala-espaciado-interno, 1));
+  }
+
+  .servicio,
+  .etapa {
+    margin: 0;
+    padding: calc(1.35em * var(--escala-espaciado-interno, 1)) calc(1.5em * var(--escala-espaciado-interno, 1));
+    border: 1.5px solid var(--d-linea);
+    border-radius: 1.2em;
+    background: transparent;
+  }
+
+  .etapa::after {
+    display: none;
+  }
+
+  .servicio--opcional {
+    border-style: dashed;
+  }
+
+  .servicio--sumado,
+  .servicio:hover {
+    border-color: var(--d-acento);
+  }
+
+  .resumen,
+  .cierre {
+    border-radius: 1.2em;
+  }
+}
+
+.doc[data-estilo="suave"] {
+  .bloque {
+    border-top: 0;
+  }
+
+  .objetivos-lista .objetivo-item,
+  .servicio,
+  .etapa,
+  .presentacion-bloque,
+  .contexto-bloque {
+    margin: 0;
+    padding: calc(1.3em * var(--escala-espaciado-interno, 1)) calc(1.5em * var(--escala-espaciado-interno, 1));
+    border: 0;
+    border-radius: 1em;
+    background: var(--dorado-fondo);
+    max-width: none;
+  }
+
+  .objetivos-lista {
+    display: grid;
+    gap: calc(0.7em * var(--escala-espaciado-interno, 1));
+  }
+
+  .servicios-grilla,
+  .etapas {
+    display: flex;
+    flex-direction: column;
+    gap: calc(0.8em * var(--escala-espaciado-interno, 1));
+  }
+
+  .etapa::after {
+    display: none;
+  }
+
+  .servicio--opcional {
+    background: rgba(128, 128, 128, 0.05);
+  }
+
+  .servicio--sumado {
+    box-shadow: inset 0 0 0 2px var(--d-acento);
+  }
+
+  .resumen,
+  .cierre {
+    border-radius: 1em;
+  }
+}

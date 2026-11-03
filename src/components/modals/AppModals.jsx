@@ -1,4 +1,6 @@
-// Diálogos modales (confirmación, plantillas, compartir, aceptar propuesta, eliminar cuenta, visor Lightbox), notificaciones y plantillas de listas dinámicas.
+// Diálogos modales (confirmación, compartir, aceptar propuesta, eliminar cuenta, visor Lightbox), notificaciones y plantillas de listas dinámicas.
+
+import { DialogoAceptar, DialogoConfirmacion, Aviso, VisorLightbox } from './ModalesComunes.jsx';
 
 const TPL_CONTROLES = `<button type="button" class="icono-boton" data-accion="subir"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 10l4-4 4 4"/></svg></button>
   <button type="button" class="icono-boton" data-accion="bajar"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
@@ -294,30 +296,8 @@ const TPL_FAQS = `<div class="item">
 export function AppModals() {
   return (
     <>
-      <dialog className="dialogo" id="dialogo" aria-labelledby="dialogo-titulo">
-  <form method="dialog">
-    <h2 className="dialogo__titulo" id="dialogo-titulo"></h2>
-    <p className="dialogo__texto" id="dialogo-texto"></p>
-    <div className="dialogo__acciones">
-      <button className="boton boton--texto" value="cancelar">Cancelar</button>
-      <button className="boton boton--primario" value="aceptar" id="dialogo-confirmar"></button>
-    </div>
-  </form>
-</dialog>
-
-<dialog className="dialogo dialogo--ancho" id="dialogo-plantilla" aria-labelledby="plantilla-modal-titulo">
-  <form method="dialog">
-    <h2 className="dialogo__titulo" id="plantilla-modal-titulo">Aplicar plantilla</h2>
-    <p className="dialogo__texto" id="plantilla-modal-texto">¿Querés cargar toda la propuesta de ejemplo de este rubro o aplicar únicamente su diseño visual manteniendo lo que ya escribiste?</p>
-    <div className="dialogo__acciones">
-      <button className="boton boton--texto" value="cancelar">Cancelar</button>
-      <button type="button" className="boton boton--secundario" id="plantilla-solo-diseno">Solo aplicar diseño</button>
-      <button type="button" className="boton boton--primario" id="plantilla-completa">Cargar texto y diseño</button>
-    </div>
-  </form>
-</dialog>
-
-<dialog className="dialogo dialogo--ancho" id="dialogo-compartir" aria-labelledby="compartir-titulo">
+      <DialogoConfirmacion />
+      <dialog className="dialogo dialogo--ancho" id="dialogo-compartir" aria-labelledby="compartir-titulo">
   <form method="dialog">
     <h2 className="dialogo__titulo" id="compartir-titulo">Tu propuesta está lista para mandar</h2>
     <p className="dialogo__texto">Este link abre la propuesta completa. Tu cliente la recorre desde el celular, suma los opcionales que quiera y la acepta con un toque.</p>
@@ -355,41 +335,46 @@ export function AppModals() {
     <p className="campo__ayuda" id="eliminar-ayuda-google" hidden>Google te va a pedir que confirmes que sos vos.</p>
     <p className="auth__error" id="eliminar-error" role="alert" hidden></p>
     <div className="dialogo__acciones">
-      <button className="boton boton--texto" value="cancelar" formnovalidate>Cancelar</button>
+      <button className="boton boton--texto" value="cancelar" formNoValidate>Cancelar</button>
       <button type="button" className="boton boton--primario boton--destructivo" id="eliminar-confirmar" disabled>Eliminar cuenta</button>
     </div>
   </form>
 </dialog>
 
-<dialog className="dialogo" id="dialogo-aceptar" aria-labelledby="aceptar-titulo">
-  <form method="dialog">
-    <h2 className="dialogo__titulo" id="aceptar-titulo">Confirmar la propuesta</h2>
-    <dl className="dialogo__resumen" id="aceptar-resumen"></dl>
-    <p className="dialogo__texto" id="aceptar-texto"></p>
-    <div className="aceptar__formulario" id="aceptar-formulario" hidden>
-      <label className="campo">
-        <span className="campo__etiqueta">Tu nombre completo</span>
-        <input className="control" id="aceptar-nombre" type="text" autoComplete="name" maxLength="120" />
-      </label>
-      <label className="casilla">
-        <input type="checkbox" id="aceptar-conformidad" />
-        <span>Acepto la propuesta y sus condiciones.</span>
-      </label>
-      <p className="auth__error" id="aceptar-error" role="alert" hidden></p>
+      <DialogoAceptar />
+
+<dialog className="dialogo dialogo--vista" id="dialogo-plantilla-vista" aria-labelledby="plantilla-vista-titulo">
+  <form method="dialog" className="dialogo--vista__marco">
+    <div className="dialogo--vista__cabecera">
+      <div>
+        <p className="plantilla-card__rubro" id="plantilla-vista-rubro"></p>
+        <h2 className="dialogo__titulo" id="plantilla-vista-titulo"></h2>
+      </div>
+      <div className="dialogo__acciones">
+        <button className="boton boton--texto" value="cerrar">Cerrar</button>
+        <button type="button" className="boton boton--primario" id="plantilla-vista-usar" data-accion="usar-plantilla">Usar esta plantilla</button>
+      </div>
     </div>
-    <div className="dialogo__acciones dialogo__acciones--apiladas">
-      <button type="button" className="boton boton--primario boton--grande" id="aceptar-confirmar" hidden disabled>Aceptar propuesta</button>
-      <a className="boton boton--primario boton--grande" id="aceptar-whatsapp" target="_blank" rel="noopener" hidden>Confirmar por WhatsApp</a>
-      <a className="boton boton--secundario boton--grande" id="aceptar-email" hidden>Confirmar por email</a>
-      <button type="button" className="boton boton--secundario boton--grande" data-accion="copiar-aceptacion" id="aceptar-copiar" hidden>Copiar mensaje de confirmación</button>
-      <button className="boton boton--texto" value="cancelar" id="aceptar-cerrar">Volver a la propuesta</button>
+    <div className="dialogo--vista__documento" id="plantilla-vista-documento">
+      <article className="doc doc--web doc--estatico" inert=""></article>
     </div>
   </form>
 </dialog>
 
-<input className="visualmente-oculto" id="campo-borrador" type="file" accept="application/json,.json" tabIndex="-1" aria-hidden="true" />
+<dialog className="dialogo dialogo--ancho" id="dialogo-versiones" aria-labelledby="versiones-titulo">
+  <form method="dialog">
+    <h2 className="dialogo__titulo" id="versiones-titulo">Versiones de la propuesta</h2>
+    <p className="dialogo__texto">Todo se guarda solo en tu cuenta. Las versiones son copias a las que podés volver cuando quieras.</p>
+    <p className="versiones__estado" id="versiones-estado" role="status" aria-live="polite"></p>
+    <ul className="versiones" id="versiones-lista" aria-label="Versiones guardadas"></ul>
+    <div className="dialogo__acciones">
+      <button type="button" className="boton boton--secundario" data-accion="guardar-version">Guardar versión ahora</button>
+      <button className="boton boton--texto" value="cerrar">Cerrar</button>
+    </div>
+  </form>
+</dialog>
 
-<div className="aviso" id="aviso" role="status" aria-live="polite"></div>
+      <Aviso />
       <template id="tpl-controles" dangerouslySetInnerHTML={{ __html: TPL_CONTROLES }} />
       <template id="tpl-objetivos" dangerouslySetInnerHTML={{ __html: TPL_OBJETIVOS }} />
       <template id="tpl-servicios" dangerouslySetInnerHTML={{ __html: TPL_SERVICIOS }} />
@@ -401,26 +386,7 @@ export function AppModals() {
       <template id="tpl-serviciosWeb" dangerouslySetInnerHTML={{ __html: TPL_SERVICIOSWEB }} />
       <template id="tpl-testimonios" dangerouslySetInnerHTML={{ __html: TPL_TESTIMONIOS }} />
       <template id="tpl-faqs" dangerouslySetInnerHTML={{ __html: TPL_FAQS }} />
-      <dialog className="lightbox" id="dialogo-lightbox" aria-label="Visor de imagen a pantalla completa">
-  <div className="lightbox__barra">
-    <span className="lightbox__contador" id="lightbox-contador"></span>
-    <button type="button" className="icono-boton lightbox__cerrar" data-accion="lightbox-cerrar" aria-label="Cerrar visor">
-      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5l7 7M11.5 4.5l-7 7"/></svg>
-    </button>
-  </div>
-  <div className="lightbox__escenario" data-accion="lightbox-fondo">
-    <button type="button" className="icono-boton lightbox__nav lightbox__nav--ant" id="lightbox-ant" data-accion="lightbox-ant" aria-label="Foto anterior">
-      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg>
-    </button>
-    <figure className="lightbox__figura">
-      <img className="lightbox__img" id="lightbox-img" alt="" />
-      <figcaption className="lightbox__epigrafe" id="lightbox-epigrafe" hidden></figcaption>
-    </figure>
-    <button type="button" className="icono-boton lightbox__nav lightbox__nav--sig" id="lightbox-sig" data-accion="lightbox-sig" aria-label="Foto siguiente">
-      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5"/></svg>
-    </button>
-  </div>
-</dialog>
+      <VisorLightbox />
     </>
   );
 }

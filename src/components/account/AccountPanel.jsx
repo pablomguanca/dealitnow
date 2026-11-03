@@ -103,6 +103,15 @@ export function AccountPanel() {
 
     <section className="tarjeta">
       <div className="tarjeta__cabecera">
+        <h2 className="tarjeta__titulo">Borradores en archivo</h2>
+        <p className="tarjeta__ayuda">Si antes guardaste propuestas como archivo (.json), abrilas acá: quedan guardadas en tu cuenta como propuestas nuevas.</p>
+      </div>
+      <button type="button" className="boton boton--secundario" data-accion="abrir-archivo-viejo">Abrir un archivo guardado</button>
+      <input className="visualmente-oculto" id="campo-borrador" type="file" accept="application/json,.json" tabIndex="-1" aria-hidden="true" />
+    </section>
+
+    <section className="tarjeta">
+      <div className="tarjeta__cabecera">
         <h2 className="tarjeta__titulo">Sesión</h2>
         <p className="tarjeta__ayuda">Cerrar sesión borra la copia de tus propuestas guardada en este navegador.</p>
       </div>

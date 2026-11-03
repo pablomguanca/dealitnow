@@ -1,28 +1,33 @@
-// Notificaciones flotantes (.aviso) y modales nativos (.dialogo)
+// Avisos flotantes (toasts) y diálogos de la app (.dialogo)
+
+// Avisos (react-hot-toast): los colores base van en <Aviso /> con estas mismas variables.
+.avisos {
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px)) !important;
+}
 
 .aviso {
-  position: fixed;
-  left: 50%;
-  bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
-  z-index: 40;
-  max-width: min(30rem, calc(100vw - 2rem));
-  padding: 0.85rem 1.1rem;
-  border: 1px solid var(--superficie-borde);
-  border-left: 3px solid var(--dorado);
-  border-radius: var(--radio-m);
-  background: var(--superficie);
-  color: var(--marfil);
-  font-size: 0.88rem;
-  opacity: 0;
-  transform: translate(-50%, 1rem);
-  pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
+  font-family: var(--fuente-texto);
+  line-height: 1.4;
 
-  &--visible {
-    opacity: 1;
-    transform: translate(-50%, 0);
+  &--celebracion {
+    border-left: 3px solid var(--dorado) !important;
+    font-weight: 500;
   }
 }
+
+@keyframes dialogo-entrada {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem) scale(0.97);
+  }
+}
+
+@keyframes velo-entrada {
+  from {
+    opacity: 0;
+  }
+}
+
 .dialogo {
   width: min(26rem, calc(100vw - 2rem));
   padding: 1.6rem;
@@ -35,8 +40,17 @@
     width: min(34rem, calc(100vw - 2rem));
   }
 
+  &[open] {
+    animation: dialogo-entrada 0.22s var(--ease-out-expo);
+  }
+
   &::backdrop {
     background: var(--velo);
+    backdrop-filter: blur(2px);
+  }
+
+  &[open]::backdrop {
+    animation: velo-entrada 0.22s ease;
   }
 
   &__titulo {
@@ -111,5 +125,63 @@
     font-size: 0.82rem;
     color: var(--marfil-apagado);
     text-overflow: ellipsis;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialogo[open],
+  .dialogo[open]::backdrop {
+    animation: none;
+  }
+}
+
+// Versiones guardadas de la propuesta o el portfolio
+.versiones {
+  display: grid;
+  gap: 0.5rem;
+  max-height: min(22rem, 55vh);
+  margin: 0 0 1.2rem;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+
+  &__estado {
+    margin: 0 0 1.2rem;
+    font-size: 0.88rem;
+    color: var(--marfil-apagado);
+  }
+}
+
+.version {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.9rem;
+  border: 1px solid var(--superficie-borde);
+  border-radius: var(--radio-m);
+  background: var(--negro);
+
+  &__datos {
+    display: grid;
+    gap: 0.1rem;
+    min-width: 0;
+  }
+
+  &__motivo {
+    font-size: 0.88rem;
+    font-weight: 600;
+  }
+
+  &__fecha,
+  &__titulo {
+    font-size: 0.8rem;
+    color: var(--marfil-apagado);
+  }
+
+  &__titulo {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }

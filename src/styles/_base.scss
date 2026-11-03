@@ -22,6 +22,9 @@
   --tinta-tenue: #718096;
   --linea-papel: #E2E8F0;
 
+  --peligro: #dc2626;
+  --peligro-fuerte: #b91c1c;
+
   --velo: rgba(26, 32, 44, 0.6);
   --sombra-hoja: 0 1.2em 3.6em rgba(0, 0, 0, 0.08);
   --sombra-menu: 0 1rem 2.5rem rgba(0, 0, 0, 0.1);
@@ -94,4 +97,32 @@ textarea {
 :focus-visible {
   outline: 2px solid var(--dorado);
   outline-offset: 2px;
+}
+
+// Modo oscuro de la app del dueño (ver src/lib/modo-app.js). Las propuestas no cambian:
+// el motor de temas fija sus propias variables sobre cada documento. Papel y tinta
+// tampoco cambian, así el PDF sale siempre claro.
+:root[data-tema-app="oscuro"] {
+  color-scheme: dark;
+
+  --negro: #0E1315;
+  --negro-2: #151C1F;
+  --superficie: #192226;
+  --superficie-borde: #2A363B;
+
+  --dorado: #00C896;
+  --dorado-claro: #33D6AA;
+  --dorado-papel: #34E0B4;
+  --dorado-tenue: rgba(0, 200, 150, 0.24);
+  --dorado-fondo: rgba(0, 200, 150, 0.12);
+
+  --marfil: #E7EEEC;
+  --marfil-apagado: #A6B3B0;
+  --marfil-tenue: #7B8986;
+
+  --peligro: #F87171;
+  --peligro-fuerte: #FCA5A5;
+
+  --velo: rgba(0, 0, 0, 0.62);
+  --sombra-menu: 0 1rem 2.5rem rgba(0, 0, 0, 0.45);
 }

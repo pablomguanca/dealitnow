@@ -14,11 +14,26 @@ export const MODALIDADES = {
 
 export const FUENTES_TITULOS = [
   'Bebas Neue', 'Playfair Display', 'Poppins', 'Oswald', 'Raleway',
-  'Inter', 'DM Sans', 'Space Grotesk', 'Outfit', 'Sora', 'Archivo Black'
+  'Inter', 'DM Sans', 'Space Grotesk', 'Outfit', 'Sora', 'Archivo Black',
+  'Fraunces', 'DM Serif Display', 'Syne', 'Cormorant Garamond', 'Lexend'
 ];
 export const FUENTES_CUERPO = [
   'Montserrat', 'Inter', 'Open Sans', 'Lato', 'Source Sans 3',
-  'DM Sans', 'Nunito', 'Work Sans', 'Rubik', 'IBM Plex Sans'
+  'DM Sans', 'Nunito', 'Work Sans', 'Rubik', 'IBM Plex Sans',
+  'Manrope', 'Karla', 'Figtree', 'Lexend'
+];
+
+// Duplas de títulos y cuerpo que combinan bien y se leen cómodas en pantalla y en PDF.
+export const COMBINACIONES_FUENTES = [
+  { id: 'noir', nombre: 'Noir & Oro', titulos: 'Bebas Neue', cuerpo: 'Montserrat' },
+  { id: 'editorial', nombre: 'Editorial moderna', titulos: 'Fraunces', cuerpo: 'Inter' },
+  { id: 'elegante', nombre: 'Elegante', titulos: 'DM Serif Display', cuerpo: 'DM Sans' },
+  { id: 'clasica', nombre: 'Clásica', titulos: 'Cormorant Garamond', cuerpo: 'Lato' },
+  { id: 'revista', nombre: 'Revista', titulos: 'Playfair Display', cuerpo: 'Source Sans 3' },
+  { id: 'creativa', nombre: 'Creativa', titulos: 'Syne', cuerpo: 'Manrope' },
+  { id: 'tecnologica', nombre: 'Tecnológica', titulos: 'Space Grotesk', cuerpo: 'IBM Plex Sans' },
+  { id: 'cercana', nombre: 'Cercana', titulos: 'Lexend', cuerpo: 'Figtree' },
+  { id: 'impacto', nombre: 'Impacto', titulos: 'Archivo Black', cuerpo: 'Work Sans' }
 ];
 
 export const DECORACIONES = {
@@ -35,14 +50,19 @@ export const PORTADAS = {
   editorial: { nombre: 'Clásica editorial', desc: 'Título monumental y pie a 4 columnas' },
   dividida: { nombre: 'Magazine dividida', desc: 'Columna lateral de acento y ficha de cliente' },
   insignia: { nombre: 'Centrada boutique', desc: 'Alineación central con cápsula y emblema' },
-  impacto: { nombre: 'Banda de impacto', desc: 'Cabecera hero con numeración gigante' }
+  impacto: { nombre: 'Banda de impacto', desc: 'Cabecera hero con numeración gigante' },
+  tarjeta: { nombre: 'Tarjeta flotante', desc: 'Título dentro de una tarjeta elevada sobre el fondo' },
+  franja: { nombre: 'Franja de color', desc: 'Banda superior de acento y ficha en línea' },
+  minimal: { nombre: 'Minimal', desc: 'Solo el título, mucho aire y una línea fina' }
 };
 
 export const ESTILOS_BLOQUES = {
   editorial: { nombre: 'Editorial clásico', desc: 'Numeración lateral y líneas finas' },
   tarjetas: { nombre: 'Tarjetas elevadas', desc: 'Servicios y etapas en bloques con relieve' },
   bento: { nombre: 'Grilla Bento', desc: 'Módulos modernos con chips e insignias' },
-  minimal: { nombre: 'Acento lateral', desc: 'Barras verticales de color y diseño limpio' }
+  minimal: { nombre: 'Acento lateral', desc: 'Barras verticales de color y diseño limpio' },
+  contorno: { nombre: 'Contorno', desc: 'Bloques con borde fino y esquinas redondeadas' },
+  suave: { nombre: 'Suave', desc: 'Bloques de color tenue, sin bordes' }
 };
 
 export const PROPORCIONES_IMAGEN = {
@@ -136,6 +156,41 @@ export const TEMAS = {
     texto: '#F0F9FF', textoApagado: '#93B4D1', textoTenue: '#5B7C99',
     fuenteTitulos: 'Outfit', fuenteCuerpo: 'Nunito',
     portada: 'insignia', decoracion: 'ondas', estilo: 'tarjetas'
+  },
+  'terracota': {
+    nombre: 'Terracota', etiqueta: 'Arcilla & Crema', plan: 'gratis', acento: '#C2410C', modo: 'claro',
+    fondo: '#FBF5EF', fondo2: '#F5EADF', superficie: '#EEDCCB', superficieBorde: '#E2C9B3',
+    texto: '#2B1A12', textoApagado: '#7A5A48', textoTenue: '#A88A77',
+    fuenteTitulos: 'Fraunces', fuenteCuerpo: 'Inter',
+    portada: 'tarjeta', decoracion: 'organica', estilo: 'contorno'
+  },
+  'salvia': {
+    nombre: 'Salvia', etiqueta: 'Calma & Verde', plan: 'gratis', acento: '#4D7C5B', modo: 'claro', portadaClara: true,
+    fondo: '#F4F6F1', fondo2: '#EAEFE6', superficie: '#DDE5D8', superficieBorde: '#C9D5C3',
+    texto: '#1F2A22', textoApagado: '#5B6B5F', textoTenue: '#8B998E',
+    fuenteTitulos: 'Cormorant Garamond', fuenteCuerpo: 'Lato',
+    portada: 'minimal', decoracion: 'ninguna', estilo: 'suave'
+  },
+  'medianoche': {
+    nombre: 'Medianoche', etiqueta: 'Ámbar Nocturno', plan: 'pro', acento: '#F59E0B', modo: 'oscuro',
+    fondo: '#0B1020', fondo2: '#121933', superficie: '#1C2547', superficieBorde: '#2A3561',
+    texto: '#F8FAFC', textoApagado: '#A3ADC8', textoTenue: '#6B7596',
+    fuenteTitulos: 'Syne', fuenteCuerpo: 'Manrope',
+    portada: 'franja', decoracion: 'geometrica', estilo: 'contorno'
+  },
+  'grafito-lima': {
+    nombre: 'Grafito', etiqueta: 'Negro & Lima', plan: 'pro', acento: '#A3E635', modo: 'oscuro',
+    fondo: '#111113', fondo2: '#18181B', superficie: '#232327', superficieBorde: '#34343A',
+    texto: '#F4F4F5', textoApagado: '#A1A1AA', textoTenue: '#71717A',
+    fuenteTitulos: 'Space Grotesk', fuenteCuerpo: 'IBM Plex Sans',
+    portada: 'franja', decoracion: 'trama', estilo: 'bento'
+  },
+  'rosa-editorial': {
+    nombre: 'Rosa Editorial', etiqueta: 'Moda & Lifestyle', plan: 'pro', acento: '#BE185D', modo: 'claro', portadaClara: true,
+    fondo: '#FFF6F8', fondo2: '#FCE9EE', superficie: '#F7D9E1', superficieBorde: '#EEC2CF',
+    texto: '#2A0F1C', textoApagado: '#7A4A5E', textoTenue: '#A87E8F',
+    fuenteTitulos: 'DM Serif Display', fuenteCuerpo: 'DM Sans',
+    portada: 'tarjeta', decoracion: 'ninguna', estilo: 'suave'
   }
 };
 
@@ -616,6 +671,131 @@ export const PLANTILLAS = {
         portada: 'insignia',
         decoracion: 'ondas',
         estilo: 'tarjetas'
+      }
+    })
+  },
+  'gastronomia-eventos': {
+    nombre: 'Catering y Eventos',
+    rubro: 'Gastronomía & Eventos',
+    desc: 'Menú por invitado, barra de bebidas, ambientación y staff para el evento.',
+    plan: 'gratis',
+    crear: () => ({
+      emisor: {
+        nombre: 'Fuego Lento Catering',
+        rol: 'Catering para eventos sociales y corporativos',
+        email: 'eventos@fuegolento.com.ar',
+        telefono: '+54 9 351 555-0182',
+        web: 'fuegolento.com.ar',
+        presentacion: 'Hace diez años cocinamos para casamientos, cumpleaños y eventos de empresa en Córdoba y alrededores. Trabajamos con productores locales, armamos el menú con vos y nos ocupamos de todo el día del evento para que solo tengas que disfrutar.',
+        logo: ''
+      },
+      cliente: { nombre: 'Lucía Ferreyra', empresa: 'Casamiento Lucía & Tomás', cargo: '' },
+      propuesta: { titulo: 'Catering para casamiento de 120 invitados', numero: 'P-2026-031', fecha: hoyISO(), validez: 10 },
+      contexto: 'Lucía y Tomás celebran su casamiento un sábado de marzo en una quinta de Villa Allende, con ceremonia a las 19 h y fiesta hasta las 4 h. Buscan un menú de estación con opciones vegetarianas, barra de tragos y un servicio atento que acompañe todo el evento sin cortar el ritmo de la fiesta.',
+      objetivos: [
+        { id: uid(), texto: 'Que los 120 invitados coman bien durante toda la noche, con opciones para cada dieta.' },
+        { id: uid(), texto: 'Resolver bebidas, vajilla y personal con un solo proveedor.' },
+        { id: uid(), texto: 'Que los novios no tengan que coordinar nada el día del evento.' }
+      ],
+      servicios: [
+        { id: uid(), nombre: 'Menú de estación completo', modalidad: 'unico', cantidad: 120, precio: 32000, descripcion: 'Recepción con finger food, estación de carnes a la parrilla, estación vegetariana, mesa de postres y fin de fiesta.', entregables: 'Recepción con 8 bocados por persona\nEstación de parrilla y estación vegetariana\nMesa de postres y torta de bodas\nFin de fiesta con pizzetas y sándwiches', opcional: false },
+        { id: uid(), nombre: 'Barra de bebidas libre', modalidad: 'unico', cantidad: 120, precio: 14500, descripcion: 'Vinos, espumantes, cerveza, gaseosas, agua y barra de tragos con bartenders durante toda la fiesta.', entregables: 'Bebidas sin alcohol ilimitadas\nVinos y espumantes de bodegas cordobesas\nBarra de tragos con dos bartenders', opcional: false },
+        { id: uid(), nombre: 'Personal, vajilla y mantelería', modalidad: 'incluido', cantidad: 1, precio: 0, descripcion: 'Mozos, jefe de servicio, vajilla, cristalería y mantelería incluidos en el valor por invitado.', entregables: 'Un mozo cada 15 invitados\nJefe de servicio durante todo el evento\nVajilla, cristalería y mantelería completas', opcional: false },
+        { id: uid(), nombre: 'Ambientación floral de mesas', modalidad: 'unico', cantidad: 12, precio: 45000, descripcion: 'Centros de mesa con flores de estación y velas, coordinados con la paleta del casamiento.', entregables: 'Doce centros de mesa\nArreglo para la mesa principal', opcional: true },
+        { id: uid(), nombre: 'Mesa de quesos y fiambres', modalidad: 'unico', cantidad: 1, precio: 380000, descripcion: 'Mesa de quesos de la región, fiambres, panes caseros y conservas para la recepción.', entregables: 'Mesa armada para 120 personas\nCartelería con cada producto', opcional: true }
+      ],
+      etapas: [
+        { id: uid(), nombre: 'Degustación', duracion: '1 encuentro', descripcion: 'Probamos el menú juntos y ajustamos opciones y cantidades.' },
+        { id: uid(), nombre: 'Coordinación', duracion: '3 semanas antes', descripcion: 'Visita a la quinta, horarios del evento y lista final de invitados con dietas especiales.' },
+        { id: uid(), nombre: 'El día del evento', duracion: 'Sábado de 17 a 4 h', descripcion: 'Montaje, servicio completo y desarme sin que tengan que ocuparse de nada.' }
+      ],
+      inversion: {
+        moneda: 'ARS',
+        descuento: 0,
+        impuestoNombre: 'IVA',
+        impuesto: 0,
+        pagos: [
+          { id: uid(), concepto: 'Seña para reservar la fecha', porcentaje: 30 },
+          { id: uid(), concepto: 'Un mes antes del evento', porcentaje: 40 },
+          { id: uid(), concepto: 'Con la lista final de invitados', porcentaje: 30 }
+        ]
+      },
+      condiciones: 'El valor por invitado se confirma con la lista final, diez días antes del evento.\nLa seña reserva la fecha y no es reintegrable si el evento se cancela.\nLos precios se mantienen por 10 días; después se actualizan según la inflación del período.\nLa quinta tiene que contar con agua, luz y un espacio de cocina o montaje.',
+      proximosPasos: 'Aceptar la propuesta desde este link.\nAbonar la seña para reservar la fecha.\nAgendar la degustación.',
+      opciones: { firmas: true, credito: true },
+      tema: {
+        preset: 'terracota',
+        acento: '#C2410C',
+        colorTexto: '',
+        colorSvg: '',
+        opacidadSvg: 100,
+        fuenteTitulos: 'Fraunces',
+        fuenteCuerpo: 'Inter',
+        portada: 'tarjeta',
+        decoracion: 'organica',
+        estilo: 'contorno'
+      }
+    })
+  },
+  'coaching-capacitacion': {
+    nombre: 'Coaching y Capacitación',
+    rubro: 'Educación & Coaching',
+    desc: 'Programa de sesiones, talleres para el equipo y seguimiento mensual.',
+    plan: 'pro',
+    crear: () => ({
+      emisor: {
+        nombre: 'Carolina Paz',
+        rol: 'Coach ejecutiva y facilitadora de equipos',
+        email: 'hola@carolinapaz.com',
+        telefono: '+54 9 11 6012-4410',
+        web: 'carolinapaz.com',
+        presentacion: 'Acompaño a líderes y equipos a comunicarse mejor, tomar decisiones con claridad y sostener el cambio en el tiempo. Trabajo con herramientas de coaching ontológico y facilitación, siempre con objetivos medibles acordados al inicio.',
+        logo: ''
+      },
+      cliente: { nombre: 'Martín Acosta', empresa: 'Logística Pampa', cargo: 'Gerente de Recursos Humanos' },
+      propuesta: { titulo: 'Programa de liderazgo para mandos medios', numero: 'P-2026-047', fecha: hoyISO(), validez: 15 },
+      contexto: 'Logística Pampa creció de 40 a 110 personas en dos años y promovió a 12 supervisores que hoy lideran equipos por primera vez. Recursos Humanos detecta conflictos en los turnos, rotación alta en depósito y reuniones que no terminan en acuerdos.',
+      objetivos: [
+        { id: uid(), texto: 'Que los 12 supervisores tengan herramientas concretas para dar feedback y resolver conflictos.' },
+        { id: uid(), texto: 'Bajar la rotación en depósito durante los seis meses del programa.' },
+        { id: uid(), texto: 'Instalar reuniones de equipo cortas que terminen con acuerdos y responsables.' }
+      ],
+      servicios: [
+        { id: uid(), nombre: 'Diagnóstico inicial', modalidad: 'unico', cantidad: 1, precio: 650000, descripcion: 'Entrevistas con gerencia y con cada supervisor, y una encuesta breve a los equipos para definir objetivos medibles.', entregables: 'Informe de diagnóstico\nObjetivos del programa con indicadores', opcional: false },
+        { id: uid(), nombre: 'Talleres grupales de liderazgo', modalidad: 'unico', cantidad: 6, precio: 420000, descripcion: 'Seis talleres presenciales de tres horas: comunicación, feedback, conflictos, delegación, reuniones efectivas y cierre.', entregables: 'Seis talleres en la empresa\nMaterial de trabajo para cada participante\nGuía de herramientas para el día a día', opcional: false },
+        { id: uid(), nombre: 'Sesiones individuales de coaching', modalidad: 'hora', cantidad: 24, precio: 55000, descripcion: 'Dos sesiones individuales por supervisor para trabajar sus desafíos concretos.', entregables: 'Dos sesiones por supervisor\nPlan de acción personal', opcional: false },
+        { id: uid(), nombre: 'Seguimiento mensual con gerencia', modalidad: 'mensual', cantidad: 1, precio: 280000, descripcion: 'Reunión mensual con Recursos Humanos para revisar indicadores y ajustar el programa.', entregables: 'Reunión mensual de seguimiento\nReporte de avance', opcional: true }
+      ],
+      etapas: [
+        { id: uid(), nombre: 'Diagnóstico', duracion: '2 semanas', descripcion: 'Entrevistas, encuesta y acuerdo de objetivos con gerencia.' },
+        { id: uid(), nombre: 'Talleres y sesiones', duracion: '4 meses', descripcion: 'Un taller cada tres semanas y sesiones individuales entre talleres.' },
+        { id: uid(), nombre: 'Cierre y medición', duracion: '2 semanas', descripcion: 'Encuesta final, comparación de indicadores y recomendaciones para seguir.' }
+      ],
+      inversion: {
+        moneda: 'ARS',
+        descuento: 0,
+        impuestoNombre: 'IVA',
+        impuesto: 21,
+        pagos: [
+          { id: uid(), concepto: 'Al aprobar la propuesta', porcentaje: 40 },
+          { id: uid(), concepto: 'Al terminar el tercer taller', porcentaje: 30 },
+          { id: uid(), concepto: 'Al cierre del programa', porcentaje: 30 }
+        ]
+      },
+      condiciones: 'Las sesiones individuales son confidenciales: a gerencia solo llegan indicadores grupales.\nLos talleres se pueden reprogramar con 72 horas de aviso.\nLos valores se actualizan cada trimestre según el índice de precios.',
+      proximosPasos: 'Aceptar la propuesta desde este link.\nCompartir el organigrama y los contactos de los supervisores.\nAgendar las entrevistas del diagnóstico.',
+      opciones: { firmas: true, credito: true },
+      tema: {
+        preset: 'salvia',
+        acento: '#4D7C5B',
+        colorTexto: '',
+        colorSvg: '',
+        opacidadSvg: 100,
+        fuenteTitulos: 'Cormorant Garamond',
+        fuenteCuerpo: 'Lato',
+        portada: 'minimal',
+        decoracion: 'ninguna',
+        estilo: 'suave'
       }
     })
   }

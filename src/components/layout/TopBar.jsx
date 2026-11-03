@@ -70,19 +70,26 @@ export function TopBar() {
                 </div>
                 <div className="menu__grupo">
                   <span className="menu__grupo-titulo" id="menu-grupo-actual">Propuesta actual</span>
-                  <button type="button" className="boton boton--texto menu__opcion" data-accion="abrir-borrador">
-                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 5.5A1.5 1.5 0 0 1 4 4h2.8l1.4 1.5H12A1.5 1.5 0 0 1 13.5 7v4.5A1.5 1.5 0 0 1 12 13H4a1.5 1.5 0 0 1-1.5-1.5V5.5z" /></svg>
-                    <span>Abrir borrador (.json)</span>
-                  </button>
-                  <button type="button" className="boton boton--texto menu__opcion solo-editor" data-accion="guardar-borrador">
+                  <button type="button" className="boton boton--texto menu__opcion solo-editor" data-accion="guardar-version">
                     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h7.2l2.3 2.3v8.2a1 1 0 0 1-1 1h-8.5a1 1 0 0 1-1-1v-9.5a1 1 0 0 1 1-1z" /><path d="M5.5 2.5v3.5h5V2.5M5.5 13.5v-4h5v4" /></svg>
-                    <span>Guardar borrador (.json)</span>
+                    <span>Guardar versión</span>
+                  </button>
+                  <button type="button" className="boton boton--texto menu__opcion solo-editor solo-cuenta" data-accion="ver-versiones">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.8 8a5.2 5.2 0 1 0 1.5-3.7M2.5 2.8v2.6h2.6" /><path d="M8 5.3V8l1.9 1.4" /></svg>
+                    <span>Versiones anteriores</span>
                   </button>
                   <button type="button" className="boton boton--texto menu__opcion solo-editor" data-accion="pdf">
                     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5M5 7.5l3 3 3-3M3 12.5h10" /></svg>
                     <span>Descargar PDF</span>
                   </button>
                 </div>
+              </div>
+              <div className="menu__grupo menu__grupo--ajustes">
+                <button type="button" className="boton boton--texto menu__opcion menu__interruptor" data-accion="alternar-modo" role="switch" aria-checked="false" id="menu-modo-oscuro">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 9.6A5.5 5.5 0 0 1 6.4 3a5.5 5.5 0 1 0 6.6 6.6z" /></svg>
+                  <span>Modo oscuro</span>
+                  <span className="interruptor" aria-hidden="true"></span>
+                </button>
               </div>
               <div className="menu__pie solo-cuenta">
                 <button type="button" className="boton boton--texto menu__opcion menu__opcion--salir solo-cuenta" data-accion="cerrar-sesion">

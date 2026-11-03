@@ -374,6 +374,12 @@ let observador;
 const OBS_SEL = '.bloque, .resumen, .cierre, .pie, .doc-aviso';
 const HIJO_SEL = '.servicio, .etapa, .proyecto-card, .galeria-item, .testimonio-card, .faq-item, .servicio-web-card';
 
+// Muestra todo de una, sin animaciones de entrada (miniaturas y vistas previas de plantillas).
+// No toca el observador del documento principal.
+export const mostrarSinAnimar = raiz => {
+  raiz?.querySelectorAll(`${OBS_SEL}, ${HIJO_SEL}`).forEach(el => el.classList.add('visible'));
+};
+
 export const observarElementos = (raiz, esCliente = false) => {
   if (!raiz) return;
   if (observador) observador.disconnect();

@@ -1,60 +1,103 @@
 // Acceso a Firebase (Auth, Firestore, Storage y App Check) para el resto de la app.
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/app-check';
-import 'firebase/compat/auth';
-import 'firebase/compat/firestore';
-import 'firebase/compat/storage';
-
-const firebaseConfig = {
-  apiKey:            'AIzaSyA4fAtms8k5hOEvtFiTnf6B2ijg2jiWDtg',
-  authDomain:        'dealitnow.vercel.app',
-  projectId:         'dealit-7f735',
-  storageBucket:     'dealit-7f735.firebasestorage.app',
-  messagingSenderId: '837213426465',
-  appId:             '1:837213426465:web:91f1c863f453efe950e460'
-};
+// Usa el SDK modular: al paquete solo entra lo que se importa acá.
+import { initializeApp } from 'firebase/app';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+import {
+  getAuth,
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  EmailAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+  sendPasswordResetEmail,
+  updateProfile,
+  reload,
+  reauthenticateWithCredential,
+  reauthenticateWithPopup,
+  deleteUser,
+  signOut as cerrarSesionAuth
+} from 'firebase/auth';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  onSnapshot,
+  writeBatch,
+  serverTimestamp,
+  terminate,
+  clearIndexedDbPersistence
+} from 'firebase/firestore';
+import {
+  getStorage,
+  ref as refStorage,
+  getDownloadURL,
+  uploadBytes,
+  listAll,
+  deleteObject
+} from 'firebase/storage';
+import { firebaseConfig, PREFIJO_URL_LOGO } from './firebase-config.js';
 
 const crearAteneaDB = () => {
   if (firebaseConfig.apiKey === 'TU_API_KEY') throw new Error('Firebase no está configurado: falta la API key.');
-  firebase.initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig);
 
   // App Check: certifica que las llamadas a Firestore y Storage salen de esta web y no
   // de un script ajeno. Se activa al completar la clave del sitio de reCAPTCHA Enterprise
   // (Firebase → App Check). En localhost usa un token de depuración que se registra en la consola.
   const APP_CHECK_SITE_KEY = '';
-  if (APP_CHECK_SITE_KEY && typeof firebase.appCheck === 'function') {
+  if (APP_CHECK_SITE_KEY) {
     if (['localhost', '127.0.0.1'].includes(location.hostname)) self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
-    firebase.appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY), true);
+    initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider(APP_CHECK_SITE_KEY), isTokenAutoRefreshEnabled: true });
   }
 
-  const auth = firebase.auth();
+  // La sesión queda guardada en el navegador (IndexedDB) hasta que se cierre.
+  const auth = getAuth(app);
   auth.languageCode = 'es'; // emails de verificación y de contraseña en español
-  const db   = firebase.firestore();
 
-  // Caché local en IndexedDB: el editor funciona sin conexión y sincroniza al volver.
-  // Tiene que pedirse antes de cualquier otra operación sobre Firestore.
-  db.enablePersistence({ synchronizeTabs: true }).catch(e => {
-    console.warn('Firestore sin caché local:', e.code || e);
+  // Caché local en IndexedDB, compartida entre pestañas: el editor funciona sin conexión
+  // y sincroniza al volver. Si el navegador no la permite, Firestore sigue en memoria.
+  const db = initializeFirestore(app, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() })
   });
 
-  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  const limpiarCacheLocal = async () => {
+    try {
+      await terminate(db);
+      await clearIndexedDbPersistence(db);
+    } catch (e) {
+      console.warn('No se pudo limpiar la caché local de Firestore:', e);
+    }
+  };
 
   let _unsubSnapshots = [];
 
   const getUser = () => auth.currentUser;
   const getUid  = () => { const u = getUser(); if (!u) throw new Error('No autenticado'); return u.uid; };
 
-  const onAuthChange = callback => auth.onAuthStateChanged(callback);
+  const onAuthChange = callback => onAuthStateChanged(auth, callback);
 
   const _crearPerfilSiNoExiste = async (user) => {
-    const userRef = db.collection('users').doc(user.uid);
-    const snap = await userRef.get();
-    if (!snap.exists) {
-      await userRef.set({
+    const userRef = doc(db, 'users', user.uid);
+    const snap = await getDoc(userRef);
+    if (!snap.exists()) {
+      await setDoc(userRef, {
         email: user.email,
         displayName: user.displayName || '',
         photoURL: user.photoURL || '',
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        createdAt: serverTimestamp()
       });
     }
   };
@@ -65,58 +108,58 @@ const crearAteneaDB = () => {
   const LARGO_EMISOR = { presentacion: 2000, logo: 1000, foto: 1000 };
 
   const obtenerPerfil = async () => {
-    const snap = await db.collection('users').doc(getUid()).get();
-    return snap.exists ? snap.data() : {};
+    const snap = await getDoc(doc(db, 'users', getUid()));
+    return snap.exists() ? snap.data() : {};
   };
 
   const guardarPerfil = async ({ displayName, emisor }) => {
     const user = auth.currentUser;
     const nombre = String(displayName ?? '').trim().slice(0, 80);
     const datos = Object.fromEntries(CAMPOS_EMISOR.map(k => [k, String(emisor?.[k] ?? '').trim().slice(0, LARGO_EMISOR[k] || 200)]));
-    if (nombre !== (user.displayName || '')) await user.updateProfile({ displayName: nombre });
-    await db.collection('users').doc(user.uid).set({ email: user.email, displayName: nombre, emisor: datos }, { merge: true });
+    if (nombre !== (user.displayName || '')) await updateProfile(user, { displayName: nombre });
+    await setDoc(doc(db, 'users', user.uid), { email: user.email, displayName: nombre, emisor: datos }, { merge: true });
   };
 
-  auth.onAuthStateChanged(user => {
+  onAuthStateChanged(auth, user => {
     if (user) _crearPerfilSiNoExiste(user);
   });
 
   const signInGoogle = () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
+    const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    return auth.signInWithPopup(provider);
+    return signInWithPopup(auth, provider);
   };
 
-  const signIn = (email, password) => auth.signInWithEmailAndPassword(email, password);
+  const signIn = (email, password) => signInWithEmailAndPassword(auth, email, password);
 
   // Al volver desde el link del email, Firebase redirige a la web.
   const _ajustesEmail = () => ({ url: `${location.origin}/` });
 
-  const enviarVerificacion = () => auth.currentUser.sendEmailVerification(_ajustesEmail());
+  const enviarVerificacion = () => sendEmailVerification(auth.currentUser, _ajustesEmail());
 
   // Después de tocar el link del email hay que recargar el usuario y renovar el
   // token: las reglas de Firestore leen email_verified del token.
   const comprobarVerificacion = async () => {
-    await auth.currentUser.reload();
+    await reload(auth.currentUser);
     if (!auth.currentUser.emailVerified) return false;
     await auth.currentUser.getIdToken(true);
     return true;
   };
 
-  const recuperarPassword = email => auth.sendPasswordResetEmail(email, _ajustesEmail());
+  const recuperarPassword = email => sendPasswordResetEmail(auth, email, _ajustesEmail());
 
   const signUp = async (email, password, displayName) => {
-    const cred = await auth.createUserWithEmailAndPassword(email, password);
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
     try {
-      await cred.user.sendEmailVerification(_ajustesEmail());
+      await sendEmailVerification(cred.user, _ajustesEmail());
     } catch (e) {
       console.warn('No se pudo enviar el email de verificación:', e); // se puede reenviar desde la app
     }
-    if (displayName) await cred.user.updateProfile({ displayName });
-    await db.collection('users').doc(cred.user.uid).set({
+    if (displayName) await updateProfile(cred.user, { displayName });
+    await setDoc(doc(db, 'users', cred.user.uid), {
       email,
       displayName: displayName || '',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      createdAt: serverTimestamp()
     });
     return cred;
   };
@@ -125,21 +168,16 @@ const crearAteneaDB = () => {
   // computadoras compartidas. Quien llama debe esperar antes las escrituras pendientes.
   const signOut = async () => {
     _limpiarSuscripciones();
-    await auth.signOut();
-    try {
-      await db.terminate();
-      await db.clearPersistence();
-    } catch (e) {
-      console.warn('No se pudo limpiar la caché local de Firestore:', e);
-    }
+    await cerrarSesionAuth(auth);
+    await limpiarCacheLocal();
   };
 
-  const _colProposals = () => db.collection('proposals');
+  const _docsDe = snap => snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  const _baseQuery = () =>
-    _colProposals()
-      .where('userId', '==', getUid())
-      .orderBy('createdAt', 'desc');
+  const _colProposals = () => collection(db, 'proposals');
+
+  const _baseQuery = (...filtros) =>
+    query(_colProposals(), where('userId', '==', getUid()), ...filtros, orderBy('createdAt', 'desc'));
 
   const ESTADOS = ['draft', 'sent', 'accepted', 'rejected'];
   const LARGO_MAX = 200;
@@ -157,13 +195,13 @@ const crearAteneaDB = () => {
     return limpio;
   };
 
-  const nuevoIdPropuesta = () => _colProposals().doc().id;
+  const nuevoIdPropuesta = () => doc(_colProposals()).id;
 
   // El ID se genera en el cliente para poder encolar escrituras antes de que
   // el servidor confirme la creación, incluso sin conexión.
   const crearPropuesta = async (data, id = nuevoIdPropuesta()) => {
-    const ahora = firebase.firestore.FieldValue.serverTimestamp();
-    await _colProposals().doc(id).set({
+    const ahora = serverTimestamp();
+    await setDoc(doc(_colProposals(), id), {
       title: '', clientName: '', amount: 0, theme: 'elegante-oscuro', payload: {},
       ..._camposEditables(data),
       status:    'draft',
@@ -175,8 +213,8 @@ const crearAteneaDB = () => {
   };
 
   const obtenerPropuesta = async (id) => {
-    const snap = await _colProposals().doc(id).get();
-    if (!snap.exists) return null;
+    const snap = await getDoc(doc(_colProposals(), id));
+    if (!snap.exists()) return null;
     const data = snap.data();
     if (data.userId !== getUid()) return null;
     return { id: snap.id, ...data };
@@ -186,8 +224,8 @@ const crearAteneaDB = () => {
   // permiten si la propuesta está marcada como pública (o si la pide su dueño).
   const obtenerPublica = async (id) => {
     try {
-      const snap = await _colProposals().doc(id).get();
-      if (!snap.exists || !snap.data().payload) return null;
+      const snap = await getDoc(doc(_colProposals(), id));
+      if (!snap.exists() || !snap.data().payload) return null;
       const { payload, aceptacion } = snap.data();
       return { payload, aceptacion: aceptacion || null };
     } catch (e) {
@@ -196,51 +234,46 @@ const crearAteneaDB = () => {
     }
   };
 
-  const listarPropuestas = async (limite = 50) => {
-    const snap = await _baseQuery().limit(limite).get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  };
+  const listarPropuestas = async (limite = 50) => _docsDe(await getDocs(query(_baseQuery(), limit(limite))));
 
-  const listarPorEstado = async (status, limite = 50) => {
-    const snap = await _colProposals()
-      .where('userId', '==', getUid())
-      .where('status', '==', status)
-      .orderBy('createdAt', 'desc')
-      .limit(limite)
-      .get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  };
+  const listarPorEstado = async (status, limite = 50) =>
+    _docsDe(await getDocs(query(_baseQuery(where('status', '==', status)), limit(limite))));
 
   // La propiedad la verifican las reglas de Firestore: leer antes de escribir
   // duplicaría el costo y no funcionaría sin conexión.
   const actualizarPropuesta = (id, cambios) =>
-    _colProposals().doc(id).update({
+    updateDoc(doc(_colProposals(), id), {
       ..._camposEditables(cambios),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      updatedAt: serverTimestamp()
     });
 
-  const borrarPropuesta = (id) => _colProposals().doc(id).delete();
+  // Las versiones guardadas se borran antes: sin la propuesta, las reglas ya no dejarían leerlas.
+  const borrarPropuesta = async (id) => {
+    await _borrarVersiones('proposals', id);
+    await deleteDoc(doc(_colProposals(), id));
+  };
 
   // Escucha en tiempo real (y desde la caché sin conexión). Las fechas que todavía
   // no confirmó el servidor llegan estimadas en vez de null.
-  const escucharPropuestas = (callback, alFallar, limite = 100) => {
-    const unsub = _baseQuery().limit(limite).onSnapshot(snap => {
+  const _escuchar = (consulta, callback, alFallar, etiqueta) => {
+    const unsub = onSnapshot(consulta, snap => {
       const docs = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
       callback(docs);
     }, err => {
-      console.error('Error en snapshot de propuestas:', err);
+      console.error(`Error en snapshot de ${etiqueta}:`, err);
       if (alFallar) alFallar(err);
     });
     _unsubSnapshots.push(unsub);
     return unsub;
   };
 
+  const escucharPropuestas = (callback, alFallar, limite = 100) =>
+    _escuchar(query(_baseQuery(), limit(limite)), callback, alFallar, 'propuestas');
 
-  const _colPortfolios = () => db.collection('portfolios');
 
-  const _baseQueryPortfolios = () =>
-    _colPortfolios()
-      .where('userId', '==', getUid());
+  const _colPortfolios = () => collection(db, 'portfolios');
+
+  const _baseQueryPortfolios = () => query(_colPortfolios(), where('userId', '==', getUid()));
 
   const _camposEditablesPortafolio = (data) => {
     const limpio = {};
@@ -253,11 +286,11 @@ const crearAteneaDB = () => {
     return limpio;
   };
 
-  const nuevoIdPortafolio = () => _colPortfolios().doc().id;
+  const nuevoIdPortafolio = () => doc(_colPortfolios()).id;
 
   const crearPortafolio = async (data, id = nuevoIdPortafolio()) => {
-    const ahora = firebase.firestore.FieldValue.serverTimestamp();
-    await _colPortfolios().doc(id).set({
+    const ahora = serverTimestamp();
+    await setDoc(doc(_colPortfolios(), id), {
       title: '', subtitle: '', projectCount: 0, theme: 'elegante-oscuro', payload: {},
       publico: false,
       ..._camposEditablesPortafolio(data),
@@ -269,8 +302,8 @@ const crearAteneaDB = () => {
   };
 
   const obtenerPortafolio = async (id) => {
-    const snap = await _colPortfolios().doc(id).get();
-    if (!snap.exists) return null;
+    const snap = await getDoc(doc(_colPortfolios(), id));
+    if (!snap.exists()) return null;
     const data = snap.data();
     if (data.userId !== getUid()) return null;
     return { id: snap.id, ...data };
@@ -278,8 +311,8 @@ const crearAteneaDB = () => {
 
   const obtenerPortafolioPublico = async (id) => {
     try {
-      const snap = await _colPortfolios().doc(id).get();
-      if (!snap.exists || !snap.data().payload) return null;
+      const snap = await getDoc(doc(_colPortfolios(), id));
+      if (!snap.exists() || !snap.data().payload) return null;
       const { payload } = snap.data();
       return { payload };
     } catch (e) {
@@ -288,29 +321,57 @@ const crearAteneaDB = () => {
     }
   };
 
-  const listarPortafolios = async (limite = 50) => {
-    const snap = await _baseQueryPortfolios().limit(limite).get();
-    return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-  };
+  const listarPortafolios = async (limite = 50) => _docsDe(await getDocs(query(_baseQueryPortfolios(), limit(limite))));
 
   const actualizarPortafolio = (id, cambios) =>
-    _colPortfolios().doc(id).update({
+    updateDoc(doc(_colPortfolios(), id), {
       ..._camposEditablesPortafolio(cambios),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      updatedAt: serverTimestamp()
     });
 
-  const borrarPortafolio = (id) => _colPortfolios().doc(id).delete();
+  const borrarPortafolio = async (id) => {
+    await _borrarVersiones('portfolios', id);
+    await deleteDoc(doc(_colPortfolios(), id));
+  };
 
-  const escucharPortafolios = (callback, alFallar, limite = 100) => {
-    const unsub = _baseQueryPortfolios().limit(limite).onSnapshot(snap => {
-      const docs = snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
-      callback(docs);
-    }, err => {
-      console.error('Error en snapshot de portafolios:', err);
-      if (alFallar) alFallar(err);
+  const escucharPortafolios = (callback, alFallar, limite = 100) =>
+    _escuchar(query(_baseQueryPortfolios(), limit(limite)), callback, alFallar, 'portafolios');
+
+  // Versiones guardadas de una propuesta o un portfolio ({coleccion}/{id}/versiones): las
+  // guarda el dueño a mano, al enviar la propuesta y antes de restaurar otra. Se conservan
+  // las últimas VERSIONES_MAX.
+  const COLECCIONES_CON_VERSIONES = ['proposals', 'portfolios'];
+  const MOTIVOS_VERSION = ['manual', 'enviada', 'antes-de-restaurar'];
+  const VERSIONES_MAX = 20;
+
+  const _colVersiones = (coleccion, id) => {
+    if (!COLECCIONES_CON_VERSIONES.includes(coleccion)) throw new Error(`Colección sin versiones: ${coleccion}`);
+    return collection(db, coleccion, id, 'versiones');
+  };
+
+  const listarVersiones = async (coleccion, id) => {
+    const snap = await getDocs(query(_colVersiones(coleccion, id), orderBy('createdAt', 'desc'), limit(VERSIONES_MAX + 10)));
+    return snap.docs.map(d => ({ id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }));
+  };
+
+  const crearVersion = async (coleccion, id, { payload, title, motivo }) => {
+    await setDoc(doc(_colVersiones(coleccion, id)), {
+      userId: getUid(),
+      payload: payload && typeof payload === 'object' ? payload : {},
+      title: String(title ?? '').slice(0, LARGO_MAX),
+      motivo: MOTIVOS_VERSION.includes(motivo) ? motivo : 'manual',
+      createdAt: serverTimestamp()
     });
-    _unsubSnapshots.push(unsub);
-    return unsub;
+    const viejas = (await listarVersiones(coleccion, id)).slice(VERSIONES_MAX);
+    await Promise.all(viejas.map(v => deleteDoc(doc(_colVersiones(coleccion, id), v.id))));
+  };
+
+  const _borrarVersiones = async (coleccion, id) => {
+    try {
+      await _borrarEnLotes(_colVersiones(coleccion, id));
+    } catch (e) {
+      console.warn('No se pudieron borrar las versiones guardadas:', e);
+    }
   };
 
   const _limpiarSuscripciones = () => {
@@ -321,9 +382,8 @@ const crearAteneaDB = () => {
   // Logos en Firebase Storage: users/{uid}/logos/{sha256}.{ext}. El nombre es el hash
   // del contenido, así el mismo logo se sube una sola vez aunque esté en muchas propuestas.
   // Se muestran con su URL de descarga (lleva un token), que funciona sin sesión.
-  const storage = typeof firebase.storage === 'function' ? firebase.storage() : null;
+  const storage = getStorage(app);
   const EXTENSIONES_LOGO = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' };
-  const PREFIJO_URL_LOGO = `https://firebasestorage.googleapis.com/v0/b/${firebaseConfig.storageBucket}/o/`;
 
   const _hashHex = async (blob) => {
     const digest = await crypto.subtle.digest('SHA-256', await blob.arrayBuffer());
@@ -331,23 +391,22 @@ const crearAteneaDB = () => {
   };
 
   const subirLogo = async (blob) => {
-    if (!storage) throw new Error('Firebase Storage no está disponible');
     const ext = EXTENSIONES_LOGO[blob.type];
     if (!ext) throw new Error(`Formato de logo no admitido: ${blob.type}`);
-    const ref = storage.ref(`users/${getUid()}/logos/${await _hashHex(blob)}.${ext}`);
+    const ref = refStorage(storage, `users/${getUid()}/logos/${await _hashHex(blob)}.${ext}`);
     try {
-      return await ref.getDownloadURL();
+      return await getDownloadURL(ref);
     } catch (e) {
       if (e.code !== 'storage/object-not-found') throw e;
     }
-    await ref.put(blob, { contentType: blob.type, cacheControl: 'public, max-age=31536000, immutable' });
-    return ref.getDownloadURL();
+    await uploadBytes(ref, blob, { contentType: blob.type, cacheControl: 'public, max-age=31536000, immutable' });
+    return getDownloadURL(ref);
   };
 
   // Token de la sesión para identificarse ante /api (null si no hay sesión). Espera a
   // que Firebase recupere la sesión guardada, que al cargar la página llega un instante después.
   const sesionRecuperada = new Promise(res => {
-    const dejar = auth.onAuthStateChanged(() => { dejar(); res(); });
+    const dejar = onAuthStateChanged(auth, () => { dejar(); res(); });
   });
   const tokenDeSesion = async () => {
     await sesionRecuperada;
@@ -360,12 +419,21 @@ const crearAteneaDB = () => {
   const _reautenticar = async (password) => {
     const user = auth.currentUser;
     if (usaPassword()) {
-      await user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, password));
+      await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, password));
       return;
     }
-    const provider = new firebase.auth.GoogleAuthProvider();
+    const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ login_hint: user.email });
-    await user.reauthenticateWithPopup(provider);
+    await reauthenticateWithPopup(user, provider);
+  };
+
+  const _borrarEnLotes = async (consulta) => {
+    const snap = await getDocs(consulta);
+    for (let i = 0; i < snap.docs.length; i += 400) {
+      const lote = writeBatch(db);
+      snap.docs.slice(i, i + 400).forEach(d => lote.delete(d.ref));
+      await lote.commit();
+    }
   };
 
   // Borra todo lo del usuario y después la cuenta. El orden importa: sin la cuenta,
@@ -376,43 +444,30 @@ const crearAteneaDB = () => {
 
     // El perfil va primero: si las reglas no permiten borrar, falla antes de tocar
     // las propuestas. Y si algo falla después, el perfil se vuelve a crear al iniciar sesión.
-    await db.collection('users').doc(uid).delete();
+    await deleteDoc(doc(db, 'users', uid));
     _limpiarSuscripciones();
 
-    const propuestas = await _colProposals().where('userId', '==', uid).get();
-    for (let i = 0; i < propuestas.docs.length; i += 400) {
-      const lote = db.batch();
-      propuestas.docs.slice(i, i + 400).forEach(d => lote.delete(d.ref));
-      await lote.commit();
-    }
+    const propias = await getDocs(query(_colProposals(), where('userId', '==', uid)));
+    for (const d of propias.docs) await _borrarVersiones('proposals', d.id);
+    await _borrarEnLotes(query(_colProposals(), where('userId', '==', uid)));
 
     try {
-      const portafolios = await _colPortfolios().where('userId', '==', uid).get();
-      for (let i = 0; i < portafolios.docs.length; i += 400) {
-        const lote = db.batch();
-        portafolios.docs.slice(i, i + 400).forEach(d => lote.delete(d.ref));
-        await lote.commit();
-      }
+      const propios = await getDocs(query(_colPortfolios(), where('userId', '==', uid)));
+      for (const d of propios.docs) await _borrarVersiones('portfolios', d.id);
+      await _borrarEnLotes(query(_colPortfolios(), where('userId', '==', uid)));
     } catch (e) {
       console.warn('No se pudieron borrar los portafolios:', e);
     }
 
-    if (storage) {
-      try {
-        const logos = await storage.ref(`users/${uid}/logos`).listAll();
-        await Promise.all(logos.items.map(ref => ref.delete()));
-      } catch (e) {
-        console.warn('No se pudieron borrar los logos:', e);
-      }
+    try {
+      const logos = await listAll(refStorage(storage, `users/${uid}/logos`));
+      await Promise.all(logos.items.map(ref => deleteObject(ref)));
+    } catch (e) {
+      console.warn('No se pudieron borrar los logos:', e);
     }
 
-    await auth.currentUser.delete();
-    try {
-      await db.terminate();
-      await db.clearPersistence();
-    } catch (e) {
-      console.warn('No se pudo limpiar la caché local de Firestore:', e);
-    }
+    await deleteUser(auth.currentUser);
+    await limpiarCacheLocal();
   };
 
   return {
@@ -421,6 +476,7 @@ const crearAteneaDB = () => {
       enviarVerificacion, comprobarVerificacion, recuperarPassword, usaPassword, eliminarCuenta, tokenDeSesion
     },
     logos: { subir: subirLogo, prefijoURL: PREFIJO_URL_LOGO },
+    versiones: { listar: listarVersiones, crear: crearVersion },
     perfil: { obtener: obtenerPerfil, guardar: guardarPerfil },
     proposals: {
       nuevoId:    nuevoIdPropuesta,

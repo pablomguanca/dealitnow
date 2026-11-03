@@ -46,6 +46,8 @@ const comoFirestore = (id, d) => {
   return doc;
 };
 
+const leerVersiones = (coleccion, id) => JSON.parse(localStorage.getItem(`${CLAVE}:versiones:${coleccion}:${id}`) || '[]');
+
 const oyentes = new Set();
 const emitir = () => {
   const docs = Object.entries(leer()).filter(([, d]) => d.userId === UID).map(([id, d]) => comoFirestore(id, d));
@@ -93,6 +95,13 @@ export const AteneaDB = {
     tokenDeSesion: async () => (usuario ? 'token-demo' : null)
   },
   logos: { prefijoURL: 'https://demo.invalid/', subir: async () => { throw new Error('Sin Storage en el modo demo'); } },
+  versiones: {
+    listar: async (coleccion, id) => leerVersiones(coleccion, id).map(v => comoFirestore(v.id, v)),
+    crear: async (coleccion, id, { payload, title, motivo }) => {
+      const lista = [{ id: `v${Date.now()}${++n}`, userId: UID, payload: structuredClone(payload), title, motivo, createdAt: new Date().toISOString() }, ...leerVersiones(coleccion, id)];
+      localStorage.setItem(`${CLAVE}:versiones:${coleccion}:${id}`, JSON.stringify(lista.slice(0, 20)));
+    }
+  },
   perfil: {
     obtener: async () => JSON.parse(localStorage.getItem(`${CLAVE}:perfil`) || '{}'),
     guardar: async datos => { localStorage.setItem(`${CLAVE}:perfil`, JSON.stringify(datos)); }
@@ -114,7 +123,7 @@ export const AteneaDB = {
       return { payload: doc.payload, aceptacion: doc.aceptacion || null };
     },
     actualizar: async (id, cambios) => actualizarDoc(id, cambios),
-    borrar: async id => { const docs = leer(); delete docs[id]; guardar(docs); },
+    borrar: async id => { const docs = leer(); delete docs[id]; guardar(docs); localStorage.removeItem(`${CLAVE}:versiones:proposals:${id}`); },
     escuchar: cb => { oyentes.add(cb); emitir(); return () => oyentes.delete(cb); }
   }
 };

@@ -13,6 +13,10 @@
       "destination": "https://dealit-7f735.firebaseapp.com/__/firebase/:path*"
     },
     {
+      "source": "/plantillas",
+      "destination": "/"
+    },
+    {
       "source": "/portafolios",
       "destination": "/"
     },

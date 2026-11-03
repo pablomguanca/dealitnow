@@ -62,11 +62,13 @@ const clampNumero = (val, min, max, def = 100) => {
   return Number.isFinite(n) ? Math.min(max, Math.max(min, Math.round(n))) : def;
 };
 
+const FUENTES_UN_PESO = ['Bebas Neue', 'Archivo Black', 'DM Serif Display'];
 const fuentesEnUso = new Set();
 export const cargarFuente = nombre => {
   if (!nombre || fuentesEnUso.has(nombre) || typeof document === 'undefined') return;
   fuentesEnUso.add(nombre);
-  const pesos = nombre === 'Bebas Neue' || nombre === 'Archivo Black' ? '400' : '400;500;700';
+  // Google Fonts rechaza el pedido entero si se piden pesos que la fuente no tiene.
+  const pesos = FUENTES_UN_PESO.includes(nombre) ? '400' : '400;500;700';
   const link = document.createElement('link');
   link.rel = 'stylesheet';
   link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(nombre)}:wght@${pesos}&display=swap`;

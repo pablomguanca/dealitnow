@@ -8,6 +8,18 @@ service cloud.firestore {
     // Google ya verifica el email; las cuentas con email y contraseña, al tocar el link.
     function verificado()   { return request.auth.token.email_verified == true; }
 
+    // Versión guardada de una propuesta o un portfolio ({coleccion}/{id}/versiones/{versionId}).
+    // Solo la crea y la lee el dueño del documento; no se edita: se crea o se borra.
+    function versionValida() {
+      let d = request.resource.data;
+      return d.keys().hasOnly(['userId', 'payload', 'title', 'motivo', 'createdAt'])
+        && d.userId == request.auth.uid
+        && d.payload is map
+        && d.title is string && d.title.size() <= 200
+        && d.motivo in ['manual', 'enviada', 'antes-de-restaurar']
+        && d.createdAt == request.time;
+    }
+
     match /users/{uid} {
       function texto(m, campo, largo) { return m.get(campo, '') is string && m.get(campo, '').size() <= largo; }
 
@@ -73,6 +85,16 @@ service cloud.firestore {
         && datosValidos();
 
       allow delete: if esDueno(resource.data.userId);
+
+      match /versiones/{versionId} {
+        function duenoDeLaPropuesta() {
+          return autenticado() && get(/databases/$(database)/documents/proposals/$(proposalId)).data.userId == request.auth.uid;
+        }
+        allow read:   if duenoDeLaPropuesta();
+        allow create: if duenoDeLaPropuesta() && verificado() && versionValida();
+        // Se puede borrar aunque la propuesta ya no exista.
+        allow delete: if esDueno(resource.data.userId);
+      }
     }
 
 
@@ -107,6 +129,15 @@ service cloud.firestore {
         && datosPortafolioValidos();
 
       allow delete: if esDueno(resource.data.userId);
+
+      match /versiones/{versionId} {
+        function duenoDelPortafolio() {
+          return autenticado() && get(/databases/$(database)/documents/portfolios/$(portfolioId)).data.userId == request.auth.uid;
+        }
+        allow read:   if duenoDelPortafolio();
+        allow create: if duenoDelPortafolio() && verificado() && versionValida();
+        allow delete: if esDueno(resource.data.userId);
+      }
     }
 
     match /{document=**} {

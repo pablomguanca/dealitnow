@@ -1,5 +1,7 @@
 // Estudio de diseño visual: plantillas por rubro, temas cromáticos, decoraciones SVG, portadas, estilos de bloques, tipografías y escalas.
 
+import { FUENTES_TITULOS, FUENTES_CUERPO, COMBINACIONES_FUENTES } from '../../modelo.js';
+
 export function DesignStudio() {
   return (
     <details className="paso" open>
@@ -42,6 +44,14 @@ export function DesignStudio() {
             <button type="button" className="plantilla-chip" data-plantilla="audiovisual-eventos">
               <span className="plantilla-chip__rubro">Audiovisual &amp; Foto <em className="insignia-pro">PRO</em></span>
               <span className="plantilla-chip__nombre">Rodaje y Campaña 4K</span>
+            </button>
+            <button type="button" className="plantilla-chip" data-plantilla="gastronomia-eventos">
+              <span className="plantilla-chip__rubro">Gastronomía &amp; Eventos</span>
+              <span className="plantilla-chip__nombre">Catering y Eventos</span>
+            </button>
+            <button type="button" className="plantilla-chip" data-plantilla="coaching-capacitacion">
+              <span className="plantilla-chip__rubro">Educación &amp; Coaching <em className="insignia-pro">PRO</em></span>
+              <span className="plantilla-chip__nombre">Coaching y Capacitación</span>
             </button>
           </div>
           </div>
@@ -136,6 +146,34 @@ export function DesignStudio() {
               <span className="tema-card__nombre">Océano Vivo</span>
               <span className="tema-card__sub">Fluido &amp; Creativo</span>
             </button>
+            <button type="button" className="tema-card" data-tema="terracota">
+              <div className="tema-card__muestra"><span style={{ background: '#FBF5EF', border: '1px solid #E2C9B3' }}></span><span style={{ background: '#C2410C' }}></span><span style={{ background: '#2B1A12' }}></span></div>
+              <span className="tema-card__nombre">Terracota</span>
+              <span className="tema-card__sub">Arcilla &amp; Crema</span>
+            </button>
+            <button type="button" className="tema-card" data-tema="salvia">
+              <div className="tema-card__muestra"><span style={{ background: '#F4F6F1', border: '1px solid #C9D5C3' }}></span><span style={{ background: '#4D7C5B' }}></span><span style={{ background: '#1F2A22' }}></span></div>
+              <span className="tema-card__nombre">Salvia</span>
+              <span className="tema-card__sub">Calma &amp; Verde</span>
+            </button>
+            <button type="button" className="tema-card" data-tema="medianoche">
+              <span className="tema-card__badge">PRO</span>
+              <div className="tema-card__muestra"><span style={{ background: '#0B1020' }}></span><span style={{ background: '#F59E0B' }}></span><span style={{ background: '#F8FAFC' }}></span></div>
+              <span className="tema-card__nombre">Medianoche</span>
+              <span className="tema-card__sub">Ámbar Nocturno</span>
+            </button>
+            <button type="button" className="tema-card" data-tema="grafito-lima">
+              <span className="tema-card__badge">PRO</span>
+              <div className="tema-card__muestra"><span style={{ background: '#111113' }}></span><span style={{ background: '#A3E635' }}></span><span style={{ background: '#F4F4F5' }}></span></div>
+              <span className="tema-card__nombre">Grafito</span>
+              <span className="tema-card__sub">Negro &amp; Lima</span>
+            </button>
+            <button type="button" className="tema-card" data-tema="rosa-editorial">
+              <span className="tema-card__badge">PRO</span>
+              <div className="tema-card__muestra"><span style={{ background: '#FFF6F8', border: '1px solid #EEC2CF' }}></span><span style={{ background: '#BE185D' }}></span><span style={{ background: '#2A0F1C' }}></span></div>
+              <span className="tema-card__nombre">Rosa Editorial</span>
+              <span className="tema-card__sub">Moda &amp; Lifestyle</span>
+            </button>
           </div>
 
           <h3 className="separador-campos">Decoración gráfica</h3>
@@ -188,6 +226,18 @@ export function DesignStudio() {
               <svg viewBox="0 0 36 24" aria-hidden="true"><path d="M2 2h32v11L2 16z" fill="currentColor" opacity="0.3"/><rect x="5" y="7" width="22" height="4" fill="currentColor"/><rect x="5" y="18" width="8" height="3.5" fill="currentColor" opacity="0.4"/><rect x="15" y="18" width="8" height="3.5" fill="currentColor" opacity="0.4"/></svg>
               <span>Impacto</span>
             </button>
+            <button type="button" className="opcion-visual" data-portada="tarjeta">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="2" y="2" width="32" height="20" rx="2" fill="currentColor" opacity="0.12"/><rect x="7" y="6" width="22" height="12" rx="2.5" fill="none" stroke="currentColor" strokeWidth="1.1"/><rect x="10" y="9.5" width="14" height="2.5" fill="currentColor"/><rect x="10" y="14" width="8" height="1.3" fill="currentColor" opacity="0.5"/></svg>
+              <span>Tarjeta</span>
+            </button>
+            <button type="button" className="opcion-visual" data-portada="franja">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="2" y="2" width="32" height="3" fill="currentColor"/><rect x="5" y="9" width="20" height="4" fill="currentColor"/><path d="M5 19h26M14 17v4M23 17v4" stroke="currentColor" strokeWidth="0.8" opacity="0.5"/></svg>
+              <span>Franja</span>
+            </button>
+            <button type="button" className="opcion-visual" data-portada="minimal">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="5" y="8" width="26" height="5" fill="currentColor"/><line x1="5" y1="17" x2="31" y2="17" stroke="currentColor" strokeWidth="0.6" opacity="0.5"/></svg>
+              <span>Minimal</span>
+            </button>
           </div>
 
           <h3 className="separador-campos">Estilo de bloques y servicios</h3>
@@ -208,6 +258,26 @@ export function DesignStudio() {
               <svg viewBox="0 0 36 24" aria-hidden="true"><line x1="5" y1="4" x2="5" y2="20" stroke="currentColor" strokeWidth="2.5"/><line x1="10" y1="7" x2="30" y2="7" stroke="currentColor" strokeWidth="2"/><line x1="10" y1="13" x2="26" y2="13" stroke="currentColor" strokeWidth="1.2" opacity="0.5"/><line x1="10" y1="17" x2="28" y2="17" stroke="currentColor" strokeWidth="1.2" opacity="0.5"/></svg>
               <span>Lateral</span>
             </button>
+            <button type="button" className="opcion-visual" data-estilo="contorno">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="3" y="3.5" width="30" height="7.5" rx="3.5" fill="none" stroke="currentColor" strokeWidth="1.2"/><rect x="3" y="13" width="30" height="7.5" rx="3.5" fill="none" stroke="currentColor" strokeWidth="1.2"/></svg>
+              <span>Contorno</span>
+            </button>
+            <button type="button" className="opcion-visual" data-estilo="suave">
+              <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="3" y="3.5" width="30" height="7.5" rx="3" fill="currentColor" opacity="0.25"/><rect x="3" y="13" width="30" height="7.5" rx="3" fill="currentColor" opacity="0.25"/></svg>
+              <span>Suave</span>
+            </button>
+          </div>
+
+          <h3 className="separador-campos">Combinaciones de tipografía</h3>
+          <p className="campo__ayuda">Títulos y texto que combinan bien. Después podés cambiar cada una por separado.</p>
+          <div className="combinaciones" id="combinaciones-grid">
+            {COMBINACIONES_FUENTES.map(c => (
+              <button type="button" className="combinacion" data-combinacion={c.id} key={c.id}>
+                <span className="combinacion__muestra" style={{ fontFamily: `'${c.titulos}', serif` }}>Aa</span>
+                <span className="combinacion__nombre">{c.nombre}</span>
+                <span className="combinacion__fuentes" style={{ fontFamily: `'${c.cuerpo}', sans-serif` }}>{c.titulos} + {c.cuerpo}</span>
+              </button>
+            ))}
           </div>
 
           <div className="personalizar-cabecera">
@@ -260,32 +330,13 @@ export function DesignStudio() {
             <label className="campo">
               <span className="campo__etiqueta">Tipografía de títulos</span>
               <select className="control" id="tema-fuente-titulos">
-                <option>Bebas Neue</option>
-                <option>Playfair Display</option>
-                <option>Poppins</option>
-                <option>Oswald</option>
-                <option>Raleway</option>
-                <option>Inter</option>
-                <option>DM Sans</option>
-                <option>Space Grotesk</option>
-                <option>Outfit</option>
-                <option>Sora</option>
-                <option>Archivo Black</option>
+                {FUENTES_TITULOS.map(f => <option key={f}>{f}</option>)}
               </select>
             </label>
             <label className="campo">
               <span className="campo__etiqueta">Tipografía de cuerpo</span>
               <select className="control" id="tema-fuente-cuerpo">
-                <option>Montserrat</option>
-                <option>Inter</option>
-                <option>Open Sans</option>
-                <option>Lato</option>
-                <option>Source Sans 3</option>
-                <option>DM Sans</option>
-                <option>Nunito</option>
-                <option>Work Sans</option>
-                <option>Rubik</option>
-                <option>IBM Plex Sans</option>
+                {FUENTES_CUERPO.map(f => <option key={f}>{f}</option>)}
               </select>
             </label>
             <label className="campo">

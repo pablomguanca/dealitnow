@@ -1,18 +1,24 @@
-// Punto de entrada de React 18 + React Router v6 para Dealit.
+// Punto de entrada de Dealit. Según la URL carga una de dos apps, cada una en su propio
+// paquete: la vista del cliente (links /p/…, /portafolio/…, #p=…, #f=…), liviana para
+// que la propuesta abra rápido en el celular, o la app del dueño.
 
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
 import './styles/styles.scss';
-import { App } from './App.jsx';
+import { tipoLinkCliente } from './lib/links-cliente.js';
+import { aplicarModoApp } from './lib/modo-app.js';
 
 const contenedor = document.getElementById('root');
 if (contenedor) {
-  createRoot(contenedor).render(
-    <StrictMode>
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </StrictMode>
-  );
+  const esCliente = !!tipoLinkCliente();
+  // El modo oscuro es solo de la app del dueño; se aplica antes de dibujar para que no parpadee.
+  if (!esCliente) aplicarModoApp();
+  const modulo = esCliente ? import('./ClienteApp.jsx') : import('./App.jsx');
+  modulo.then(({ default: Raiz }) => {
+    createRoot(contenedor).render(
+      <StrictMode>
+        <Raiz />
+      </StrictMode>
+    );
+  });
 }
