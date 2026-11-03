@@ -3010,7 +3010,7 @@ export const inicializarControladorDealit = () => {
   // lo que falte (como el logo), de la última propuesta editada.
   const nuevaPropuesta = base => {
     cerrarEdicion();
-    const nueva = base || vacio();
+    const nueva = base ? normalizar(base) : vacio();
     if (!base) {
       const ultima = propuestas[0]?.payload ? normalizar(propuestas[0].payload).emisor : null;
       const guardados = { ...perfil?.emisor };
@@ -3127,7 +3127,7 @@ export const inicializarControladorDealit = () => {
   const iniciarSinCuenta = () => {
     document.body.classList.add('sin-cuenta');
     portafolios = cargarPortafoliosLocales();
-    estado = cargarGuardado() || ejemplo();
+    estado = cargarGuardado() || normalizar(ejemplo());
     llenarFormulario();
     renderDocumento();
     actualizarAvisoPagos();
@@ -3201,7 +3201,7 @@ export const inicializarControladorDealit = () => {
     portafolios = cargarPortafoliosLocales();
     const guardada = cargarGuardado();
     invitadoEdito = !!guardada;
-    estado = guardada || ejemplo();
+    estado = guardada || normalizar(ejemplo());
     seleccion = new Set();
     llenarFormulario();
     renderDocumento();
