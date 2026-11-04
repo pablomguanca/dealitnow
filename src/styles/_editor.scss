@@ -1,9 +1,49 @@
 // Layout de la aplicación (.app), formulario por pasos (.editor) y controles del visor (.visor)
 
+// El ancho del editor es una medida fija (no minmax) para que la columna se pueda animar
+// al ocultarla.
+$ancho-editor: clamp(340px, 32vw, 440px);
+
 .app {
   display: grid;
-  grid-template-columns: minmax(340px, 440px) 1fr;
+  grid-template-columns: $ancho-editor 1fr;
   min-height: 0;
+  transition: grid-template-columns 0.38s var(--ease-out-expo);
+}
+
+@media (min-width: 901px) {
+  .app--sin-editor {
+    grid-template-columns: 0px 1fr;
+
+    .editor {
+      visibility: hidden;
+      border-right-width: 0;
+      transition: visibility 0s 0.38s;
+    }
+
+    .visor__alternar-flecha {
+      transform: scaleX(-1);
+      transform-origin: 9.7px 8px;
+    }
+  }
+
+  // Mientras se cierra, el contenido no se aplasta: la columna lo va tapando.
+  .editor__cuerpo,
+  .hoja__cabecera {
+    width: $ancho-editor;
+  }
+}
+
+@media (max-width: 900px) {
+  .visor__alternar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app {
+    transition: none;
+  }
 }
 // El scroll va en .editor__cuerpo: en celular la cabecera de la hoja queda fija arriba.
 .editor {

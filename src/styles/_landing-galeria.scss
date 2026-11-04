@@ -549,3 +549,92 @@
     display: none;
   }
 }
+
+/* Fotos de un proyecto cuando tiene varias: todas visibles (grilla, mosaico o carrusel) */
+.proyecto-fotos {
+  display: grid;
+  gap: 0.5em;
+  margin-bottom: 1.1em;
+
+  &__item {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radio-m);
+    border: 1px solid var(--d-linea);
+    background: var(--d-panel);
+
+    &[data-lightbox-src] {
+      cursor: zoom-in;
+    }
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.5s var(--ease-out-expo);
+    }
+
+    &:hover img {
+      transform: scale(1.03);
+    }
+  }
+
+  // Grilla pareja: todas del mismo tamaño. De a dos con 2 o 4 fotos y de a tres con 3;
+  // con más, de a tres si hay lugar.
+  &--grilla {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    &[data-cantidad="3"] {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  // Mosaico: filas de altura fija y la primera foto ocupando dos lugares.
+  &--mosaico {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-auto-rows: 7.5em;
+    grid-auto-flow: dense;
+
+    .proyecto-fotos__item:first-child {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+
+    &[data-cantidad="2"] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-auto-rows: 12em;
+
+      .proyecto-fotos__item:first-child {
+        grid-column: auto;
+        grid-row: auto;
+      }
+    }
+  }
+
+  // Carrusel: se desliza con el dedo, cada foto casi a todo el ancho.
+  &--carrusel {
+    display: flex;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    padding-bottom: 0.3em;
+
+    .proyecto-fotos__item {
+      flex: 0 0 82%;
+      scroll-snap-align: start;
+    }
+  }
+}
+
+@container (min-width: 40em) {
+  .proyecto-fotos--grilla:not([data-cantidad="2"]):not([data-cantidad="3"]):not([data-cantidad="4"]) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proyecto-fotos__item img {
+    transition: none;
+  }
+}

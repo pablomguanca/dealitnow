@@ -142,12 +142,31 @@ const TPL_PROYECTOS = `<div class="item">
         <input class="control" type="text" data-item-pf="textoEnlace" placeholder="Ver proyecto">
       </label>
       <label class="campo">
-        <span class="campo__etiqueta">Formato de imagen</span>
+        <span class="campo__etiqueta">Tamaño y formato de las fotos</span>
         <select class="control" data-item-pf="proporcion">
           <option value="panoramica">Panorámica (16:9)</option>
           <option value="cuadrada">Cuadrada (1:1)</option>
           <option value="vertical">Vertical (4:5)</option>
           <option value="natural">Proporción original</option>
+        </select>
+      </label>
+      <label class="campo">
+        <span class="campo__etiqueta">Cómo se muestran si hay varias</span>
+        <select class="control" data-item-pf="disposicionFotos">
+          <option value="grilla">Grilla pareja (todas del mismo tamaño)</option>
+          <option value="mosaico">Mosaico</option>
+          <option value="carrusel">Carrusel deslizable</option>
+          <option value="destacada">Una destacada y miniaturas</option>
+        </select>
+      </label>
+      <label class="campo">
+        <span class="campo__etiqueta">Encuadre (qué parte se ve)</span>
+        <select class="control" data-item-pf="encuadre">
+          <option value="centro">Centro</option>
+          <option value="arriba">Arriba</option>
+          <option value="abajo">Abajo</option>
+          <option value="izquierda">Izquierda</option>
+          <option value="derecha">Derecha</option>
         </select>
       </label>
       <div class="campo">
@@ -198,6 +217,16 @@ const TPL_GALERIA = `<div class="item">
           <option value="cuadrada">Cuadrada (1:1)</option>
           <option value="vertical">Vertical (4:5)</option>
           <option value="natural">Original</option>
+        </select>
+      </label>
+      <label class="campo">
+        <span class="campo__etiqueta">Encuadre (qué parte se ve)</span>
+        <select class="control" data-item="encuadre" data-item-pf="encuadre">
+          <option value="centro">Centro</option>
+          <option value="arriba">Arriba</option>
+          <option value="abajo">Abajo</option>
+          <option value="izquierda">Izquierda</option>
+          <option value="derecha">Derecha</option>
         </select>
       </label>
       <label class="campo">

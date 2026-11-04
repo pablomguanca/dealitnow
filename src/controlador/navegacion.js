@@ -5,7 +5,7 @@ import { $, $$ } from '../lib/formato.js';
 import { ctx, nube } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { avisar } from './avisos.js';
-import { esModoOscuro, guardarModoApp, seguirModoDelSistema } from '../lib/modo-app.js';
+import { esModoOscuro, guardarModoApp } from '../lib/modo-app.js';
 import { hayCambiosSinEnviar, guardarAhora } from './guardado.js';
 import { irAlPanel, abrirPropuesta, volverAEditorPropuestaInvitado } from './propuestas.js';
 import { irAPortafolios, abrirPortafolio } from './portafolios.js';
@@ -114,13 +114,12 @@ const conLink = fn => (boton, ev) => {
   fn();
 };
 
-const pintarInterruptorModo = () => {
-  $('#menu-modo-oscuro')?.setAttribute('aria-checked', String(esModoOscuro()));
+const pintarInterruptorModo = (oscuro = esModoOscuro()) => {
+  $('#menu-modo-oscuro')?.setAttribute('aria-checked', String(oscuro));
 };
 
 export const instalarNavegacion = () => {
   pintarInterruptorModo();
-  seguirModoDelSistema(pintarInterruptorModo);
 
   // Clic fuera del menú lo cierra, y elegir una de sus opciones también (abrirlo y
   // cerrarlo tienen su propia acción). Corre antes de que se despache la acción.
@@ -173,9 +172,13 @@ export const instalarNavegacion = () => {
       if (!nube()) return;
       conLink(() => irACuenta())(boton, ev);
     },
-    'alternar-modo': () => {
-      guardarModoApp(esModoOscuro() ? 'claro' : 'oscuro');
-      pintarInterruptorModo();
+    // El modo nuevo se abre desde el interruptor que se tocó.
+    'alternar-modo': boton => {
+      const r = boton.getBoundingClientRect();
+      const oscuro = !esModoOscuro();
+      // Con View Transitions el modo se aplica un instante después: el interruptor se pinta ya.
+      guardarModoApp(oscuro ? 'oscuro' : 'claro', { x: r.left + r.width / 2, y: r.top + r.height / 2 });
+      pintarInterruptorModo(oscuro);
     },
     'contacto-demo': () => avisar('En tu portfolio compartido, este botón abre WhatsApp o email directo para contratarte.')
   });

@@ -72,6 +72,25 @@ export const PROPORCIONES_IMAGEN = {
   natural: { nombre: 'Proporción original', ratio: 'auto' }
 };
 
+// Cómo se muestran las fotos de un proyecto del portfolio cuando tiene más de una.
+export const DISPOSICIONES_FOTOS = {
+  grilla: { nombre: 'Grilla pareja (todas del mismo tamaño)' },
+  mosaico: { nombre: 'Mosaico' },
+  carrusel: { nombre: 'Carrusel deslizable' },
+  destacada: { nombre: 'Una destacada y miniaturas' }
+};
+
+// Qué parte de la foto se ve cuando se recorta al formato elegido (object-position).
+export const ENCUADRES_IMAGEN = {
+  centro: { nombre: 'Centro', css: 'center' },
+  arriba: { nombre: 'Arriba', css: 'center top' },
+  abajo: { nombre: 'Abajo', css: 'center bottom' },
+  izquierda: { nombre: 'Izquierda', css: 'left center' },
+  derecha: { nombre: 'Derecha', css: 'right center' }
+};
+const encuadreValido = v => (ENCUADRES_IMAGEN[v] ? v : 'centro');
+const disposicionValida = v => (DISPOSICIONES_FOTOS[v] ? v : 'grilla');
+
 export const LAYOUTS_GALERIA = {
   grilla: { nombre: 'Grilla uniforme (2 columnas)' },
   bento: { nombre: 'Mosaico Bento (destaca la 1ª foto)' },
@@ -213,7 +232,7 @@ export const LISTAS = {
   servicios: { ruta: 'servicios', nombre: 'servicio', nuevo: () => ({ id: uid(), nombre: '', modalidad: 'unico', cantidad: 1, precio: 0, descripcion: '', entregables: '', opcional: false, imagen: '' }) },
   etapas: { ruta: 'etapas', nombre: 'etapa', nuevo: () => ({ id: uid(), nombre: '', duracion: '', descripcion: '' }) },
   pagos: { ruta: 'inversion.pagos', nombre: 'pago', nuevo: () => ({ id: uid(), concepto: '', porcentaje: 0 }) },
-  galeria: { ruta: 'galeria', nombre: 'foto', nuevo: () => ({ id: uid(), imagen: '', titulo: '', descripcion: '', proporcion: 'panoramica' }) },
+  galeria: { ruta: 'galeria', nombre: 'foto', nuevo: () => ({ id: uid(), imagen: '', titulo: '', descripcion: '', proporcion: 'panoramica', encuadre: 'centro' }) },
   testimonios: { ruta: 'testimonios', nombre: 'testimonio', nuevo: () => ({ id: uid(), texto: '', autor: '', rol: '', avatar: '' }) },
   faqs: { ruta: 'faqs', nombre: 'pregunta', nuevo: () => ({ id: uid(), pregunta: '', respuesta: '' }) }
 };
@@ -873,6 +892,7 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
     g.titulo = texto(g.titulo);
     g.descripcion = texto(g.descripcion);
     g.proporcion = PROPORCIONES_IMAGEN[g.proporcion] ? g.proporcion : 'panoramica';
+    g.encuadre = encuadreValido(g.encuadre);
     g.imagen = logoValido(texto(g.imagen)) ? texto(g.imagen) : '';
   });
   n.testimonios.forEach(t => {
@@ -934,6 +954,8 @@ export const LISTAS_PORTAFOLIO = {
       imagen: '',
       galeria: [],
       proporcion: 'panoramica',
+      disposicionFotos: 'grilla',
+      encuadre: 'centro',
       enlace: '',
       textoEnlace: 'Ver proyecto'
     })
@@ -946,7 +968,7 @@ export const LISTAS_PORTAFOLIO = {
   galeria: {
     ruta: 'galeria',
     nombre: 'foto',
-    nuevo: () => ({ id: uid(), imagen: '', titulo: '', descripcion: '', proporcion: 'panoramica' })
+    nuevo: () => ({ id: uid(), imagen: '', titulo: '', descripcion: '', proporcion: 'panoramica', encuadre: 'centro' })
   },
   serviciosWeb: {
     ruta: 'serviciosWeb',
@@ -1463,6 +1485,8 @@ export const normalizarResumenPortafolio = (datos, { logoValido = logo => /^data
           imagen: logoValido(texto(x.imagen)) ? texto(x.imagen) : '',
           galeria: Array.isArray(x.galeria) ? x.galeria.map(img => texto(img)).filter(img => logoValido(img)).slice(0, 8) : [],
           proporcion: PROPORCIONES_IMAGEN[x.proporcion] ? x.proporcion : 'panoramica',
+          disposicionFotos: disposicionValida(x.disposicionFotos),
+          encuadre: encuadreValido(x.encuadre),
           enlace: texto(x.enlace),
           textoEnlace: texto(x.textoEnlace) || 'Ver proyecto'
         }))
@@ -1475,7 +1499,8 @@ export const normalizarResumenPortafolio = (datos, { logoValido = logo => /^data
           imagen: texto(g.imagen),
           titulo: texto(g.titulo),
           descripcion: texto(g.descripcion),
-          proporcion: PROPORCIONES_IMAGEN[g.proporcion] ? g.proporcion : 'panoramica'
+          proporcion: PROPORCIONES_IMAGEN[g.proporcion] ? g.proporcion : 'panoramica',
+          encuadre: encuadreValido(g.encuadre)
         }))
     : [];
   return {
@@ -1552,6 +1577,8 @@ export const normalizarPortafolio = (datos, { logoValido = logo => /^data:image\
     });
     if (!p.textoEnlace.trim()) p.textoEnlace = 'Ver proyecto';
     p.proporcion = PROPORCIONES_IMAGEN[p.proporcion] ? p.proporcion : 'panoramica';
+    p.disposicionFotos = disposicionValida(p.disposicionFotos);
+    p.encuadre = encuadreValido(p.encuadre);
     p.imagen = logoValido(texto(p.imagen)) ? texto(p.imagen) : '';
     p.galeria = Array.isArray(p.galeria)
       ? p.galeria.map(img => texto(img)).filter(img => logoValido(img)).slice(0, 8)
@@ -1561,6 +1588,7 @@ export const normalizarPortafolio = (datos, { logoValido = logo => /^data:image\
     g.titulo = texto(g.titulo);
     g.descripcion = texto(g.descripcion);
     g.proporcion = PROPORCIONES_IMAGEN[g.proporcion] ? g.proporcion : 'panoramica';
+    g.encuadre = encuadreValido(g.encuadre);
     g.imagen = logoValido(texto(g.imagen)) ? texto(g.imagen) : '';
   });
   n.serviciosWeb.forEach(s => {

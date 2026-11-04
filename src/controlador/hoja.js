@@ -55,8 +55,26 @@ const irASeccion = (indice, boton) => {
   cuerpo.scrollTo({ top: destino, behavior: 'smooth' });
 };
 
+// En escritorio el editor se puede ocultar para ver el documento a todo el ancho.
+const CLAVE_EDITOR_OCULTO = 'dealit-editor-oculto';
+const ocultarEditor = oculto => {
+  $('#app')?.classList.toggle('app--sin-editor', oculto);
+  const boton = $('#alternar-editor');
+  if (boton) {
+    const texto = oculto ? 'Mostrar el editor' : 'Ocultar el editor';
+    boton.setAttribute('aria-expanded', String(!oculto));
+    boton.setAttribute('aria-label', texto);
+    boton.title = texto;
+  }
+  try { localStorage.setItem(CLAVE_EDITOR_OCULTO, oculto ? '1' : ''); } catch { }
+};
+const editorOcultoGuardado = () => {
+  try { return localStorage.getItem(CLAVE_EDITOR_OCULTO) === '1'; } catch { return false; }
+};
+
 export const instalarHoja = () => {
   fijarHoja(altura);
+  ocultarEditor(editorOcultoGuardado());
 
   // Arrastrar la cabecera sube o baja la hoja; un toque en la manija la abre o la cierra.
   const cabecera = $('#hoja-cabecera');
@@ -90,6 +108,7 @@ export const instalarHoja = () => {
   });
 
   registrarAcciones({
-    'hoja-seccion': boton => irASeccion(Number(boton.dataset.indice), boton)
+    'hoja-seccion': boton => irASeccion(Number(boton.dataset.indice), boton),
+    'alternar-editor': () => ocultarEditor(!$('#app').classList.contains('app--sin-editor'))
   });
 };

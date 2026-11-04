@@ -126,3 +126,18 @@ textarea {
   --velo: rgba(0, 0, 0, 0.62);
   --sombra-menu: 0 1rem 2.5rem rgba(0, 0, 0, 0.45);
 }
+
+// Cambio de modo claro / oscuro (ver src/lib/modo-app.js). Con View Transitions el modo
+// nuevo se abre en círculo sobre el viejo; sin ellas, los colores pasan con un fundido.
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+.cambiando-modo,
+.cambiando-modo *,
+.cambiando-modo *::before,
+.cambiando-modo *::after {
+  transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease, box-shadow 0.4s ease !important;
+}

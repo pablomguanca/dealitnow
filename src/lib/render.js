@@ -12,6 +12,8 @@ import {
 import {
   PROPORCIONES_IMAGEN,
   LAYOUTS_GALERIA,
+  DISPOSICIONES_FOTOS,
+  ENCUADRES_IMAGEN,
   totalServicio,
   calcularTotales
 } from '../modelo.js';
@@ -132,11 +134,12 @@ export const galeriaSeccionHTML = (fotos = [], opciones = {}, web = true) => {
   const sub = opciones.galeriaSubtitulo?.trim() ? `<p class="galeria-subtitulo">${esc(opciones.galeriaSubtitulo.trim())}</p>` : '';
   const items = validas.map((g, idx) => {
     const prop = PROPORCIONES_IMAGEN[g.proporcion] ? g.proporcion : propDef;
+    const encuadreGal = (ENCUADRES_IMAGEN[g.encuadre] || ENCUADRES_IMAGEN.centro).css;
     const cap = [g.titulo?.trim(), g.descripcion?.trim()].filter(Boolean).join(' — ');
     return `
       <figure class="galeria-item">
         <div class="galeria-item__media media-ratio--${esc(prop)}"${usaLightbox ? ` data-lightbox-src="${esc(g.imagen)}" data-lightbox-caption="${esc(cap)}" data-lightbox-group="galeria"` : ''}>
-          <img src="${esc(g.imagen)}" alt="${esc(g.titulo?.trim() || `Imagen ${idx + 1}`)}">
+          <img src="${esc(g.imagen)}" alt="${esc(g.titulo?.trim() || `Imagen ${idx + 1}`)}" style="object-position:${esc(encuadreGal)}">
         </div>
         ${(g.titulo?.trim() || g.descripcion?.trim()) ? `
           <figcaption class="galeria-item__pie">
@@ -191,10 +194,24 @@ export const proyectoCardHTML = (p, idx, web, lightbox = true) => {
   const grupoLb = `proy-${p.id || idx}`;
   const usaLb = web && lightbox;
   const capBase = [p.titulo?.trim(), p.subtitulo?.trim(), p.destacado?.trim()].filter(Boolean).join(' · ');
+  const encuadre = (ENCUADRES_IMAGEN[p.encuadre] || ENCUADRES_IMAGEN.centro).css;
+  const disposicion = DISPOSICIONES_FOTOS[p.disposicionFotos] ? p.disposicionFotos : 'grilla';
+  // Con varias fotos y una disposición que no sea «destacada», se ven todas por igual.
+  const variasVisibles = todasLasFotos.length > 1 && disposicion !== 'destacada';
+  const atributosLb = (src, i) => (usaLb
+    ? ` data-lightbox-src="${esc(src)}" data-lightbox-caption="${esc(capBase ? `${capBase} (${i + 1}/${todasLasFotos.length})` : '')}" data-lightbox-group="${esc(grupoLb)}"`
+    : '');
 
-  const media = imagenPrincipal
+  const fotosVisibles = variasVisibles
+    ? `<div class="proyecto-fotos proyecto-fotos--${esc(disposicion)}" data-cantidad="${Math.min(todasLasFotos.length, 9)}">${todasLasFotos.map((src, i) => `
+        <div class="proyecto-fotos__item${disposicion === 'mosaico' ? '' : ` media-ratio--${esc(prop)}`}"${atributosLb(src, i)}>
+          <img src="${esc(src)}" alt="${esc(`${p.titulo || 'Proyecto'} — foto ${i + 1}`)}" style="object-position:${esc(encuadre)}" loading="lazy">
+        </div>`).join('')}</div>`
+    : '';
+
+  const media = fotosVisibles || (imagenPrincipal
     ? `<div class="proyecto-card__media media-ratio--${esc(prop)}"${usaLb ? ` data-lightbox-src="${esc(imagenPrincipal)}" data-lightbox-caption="${esc(capBase)}" data-lightbox-group="${esc(grupoLb)}"` : ''}>
-        <img src="${esc(imagenPrincipal)}" alt="${esc(p.titulo || 'Proyecto')}">
+        <img src="${esc(imagenPrincipal)}" alt="${esc(p.titulo || 'Proyecto')}" style="object-position:${esc(encuadre)}">
         ${todasLasFotos.length > 1 ? `<span class="proyecto-card__contador-fotos">${todasLasFotos.length} fotos</span>` : ''}
       </div>`
     : `<div class="proyecto-card__arte" aria-hidden="true">
@@ -203,12 +220,12 @@ export const proyectoCardHTML = (p, idx, web, lightbox = true) => {
           ${p.destacado.trim() ? `<span class="proyecto-card__destacado">${esc(p.destacado.trim())}</span>` : ''}
         </div>
         <span class="proyecto-card__arte-titular">${esc(p.titulo.trim() || 'Proyecto destacado')}</span>
-      </div>`;
+      </div>`);
 
-  const tiraExtras = extras.length
+  const tiraExtras = extras.length && !variasVisibles
     ? `<div class="proyecto-card__tira">${extras.map((imgUrl, iEx) => `
         <button type="button" class="proyecto-card__mini"${usaLb ? ` data-lightbox-src="${esc(imgUrl)}" data-lightbox-caption="${esc(capBase ? `${capBase} (${iEx + 2}/${todasLasFotos.length})` : '')}" data-lightbox-group="${esc(grupoLb)}"` : ''} aria-label="Ver foto ${iEx + 2} de ${esc(p.titulo || 'proyecto')}">
-          <img src="${esc(imgUrl)}" alt="">
+          <img src="${esc(imgUrl)}" alt="" style="object-position:${esc(encuadre)}">
         </button>`).join('')}</div>`
     : '';
 
