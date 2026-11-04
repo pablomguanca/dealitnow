@@ -54,6 +54,9 @@ body.sin-cuenta .solo-cuenta {
 }
 
 .panel {
+  // Posicionado: lo absoluto de adentro (como los campos de archivo ocultos) queda
+  // recortado acá; si no, se ubica respecto del body y estira la página entera.
+  position: relative;
   min-height: 0;
   overflow-y: auto;
   background: var(--negro);
@@ -690,6 +693,9 @@ a.barra__logo {
 }
 
 .cuenta {
+  // Posicionado: lo absoluto de adentro (como los campos de archivo ocultos) queda
+  // recortado acá; si no, se ubica respecto del body y estira la página entera.
+  position: relative;
   min-height: 0;
   overflow-y: auto;
   background: var(--negro);

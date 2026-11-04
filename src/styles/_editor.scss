@@ -55,6 +55,9 @@ $ancho-editor: clamp(340px, 32vw, 440px);
   background: var(--negro);
 
   &__cuerpo {
+    // Posicionado: lo absoluto de adentro (como los campos de archivo ocultos) queda
+    // recortado acá; si no, se ubica respecto del body y estira la página entera.
+    position: relative;
     flex: 1;
     min-height: 0;
     overflow-y: auto;
@@ -415,6 +418,9 @@ $ancho-editor: clamp(340px, 32vw, 440px);
   font-weight: 500;
 }
 .visor {
+  // Posicionado: lo absoluto de adentro (como los campos de archivo ocultos) queda
+  // recortado acá; si no, se ubica respecto del body y estira la página entera.
+  position: relative;
   overflow: auto;
   padding: 0 2rem 4rem;
   background: var(--negro-2);
