@@ -11,6 +11,8 @@ import { llamarApi } from './api.js';
 import { irRuta } from './navegacion.js';
 
 let dejarDeEscuchar = null;
+// El servidor dice si los planes están activos para esta cuenta (interruptor PLANES_ACTIVOS).
+let planesActivos = false;
 
 const precioTexto = periodo => {
   const p = PRECIOS_PRO[periodo];
@@ -20,6 +22,8 @@ const precioTexto = periodo => {
 export const usuarioEsPro = () => esPro(ctx.plan);
 
 const pintarPlan = () => {
+  const tarjeta = $('.tarjeta--plan');
+  if (tarjeta) tarjeta.hidden = !planesActivos;
   const plan = ctx.plan || {};
   const pro = esPro(plan);
   const usados = enviosDelMes(plan);
@@ -45,6 +49,10 @@ const pintarPlan = () => {
 
 export const escucharPlan = () => {
   if (!AteneaDB?.plan) return;
+  llamarApi('/api/plan', {})
+    .then(r => { planesActivos = !!r?.activos; })
+    .catch(() => { planesActivos = false; })
+    .finally(pintarPlan);
   if (dejarDeEscuchar) dejarDeEscuchar();
   dejarDeEscuchar = AteneaDB.plan.escuchar(plan => {
     const eraPro = esPro(ctx.plan);
@@ -56,6 +64,7 @@ export const escucharPlan = () => {
 
 export const reiniciarPlan = () => {
   if (dejarDeEscuchar) { dejarDeEscuchar(); dejarDeEscuchar = null; }
+  planesActivos = false;
   ctx.plan = null;
 };
 
@@ -63,12 +72,14 @@ export const reiniciarPlan = () => {
 const suscribir = async (periodo, boton) => {
   if (boton) boton.disabled = true;
   try {
-    const { url } = await llamarApi('/api/suscripcion', { periodo });
+    // Mercado Pago pide el email de la cuenta con la que se va a pagar (si no, el de Dealit).
+    const emailPago = $('#plan-email-pago')?.value.trim();
+    const { url } = await llamarApi('/api/suscripcion', emailPago ? { periodo, emailPago } : { periodo });
     location.href = url;
   } catch (e) {
     const mensajes = {
       'ya-es-pro': 'Ya tenés Dealit Pro activo.',
-      'email-invalido': 'Necesitamos un email válido en tu cuenta para el pago.',
+      'email-invalido': 'Revisá el email de tu cuenta de Mercado Pago.',
       'mercadopago-rechazo': 'Mercado Pago no pudo iniciar el pago. Probá de nuevo en unos minutos.'
     };
     avisarError(mensajes[e.codigo] || 'No pudimos iniciar el pago. Revisá tu conexión y probá de nuevo.');

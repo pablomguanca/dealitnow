@@ -5,6 +5,8 @@ import { crearHandler as crearActivar } from '../api/activar.js';
 import { crearHandler as crearSuscripcion } from '../api/suscripcion.js';
 import { crearHandler as crearWebhook } from '../api/mercadopago.js';
 import { firmaValida } from '../api/_lib/mercadopago.js';
+import { crearHandler as crearPlan } from '../api/plan.js';
+import { planesActivosPara } from '../api/_lib/planes-activos.js';
 
 const AHORA = new Date('2026-11-15T15:00:00-03:00');
 const MES = '2026-11';
@@ -81,7 +83,12 @@ describe('reglas del plan', () => {
 
 describe('POST /api/activar', () => {
   const propuesta = (cambios = {}) => ({ userId: 'duenio', status: 'draft', publico: false, ...cambios });
-  const activar = (db, uid = 'duenio') => crearActivar({ db, uidDe: async () => uid, ahora: () => AHORA });
+  const activar = (db, uid = 'duenio', activos = true) => crearActivar({
+    db,
+    sesionDe: async () => (uid ? { uid, email: `${uid}@estudio.com` } : null),
+    planesActivos: () => activos,
+    ahora: () => AHORA
+  });
 
   it('activa el link, la pasa a enviada y cuenta el envío del mes', async () => {
     const { db, datos } = crearDb({ proposals: { [ID]: propuesta() } });
@@ -110,6 +117,15 @@ describe('POST /api/activar', () => {
     expect(datos.planes.duenio.envios[MES]).toBe(LIMITE_ENVIOS_GRATIS);
   });
 
+  it('con los planes apagados cuenta el envío pero no frena', async () => {
+    const { db, datos } = crearDb({ proposals: { [ID]: propuesta() }, planes: { duenio: { envios: { [MES]: LIMITE_ENVIOS_GRATIS } } } });
+    const r = res();
+    await activar(db, 'duenio', false)(post({ id: ID }), r);
+    expect(r.estado).toBe(200);
+    expect(datos.proposals[ID].publico).toBe(true);
+    expect(datos.planes.duenio.envios[MES]).toBe(LIMITE_ENVIOS_GRATIS + 1);
+  });
+
   it('Pro no tiene límite', async () => {
     const { db } = crearDb({ proposals: { [ID]: propuesta() }, planes: { duenio: { tipo: 'pro', estado: 'activa', envios: { [MES]: 40 } } } });
     const r = res();
@@ -133,7 +149,7 @@ describe('POST /api/suscripcion', () => {
     let enviado;
     const mp = { crearSuscripcion: async d => { enviado = d; return { init_point: 'https://mp/pagar' }; } };
     const r = res();
-    await crearSuscripcion({ db, uidDe: async () => 'duenio', mp, urlApp: () => 'https://dealit.test' })(post({ periodo: 'anual' }), r);
+    await crearSuscripcion({ db, sesionDe: async () => ({ uid: 'duenio', email: 'hola@estudio.com' }), planesActivos: () => true, mp, urlApp: () => 'https://dealit.test' })(post({ periodo: 'anual' }), r);
     expect(r.estado).toBe(200);
     expect(r.cuerpo.url).toBe('https://mp/pagar');
     expect(enviado).toMatchObject({ external_reference: 'duenio', payer_email: 'hola@estudio.com', status: 'pending' });
@@ -143,11 +159,37 @@ describe('POST /api/suscripcion', () => {
   it('rechaza períodos desconocidos y a quien ya es Pro', async () => {
     const { db } = crearDb({ users: { duenio: { email: 'a@b.com' } }, planes: { duenio: { tipo: 'pro', estado: 'activa' } } });
     const mp = { crearSuscripcion: async () => ({ init_point: 'x' }) };
-    const h = crearSuscripcion({ db, uidDe: async () => 'duenio', mp, urlApp: () => 'https://x' });
+    const h = crearSuscripcion({ db, sesionDe: async () => ({ uid: 'duenio', email: 'a@b.com' }), planesActivos: () => true, mp, urlApp: () => 'https://x' });
     const r1 = res(); await h(post({ periodo: 'semanal' }), r1);
     expect(r1.estado).toBe(400);
     const r2 = res(); await h(post({ periodo: 'mensual' }), r2);
     expect(r2.estado).toBe(409);
+  });
+});
+
+describe('interruptor de los planes', () => {
+  it('apagado salvo PLANES_ACTIVOS=1 o los emails de prueba', () => {
+    expect(planesActivosPara('a@b.com', {})).toBe(false);
+    expect(planesActivosPara('a@b.com', { PLANES_ACTIVOS: '1' })).toBe(true);
+    expect(planesActivosPara('Yo@Estudio.com', { PLANES_PRUEBA: 'otro@x.com, yo@estudio.com' })).toBe(true);
+    expect(planesActivosPara('', { PLANES_PRUEBA: 'yo@estudio.com' })).toBe(false);
+  });
+
+  it('con los planes apagados no se puede suscribir', async () => {
+    const { db } = crearDb({ users: { duenio: { email: 'a@b.com' } } });
+    const r = res();
+    await crearSuscripcion({ db, sesionDe: async () => ({ uid: 'duenio', email: 'a@b.com' }), planesActivos: () => false, mp: {}, urlApp: () => 'https://x' })(post({ periodo: 'mensual' }), r);
+    expect(r.estado).toBe(403);
+    expect(r.cuerpo.error).toBe('planes-inactivos');
+  });
+
+  it('/api/plan le dice a la app si los planes están activos', async () => {
+    const r = res();
+    await crearPlan({ sesionDe: async () => ({ uid: 'u', email: 'a@b.com' }), planesActivos: () => true })(post({}), r);
+    expect(r.cuerpo).toEqual({ activos: true });
+    const sinSesion = res();
+    await crearPlan({ sesionDe: async () => null, planesActivos: () => true })(post({}), sinSesion);
+    expect(sinSesion.estado).toBe(401);
   });
 });
 

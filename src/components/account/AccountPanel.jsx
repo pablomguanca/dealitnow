@@ -6,7 +6,7 @@ export function AccountPanel() {
   <div className="cuenta__contenido">
     <h1 className="panel__titulo" id="cuenta-titulo">Mi cuenta</h1>
 
-    <section className="tarjeta tarjeta--plan" aria-labelledby="plan-titulo">
+    <section className="tarjeta tarjeta--plan" aria-labelledby="plan-titulo" hidden>
       <div className="tarjeta__cabecera">
         <h2 className="tarjeta__titulo" id="plan-titulo">Tu plan</h2>
         <p className="tarjeta__ayuda" id="plan-estado" role="status">Plan Gratis.</p>
@@ -19,6 +19,10 @@ export function AccountPanel() {
           <li>Sin la marca «Plantilla creada con Dealit»</li>
           <li>Avisos por email cuando tu cliente abre o acepta</li>
         </ul>
+        <label className="campo plan-email">
+          <span className="campo__etiqueta">Email de tu cuenta de Mercado Pago (si es distinto al de Dealit)</span>
+          <input className="control" id="plan-email-pago" type="email" autoComplete="email" maxLength="200" placeholder="El mismo con el que entrás a Mercado Pago" />
+        </label>
         <div className="plan-botones">
           <button type="button" className="boton boton--primario" data-accion="suscribir-pro" data-periodo="anual">
             Pro anual · <span data-precio-pro="anual"></span>

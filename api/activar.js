@@ -1,19 +1,23 @@
 // POST /api/activar { id } — el dueño activa el link de su propuesta. El límite del plan
 // se controla acá: en Gratis, hasta LIMITE_ENVIOS_GRATIS propuestas nuevas por mes.
 // Una propuesta que ya se envió alguna vez se puede volver a activar sin contar de nuevo.
+// Con los planes apagados (ver _lib/planes-activos.js) los envíos se cuentan pero no se frenan.
 import { ID_PROPUESTA } from '../src/aceptacion.js';
 import { LIMITE_ENVIOS_GRATIS, enviosDelMes, esPro, mesDe } from '../src/planes.js';
-import { FieldValue, firestore, uidDeLaSolicitud } from './_lib/firebase-admin.js';
+import { FieldValue, firestore, sesionDeLaSolicitud } from './_lib/firebase-admin.js';
+import { planesActivosPara } from './_lib/planes-activos.js';
 import { ErrorHttp, fallar, leerPost, responder } from './_lib/http.js';
 
-export const crearHandler = ({ db, uidDe, ahora = () => new Date() }) => async (req, res) => {
+export const crearHandler = ({ db, sesionDe, planesActivos, ahora = () => new Date() }) => async (req, res) => {
   const cuerpo = leerPost(req, res);
   if (!cuerpo) return;
   if (typeof cuerpo.id !== 'string' || !ID_PROPUESTA.test(cuerpo.id)) return responder(res, 400, { error: 'id-invalido' });
 
   try {
-    const uid = await uidDe(req);
-    if (!uid) return responder(res, 401, { error: 'sin-sesion' });
+    const sesion = await sesionDe(req);
+    if (!sesion) return responder(res, 401, { error: 'sin-sesion' });
+    const { uid } = sesion;
+    const conLimite = planesActivos(sesion.email);
     const refPropuesta = db().collection('proposals').doc(cuerpo.id);
     const refPlan = db().collection('planes').doc(uid);
     const resultado = await db().runTransaction(async tx => {
@@ -24,7 +28,7 @@ export const crearHandler = ({ db, uidDe, ahora = () => new Date() }) => async (
 
       const plan = snapPlan.exists ? snapPlan.data() : {};
       const momento = ahora();
-      const pro = esPro(plan, momento);
+      const pro = esPro(plan, momento) || !conLimite;
       const usados = enviosDelMes(plan, momento);
       const primeraVez = !doc.enviadaEn;
       if (doc.publico === true) return { primeraVez: false, usados, pro };
@@ -43,4 +47,4 @@ export const crearHandler = ({ db, uidDe, ahora = () => new Date() }) => async (
   }
 };
 
-export default crearHandler({ db: firestore, uidDe: uidDeLaSolicitud });
+export default crearHandler({ db: firestore, sesionDe: sesionDeLaSolicitud, planesActivos: planesActivosPara });

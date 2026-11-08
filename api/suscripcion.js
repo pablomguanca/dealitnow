@@ -2,21 +2,24 @@
 // a Pro en Mercado Pago y devuelve el link donde la persona paga. El plan NO se activa
 // acá: lo activa /api/mercadopago cuando Mercado Pago confirma el pago.
 import { PRECIOS_PRO, esPro } from '../src/planes.js';
-import { firestore, uidDeLaSolicitud } from './_lib/firebase-admin.js';
+import { firestore, sesionDeLaSolicitud } from './_lib/firebase-admin.js';
+import { planesActivosPara } from './_lib/planes-activos.js';
 import { fallar, leerPost, responder } from './_lib/http.js';
 import { crearSuscripcion } from './_lib/mercadopago.js';
 
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
 
-export const crearHandler = ({ db, uidDe, mp, urlApp, ahora = () => new Date() }) => async (req, res) => {
+export const crearHandler = ({ db, sesionDe, planesActivos, mp, urlApp, ahora = () => new Date() }) => async (req, res) => {
   const cuerpo = leerPost(req, res);
   if (!cuerpo) return;
   const precio = PRECIOS_PRO[cuerpo.periodo];
   if (!precio) return responder(res, 400, { error: 'periodo-invalido' });
 
   try {
-    const uid = await uidDe(req);
-    if (!uid) return responder(res, 401, { error: 'sin-sesion' });
+    const sesion = await sesionDe(req);
+    if (!sesion) return responder(res, 401, { error: 'sin-sesion' });
+    if (!planesActivos(sesion.email)) return responder(res, 403, { error: 'planes-inactivos' });
+    const { uid } = sesion;
     const [snapPlan, snapUsuario] = await Promise.all([
       db().collection('planes').doc(uid).get(),
       db().collection('users').doc(uid).get()
@@ -55,4 +58,4 @@ export const crearHandler = ({ db, uidDe, mp, urlApp, ahora = () => new Date() }
 // La URL de vuelta tiene que ser https. En producción conviene fijarla con APP_URL.
 const urlApp = req => process.env.APP_URL || `https://${req.headers?.host || 'dealitnow.vercel.app'}`;
 
-export default crearHandler({ db: firestore, uidDe: uidDeLaSolicitud, mp: { crearSuscripcion }, urlApp });
+export default crearHandler({ db: firestore, sesionDe: sesionDeLaSolicitud, planesActivos: planesActivosPara, mp: { crearSuscripcion }, urlApp });

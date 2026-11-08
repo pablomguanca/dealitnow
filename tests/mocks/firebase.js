@@ -179,6 +179,7 @@ window.fetch = async (url, opciones = {}) => {
     const { contenido, ...resumen } = datos;
     return respuesta(200, { aceptacion: { ...resumen, fecha } });
   }
+  if (ruta === '/api/plan') return respuesta(uid ? 200 : 401, uid ? { activos: true } : { error: 'sin-sesion' });
   if (ruta === '/api/activar') {
     if (!uid) return respuesta(401, { error: 'sin-sesion' });
     if (!doc) return respuesta(404, { error: 'no-existe' });

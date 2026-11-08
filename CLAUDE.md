@@ -68,6 +68,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 - Por eso: verificar en local antes de pushear (`npm run check` y probar en `npm run dev:demo`), y pushear solo cuando el dueño lo pida.
 - Si un cambio necesita publicar reglas o índices de Firebase, avisar y hacerlo **antes** del push.
 - Secretos, solo como variables de entorno en Vercel y nunca en el repo: `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio), `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` (Mercado Pago; primero las de prueba). Opcional: `APP_URL` (URL de vuelta tras pagar).
+- Interruptor de los planes: `PLANES_ACTIVOS=1` prende el límite de Gratis y la oferta de Pro para todos; `PLANES_PRUEBA` (emails separados por coma) los prende solo para esas cuentas. Apagado, los envíos se cuentan pero no se frenan (ver `api/_lib/planes-activos.js`).
 
 ## Planes (freemium, definido el 2026-10-07)
 

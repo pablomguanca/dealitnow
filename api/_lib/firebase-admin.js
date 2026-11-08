@@ -35,12 +35,16 @@ const verificarToken = async token => {
     });
   }
   const { payload } = await verificador(token);
-  return typeof payload.sub === 'string' && payload.sub ? payload.sub : null;
+  if (typeof payload.sub !== 'string' || !payload.sub) return null;
+  return {
+    uid: payload.sub,
+    email: payload.email_verified === true && typeof payload.email === 'string' ? payload.email.toLowerCase() : ''
+  };
 };
 
-// Si quien llama tiene la sesión iniciada, devuelve su uid. Nunca falla: un token
-// inválido o ausente se trata como visitante anónimo.
-export const uidDeLaSolicitud = async req => {
+// Si quien llama tiene la sesión iniciada, devuelve { uid, email } (el email solo si
+// está verificado). Nunca falla: un token inválido o ausente se trata como anónimo.
+export const sesionDeLaSolicitud = async req => {
   const encabezado = req.headers?.authorization || '';
   if (!encabezado.startsWith('Bearer ')) return null;
   try {
@@ -49,3 +53,5 @@ export const uidDeLaSolicitud = async req => {
     return null;
   }
 };
+
+export const uidDeLaSolicitud = async req => (await sesionDeLaSolicitud(req))?.uid || null;
