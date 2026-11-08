@@ -47,12 +47,26 @@ const pintarPlan = () => {
   }
 };
 
+// Pregunta al servidor si los planes están activos para esta cuenta. Si falla (por ejemplo,
+// la función tarda en arrancar justo al iniciar sesión), reintenta una vez; y se vuelve a
+// preguntar cada vez que se entra a Mi cuenta, así un error suelto no deja oculto el plan.
+export const consultarPlanesActivos = async (reintento = true) => {
+  try {
+    const r = await llamarApi('/api/plan', {});
+    planesActivos = !!r?.activos;
+  } catch (e) {
+    console.warn('No se pudo consultar si los planes están activos:', e.codigo || e.message);
+    if (reintento) {
+      await new Promise(listo => setTimeout(listo, 1500));
+      return consultarPlanesActivos(false);
+    }
+  }
+  pintarPlan();
+};
+
 export const escucharPlan = () => {
   if (!AteneaDB?.plan) return;
-  llamarApi('/api/plan', {})
-    .then(r => { planesActivos = !!r?.activos; })
-    .catch(() => { planesActivos = false; })
-    .finally(pintarPlan);
+  consultarPlanesActivos();
   if (dejarDeEscuchar) dejarDeEscuchar();
   dejarDeEscuchar = AteneaDB.plan.escuchar(plan => {
     const eraPro = esPro(ctx.plan);

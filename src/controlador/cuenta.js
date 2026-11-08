@@ -8,6 +8,7 @@ import { registrarAcciones } from './acciones.js';
 import { avisarError, avisarExito } from './avisos.js';
 import { irRuta, mostrarVista, cerrarEdicion } from './navegacion.js';
 import { renderPanel } from './propuestas.js';
+import { consultarPlanesActivos } from './plan.js';
 
 let cuentaEditada = false;
 // Logo y foto del negocio: se suben a Storage y se guardan con «Guardar cambios».
@@ -81,6 +82,7 @@ export const irACuenta = ({ historial = true } = {}) => {
   if (historial && location.pathname !== '/cuenta') irRuta('/cuenta');
   mostrarVista('cuenta');
   if (!cuentaEditada) llenarCuenta();
+  consultarPlanesActivos();
   $('#cuenta').scrollTop = 0;
 };
 
