@@ -12,8 +12,8 @@ export const llamarApi = async (ruta, cuerpo, { keepalive = false } = {}) => {
     keepalive
   });
   if (!respuesta.ok) {
-    const codigo = await respuesta.json().then(r => r.error).catch(() => null);
-    throw Object.assign(new Error(codigo || `HTTP ${respuesta.status}`), { codigo, estado: respuesta.status });
+    const { error: codigo = null, detalle = '' } = await respuesta.json().catch(() => ({}));
+    throw Object.assign(new Error(codigo || `HTTP ${respuesta.status}`), { codigo, detalle, estado: respuesta.status });
   }
   return respuesta.status === 204 ? null : respuesta.json();
 };

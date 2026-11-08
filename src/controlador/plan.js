@@ -80,9 +80,16 @@ const suscribir = async (periodo, boton) => {
     const mensajes = {
       'ya-es-pro': 'Ya tenés Dealit Pro activo.',
       'email-invalido': 'Revisá el email de tu cuenta de Mercado Pago.',
-      'mercadopago-rechazo': 'Mercado Pago no pudo iniciar el pago. Probá de nuevo en unos minutos.'
+      'mercadopago-rechazo': 'Mercado Pago no pudo iniciar el pago.'
     };
-    avisarError(mensajes[e.codigo] || 'No pudimos iniciar el pago. Revisá tu conexión y probá de nuevo.');
+    let mensaje = mensajes[e.codigo] || 'No pudimos iniciar el pago. Revisá tu conexión y probá de nuevo.';
+    if (e.codigo === 'mercadopago-rechazo') {
+      // Vendedor y comprador tienen que ser los dos reales o los dos de prueba.
+      mensaje += /real or test|test users|testuser/i.test(e.detalle)
+        ? ' El email tiene que ser el de una cuenta de Mercado Pago del mismo tipo (en las pruebas, el del comprador de prueba).'
+        : (e.detalle ? ` Motivo: ${e.detalle}` : ' Probá de nuevo en unos minutos.');
+    }
+    avisarError(mensaje, 12000);
     if (boton) boton.disabled = false;
   }
 };

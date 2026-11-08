@@ -49,7 +49,8 @@ export const crearHandler = ({ db, sesionDe, planesActivos, mp, urlApp, ahora = 
   } catch (e) {
     if (e?.estado >= 400 && e?.estado < 500) {
       console.error('Mercado Pago rechazó la suscripción:', e.datos);
-      return responder(res, 502, { error: 'mercadopago-rechazo' });
+      const detalle = String(e.datos?.message || e.datos?.error || '').slice(0, 200);
+      return responder(res, 502, { error: 'mercadopago-rechazo', detalle });
     }
     return fallar(res, e);
   }
