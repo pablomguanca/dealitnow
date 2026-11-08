@@ -48,14 +48,22 @@ service cloud.firestore {
     }
 
     match /proposals/{proposalId} {
-      // Visitas y aceptación: solo las escribe el servidor (api/visto, api/aceptar).
-      function camposDelServidor() { return ['vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion']; }
+      // Visitas, aceptación y primer envío: solo los escribe el servidor
+      // (api/visto, api/aceptar, api/activar).
+      function camposDelServidor() { return ['vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion', 'enviadaEn']; }
+
+      // Activar el link pasa por api/activar, que aplica el límite del plan. El navegador
+      // solo puede desactivarlo.
+      function noActivaElLink() {
+        return request.resource.data.get('publico', false) != true
+          || (resource != null && resource.data.get('publico', false) == true);
+      }
 
       function datosValidos() {
         let d = request.resource.data;
         return d.keys().hasOnly(['userId', 'title', 'clientName', 'amount', 'status',
                                  'theme', 'payload', 'publico', 'createdAt', 'updatedAt',
-                                 'vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion'])
+                                 'vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion', 'enviadaEn'])
           && d.title is string      && d.title.size() <= 200
           && d.clientName is string && d.clientName.size() <= 200
           && d.amount is number
@@ -75,6 +83,7 @@ service cloud.firestore {
         && verificado()
         && datosValidos()
         && !request.resource.data.keys().hasAny(camposDelServidor())
+        && request.resource.data.get('publico', false) != true
         && request.resource.data.createdAt == request.time;
 
       allow update: if esDueno(resource.data.userId)
@@ -82,6 +91,7 @@ service cloud.firestore {
         && request.resource.data.userId    == resource.data.userId
         && request.resource.data.createdAt == resource.data.createdAt
         && !request.resource.data.diff(resource.data).affectedKeys().hasAny(camposDelServidor())
+        && noActivaElLink()
         && datosValidos();
 
       allow delete: if esDueno(resource.data.userId);
@@ -138,6 +148,13 @@ service cloud.firestore {
         allow create: if duenoDelPortafolio() && verificado() && versionValida();
         allow delete: if esDueno(resource.data.userId);
       }
+    }
+
+    // Plan de cada usuario (Gratis / Pro) y envíos del mes: lo escriben solo
+    // api/activar y api/mercadopago. El dueño lo lee para ver su estado.
+    match /planes/{uid} {
+      allow read: if esDueno(uid);
+      allow write: if false;
     }
 
     match /{document=**} {

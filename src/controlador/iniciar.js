@@ -20,6 +20,7 @@ import { instalarPropuestas } from './propuestas.js';
 import { instalarGaleriaPlantillas } from './galeria-plantillas.js';
 import { instalarPortafolios } from './portafolios.js';
 import { instalarCuenta } from './cuenta.js';
+import { instalarPlan } from './plan.js';
 import { instalarSesion, arrancarSesion } from './sesion.js';
 
 export { registrarNavegadorReact } from './navegacion.js';
@@ -49,6 +50,7 @@ export const inicializarControladorDealit = () => {
   instalarGaleriaPlantillas();
   instalarPortafolios();
   instalarCuenta();
+  instalarPlan();
   instalarSesion();
 
   if (!AteneaDB) document.body.classList.remove('auth-cargando');

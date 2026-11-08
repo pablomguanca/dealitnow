@@ -20,6 +20,8 @@ import { avisar, avisarExito, avisarError, confirmar } from './avisos.js';
 import { hayCambiosSinEnviar, guardarAhora, registrarEscritura } from './guardado.js';
 import { abrirRegistro } from './sesion.js';
 import { guardarVersion } from './versiones.js';
+import { llamarApi } from './api.js';
+import { ofrecerPro } from './plan.js';
 
 let linkActual = '';
 
@@ -61,17 +63,24 @@ const conEspera = escritura => Promise.race([escritura, new Promise(res => setTi
 
 // Activa el link corto: la propuesta pasa a ser legible por quien tenga el link
 // y, si era un borrador, queda como enviada.
+// El servidor (api/activar) aplica el límite del plan. Antes se espera a que la propuesta
+// y sus últimos cambios lleguen a la cuenta: el servidor lee lo guardado.
 const activarLink = async () => {
   if (hayCambiosSinEnviar()) guardarAhora();
   const actual = ctx.propuestas.find(p => p.id === ctx.propuestaId);
-  const cambios = { publico: true };
-  if (!actual || !actual.status || actual.status === 'draft') cambios.status = 'sent';
-  if (actual?.publico && !cambios.status) return true;
-  if (cambios.status === 'sent') guardarVersion('enviada');
-  return conEspera(registrarEscritura(
-    AteneaDB.proposals.actualizar(ctx.propuestaId, cambios),
-    'No se pudo activar el link de la propuesta. Revisá tu conexión y probá de nuevo.'
-  ));
+  if (actual?.publico) return true;
+  await conEspera(ctx.ultimaEscritura);
+  try {
+    const { primeraVez } = await llamarApi('/api/activar', { id: ctx.propuestaId });
+    if (primeraVez) guardarVersion('enviada');
+    return true;
+  } catch (e) {
+    if (e.codigo === 'limite-envios') ofrecerPro('limite');
+    else avisarError(navigator.onLine
+      ? 'No se pudo activar el link. Probá de nuevo en unos segundos.'
+      : 'Necesitás conexión a internet para activar el link.');
+    return false;
+  }
 };
 
 const mostrarDialogoCompartir = ({ titulo, mensaje, conCuenta, nota, avisos }) => {
@@ -148,9 +157,7 @@ export const abrirCompartir = async () => {
   const conCuenta = !!(nube() && ctx.propuestaId);
   const avisos = [];
   if (conCuenta) {
-    const activado = await activarLink();
-    if (activado === false) return;
-    if (activado === null) avisos.push('Estás sin conexión: el link empieza a funcionar en cuanto vuelva.');
+    if (!await activarLink()) return;
     linkActual = linkCorto(ctx.propuestaId);
   } else {
     const { datos, logoOmitido } = datosParaLink();

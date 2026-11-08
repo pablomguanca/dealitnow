@@ -374,6 +374,17 @@ const crearAteneaDB = () => {
     }
   };
 
+  // Plan (Gratis / Pro) y envíos del mes: los escribe solo el servidor (api/activar,
+  // api/mercadopago). Acá solo se escucha para mostrar el estado.
+  const escucharPlan = (callback) => {
+    const unsub = onSnapshot(doc(db, 'planes', getUid()), snap => callback(snap.exists() ? snap.data() : {}), err => {
+      console.warn('No se pudo leer el plan:', err);
+      callback({});
+    });
+    _unsubSnapshots.push(unsub);
+    return unsub;
+  };
+
   const _limpiarSuscripciones = () => {
     _unsubSnapshots.forEach(fn => fn());
     _unsubSnapshots = [];
@@ -477,6 +488,7 @@ const crearAteneaDB = () => {
     },
     logos: { subir: subirLogo, prefijoURL: PREFIJO_URL_LOGO },
     versiones: { listar: listarVersiones, crear: crearVersion },
+    plan: { escuchar: escucharPlan },
     perfil: { obtener: obtenerPerfil, guardar: guardarPerfil },
     proposals: {
       nuevoId:    nuevoIdPropuesta,

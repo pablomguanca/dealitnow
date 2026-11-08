@@ -24,6 +24,7 @@ import { escucharPropuestas, reiniciarPanel, irAlPanel, abrirPropuesta, mostrarE
 import { escucharPortafoliosNube, reiniciarPortafolios, irAPortafolios, abrirPortafolio } from './portafolios.js';
 import { cargarPerfil, reiniciarCuenta, irACuenta, pintarAvatar } from './cuenta.js';
 import { abrirCompartir } from './compartir.js';
+import { escucharPlan, reiniciarPlan } from './plan.js';
 
 let invitadoIniciado = false;
 let guardadoParaRegistro = false;
@@ -282,6 +283,7 @@ const limpiarEstadoMemoria = () => {
   reiniciarPanel();
   reiniciarPortafolios();
   reiniciarCuenta();
+  reiniciarPlan();
   ctx.propuestaId = null;
   ctx.portafolioId = null;
   ctx.estado = vacio();
@@ -330,6 +332,7 @@ const iniciarConCuenta = async () => {
   const migrada = migrarLocal();
   escucharPropuestas();
   escucharPortafoliosNube();
+  escucharPlan();
   cargarPerfil();
   // Si se registró desde el editor sin cuenta, sigue donde estaba: con su propuesta
   // abierta y, si quería compartirla o bajar el PDF, haciendo eso.

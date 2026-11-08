@@ -6,6 +6,7 @@
 // Para empezar de cero: localStorage.removeItem('dealit-demo') y recargar.
 import { validarAceptacion } from '../../src/aceptacion.js';
 import { ejemplo } from '../../src/modelo.js';
+import { LIMITE_ENVIOS_GRATIS, enviosDelMes, esPro, mesDe } from '../../src/planes.js';
 
 const CLAVE = 'dealit-demo';
 const ID_DEMO = 'DEMO0000000000000001';
@@ -44,6 +45,14 @@ const comoFirestore = (id, d) => {
   for (const k of FECHAS) if (doc[k]) doc[k] = { toDate: () => new Date(d[k]) };
   if (doc.aceptacion?.fecha) doc.aceptacion.fecha = { toDate: () => new Date(d.aceptacion.fecha) };
   return doc;
+};
+
+// Plan del usuario (lo que en producción es planes/{uid}, escrito solo por el servidor).
+const leerPlan = () => JSON.parse(localStorage.getItem(`${CLAVE}:plan`) || '{}');
+const oyentesPlan = new Set();
+const guardarPlan = plan => {
+  localStorage.setItem(`${CLAVE}:plan`, JSON.stringify(plan));
+  oyentesPlan.forEach(cb => cb(plan));
 };
 
 const leerVersiones = (coleccion, id) => JSON.parse(localStorage.getItem(`${CLAVE}:versiones:${coleccion}:${id}`) || '[]');
@@ -95,6 +104,13 @@ export const AteneaDB = {
     tokenDeSesion: async () => (usuario ? 'token-demo' : null)
   },
   logos: { prefijoURL: 'https://demo.invalid/', subir: async () => { throw new Error('Sin Storage en el modo demo'); } },
+  plan: {
+    escuchar: cb => {
+      oyentesPlan.add(cb);
+      setTimeout(() => cb(leerPlan()), 0);
+      return () => oyentesPlan.delete(cb);
+    }
+  },
   versiones: {
     listar: async (coleccion, id) => leerVersiones(coleccion, id).map(v => comoFirestore(v.id, v)),
     crear: async (coleccion, id, { payload, title, motivo }) => {
@@ -162,6 +178,31 @@ window.fetch = async (url, opciones = {}) => {
     guardar(docs);
     const { contenido, ...resumen } = datos;
     return respuesta(200, { aceptacion: { ...resumen, fecha } });
+  }
+  if (ruta === '/api/activar') {
+    if (!uid) return respuesta(401, { error: 'sin-sesion' });
+    if (!doc) return respuesta(404, { error: 'no-existe' });
+    if (doc.userId !== uid) return respuesta(403, { error: 'ajena' });
+    const plan = leerPlan();
+    const pro = esPro(plan);
+    const usados = enviosDelMes(plan);
+    if (doc.publico === true) return respuesta(200, { primeraVez: false, usados, limite: pro ? null : LIMITE_ENVIOS_GRATIS });
+    const primeraVez = !doc.enviadaEn;
+    if (primeraVez && !pro && usados >= LIMITE_ENVIOS_GRATIS) return respuesta(403, { error: 'limite-envios' });
+    Object.assign(doc, { publico: true, updatedAt: new Date().toISOString() });
+    if (!doc.status || doc.status === 'draft') doc.status = 'sent';
+    if (primeraVez) doc.enviadaEn = new Date().toISOString();
+    guardar(docs);
+    if (primeraVez) guardarPlan({ ...plan, envios: { ...plan.envios, [mesDe()]: usados + 1 } });
+    return respuesta(200, { primeraVez, usados: primeraVez ? usados + 1 : usados, limite: pro ? null : LIMITE_ENVIOS_GRATIS });
+  }
+  // En la demo no hay Mercado Pago: la suscripción se activa en el momento.
+  if (ruta === '/api/suscripcion') {
+    if (!uid) return respuesta(401, { error: 'sin-sesion' });
+    if (!['mensual', 'anual'].includes(cuerpo.periodo)) return respuesta(400, { error: 'periodo-invalido' });
+    const vence = new Date(Date.now() + (cuerpo.periodo === 'anual' ? 365 : 30) * 86400000).toISOString();
+    guardarPlan({ ...leerPlan(), tipo: 'pro', estado: 'activa', periodo: cuerpo.periodo, vence, mpSuscripcionId: 'demo' });
+    return respuesta(200, { url: '/cuenta?suscripcion=volver' });
   }
   return respuesta(404, { error: 'ruta-desconocida' });
 };

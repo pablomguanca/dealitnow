@@ -6,8 +6,9 @@ Repo: `github.com/pablomguanca/dealitnow`. Hosting en Vercel; datos en Firebase 
 
 ## Stack
 
-- **Frontend:** React 18 + Vite (JSX + Hooks + Context) + SCSS Partials, empaquetado con Vite. Toda la interfaz vive en `src/main.jsx`, `src/App.jsx`, `src/components/` y `src/hooks/useDealitController.js` (editor, panel «Mis propuestas», vista del cliente, Mi cuenta).
-- **Firebase:** Auth (Google y email/contraseña, con `signInWithPopup`), Firestore, Storage (logos) y App Check. Se usa el SDK **compat** (`firebase/compat/*`, estilo `db.collection(...)`), no el modular.
+- **Frontend:** React 18 + Vite + SCSS Partials. React dibuja la estructura (`src/components/`) y un controlador modular la maneja (`src/controlador/`, un módulo por área). `src/main.jsx` carga, según la URL, la app del dueño (`App.jsx`) o la vista del cliente (`ClienteApp.jsx`), cada una en su propio paquete.
+- **Firebase:** Auth (Google y email/contraseña, con `signInWithPopup`), Firestore, Storage (logos) y App Check, con el SDK **modular**. La vista del cliente usa Firestore Lite (`src/firebase-publico.js`), solo lectura.
+- **Avisos y confirmaciones:** react-hot-toast y un modal propio (`elegir` / `confirmar` en `src/controlador/avisos.js`). Nunca `alert`, `confirm` ni `prompt`.
 - **Servidor:** funciones de Vercel en `api/` (Node 22) con `firebase-admin/firestore`. El token de sesión se verifica con `jose`, **no** con `firebase-admin/auth` (arrastra `jwks-rsa`, que rompe la función en Vercel).
 - **Tests:** Vitest. **Lint:** ESLint. **CI:** GitHub Actions corre lint + tests + build en cada push a `main`.
 
@@ -26,15 +27,20 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 
 | Ruta | Qué hay |
 | --- | --- |
-| `src/main.jsx`, `src/App.jsx`, `src/components/` y `src/hooks/useDealitController.js` | Toda la interfaz |
+| `src/main.jsx`, `src/App.jsx`, `src/ClienteApp.jsx`, `src/components/` | Estructura de la interfaz (React) |
+| `src/controlador/` | Lógica de la interfaz por área: `iniciar.js` (dueño), `iniciar-cliente.js` (cliente), `contexto.js` (estado compartido), panel, editor, hoja en celular, plan, versiones, etc. |
+| `src/planes.js` | Reglas de los planes (límite de envíos, quién es Pro), compartidas por la app y el servidor |
 | `src/modelo.js` | Temas, valores por defecto, normalización y cálculo de totales |
 | `src/aceptacion.js` | Reglas de aceptación, compartidas por la app y el servidor |
-| `src/firebase.js` | Auth, Firestore, Storage, App Check y operaciones de datos |
+| `src/firebase.js`, `src/firebase-publico.js`, `src/firebase-config.js` | Firebase de la app del dueño, de la vista del cliente y su configuración |
 | `src/link.js` | Links largos viejos (`#p=…`, propuesta comprimida); hoy solo para abrirlos |
 | `src/lib/formato.js` | Utilidades de texto, números, fechas y DOM |
 | `api/visto.js` | `POST /api/visto`: registra visitas al link |
 | `api/aceptar.js` | `POST /api/aceptar`: aceptación del cliente, validada en una transacción |
-| `api/_lib/` | Firebase Admin, verificación del token y utilidades HTTP |
+| `api/activar.js` | `POST /api/activar`: el dueño activa el link; aplica el límite del plan |
+| `api/suscripcion.js` | `POST /api/suscripcion`: crea la suscripción a Pro en Mercado Pago y devuelve el link de pago |
+| `api/mercadopago.js` | `POST /api/mercadopago`: avisos de Mercado Pago (firma verificada); actualiza `planes/{uid}` |
+| `api/_lib/` | Firebase Admin, verificación del token, utilidades HTTP y cliente de Mercado Pago |
 | `firestore.rules`, `storage.rules` | Reglas de seguridad (versionadas) |
 | `index.html`, `terminos.html`, `privacidad.html` | Páginas; `/p/:id` se reescribe a `/` (ver `vercel.json`) |
 
@@ -42,8 +48,12 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 
 - `users/{uid}`: `email`, `displayName`, `photoURL`, `createdAt`, `emisor` (datos del negocio por defecto: nombre, rol, email, teléfono, web, presentación, logo del Storage de Dealit).
 - `proposals/{id}`: `userId`, `title`, `clientName`, `amount`, `status` (`draft | sent | accepted | rejected`), `theme`, `payload` (la propuesta completa), `publico` (si el link está activo), `createdAt`, `updatedAt`.
-  - Campos que **solo escribe el servidor**: `vistas`, `vistoPrimero`, `vistoUltimo`, `aceptacion`. Las reglas impiden que el navegador los toque.
+  - Campos que **solo escribe el servidor**: `vistas`, `vistoPrimero`, `vistoUltimo`, `aceptacion`, `enviadaEn` (primer envío). Las reglas impiden que el navegador los toque.
+  - Activar el link (`publico: true`) solo lo hace `api/activar`; el navegador solo puede desactivarlo.
   - Cualquiera puede leer una propuesta con `publico == true` por ID (el link del cliente). Solo el dueño puede listarlas.
+  - `proposals/{id}/versiones/{vid}` (y lo mismo en `portfolios`): versiones guardadas por el dueño (`payload`, `title`, `motivo`, `createdAt`). Se crean o se borran; no se editan.
+- `portfolios/{id}`: como las propuestas, sin aceptación. El navegador puede activar su link.
+- `planes/{uid}`: `tipo` (`gratis | pro`), `estado` (`activa | pendiente | pausada | cancelada`), `periodo`, `vence`, `mpSuscripcionId`, `envios` (`{ "2026-11": 3 }`, en hora de Argentina). Lo escribe **solo el servidor**; el dueño lo lee.
 
 ## Principios
 
@@ -57,14 +67,14 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 - **Directo en `main`, sin ramas ni pull requests.** Los deploys de prueba de Vercel piden login por la Deployment Protection, así que lo que se pushea a `main` va derecho a producción.
 - Por eso: verificar en local antes de pushear (`npm run check` y probar en `npm run dev:demo`), y pushear solo cuando el dueño lo pida.
 - Si un cambio necesita publicar reglas o índices de Firebase, avisar y hacerlo **antes** del push.
-- Secretos: `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio) solo como variable de entorno en Vercel. Nunca va al repo.
+- Secretos, solo como variables de entorno en Vercel y nunca en el repo: `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio), `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` (Mercado Pago; primero las de prueba). Opcional: `APP_URL` (URL de vuelta tras pagar).
 
 ## Planes (freemium, definido el 2026-10-07)
 
 Planes: **Gratis · Pro · Estudio**.
 
 - **Sin cuenta:** una propuesta en el navegador. No puede compartir, guardar ni bajar PDF, y lo impreso con Ctrl+P lleva marca de agua.
-- **Gratis:** hasta 100 borradores y 5 propuestas enviadas (links activados) por mes calendario. Incluye aceptación online, logo y colores propios y la marca «Hecha con Dealit» en el link y el PDF. Sin seguimiento de vistas ni avisos por email.
+- **Gratis:** hasta 100 borradores y 5 propuestas enviadas (links activados) por mes calendario. Incluye aceptación online, logo y colores propios y la marca «Plantilla creada con Dealit» en el link y el PDF. Sin seguimiento de vistas ni avisos por email.
 - **Pro:** ARS 13.900/mes o 139.000/año; USD 9/mes o 90/año fuera de Argentina (los pesos se ajustan cada trimestre). Borradores y envíos ilimitados, sin marca, seguimiento completo (vistas, cuándo, avisos en vivo) y avisos por email al aceptar.
 - **Estudio:** equipos de hasta 3 usuarios, alrededor de ARS 38.900/mes. Sale como «Próximamente» con lista de espera.
 - Los límites se aplican en el servidor: activar un link pasa por una función de Vercel y las reglas no dejan que el navegador lo haga solo.

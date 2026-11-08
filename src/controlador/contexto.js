@@ -45,6 +45,7 @@ export const ctx = {
   vista: 'escritorio',
   imprimiendo: false,
   perfil: null,
+  plan: null, // planes/{uid}: tipo, estado, vence, envios por mes (lo escribe el servidor)
 
   // Guardado
   editando: false,

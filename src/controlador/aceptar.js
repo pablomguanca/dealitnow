@@ -19,6 +19,7 @@ import { registrarAcciones } from './acciones.js';
 import { avisar, avisarExito, avisarError } from './avisos.js';
 import { renderDocumento } from './vista.js';
 import { copiar } from '../lib/portapapeles.js';
+import { llamarApi } from './api.js';
 
 const mensajeAceptacion = (firma = ctx.estado.cliente.nombre.trim()) => {
   const { estado, seleccion } = ctx;
@@ -32,23 +33,6 @@ const mensajeAceptacion = (firma = ctx.estado.cliente.nombre.trim()) => {
   if (sumados.length) lineasMsg.push(`Sumé: ${sumados.join(', ')}.`);
   if (firma) lineasMsg.push(firma);
   return { texto: lineasMsg.join('\n'), c, sumados };
-};
-
-// Llama a una función de /api. Si hay sesión, se identifica (así no cuentan las visitas
-// propias ni se puede aceptar la propuesta de uno mismo).
-const llamarApi = async (ruta, cuerpo, { keepalive = false } = {}) => {
-  const token = AteneaDB ? await AteneaDB.auth.tokenDeSesion().catch(() => null) : null;
-  const respuesta = await fetch(ruta, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
-    body: JSON.stringify(cuerpo),
-    keepalive
-  });
-  if (!respuesta.ok) {
-    const codigo = await respuesta.json().then(r => r.error).catch(() => null);
-    throw Object.assign(new Error(codigo || `HTTP ${respuesta.status}`), { codigo, estado: respuesta.status });
-  }
-  return respuesta.status === 204 ? null : respuesta.json();
 };
 
 // Una visita cada media hora por navegador: recargar la página no suma visitas.

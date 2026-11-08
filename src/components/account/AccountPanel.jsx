@@ -6,6 +6,32 @@ export function AccountPanel() {
   <div className="cuenta__contenido">
     <h1 className="panel__titulo" id="cuenta-titulo">Mi cuenta</h1>
 
+    <section className="tarjeta tarjeta--plan" aria-labelledby="plan-titulo">
+      <div className="tarjeta__cabecera">
+        <h2 className="tarjeta__titulo" id="plan-titulo">Tu plan</h2>
+        <p className="tarjeta__ayuda" id="plan-estado" role="status">Plan Gratis.</p>
+      </div>
+      <div className="plan-uso" id="plan-uso" aria-hidden="true"><span></span></div>
+      <div className="plan-ofertas" id="plan-ofertas">
+        <ul className="plan-beneficios">
+          <li>Propuestas ilimitadas, sin tope mensual</li>
+          <li>Todas las plantillas y diseños PRO</li>
+          <li>Sin la marca «Plantilla creada con Dealit»</li>
+          <li>Avisos por email cuando tu cliente abre o acepta</li>
+        </ul>
+        <div className="plan-botones">
+          <button type="button" className="boton boton--primario" data-accion="suscribir-pro" data-periodo="anual">
+            Pro anual · <span data-precio-pro="anual"></span>
+          </button>
+          <button type="button" className="boton boton--secundario" data-accion="suscribir-pro" data-periodo="mensual">
+            Pro mensual · <span data-precio-pro="mensual"></span>
+          </button>
+        </div>
+        <p className="tarjeta__ayuda">El pago se hace en Mercado Pago. Cancelás cuando quieras y seguís con Pro hasta el final del período pago.</p>
+      </div>
+      <a className="boton boton--texto" id="plan-administrar" href="https://www.mercadopago.com.ar/subscriptions" target="_blank" rel="noopener" hidden>Administrar o cancelar la suscripción en Mercado Pago</a>
+    </section>
+
     <form className="tarjeta" id="cuenta-form" noValidate>
       <div className="tarjeta__cabecera">
         <h2 className="tarjeta__titulo">Perfil</h2>
