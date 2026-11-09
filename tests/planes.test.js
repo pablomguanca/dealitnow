@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createHmac } from 'node:crypto';
-import { LIMITE_ENVIOS_GRATIS, enviosDelMes, esPro, mesDe, planDesdeSuscripcion, puedeEnviar } from '../src/planes.js';
+import { LIMITE_ENVIOS_GRATIS, enviosDelMes, esPro, mesDe, planDesdeSuscripcion, proParaVerificar, puedeEnviar, usosPro } from '../src/planes.js';
 import { crearHandler as crearActivar } from '../api/activar.js';
 import { crearHandler as crearSuscripcion } from '../api/suscripcion.js';
 import { crearHandler as crearWebhook } from '../api/mercadopago.js';
@@ -10,6 +10,7 @@ import { crearHandler as crearSincronizar } from '../api/sincronizar.js';
 import { planesActivosPara } from '../api/_lib/planes-activos.js';
 
 const AHORA = new Date('2026-11-15T15:00:00-03:00');
+const ID2 = 'BBBBBBBBBBBBBBBBBBBB';
 const MES = '2026-11';
 const ID = 'AAAAAAAAAAAAAAAAAAA1';
 
@@ -82,6 +83,22 @@ describe('reglas del plan', () => {
   });
 });
 
+describe('vencimiento y partes PRO', () => {
+  it('Pro activa sigue 3 días después de la fecha de cobro y después vuelve a Gratis', () => {
+    const plan = { tipo: 'pro', estado: 'activa', vence: '2026-11-14T12:00:00Z' };
+    expect(esPro(plan, AHORA)).toBe(true);
+    expect(proParaVerificar(plan, AHORA)).toBe(true);
+    expect(esPro(plan, new Date('2026-11-18T12:00:00Z'))).toBe(false);
+    expect(proParaVerificar({ ...plan, vence: '2026-12-14T12:00:00Z' }, AHORA)).toBe(false);
+  });
+
+  it('detecta tema y plantilla PRO', () => {
+    expect(usosPro({ tema: { preset: 'lienzo-blanco' }, plantilla: 'diseno-web' })).toEqual([]);
+    expect(usosPro({ tema: { preset: 'aurora-tech' }, plantilla: 'software-saas' }).map(u => u.tipo)).toEqual(['tema', 'plantilla']);
+    expect(usosPro(undefined)).toEqual([]);
+  });
+});
+
 describe('POST /api/activar', () => {
   const propuesta = (cambios = {}) => ({ userId: 'duenio', status: 'draft', publico: false, ...cambios });
   const activar = (db, uid = 'duenio', activos = true) => crearActivar({
@@ -99,6 +116,33 @@ describe('POST /api/activar', () => {
     expect(r.cuerpo).toMatchObject({ primeraVez: true, usados: 1, limite: LIMITE_ENVIOS_GRATIS });
     expect(datos.proposals[ID]).toMatchObject({ publico: true, status: 'sent' });
     expect(datos.planes.duenio.envios[MES]).toBe(1);
+  });
+
+  it('en Gratis no envía diseños PRO y deja la marca de Dealit', async () => {
+    const { db, datos } = crearDb({ proposals: {
+      [ID]: propuesta({ payload: { tema: { preset: 'aurora-tech' } } }),
+      [ID2]: propuesta({ userId: 'duenio', payload: { tema: { preset: 'lienzo-blanco' } } })
+    } });
+    const r = res();
+    await activar(db)(post({ id: ID }), r);
+    expect(r.estado).toBe(403);
+    expect(r.cuerpo.error).toBe('diseno-pro');
+    expect(datos.proposals[ID].publico).toBe(false);
+    const libre = res();
+    await activar(db)(post({ id: ID2 }), libre);
+    expect(libre.estado).toBe(200);
+    expect(datos.proposals[ID2]).toMatchObject({ publico: true, marca: true });
+  });
+
+  it('en Pro envía diseños PRO sin la marca', async () => {
+    const { db, datos } = crearDb({
+      proposals: { [ID]: propuesta({ payload: { tema: { preset: 'aurora-tech' } } }) },
+      planes: { duenio: { tipo: 'pro', estado: 'activa', vence: '2026-12-15T00:00:00Z' } }
+    });
+    const r = res();
+    await activar(db)(post({ id: ID }), r);
+    expect(r.estado).toBe(200);
+    expect(datos.proposals[ID]).toMatchObject({ publico: true, marca: false });
   });
 
   it('en Gratis frena al llegar al límite del mes', async () => {

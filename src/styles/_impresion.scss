@@ -91,4 +91,21 @@
   .pasos li {
     break-inside: avoid;
   }
+
+  // Sin cuenta, o en Gratis con un diseño PRO (ver llevaMarcaDeAgua en vista.js).
+  .doc--marca-agua::after {
+    content: 'Hecho con Dealit · Versión de prueba';
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 9999;
+    transform: translate(-50%, -50%) rotate(-32deg);
+    font-family: Montserrat, sans-serif;
+    font-size: 40pt;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    color: rgba(120, 120, 120, 0.18);
+    pointer-events: none;
+  }
 }

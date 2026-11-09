@@ -19,6 +19,7 @@ import { guardarLuego } from './guardado.js';
 import { llenarFormulario, reemplazarEstado } from './formulario.js';
 import { actualizar, actualizarTemaEnVivo, congelarAnimaciones } from './documento.js';
 import { nuevaPropuesta } from './propuestas.js';
+import { restriccionesActivas, avisarPruebaPro, ofrecerPro } from './plan.js';
 
 // Escalas y espaciados ajustables: [id del control, id del valor mostrado, propiedad del tema].
 const ESCALAS = [
@@ -157,6 +158,7 @@ const aplicarPlantillaRubro = (id, soloDiseno = false) => {
   const tpl = PLANTILLAS[id];
   if (!tpl) return;
   const generada = normalizar(tpl.crear());
+  if (!soloDiseno) generada.plantilla = id;
   if (soloDiseno) {
     ctx.estado.tema = { ...generada.tema };
     llenarTemaEditor();
@@ -175,12 +177,14 @@ const aplicarPlantillaRubro = (id, soloDiseno = false) => {
     }
   }
   $$('.plantilla-chip').forEach(c => c.classList.toggle('plantilla-chip--activa', c.dataset.plantilla === id));
+  if (tpl.plan === 'pro') avisarPruebaPro();
 };
 
 const aplicarPlantillaPortafolio = (id, soloDiseno = false) => {
   const tpl = PLANTILLAS_PORTAFOLIO[id];
   if (!tpl) return;
   const generada = normalizarPf(tpl.crear());
+  if (!soloDiseno) generada.plantilla = id;
   if (soloDiseno) {
     ctx.estadoPortafolio.tema = { ...generada.tema };
     llenarTemaEditor();
@@ -194,6 +198,14 @@ const aplicarPlantillaPortafolio = (id, soloDiseno = false) => {
     avisarExito(`Plantilla de portfolio «${tpl.nombre}» cargada.`);
   }
   $$('[data-plantilla-portafolio]').forEach(c => c.classList.toggle('plantilla-chip--activa', c.dataset.plantillaPortafolio === id));
+  if (tpl.plan === 'pro') avisarPruebaPro();
+};
+
+// En Gratis, un link que ya está activo no puede pasar a un diseño PRO (lo vería el cliente).
+const linkActivoSinPro = () => {
+  if (!restriccionesActivas()) return false;
+  if (ctx.modoEditor === 'portafolio') return !!ctx.portafolios?.find?.(p => p.id === ctx.portafolioId)?.publico;
+  return !!ctx.propuestas.find(p => p.id === ctx.propuestaId)?.publico;
 };
 
 export const instalarDiseno = () => {
@@ -203,6 +215,10 @@ export const instalarDiseno = () => {
     const id = card.dataset.tema;
     const preset = TEMAS[id];
     if (!preset) return;
+    if (preset.plan === 'pro' && linkActivoSinPro()) {
+      ofrecerPro('link-activo', [preset.nombre]);
+      return;
+    }
     const t = docActivo().tema;
     t.preset = id;
     t.acento = preset.acento;
@@ -218,6 +234,7 @@ export const instalarDiseno = () => {
     t.estilo = preset.estilo || 'editorial';
     llenarTemaEditor();
     actualizarTemaEnVivo();
+    if (preset.plan === 'pro') avisarPruebaPro();
   });
 
   vincularGrilla('#decoraciones-grid', 'decoracion', DECORACIONES, 'decoracion');
@@ -231,6 +248,10 @@ export const instalarDiseno = () => {
     const id = chip.dataset.plantilla;
     const tpl = PLANTILLAS[id];
     if (!tpl) return;
+    if (tpl.plan === 'pro' && linkActivoSinPro()) {
+      ofrecerPro('link-activo', [tpl.nombre]);
+      return;
+    }
     const { estado } = ctx;
     const tieneTextoPropio = estado.propuesta.titulo.trim() || estado.servicios.some(servicioConContenido);
     if (!tieneTextoPropio) {

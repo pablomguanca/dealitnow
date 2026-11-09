@@ -3,7 +3,7 @@
 // decide el servidor (api/mercadopago); acá solo se lee planes/{uid}.
 
 import { $, $$, dinero } from '../lib/formato.js';
-import { LIMITE_ENVIOS_GRATIS, PRECIOS_PRO, enviosDelMes, esPro } from '../planes.js';
+import { LIMITE_ENVIOS_GRATIS, PRECIOS_PRO, enviosDelMes, esPro, proParaVerificar } from '../planes.js';
 import { ctx, AteneaDB } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { avisar, avisarError, elegir } from './avisos.js';
@@ -11,6 +11,7 @@ import { llamarApi } from './api.js';
 import { irRuta } from './navegacion.js';
 
 let dejarDeEscuchar = null;
+let verificado = false;
 // El servidor dice si los planes están activos para esta cuenta (interruptor PLANES_ACTIVOS).
 let planesActivos = false;
 
@@ -20,6 +21,25 @@ const precioTexto = periodo => {
 };
 
 export const usuarioEsPro = () => esPro(ctx.plan);
+
+// Límites de Gratis en la app: solo con los planes activos para esta cuenta y sin Pro.
+export const restriccionesActivas = () => planesActivos && !esPro(ctx.plan);
+
+// Avisa al resto de la app (panel, editor) que cambió el plan, sin importarlos acá.
+const aplicarRestricciones = () => {
+  const antes = ctx.restringido;
+  ctx.restringido = restriccionesActivas();
+  ctx.marcaObligatoria = ctx.restringido;
+  if (antes !== ctx.restringido) document.dispatchEvent(new CustomEvent('dealit:plan'));
+};
+
+let avisoPruebaDado = false;
+// Al probar un diseño o una plantilla PRO en Gratis: se puede, pero no enviar.
+export const avisarPruebaPro = () => {
+  if (!restriccionesActivas() || avisoPruebaDado) return;
+  avisoPruebaDado = true;
+  avisar('Este diseño es PRO: probalo todo lo que quieras. Para enviarlo necesitás Dealit Pro.', 7000);
+};
 
 const pintarPlan = () => {
   const tarjeta = $('.tarjeta--plan');
@@ -46,6 +66,7 @@ const pintarPlan = () => {
     barra.hidden = pro;
     barra.style.setProperty('--uso', String(Math.min(1, usados / LIMITE_ENVIOS_GRATIS)));
   }
+  aplicarRestricciones();
 };
 
 // Pregunta al servidor si los planes están activos para esta cuenta. Si falla (por ejemplo,
@@ -74,13 +95,21 @@ export const escucharPlan = () => {
     ctx.plan = plan;
     pintarPlan();
     if (!eraPro && esPro(plan) && ctx.plan.estado === 'activa') avisar('¡Listo! Ya tenés Dealit Pro.', 7000);
+    // Pasó la fecha de cobro y no llegó el aviso: se le pregunta a Mercado Pago (una vez).
+    if (proParaVerificar(plan) && !verificado) {
+      verificado = true;
+      sincronizar();
+    }
   });
 };
 
 export const reiniciarPlan = () => {
   if (dejarDeEscuchar) { dejarDeEscuchar(); dejarDeEscuchar = null; }
   planesActivos = false;
+  verificado = false;
+  avisoPruebaDado = false;
   ctx.plan = null;
+  aplicarRestricciones();
 };
 
 // Crea la suscripción en el servidor y lleva a pagar a Mercado Pago.
@@ -109,19 +138,33 @@ const suscribir = async (periodo, boton) => {
   }
 };
 
+const lista = nombres => (nombres.length > 1 ? `«${nombres.slice(0, -1).join('», «')}» y «${nombres.at(-1)}»` : `«${nombres[0]}»`);
+
 const MOTIVOS = {
-  limite: {
-    titulo: `Llegaste a tus ${LIMITE_ENVIOS_GRATIS} propuestas de este mes`,
-    texto: 'Con Pro enviás todas las que quieras, ves cuándo tu cliente abre cada propuesta, te avisamos por email cuando acepta y sacás la marca de Dealit.'
-  },
-  general: {
+  limite: () => ({
+    titulo: `Ya enviaste tus ${LIMITE_ENVIOS_GRATIS} propuestas de este mes`,
+    texto: 'Tu propuesta queda guardada. Con Pro la mandás ahora y todas las que vengan, sin tope, sin la marca de Dealit y viendo cuándo tu cliente la abre. Si no, el mes que viene se renueva tu cupo.'
+  }),
+  diseno: (nombres = []) => ({
+    titulo: 'Este diseño es de Dealit Pro',
+    texto: `Tu propuesta usa ${nombres.length ? lista(nombres) : 'un diseño PRO'}. Podés seguir probándolo, pero para enviarla necesitás Pro. También podés elegir un diseño sin la etiqueta PRO y mandarla gratis.`
+  }),
+  'link-activo': (nombres = []) => ({
+    titulo: 'Tu cliente ya tiene el link',
+    texto: `${nombres.length ? lista(nombres) : 'Este diseño'} es PRO y tu cliente lo vería al abrir la propuesta. Con Pro lo aplicás; si no, probalo en una copia de la propuesta.`
+  }),
+  seguimiento: () => ({
+    titulo: 'Sabé cuándo tu cliente abre tu propuesta',
+    texto: 'Con Pro ves cuántas veces la abrió y cuándo, y te avisamos en el momento. Así llamás cuando está mirando, no cuando ya se olvidó.'
+  }),
+  general: () => ({
     titulo: 'Pasate a Dealit Pro',
-    texto: 'Propuestas ilimitadas, seguimiento de cada visita, avisos por email cuando tu cliente acepta y sin la marca de Dealit.'
-  }
+    texto: 'Propuestas sin tope, todos los diseños PRO, seguimiento de cada visita y sin la marca de Dealit.'
+  })
 };
 
-export const ofrecerPro = async (motivo = 'general') => {
-  const { titulo, texto } = MOTIVOS[motivo] || MOTIVOS.general;
+export const ofrecerPro = async (motivo = 'general', nombres = []) => {
+  const { titulo, texto } = (MOTIVOS[motivo] || MOTIVOS.general)(nombres);
   const eleccion = await elegir({
     titulo,
     texto,
@@ -166,7 +209,7 @@ export const instalarPlan = () => {
   }
   registrarAcciones({
     'suscribir-pro': boton => suscribir(boton.dataset.periodo, boton),
-    'ofrecer-pro': () => ofrecerPro('general'),
+    'ofrecer-pro': boton => ofrecerPro(boton?.dataset?.motivo || 'general'),
     'sincronizar-plan': boton => sincronizar({ manual: true, boton })
   });
 };

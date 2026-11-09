@@ -181,7 +181,7 @@ export const instalarPortafolios = () => {
     'nuevo-portafolio-ejemplo': () => nuevoPortafolio(ejemploPortafolio()),
     'crear-pf-rubro': boton => {
       const tpl = PLANTILLAS_PORTAFOLIO[boton.dataset.rubro];
-      if (tpl) nuevoPortafolio(tpl.crear());
+      if (tpl) nuevoPortafolio({ ...tpl.crear(), plantilla: boton.dataset.rubro });
     },
     'abrir-portafolio': (boton, ev) => {
       if (boton.tagName === 'A') {

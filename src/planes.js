@@ -1,7 +1,13 @@
 // Reglas de los planes (Gratis y Pro), compartidas por la app y el servidor. El servidor
 // decide: la app solo las usa para mostrar el estado. Ver «Planes» en CLAUDE.md.
 
-export const LIMITE_ENVIOS_GRATIS = 5; // propuestas enviadas (links activados) por mes calendario
+import { TEMAS, PLANTILLAS, PLANTILLAS_PORTAFOLIO } from './modelo.js';
+
+export const LIMITE_ENVIOS_GRATIS = 2; // propuestas enviadas (links activados) por mes calendario
+
+// Días de margen después de la fecha de cobro: Mercado Pago reintenta el débito unos días
+// antes de pausar o cancelar. Pasado ese margen sin un cobro nuevo, vuelve a Gratis.
+const GRACIA_MS = 3 * 86400000;
 
 export const PRECIOS_PRO = {
   mensual: { monto: 13900, moneda: 'ARS', meses: 1, nombre: 'mensual' },
@@ -17,12 +23,32 @@ const fechaValida = v => {
   return Number.isNaN(f?.getTime?.()) ? null : f;
 };
 
-// Pro mientras la suscripción esté activa o, si se canceló o pausó, hasta el fin del período pago.
+// Pro mientras la suscripción esté al día: activa y con la próxima fecha de cobro (más el
+// margen) por delante. Si se canceló o se pausó, hasta el fin del período ya pago. Si un
+// cobro no entra, la fecha no avanza y, pasado el margen, vuelve a Gratis sola.
 export const esPro = (plan, ahora = new Date()) => {
   if (plan?.tipo !== 'pro') return false;
-  if (plan.estado === 'activa') return true;
   const vence = fechaValida(plan.vence);
+  if (plan.estado === 'activa') return !vence || vence.getTime() + GRACIA_MS > ahora.getTime();
   return !!vence && vence > ahora;
+};
+
+// Pro según el registro, pero con la fecha de cobro ya pasada: conviene preguntarle a
+// Mercado Pago si el último cobro entró (por si se perdió el aviso).
+export const proParaVerificar = (plan, ahora = new Date()) => {
+  const vence = fechaValida(plan?.vence);
+  return plan?.tipo === 'pro' && plan.estado === 'activa' && !!vence && vence <= ahora;
+};
+
+// Partes PRO que usa una propuesta o un portfolio: el tema y la plantilla de origen. En
+// Gratis se pueden probar en el editor, pero no enviar.
+export const usosPro = (documento, { esPortafolio = false } = {}) => {
+  const usos = [];
+  const tema = TEMAS[documento?.tema?.preset];
+  if (tema?.plan === 'pro') usos.push({ tipo: 'tema', nombre: tema.nombre });
+  const plantilla = (esPortafolio ? PLANTILLAS_PORTAFOLIO : PLANTILLAS)[documento?.plantilla];
+  if (plantilla?.plan === 'pro') usos.push({ tipo: 'plantilla', nombre: plantilla.nombre });
+  return usos;
 };
 
 export const enviosDelMes = (plan, ahora = new Date()) => Math.max(0, Number(plan?.envios?.[mesDe(ahora)]) || 0);

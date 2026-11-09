@@ -21,7 +21,7 @@ const crearAteneaPublico = () => {
 
   const obtenerPublica = async id => {
     const datos = await leerPublico('proposals', id);
-    return datos ? { payload: datos.payload, aceptacion: datos.aceptacion || null } : null;
+    return datos ? { payload: datos.payload, aceptacion: datos.aceptacion || null, marca: datos.marca === true } : null;
   };
 
   const obtenerPortafolioPublico = async id => {

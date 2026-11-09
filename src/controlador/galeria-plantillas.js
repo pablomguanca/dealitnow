@@ -91,6 +91,7 @@ const usarPlantilla = id => {
   const tpl = PLANTILLAS[id];
   if (!tpl) return;
   const datos = normalizar(tpl.crear());
+  datos.plantilla = id;
   datos.emisor = emisorDeCuenta(datos.emisor);
   $('#dialogo-plantilla-vista')?.close();
   nuevaPropuesta(datos);

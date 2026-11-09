@@ -48,11 +48,12 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 
 - `users/{uid}`: `email`, `displayName`, `photoURL`, `createdAt`, `emisor` (datos del negocio por defecto: nombre, rol, email, teléfono, web, presentación, logo del Storage de Dealit).
 - `proposals/{id}`: `userId`, `title`, `clientName`, `amount`, `status` (`draft | sent | accepted | rejected`), `theme`, `payload` (la propuesta completa), `publico` (si el link está activo), `createdAt`, `updatedAt`.
-  - Campos que **solo escribe el servidor**: `vistas`, `vistoPrimero`, `vistoUltimo`, `aceptacion`, `enviadaEn` (primer envío). Las reglas impiden que el navegador los toque.
+  - Campos que **solo escribe el servidor**: `vistas`, `vistoPrimero`, `vistoUltimo`, `aceptacion`, `enviadaEn` (primer envío), `marca` (link con la marca de Dealit, en Gratis). Las reglas impiden que el navegador los toque.
   - Activar el link (`publico: true`) solo lo hace `api/activar`; el navegador solo puede desactivarlo.
   - Cualquiera puede leer una propuesta con `publico == true` por ID (el link del cliente). Solo el dueño puede listarlas.
   - `proposals/{id}/versiones/{vid}` (y lo mismo en `portfolios`): versiones guardadas por el dueño (`payload`, `title`, `motivo`, `createdAt`). Se crean o se borran; no se editan.
 - `portfolios/{id}`: como las propuestas, sin aceptación. El navegador puede activar su link.
+- `payload.plantilla`: la plantilla de origen (si se cargó completa); con `payload.tema.preset` define si la propuesta usa algo PRO (`usosPro` en `src/planes.js`).
 - `planes/{uid}`: `tipo` (`gratis | pro`), `estado` (`activa | pendiente | pausada | cancelada`), `periodo`, `vence`, `mpSuscripcionId`, `envios` (`{ "2026-11": 3 }`, en hora de Argentina). Lo escribe **solo el servidor**; el dueño lo lee.
 
 ## Principios
@@ -75,7 +76,8 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 Planes: **Gratis · Pro · Estudio**.
 
 - **Sin cuenta:** una propuesta en el navegador. No puede compartir, guardar ni bajar PDF, y lo impreso con Ctrl+P lleva marca de agua.
-- **Gratis:** hasta 100 borradores y 5 propuestas enviadas (links activados) por mes calendario. Incluye aceptación online, logo y colores propios y la marca «Plantilla creada con Dealit» en el link y el PDF. Sin seguimiento de vistas ni avisos por email.
+- **Vencimiento:** Pro sigue mientras `vence` (próximo cobro) + 3 días de margen esté por delante. Si el cobro no entra, vuelve solo a Gratis; con la fecha pasada, la app consulta `/api/sincronizar` una vez.
+- **Gratis:** hasta 100 borradores y 2 propuestas enviadas (links activados) por mes calendario. Incluye aceptación online, logo y colores propios y la marca «Plantilla creada con Dealit» obligatoria en el link y el PDF (campo `marca`, lo escribe `api/activar`). Los diseños y plantillas PRO se pueden probar en el editor, pero no enviar (`diseno-pro`); al imprimir llevan marca de agua. Sin seguimiento de vistas ni avisos por email.
 - **Pro:** ARS 13.900/mes o 139.000/año; USD 9/mes o 90/año fuera de Argentina (los pesos se ajustan cada trimestre). Borradores y envíos ilimitados, sin marca, seguimiento completo (vistas, cuándo, avisos en vivo) y avisos por email al aceptar.
 - **Estudio:** equipos de hasta 3 usuarios, alrededor de ARS 38.900/mes. Sale como «Próximamente» con lista de espera.
 - Los límites se aplican en el servidor: activar un link pasa por una función de Vercel y las reglas no dejan que el navegador lo haga solo.

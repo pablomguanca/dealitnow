@@ -48,7 +48,7 @@ export const tiempoHTML = (fecha, etiqueta) =>
   `<time datetime="${fecha.toISOString()}" title="${esc(fecha.toLocaleString('es-AR'))}">${esc(etiqueta)}</time>`;
 
 // Qué pasó con la propuesta, en una línea: aceptada, vista, sin abrir o solo editada.
-export const seguimientoHTML = p => {
+export const seguimientoHTML = (p, { conSeguimiento = true } = {}) => {
   if (p.aceptacion) {
     const fecha = fechaDeAceptacion(p.aceptacion);
     const nombre = texto(p.aceptacion.nombre).split(' ')[0];
@@ -56,6 +56,7 @@ export const seguimientoHTML = p => {
   }
   const vistas = Number(p.vistas) || 0;
   const vista = fechaDe(p.vistoUltimo);
+  if (p.publico === true && !conSeguimiento) return 'Link activo · las visitas se ven con Pro';
   if (vistas > 0 && vista) return tiempoHTML(vista, `${vistas === 1 ? 'Vista 1 vez' : `Vista ${vistas} veces`} · ${haceCuanto(vista)}`);
   if (p.publico === true) return 'Sin abrir todavía';
   const editada = fechaDe(p.updatedAt);
@@ -87,7 +88,7 @@ export const estiloPortadaTarjeta = tema => {
 
 // Tarjeta de «Mis propuestas»: portada en miniatura, estado, monto, última actualización
 // y accesos para editar, ver como el cliente, copiar el link, duplicar y borrar.
-export const propuestaHTML = p => {
+export const propuestaHTML = (p, { conSeguimiento = true } = {}) => {
   const titulo = texto(p.title).trim() || 'Sin título';
   const cliente = texto(p.clientName).trim();
   const moneda = p.aceptacion?.moneda || p.payload?.inversion?.moneda || 'USD';
@@ -96,7 +97,7 @@ export const propuestaHTML = p => {
   const estadoP = estadoDe(p);
   const numero = texto(p.payload?.propuesta?.numero).trim();
   const editada = fechaDe(p.updatedAt);
-  const seguimiento = p.aceptacion || Number(p.vistas) > 0 || p.publico === true ? seguimientoHTML(p) : '';
+  const seguimiento = p.aceptacion || Number(p.vistas) > 0 || p.publico === true ? seguimientoHTML(p, { conSeguimiento }) : '';
   const id = esc(p.id);
   return `
     <li class="propuesta-card">
@@ -148,7 +149,15 @@ export const metricaHTML = (valor, etiqueta, detalle, destacada = false) => `
     <span class="metrica__detalle">${esc(detalle)}</span>
   </div>`;
 
-export const metricasHTML = (propuestas = []) => {
+// Métrica de Pro en Gratis: se ve el lugar, no el dato, y abre la oferta.
+const metricaBloqueadaHTML = (etiqueta, detalle) => `
+  <button type="button" class="metrica metrica--bloqueada" data-accion="ofrecer-pro" data-motivo="seguimiento">
+    <span class="metrica__etiqueta">${esc(etiqueta)} <span class="insignia-pro">PRO</span></span>
+    <span class="metrica__valor" aria-hidden="true">—</span>
+    <span class="metrica__detalle">${esc(detalle)}</span>
+  </button>`;
+
+export const metricasHTML = (propuestas = [], { conSeguimiento = true } = {}) => {
   const ahora = Date.now();
   const esperando = propuestas.filter(p => p.status === 'sent' && !p.aceptacion);
   const sinAbrir = esperando.filter(p => !(Number(p.vistas) > 0)).length;
@@ -165,8 +174,10 @@ export const metricasHTML = (propuestas = []) => {
   const tasa = enviadas ? Math.round((aceptadas.length / enviadas) * 100) : null;
   const [montoPrincipal, ...otrosMontos] = montosPorMoneda(delMes);
   return [
-    metricaHTML(esperando.length, 'Esperando respuesta', esperando.length ? (sinAbrir ? `${sinAbrir} sin abrir todavía` : 'Todas abiertas') : 'Nada pendiente'),
-    metricaHTML(abiertasSemana, 'Abiertas esta semana', 'Propuestas que tus clientes miraron'),
+    metricaHTML(esperando.length, 'Esperando respuesta', !esperando.length ? 'Nada pendiente' : (!conSeguimiento ? 'Links activos' : (sinAbrir ? `${sinAbrir} sin abrir todavía` : 'Todas abiertas'))),
+    conSeguimiento
+      ? metricaHTML(abiertasSemana, 'Abiertas esta semana', 'Propuestas que tus clientes miraron')
+      : metricaBloqueadaHTML('Abiertas esta semana', 'Mirá quién abrió cada propuesta y cuándo'),
     metricaHTML(delMes.length, 'Aceptadas este mes', tasa === null ? 'Todavía no enviaste ninguna' : `${tasa} % de las que enviaste`),
     metricaHTML(montoPrincipal || '—', 'Aceptado este mes', otrosMontos.length ? `y ${otrosMontos.join(' · ')}` : 'Total inicial aceptado', true)
   ].join('');

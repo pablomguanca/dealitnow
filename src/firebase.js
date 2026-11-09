@@ -226,8 +226,8 @@ const crearAteneaDB = () => {
     try {
       const snap = await getDoc(doc(_colProposals(), id));
       if (!snap.exists() || !snap.data().payload) return null;
-      const { payload, aceptacion } = snap.data();
-      return { payload, aceptacion: aceptacion || null };
+      const { payload, aceptacion, marca } = snap.data();
+      return { payload, aceptacion: aceptacion || null, marca: marca === true };
     } catch (e) {
       if (e.code === 'permission-denied') return null;
       throw e;

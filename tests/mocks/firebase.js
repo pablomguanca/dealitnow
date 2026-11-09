@@ -6,7 +6,7 @@
 // Para empezar de cero: localStorage.removeItem('dealit-demo') y recargar.
 import { validarAceptacion } from '../../src/aceptacion.js';
 import { ejemplo } from '../../src/modelo.js';
-import { LIMITE_ENVIOS_GRATIS, enviosDelMes, esPro, mesDe } from '../../src/planes.js';
+import { LIMITE_ENVIOS_GRATIS, enviosDelMes, esPro, mesDe, usosPro } from '../../src/planes.js';
 
 const CLAVE = 'dealit-demo';
 const ID_DEMO = 'DEMO0000000000000001';
@@ -136,7 +136,7 @@ export const AteneaDB = {
       const d = leer()[id];
       if (!d || d.publico !== true) return null;
       const doc = comoFirestore(id, d);
-      return { payload: doc.payload, aceptacion: doc.aceptacion || null };
+      return { payload: doc.payload, aceptacion: doc.aceptacion || null, marca: d.marca === true };
     },
     actualizar: async (id, cambios) => actualizarDoc(id, cambios),
     borrar: async id => { const docs = leer(); delete docs[id]; guardar(docs); localStorage.removeItem(`${CLAVE}:versiones:proposals:${id}`); },
@@ -190,8 +190,9 @@ window.fetch = async (url, opciones = {}) => {
     const usados = enviosDelMes(plan);
     if (doc.publico === true) return respuesta(200, { primeraVez: false, usados, limite: pro ? null : LIMITE_ENVIOS_GRATIS });
     const primeraVez = !doc.enviadaEn;
+    if (!pro && usosPro(doc.payload).length) return respuesta(403, { error: 'diseno-pro' });
     if (primeraVez && !pro && usados >= LIMITE_ENVIOS_GRATIS) return respuesta(403, { error: 'limite-envios' });
-    Object.assign(doc, { publico: true, updatedAt: new Date().toISOString() });
+    Object.assign(doc, { publico: true, marca: !pro, updatedAt: new Date().toISOString() });
     if (!doc.status || doc.status === 'draft') doc.status = 'sent';
     if (primeraVez) doc.enviadaEn = new Date().toISOString();
     guardar(docs);

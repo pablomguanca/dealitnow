@@ -23,6 +23,7 @@ import { migrarLogo } from './subidas.js';
 import { renderGaleriaPlantillas } from './galeria-plantillas.js';
 import { linkCorto } from './compartir.js';
 import { cargarFuente } from '../lib/tema.js';
+import { restriccionesActivas } from './plan.js';
 
 // La lista se escucha en tiempo real toda la sesión: refleja al instante lo que se
 // edita, se duplica o se borra, también sin conexión.
@@ -61,7 +62,8 @@ export const renderPanel = () => {
   $('#panel-resumen').textContent = hay ? `${propuestas.length} ${propuestas.length === 1 ? 'propuesta' : 'propuestas'}` : '';
   const elMetricas = $('#panel-metricas');
   elMetricas.hidden = !hay;
-  if (hay) elMetricas.innerHTML = metricasHTML(propuestas);
+  const conSeguimiento = !restriccionesActivas();
+  if (hay) elMetricas.innerHTML = metricasHTML(propuestas, { conSeguimiento });
   $('#panel-herramientas').hidden = propuestas.length < 2;
   $('#panel-filtros').innerHTML = filtrosHTML(propuestas, filtroEstado);
   $('#panel-vacio').hidden = panelCargando || panelError || hay;
@@ -78,10 +80,12 @@ export const renderPanel = () => {
   } else {
     elPanelEstado.textContent = '';
   }
-  $('#lista-propuestas').innerHTML = visibles.map(propuestaHTML).join('');
+  $('#lista-propuestas').innerHTML = visibles.map(p => propuestaHTML(p, { conSeguimiento })).join('');
   $('#pestana-propuestas-cuenta').textContent = hay ? String(propuestas.length) : '';
   new Set(visibles.map(p => p.payload?.tema?.fuenteTitulos).filter(Boolean)).forEach(cargarFuente);
 };
+
+document.addEventListener('dealit:plan', () => renderPanel());
 
 // Avisa en el momento cuando un cliente abre o acepta una propuesta. La primera
 // carga solo registra cómo estaba todo, sin avisar.
@@ -93,7 +97,7 @@ const avisarNovedades = docs => {
       if (!antes) continue;
       const titulo = texto(p.title).trim() || 'tu propuesta';
       if (p.aceptacion && !antes.aceptada) celebrar(`${texto(p.aceptacion.nombre)} aceptó «${titulo}».`);
-      else if ((Number(p.vistas) || 0) > antes.vistas) avisar(`Tu cliente está viendo «${titulo}».`, 6000);
+      else if ((Number(p.vistas) || 0) > antes.vistas && !restriccionesActivas()) avisar(`Tu cliente está viendo «${titulo}».`, 6000);
     }
   }
   seguimientoAnterior = actual;
@@ -251,6 +255,7 @@ export const instalarPropuestas = () => {
     'nueva-ejemplo': () => {
       if (!nube()) return;
       const conDatos = normalizar(ejemplo());
+      conDatos.plantilla = 'diseno-web';
       conDatos.emisor = emisorDeCuenta(conDatos.emisor);
       nuevaPropuesta(conDatos);
     },

@@ -48,9 +48,9 @@ service cloud.firestore {
     }
 
     match /proposals/{proposalId} {
-      // Visitas, aceptación y primer envío: solo los escribe el servidor
+      // Visitas, aceptación, primer envío y marca de Dealit: solo los escribe el servidor
       // (api/visto, api/aceptar, api/activar).
-      function camposDelServidor() { return ['vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion', 'enviadaEn']; }
+      function camposDelServidor() { return ['vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion', 'enviadaEn', 'marca']; }
 
       // Activar el link pasa por api/activar, que aplica el límite del plan. El navegador
       // solo puede desactivarlo.
@@ -63,7 +63,7 @@ service cloud.firestore {
         let d = request.resource.data;
         return d.keys().hasOnly(['userId', 'title', 'clientName', 'amount', 'status',
                                  'theme', 'payload', 'publico', 'createdAt', 'updatedAt',
-                                 'vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion', 'enviadaEn'])
+                                 'vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion', 'enviadaEn', 'marca'])
           && d.title is string      && d.title.size() <= 200
           && d.clientName is string && d.clientName.size() <= 200
           && d.amount is number

@@ -21,7 +21,8 @@ import { hayCambiosSinEnviar, guardarAhora, registrarEscritura } from './guardad
 import { abrirRegistro } from './sesion.js';
 import { guardarVersion } from './versiones.js';
 import { llamarApi } from './api.js';
-import { ofrecerPro } from './plan.js';
+import { ofrecerPro, restriccionesActivas } from './plan.js';
+import { usosPro } from '../planes.js';
 
 let linkActual = '';
 
@@ -69,6 +70,11 @@ const activarLink = async () => {
   if (hayCambiosSinEnviar()) guardarAhora();
   const actual = ctx.propuestas.find(p => p.id === ctx.propuestaId);
   if (actual?.publico) return true;
+  const usos = restriccionesActivas() ? usosPro(ctx.estado) : [];
+  if (usos.length) {
+    ofrecerPro('diseno', usos.map(u => u.nombre));
+    return false;
+  }
   await conEspera(ctx.ultimaEscritura);
   try {
     const { primeraVez } = await llamarApi('/api/activar', { id: ctx.propuestaId });
@@ -76,6 +82,7 @@ const activarLink = async () => {
     return true;
   } catch (e) {
     if (e.codigo === 'limite-envios') ofrecerPro('limite');
+    else if (e.codigo === 'diseno-pro') ofrecerPro('diseno', usosPro(ctx.estado).map(u => u.nombre));
     else avisarError(navigator.onLine
       ? 'No se pudo activar el link. Probá de nuevo en unos segundos.'
       : 'Necesitás conexión a internet para activar el link.');
@@ -102,6 +109,12 @@ const abrirCompartirPortafolio = async () => {
   const tieneProyectos = estadoPortafolio.portafolio.titulo.trim() || estadoPortafolio.proyectos.some(proyectoConContenido);
   if (!tieneProyectos) {
     avisar('Cargá al menos el título y un proyecto antes de compartir tu portfolio.');
+    return;
+  }
+  // Los portfolios se activan desde el navegador: el control del diseño PRO es solo acá.
+  const usos = restriccionesActivas() ? usosPro(estadoPortafolio, { esPortafolio: true }) : [];
+  if (usos.length) {
+    ofrecerPro('diseno', usos.map(u => u.nombre));
     return;
   }
   if (hayCambiosSinEnviar()) guardarAhora();

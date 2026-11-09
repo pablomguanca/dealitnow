@@ -573,6 +573,23 @@ a.barra__logo {
   }
 }
 
+.metrica--bloqueada {
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-style: dashed;
+  transition: border-color 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: #D97706;
+  }
+
+  .metrica__valor {
+    color: var(--marfil-apagado);
+  }
+}
+
 .metrica {
   display: flex;
   flex-direction: column;

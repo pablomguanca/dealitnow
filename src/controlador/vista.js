@@ -5,6 +5,7 @@
 import { $ } from '../lib/formato.js';
 import { aplicarTema } from '../lib/tema.js';
 import { observarElementos, generarPortafolioHTML, generarPropuestaHTML } from '../lib/render.js';
+import { usosPro } from '../planes.js';
 import {
   abrirLightboxDesdeNodo,
   moverLightbox,
@@ -47,9 +48,27 @@ const terminarDocumento = (doc, web) => {
   marcarAnimacionInicial(doc, web);
 };
 
+// En Gratis el pie lleva siempre «Plantilla creada con Dealit»: en el editor (ctx.marcaObligatoria,
+// lo pone plan.js) y en el link (marca, que escribe el servidor al activarlo).
+const conMarca = s => {
+  const forzar = ctx.compartida?.marca || ctx.marcaObligatoria;
+  document.querySelectorAll('[data-campo="opciones.credito"], [data-campo-pf="opciones.credito"]').forEach(c => {
+    c.disabled = !!ctx.marcaObligatoria;
+    if (ctx.marcaObligatoria) c.checked = true;
+    c.closest('label')?.setAttribute('title', ctx.marcaObligatoria ? 'Con Pro podés sacar la marca de Dealit.' : '');
+  });
+  return forzar && !s.opciones.credito ? { ...s, opciones: { ...s.opciones, credito: true } } : s;
+};
+
+// Marca de agua al imprimir: sin cuenta, o en Gratis con un diseño o una plantilla PRO.
+const llevaMarcaDeAgua = () => !ctx.esCliente && (ctx.invitado || (ctx.restringido && usosPro(
+  ctx.modoEditor === 'portafolio' ? ctx.estadoPortafolio : ctx.estado,
+  { esPortafolio: ctx.modoEditor === 'portafolio' }
+).length > 0));
+
 export const renderPortafolio = () => {
   const { doc, web, tipoDecoracion, tipoPortada } = prepararDocumento(ctx.estadoPortafolio.tema);
-  doc.innerHTML = generarPortafolioHTML(ctx.estadoPortafolio, { web, tipoDecoracion, tipoPortada });
+  doc.innerHTML = generarPortafolioHTML(conMarca(ctx.estadoPortafolio), { web, tipoDecoracion, tipoPortada });
   terminarDocumento(doc, web);
 };
 
@@ -57,7 +76,7 @@ export const renderDocumento = () => {
   if (ctx.modoEditor === 'portafolio') return renderPortafolio();
   const { doc, web, tipoDecoracion, tipoPortada } = prepararDocumento(ctx.estado.tema);
   prepararPropuesta();
-  doc.innerHTML = generarPropuestaHTML(ctx.estado, {
+  doc.innerHTML = generarPropuestaHTML(conMarca(ctx.estado), {
     web,
     seleccion: ctx.seleccion,
     compartida: ctx.compartida,
@@ -68,12 +87,16 @@ export const renderDocumento = () => {
 };
 
 export const instalarVista = () => {
+  // Cambió el plan (por ejemplo, pasó a Pro): la marca del pie se recalcula.
+  document.addEventListener('dealit:plan', () => { if (!ctx.esCliente && $('#documento')) renderDocumento(); });
   window.addEventListener('beforeprint', () => {
     ctx.imprimiendo = true;
     renderDocumento();
+    $('#documento')?.classList.toggle('doc--marca-agua', llevaMarcaDeAgua());
   });
   window.addEventListener('afterprint', () => {
     ctx.imprimiendo = false;
+    $('#documento')?.classList.remove('doc--marca-agua');
     renderDocumento();
   });
 

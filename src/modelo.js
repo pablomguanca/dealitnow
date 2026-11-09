@@ -832,6 +832,7 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
   const opacidadValida = rangoEntero(temaEntrada.opacidadSvg, 0, 200, 100);
   const opPortadaValida = rangoEntero(d.propuesta?.opacidadPortada, 0, 90, 35);
   const n = {
+    plantilla: PLANTILLAS[d.plantilla] ? d.plantilla : '',
     emisor: limpiar(d.emisor, base.emisor),
     cliente: limpiar(d.cliente, base.cliente),
     propuesta: {
@@ -1526,6 +1527,7 @@ export const normalizarPortafolio = (datos, { logoValido = logo => /^data:image\
   const opacidadValida = rangoEntero(temaEntrada.opacidadSvg, 0, 200, 100);
   const opPortadaValida = rangoEntero(d.portafolio?.opacidadPortada, 0, 90, 35);
   const n = {
+    plantilla: PLANTILLAS_PORTAFOLIO[d.plantilla] ? d.plantilla : '',
     emisor: limpiar(d.emisor, base.emisor),
     portafolio: {
       ...limpiar(d.portafolio, base.portafolio),
