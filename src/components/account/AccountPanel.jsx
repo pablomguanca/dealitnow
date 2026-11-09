@@ -33,6 +33,7 @@ export function AccountPanel() {
         </div>
         <p className="tarjeta__ayuda">El pago se hace en Mercado Pago. Cancelás cuando quieras y seguís con Pro hasta el final del período pago.</p>
       </div>
+      <button type="button" className="boton boton--texto boton--chico" id="plan-sincronizar" data-accion="sincronizar-plan">Ya pagué, actualizar mi plan</button>
       <a className="boton boton--texto" id="plan-administrar" href="https://www.mercadopago.com.ar/subscriptions" target="_blank" rel="noopener" hidden>Administrar o cancelar la suscripción en Mercado Pago</a>
     </section>
 

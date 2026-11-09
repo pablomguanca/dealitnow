@@ -6,6 +6,7 @@ import { crearHandler as crearSuscripcion } from '../api/suscripcion.js';
 import { crearHandler as crearWebhook } from '../api/mercadopago.js';
 import { firmaValida } from '../api/_lib/mercadopago.js';
 import { crearHandler as crearPlan } from '../api/plan.js';
+import { crearHandler as crearSincronizar } from '../api/sincronizar.js';
 import { planesActivosPara } from '../api/_lib/planes-activos.js';
 
 const AHORA = new Date('2026-11-15T15:00:00-03:00');
@@ -190,6 +191,33 @@ describe('interruptor de los planes', () => {
     const sinSesion = res();
     await crearPlan({ sesionDe: async () => null, planesActivos: () => true })(post({}), sinSesion);
     expect(sinSesion.estado).toBe(401);
+  });
+});
+
+describe('POST /api/sincronizar', () => {
+  const sesion = async () => ({ uid: 'duenio1234', email: 'a@b.com' });
+
+  it('activa Pro consultando a Mercado Pago, aunque no haya llegado el aviso', async () => {
+    const { db, datos } = crearDb({});
+    const mp = { buscarSuscripciones: async () => [
+      { id: 'vieja', status: 'cancelled', external_reference: 'duenio1234' },
+      { id: 'mp7', status: 'authorized', external_reference: 'duenio1234', next_payment_date: '2026-12-09T00:00:00Z', auto_recurring: { frequency: 1 } }
+    ] };
+    const r = res();
+    await crearSincronizar({ db, sesionDe: sesion, planesActivos: () => true, mp })(post({}), r);
+    expect(r.estado).toBe(200);
+    expect(datos.planes.duenio1234).toMatchObject({ tipo: 'pro', estado: 'activa', mpSuscripcionId: 'mp7' });
+  });
+
+  it('no toca el plan si no hay suscripciones o son de otra cuenta', async () => {
+    const { db, datos } = crearDb({});
+    const sinNada = res();
+    await crearSincronizar({ db, sesionDe: sesion, planesActivos: () => true, mp: { buscarSuscripciones: async () => [] } })(post({}), sinNada);
+    expect(sinNada.cuerpo).toEqual({ encontrada: false });
+    const ajena = res();
+    await crearSincronizar({ db, sesionDe: sesion, planesActivos: () => true, mp: { buscarSuscripciones: async () => [{ id: 'x', status: 'authorized', external_reference: 'otro' }] } })(post({}), ajena);
+    expect(ajena.cuerpo).toEqual({ encontrada: false });
+    expect(datos.planes).toBeUndefined();
   });
 });
 

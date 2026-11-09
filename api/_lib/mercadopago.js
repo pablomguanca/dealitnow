@@ -33,6 +33,12 @@ export const crearSuscripcion = datos => llamar('/preapproval', { method: 'POST'
 export const obtenerSuscripcion = id => llamar(`/preapproval/${encodeURIComponent(id)}`);
 export const obtenerPagoDeSuscripcion = id => llamar(`/authorized_payments/${encodeURIComponent(id)}`);
 
+// Suscripciones de una cuenta de Dealit (external_reference = uid), de la más nueva a la más vieja.
+export const buscarSuscripciones = async referencia => {
+  const datos = await llamar(`/preapproval/search?external_reference=${encodeURIComponent(referencia)}&sort=date_created:desc&limit=20`);
+  return Array.isArray(datos?.results) ? datos.results : [];
+};
+
 // Verifica la firma de un aviso (encabezado x-signature: «ts=…,v1=…»). Sin firma válida,
 // el aviso se descarta: así nadie puede falsificar un «pagó».
 export const firmaValida = ({ firma, idSolicitud, idDato, secreto = process.env.MP_WEBHOOK_SECRET }) => {

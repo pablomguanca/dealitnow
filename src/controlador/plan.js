@@ -39,6 +39,7 @@ const pintarPlan = () => {
   }
   $('#plan-ofertas').hidden = pro && plan.estado === 'activa';
   $('#plan-administrar').hidden = !pro;
+  $('#plan-sincronizar').hidden = pro && plan.estado === 'activa';
   $$('[data-precio-pro]').forEach(el => { el.textContent = precioTexto(el.dataset.precioPro); });
   const barra = $('#plan-uso');
   if (barra) {
@@ -133,16 +134,39 @@ export const ofrecerPro = async (motivo = 'general') => {
   if (eleccion) suscribir(eleccion);
 };
 
+// Respaldo del aviso de Mercado Pago: el servidor consulta la suscripción y actualiza el
+// plan. El cambio llega solo, por planes/{uid}; acá solo se avisa si no hubo suerte.
+const sincronizar = async ({ manual = false, boton } = {}) => {
+  if (boton) boton.disabled = true;
+  try {
+    const r = await llamarApi('/api/sincronizar', {});
+    if (manual && !r?.encontrada) avisar('Todavía no encontramos un pago en Mercado Pago. Si recién pagaste, probá de nuevo en un minuto.', 8000);
+    else if (manual && r?.plan?.estado !== 'activa') avisar('Mercado Pago todavía no confirmó el pago. Probá de nuevo en un minuto.', 8000);
+    return r;
+  } catch (e) {
+    if (manual) avisarError(e.detalle ? `No pudimos consultar Mercado Pago. Motivo: ${e.detalle}` : 'No pudimos consultar Mercado Pago. Probá de nuevo en un minuto.');
+    return null;
+  } finally {
+    if (boton) boton.disabled = false;
+  }
+};
+
 export const instalarPlan = () => {
   pintarPlan();
-  // Vuelta desde Mercado Pago: el plan se activa cuando llega la confirmación (unos segundos).
+  // Vuelta desde Mercado Pago: se consulta enseguida y otra vez unos segundos después,
+  // por si Mercado Pago todavía no actualizó el estado (el aviso por webhook puede tardar).
   const parametros = new URLSearchParams(location.search);
   if (parametros.get('suscripcion') === 'volver') {
     avisar('Estamos confirmando tu pago con Mercado Pago. En unos segundos se activa Pro.', 8000);
     irRuta('/cuenta', { reemplazar: true });
+    setTimeout(async () => {
+      const r = await sincronizar();
+      if (r?.plan?.estado !== 'activa') setTimeout(() => sincronizar(), 6000);
+    }, 2500);
   }
   registrarAcciones({
     'suscribir-pro': boton => suscribir(boton.dataset.periodo, boton),
-    'ofrecer-pro': () => ofrecerPro('general')
+    'ofrecer-pro': () => ofrecerPro('general'),
+    'sincronizar-plan': boton => sincronizar({ manual: true, boton })
   });
 };
