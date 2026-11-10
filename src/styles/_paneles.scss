@@ -582,7 +582,7 @@ a.barra__logo {
 
   &:hover,
   &:focus-visible {
-    border-color: #D97706;
+    border-color: #B45309;
   }
 
   .metrica__valor {
@@ -1281,6 +1281,27 @@ body.invitado .editor__invitado {
     border-radius: inherit;
     background: var(--dorado);
     transition: width 0.5s var(--ease-out-expo);
+  }
+
+  &--ultimo span {
+    background: #D97706;
+  }
+}
+
+.plan-otra-cuenta {
+  margin: 0.9rem 0 0;
+  font-size: 0.85rem;
+
+  summary {
+    width: fit-content;
+    cursor: pointer;
+    color: var(--marfil-apagado);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .plan-email {
+    margin-top: 0.7rem;
   }
 }
 

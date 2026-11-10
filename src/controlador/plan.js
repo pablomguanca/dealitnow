@@ -9,16 +9,26 @@ import { registrarAcciones } from './acciones.js';
 import { avisar, avisarError, elegir } from './avisos.js';
 import { llamarApi } from './api.js';
 import { irRuta } from './navegacion.js';
+import { irADiseno } from './hoja.js';
 
 let dejarDeEscuchar = null;
 let verificado = false;
 // El servidor dice si los planes están activos para esta cuenta (interruptor PLANES_ACTIVOS).
 let planesActivos = false;
 
+// Meses que regala el anual frente a pagar 12 mensuales (hoy, 2).
+export const mesesGratisAnual = () => Math.round(12 - PRECIOS_PRO.anual.monto / PRECIOS_PRO.mensual.monto);
+
 const precioTexto = periodo => {
   const p = PRECIOS_PRO[periodo];
-  return `${dinero(p.monto, p.moneda)} ${periodo === 'anual' ? 'por año' : 'por mes'}`;
+  if (periodo === 'anual') return `${dinero(p.monto, p.moneda)} por año · ${mesesGratisAnual()} meses gratis`;
+  return `${dinero(p.monto, p.moneda)} por mes`;
 };
+
+const opcionesPro = () => [
+  { valor: 'mensual', texto: `Pro mensual · ${precioTexto('mensual')}`, estilo: 'primario' },
+  { valor: 'anual', texto: `Pro anual · ${precioTexto('anual')}`, estilo: 'secundario' }
+];
 
 export const usuarioEsPro = () => esPro(ctx.plan);
 
@@ -55,7 +65,8 @@ const pintarPlan = () => {
       ? `Plan Pro ${plan.periodo === 'anual' ? 'anual' : 'mensual'} activo.${vence ? ` Próximo cobro: ${vence}.` : ''}`
       : `Plan Pro hasta el ${vence}. Cancelaste la renovación.`;
   } else {
-    estado.textContent = `Plan Gratis: ${usados} de ${LIMITE_ENVIOS_GRATIS} propuestas enviadas este mes.`;
+    const quedan = Math.max(0, LIMITE_ENVIOS_GRATIS - usados);
+    estado.textContent = `Plan Gratis: ${usados} de ${LIMITE_ENVIOS_GRATIS} propuestas enviadas este mes. ${quedan === 0 ? 'No te quedan envíos: se renuevan el mes que viene.' : quedan === 1 ? 'Te queda 1 envío.' : `Te quedan ${quedan} envíos.`}`;
   }
   $('#plan-ofertas').hidden = pro && plan.estado === 'activa';
   $('#plan-administrar').hidden = !pro;
@@ -65,6 +76,7 @@ const pintarPlan = () => {
   if (barra) {
     barra.hidden = pro;
     barra.style.setProperty('--uso', String(Math.min(1, usados / LIMITE_ENVIOS_GRATIS)));
+    barra.classList.toggle('plan-uso--ultimo', !pro && usados >= LIMITE_ENVIOS_GRATIS - 1);
   }
   aplicarRestricciones();
 };
@@ -165,17 +177,32 @@ const MOTIVOS = {
 
 export const ofrecerPro = async (motivo = 'general', nombres = []) => {
   const { titulo, texto } = (MOTIVOS[motivo] || MOTIVOS.general)(nombres);
+  // Con un diseño PRO, la salida gratis es cambiar de diseño (no abandonar el envío).
+  const salida = motivo === 'diseno' || motivo === 'link-activo'
+    ? { valor: 'gratis', texto: 'Elegir un diseño gratis', estilo: 'texto' }
+    : { valor: null, texto: 'Ahora no', estilo: 'texto' };
+  const eleccion = await elegir({ titulo, texto, opciones: [...opcionesPro(), salida] });
+  if (eleccion === 'gratis') irADiseno();
+  else if (eleccion) suscribir(eleccion);
+};
+
+// Antes del último envío gratis del mes: avisa y deja elegir. true = enviar.
+export const confirmarUltimoEnvio = async () => {
   const eleccion = await elegir({
-    titulo,
-    texto,
+    titulo: 'Es tu último envío gratis de este mes',
+    texto: `Vas a usar el envío ${LIMITE_ENVIOS_GRATIS} de ${LIMITE_ENVIOS_GRATIS}. Después, las propuestas nuevas se mandan con Pro o cuando se renueve tu cupo, el mes que viene.`,
     opciones: [
-      { valor: 'anual', texto: `Pro anual · ${precioTexto('anual')}`, estilo: 'primario' },
-      { valor: 'mensual', texto: `Pro mensual · ${precioTexto('mensual')}`, estilo: 'secundario' },
-      { valor: null, texto: 'Ahora no', estilo: 'texto' }
+      { valor: 'enviar', texto: 'Enviar igual', estilo: 'primario' },
+      { valor: 'pro', texto: 'Ver Dealit Pro', estilo: 'secundario' },
+      { valor: null, texto: 'Cancelar', estilo: 'texto' }
     ]
   });
-  if (eleccion) suscribir(eleccion);
+  if (eleccion === 'pro') ofrecerPro('general');
+  return eleccion === 'enviar';
 };
+
+// Envíos gratis que le quedan este mes (null si no tiene límite).
+export const enviosRestantes = () => (restriccionesActivas() ? Math.max(0, LIMITE_ENVIOS_GRATIS - enviosDelMes(ctx.plan)) : null);
 
 // Respaldo del aviso de Mercado Pago: el servidor consulta la suscripción y actualiza el
 // plan. El cambio llega solo, por planes/{uid}; acá solo se avisa si no hubo suerte.

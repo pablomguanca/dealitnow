@@ -55,7 +55,9 @@ const conMarca = s => {
   document.querySelectorAll('[data-campo="opciones.credito"], [data-campo-pf="opciones.credito"]').forEach(c => {
     c.disabled = !!ctx.marcaObligatoria;
     if (ctx.marcaObligatoria) c.checked = true;
-    c.closest('label')?.setAttribute('title', ctx.marcaObligatoria ? 'Con Pro podés sacar la marca de Dealit.' : '');
+    const etiqueta = c.closest('label');
+    etiqueta?.setAttribute('title', ctx.marcaObligatoria ? 'Con Pro podés sacar la marca de Dealit.' : '');
+    etiqueta?.toggleAttribute('data-pro-bloqueado', !!ctx.marcaObligatoria);
   });
   return forzar && !s.opciones.credito ? { ...s, opciones: { ...s.opciones, credito: true } } : s;
 };

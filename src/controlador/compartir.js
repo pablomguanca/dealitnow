@@ -21,7 +21,7 @@ import { hayCambiosSinEnviar, guardarAhora, registrarEscritura } from './guardad
 import { abrirRegistro } from './sesion.js';
 import { guardarVersion } from './versiones.js';
 import { llamarApi } from './api.js';
-import { ofrecerPro, restriccionesActivas } from './plan.js';
+import { ofrecerPro, restriccionesActivas, confirmarUltimoEnvio, enviosRestantes } from './plan.js';
 import { usosPro } from '../planes.js';
 
 let linkActual = '';
@@ -75,11 +75,18 @@ const activarLink = async () => {
     ofrecerPro('diseno', usos.map(u => u.nombre));
     return false;
   }
+  // Una propuesta nueva gasta un envío del mes: se avisa antes del último.
+  const restantes = actual?.enviadaEn ? null : enviosRestantes();
+  if (restantes === 0) {
+    ofrecerPro('limite');
+    return false;
+  }
+  if (restantes === 1 && !await confirmarUltimoEnvio()) return false;
   await conEspera(ctx.ultimaEscritura);
   try {
-    const { primeraVez } = await llamarApi('/api/activar', { id: ctx.propuestaId });
+    const { primeraVez, usados, limite } = await llamarApi('/api/activar', { id: ctx.propuestaId });
     if (primeraVez) guardarVersion('enviada');
-    return true;
+    return { primeraVez, quedan: primeraVez && limite ? Math.max(0, limite - usados) : null };
   } catch (e) {
     if (e.codigo === 'limite-envios') ofrecerPro('limite');
     else if (e.codigo === 'diseno-pro') ofrecerPro('diseno', usosPro(ctx.estado).map(u => u.nombre));
@@ -170,8 +177,14 @@ export const abrirCompartir = async () => {
   const conCuenta = !!(nube() && ctx.propuestaId);
   const avisos = [];
   if (conCuenta) {
-    if (!await activarLink()) return;
+    const activado = await activarLink();
+    if (!activado) return;
     linkActual = linkCorto(ctx.propuestaId);
+    if (activado.quedan != null) {
+      avisos.push(activado.quedan === 0
+        ? 'Usaste tus envíos gratis de este mes. Las próximas propuestas nuevas se mandan con Pro o el mes que viene.'
+        : `Te ${activado.quedan === 1 ? 'queda 1 envío gratis' : `quedan ${activado.quedan} envíos gratis`} este mes.`);
+    }
   } else {
     const { datos, logoOmitido } = datosParaLink();
     try {

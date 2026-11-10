@@ -17,20 +17,23 @@ export function AccountPanel() {
           <li>Propuestas ilimitadas, sin tope mensual</li>
           <li>Todas las plantillas y diseños PRO</li>
           <li>Sin la marca «Plantilla creada con Dealit»</li>
-          <li>Avisos por email cuando tu cliente abre o acepta</li>
+          <li>Te avisamos por email cuando tu cliente abre o acepta</li>
         </ul>
-        <label className="campo plan-email">
-          <span className="campo__etiqueta">Email de tu cuenta de Mercado Pago (si es distinto al de Dealit)</span>
-          <input className="control" id="plan-email-pago" type="email" autoComplete="email" maxLength="200" placeholder="El mismo con el que entrás a Mercado Pago" />
-        </label>
         <div className="plan-botones">
-          <button type="button" className="boton boton--primario" data-accion="suscribir-pro" data-periodo="anual">
-            Pro anual · <span data-precio-pro="anual"></span>
-          </button>
-          <button type="button" className="boton boton--secundario" data-accion="suscribir-pro" data-periodo="mensual">
+          <button type="button" className="boton boton--primario" data-accion="suscribir-pro" data-periodo="mensual">
             Pro mensual · <span data-precio-pro="mensual"></span>
           </button>
+          <button type="button" className="boton boton--secundario" data-accion="suscribir-pro" data-periodo="anual">
+            Pro anual · <span data-precio-pro="anual"></span>
+          </button>
         </div>
+        <details className="plan-otra-cuenta">
+          <summary>¿Pagás con otra cuenta de Mercado Pago?</summary>
+          <label className="campo plan-email">
+            <span className="campo__etiqueta">Email de esa cuenta de Mercado Pago</span>
+            <input className="control" id="plan-email-pago" type="email" autoComplete="email" maxLength="200" placeholder="El mismo con el que entrás a Mercado Pago" />
+          </label>
+        </details>
         <p className="tarjeta__ayuda">El pago se hace en Mercado Pago. Cancelás cuando quieras y seguís con Pro hasta el final del período pago.</p>
       </div>
       <button type="button" className="boton boton--texto boton--chico" id="plan-sincronizar" data-accion="sincronizar-plan">Ya pagué, actualizar mi plan</button>

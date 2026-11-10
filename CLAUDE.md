@@ -40,7 +40,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 | `api/activar.js` | `POST /api/activar`: el dueño activa el link; aplica el límite del plan |
 | `api/suscripcion.js` | `POST /api/suscripcion`: crea la suscripción a Pro en Mercado Pago y devuelve el link de pago |
 | `api/mercadopago.js` | `POST /api/mercadopago`: avisos de Mercado Pago (firma verificada); actualiza `planes/{uid}` |
-| `api/_lib/` | Firebase Admin, verificación del token, utilidades HTTP y cliente de Mercado Pago |
+| `api/_lib/` | Firebase Admin, verificación del token, utilidades HTTP, cliente de Mercado Pago y avisos por email al dueño (`avisos.js`: primera visita y aceptación, solo Pro) |
 | `firestore.rules`, `storage.rules` | Reglas de seguridad (versionadas) |
 | `index.html`, `terminos.html`, `privacidad.html` | Páginas; `/p/:id` se reescribe a `/` (ver `vercel.json`) |
 
@@ -68,7 +68,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 - **Directo en `main`, sin ramas ni pull requests.** Los deploys de prueba de Vercel piden login por la Deployment Protection, así que lo que se pushea a `main` va derecho a producción.
 - Por eso: verificar en local antes de pushear (`npm run check` y probar en `npm run dev:demo`), y pushear solo cuando el dueño lo pida.
 - Si un cambio necesita publicar reglas o índices de Firebase, avisar y hacerlo **antes** del push.
-- Secretos, solo como variables de entorno en Vercel y nunca en el repo: `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio), `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` (Mercado Pago; primero las de prueba). Opcional: `APP_URL` (URL de vuelta tras pagar).
+- Secretos, solo como variables de entorno en Vercel y nunca en el repo: `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio), `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` (Mercado Pago; primero las de prueba). Opcional: `APP_URL` (URL de vuelta tras pagar y de los links en los emails). Avisos por email (Resend): `RESEND_API_KEY` y `EMAIL_REMITENTE` (ej. `Dealit <avisos@tudominio.com>`, de un dominio verificado en Resend); sin la clave no se mandan.
 - Interruptor de los planes: `PLANES_ACTIVOS=1` prende el límite de Gratis y la oferta de Pro para todos; `PLANES_PRUEBA` (emails separados por coma) los prende solo para esas cuentas. Apagado, los envíos se cuentan pero no se frenan (ver `api/_lib/planes-activos.js`).
 
 ## Planes (freemium, definido el 2026-10-07)

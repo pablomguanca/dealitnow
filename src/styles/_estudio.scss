@@ -68,7 +68,7 @@
   align-items: center;
   padding: 0.1rem 0.38rem;
   border-radius: 999px;
-  background: linear-gradient(135deg, #F59E0B, #D97706);
+  background: linear-gradient(135deg, #B45309, #92400E);
   color: #FFF;
   font-style: normal;
   font-size: 0.62rem;
@@ -210,4 +210,16 @@
     font-size: 0.7rem;
     color: var(--marfil-apagado);
   }
+}
+
+// «Elegir un diseño gratis»: los temas PRO se apagan un momento para que se vean los gratis.
+.temas--resaltar-gratis .tema-card:has(.tema-card__badge) {
+  opacity: 0.35;
+  transition: opacity 0.3s ease;
+}
+
+// La marca del pie, bloqueada en Gratis: se explica a la vista (el title no se ve en celular).
+.casilla[data-pro-bloqueado] > span::after {
+  content: ' · Con Pro podés sacarla';
+  color: var(--marfil-apagado);
 }

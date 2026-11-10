@@ -72,6 +72,16 @@ const editorOcultoGuardado = () => {
   try { return localStorage.getItem(CLAVE_EDITOR_OCULTO) === '1'; } catch { return false; }
 };
 
+export const irADiseno = () => {
+  ocultarEditor(false);
+  const paso = pasosVisibles().find(d => d.dataset.corto === 'Diseño');
+  if (!paso) return;
+  const indice = pasosVisibles().indexOf(paso);
+  irASeccion(indice, $$('.hoja__seccion')[indice]);
+  $('#temas-grid')?.classList.add('temas--resaltar-gratis');
+  setTimeout(() => $('#temas-grid')?.classList.remove('temas--resaltar-gratis'), 4000);
+};
+
 export const instalarHoja = () => {
   fijarHoja(altura);
   ocultarEditor(editorOcultoGuardado());
