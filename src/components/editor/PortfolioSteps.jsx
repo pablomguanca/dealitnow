@@ -172,7 +172,7 @@ export function PortfolioSteps() {
               </label>
               <label className="casilla campo--ancho">
                 <input type="checkbox" data-campo-pf="opciones.credito" />
-                <span>Mostrar «Plantilla creada con Dealit» al pie</span>
+                <span>Mostrar «Portfolio creado con Dealit» al pie</span>
               </label>
             </div>
           </div>

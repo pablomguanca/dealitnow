@@ -249,7 +249,7 @@ export function ProposalSteps() {
           </label>
           <label className="casilla campo--ancho">
             <input type="checkbox" data-campo="opciones.credito" />
-            <span>Mostrar «Plantilla creada con Dealit» al pie</span>
+            <span>Mostrar «Propuesta creada con Dealit» al pie</span>
           </label>
         </div>
       </details>

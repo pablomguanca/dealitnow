@@ -16,7 +16,7 @@ export function AccountPanel() {
         <ul className="plan-beneficios">
           <li>Propuestas ilimitadas, sin tope mensual</li>
           <li>Todas las plantillas y diseños PRO</li>
-          <li>Sin la marca «Plantilla creada con Dealit»</li>
+          <li>Sin la marca «Propuesta creada con Dealit»</li>
           <li>Te avisamos por email cuando tu cliente abre o acepta</li>
         </ul>
         <div className="plan-botones">

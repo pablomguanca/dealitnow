@@ -623,10 +623,30 @@
   }
 
   &__credito {
+    display: inline-flex;
     flex-basis: 100%;
+    align-items: baseline;
+    gap: 0.35em;
     margin-top: 0.8em;
     font-size: 0.9em;
     color: var(--d-tenue);
+    text-decoration: none;
+
+    &:hover .pie__marca {
+      opacity: 1;
+    }
+  }
+
+  &__marca {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.55em;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: var(--d-texto, currentColor);
+    opacity: 0.85;
+    transition: opacity 0.2s ease;
   }
 }
 .barra-cliente {

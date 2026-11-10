@@ -201,3 +201,11 @@
     transform: translateX(0);
   }
 }
+
+// Los portfolios se comparten como link: sin descarga en PDF (ver renderPortafolio).
+.editando-portafolio {
+  [data-accion="pdf"],
+  [data-vista="pdf"] {
+    display: none;
+  }
+}

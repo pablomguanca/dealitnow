@@ -440,6 +440,20 @@ export const observarElementos = (raiz, esCliente = false) => {
   });
 };
 
+// Marca de Dealit al pie: el nombre va con la tipografía del logo.
+const creditoHTML = (tipo, web) => {
+  const contenido = `${tipo === 'portafolio' ? 'Portfolio creado' : 'Propuesta creada'} con <b class="pie__marca">Dealit</b>`;
+  return web
+    ? `<a class="pie__credito" href="/?ref=marca" target="_blank" rel="noopener">${contenido}</a>`
+    : `<span class="pie__credito">${contenido}</span>`;
+};
+
+// Marca de agua al imprimir (sin cuenta, o en Gratis con un diseño PRO): tres franjas por hoja.
+export const marcaDeAguaHTML = tipo => `
+  <div class="marca-agua" aria-hidden="true">
+    ${Array.from({ length: 3 }, () => `<p><span>${tipo === 'portafolio' ? 'Portfolio creado' : 'Propuesta creada'} con</span><b>Dealit</b></p>`).join('')}
+  </div>`;
+
 export const generarPortafolioHTML = (s, { web = true, tipoDecoracion = 'marco', tipoPortada = 'editorial' } = {}) => {
   const e = s.emisor;
   const pf = s.portafolio;
@@ -613,8 +627,7 @@ export const generarPortafolioHTML = (s, { web = true, tipoDecoracion = 'marco',
     <footer class="pie">
       ${e.nombre.trim() ? `<span class="pie__nombre">${esc(e.nombre)}</span>` : ''}
       ${contactos.map(x => `<span>${x}</span>`).join('')}
-      ${web ? '<button type="button" class="pie__pdf" data-accion="pdf">Descargar en PDF</button>' : ''}
-      ${s.opciones.credito ? '<span class="pie__credito">Plantilla creada con Dealit</span>' : ''}
+      ${s.opciones.credito ? creditoHTML('portafolio', web) : ''}
     </footer>`;
 
   const barraInferior = web ? `
@@ -881,7 +894,7 @@ export const generarPropuestaHTML = (
       ${e.nombre.trim() ? `<span class="pie__nombre">${esc(e.nombre)}</span>` : ''}
       ${contactos.map(x => `<span>${x}</span>`).join('')}
       ${web ? '<button type="button" class="pie__pdf" data-accion="pdf">Descargar en PDF</button>' : ''}
-      ${s.opciones.credito ? '<span class="pie__credito">Plantilla creada con Dealit</span>' : ''}
+      ${s.opciones.credito ? creditoHTML('propuesta', web) : ''}
     </footer>`;
 
   const aviso = web && vig.vencida ? `<p class="doc-aviso">Esta propuesta venció el ${esc(fechaLarga(vig.vence))}. Los valores pueden haber cambiado.</p>` : '';

@@ -4,7 +4,7 @@
 
 import { $ } from '../lib/formato.js';
 import { aplicarTema } from '../lib/tema.js';
-import { observarElementos, generarPortafolioHTML, generarPropuestaHTML } from '../lib/render.js';
+import { observarElementos, generarPortafolioHTML, generarPropuestaHTML, marcaDeAguaHTML } from '../lib/render.js';
 import { usosPro } from '../planes.js';
 import {
   abrirLightboxDesdeNodo,
@@ -48,7 +48,7 @@ const terminarDocumento = (doc, web) => {
   marcarAnimacionInicial(doc, web);
 };
 
-// En Gratis el pie lleva siempre «Plantilla creada con Dealit»: en el editor (ctx.marcaObligatoria,
+// En Gratis el pie lleva siempre «Propuesta creada con Dealit»: en el editor (ctx.marcaObligatoria,
 // lo pone plan.js) y en el link (marca, que escribe el servidor al activarlo).
 const conMarca = s => {
   const forzar = ctx.compartida?.marca || ctx.marcaObligatoria;
@@ -69,6 +69,12 @@ const llevaMarcaDeAgua = () => !ctx.esCliente && (ctx.invitado || (ctx.restringi
 ).length > 0));
 
 export const renderPortafolio = () => {
+  // Los portfolios no se descargan en PDF: se comparten como link.
+  document.body.classList.add('editando-portafolio');
+  if (!ctx.esCliente && ctx.vista === 'pdf') {
+    document.querySelector('[data-accion="vista"][data-vista="escritorio"]')?.click();
+    return;
+  }
   const { doc, web, tipoDecoracion, tipoPortada } = prepararDocumento(ctx.estadoPortafolio.tema);
   doc.innerHTML = generarPortafolioHTML(conMarca(ctx.estadoPortafolio), { web, tipoDecoracion, tipoPortada });
   terminarDocumento(doc, web);
@@ -76,6 +82,7 @@ export const renderPortafolio = () => {
 
 export const renderDocumento = () => {
   if (ctx.modoEditor === 'portafolio') return renderPortafolio();
+  document.body.classList.remove('editando-portafolio');
   const { doc, web, tipoDecoracion, tipoPortada } = prepararDocumento(ctx.estado.tema);
   prepararPropuesta();
   doc.innerHTML = generarPropuestaHTML(conMarca(ctx.estado), {
@@ -94,11 +101,12 @@ export const instalarVista = () => {
   window.addEventListener('beforeprint', () => {
     ctx.imprimiendo = true;
     renderDocumento();
-    $('#documento')?.classList.toggle('doc--marca-agua', llevaMarcaDeAgua());
+    document.querySelector('.marca-agua')?.remove();
+    if (llevaMarcaDeAgua()) document.body.insertAdjacentHTML('beforeend', marcaDeAguaHTML(ctx.modoEditor));
   });
   window.addEventListener('afterprint', () => {
     ctx.imprimiendo = false;
-    $('#documento')?.classList.remove('doc--marca-agua');
+    document.querySelector('.marca-agua')?.remove();
     renderDocumento();
   });
 

@@ -141,8 +141,10 @@ const suscribir = async (periodo, boton) => {
     let mensaje = mensajes[e.codigo] || 'No pudimos iniciar el pago. Revisá tu conexión y probá de nuevo.';
     if (e.codigo === 'mercadopago-rechazo') {
       // Vendedor y comprador tienen que ser los dos reales o los dos de prueba.
-      mensaje += /real or test|test users|testuser/i.test(e.detalle)
-        ? ' El email tiene que ser el de una cuenta de Mercado Pago del mismo tipo (en las pruebas, el del comprador de prueba).'
+      // En producción, el email tiene que ser el de la cuenta con la que se paga (en las
+      // pruebas, además, la de un comprador de prueba: «real or test users»).
+      mensaje += /real or test|test users|testuser|payer|email/i.test(e.detalle)
+        ? ' Revisá que el email sea el de tu cuenta de Mercado Pago: si pagás con otra, cargalo en «¿Pagás con otra cuenta de Mercado Pago?».'
         : (e.detalle ? ` Motivo: ${e.detalle}` : ' Probá de nuevo en unos minutos.');
     }
     avisarError(mensaje, 12000);
