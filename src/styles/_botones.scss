@@ -90,3 +90,32 @@
     cursor: not-allowed;
   }
 }
+
+// Responsivo: un botón nunca es más ancho que su contenedor. Donde el texto es largo
+// (precios, diálogos, tarjetas de Mi cuenta) baja de línea en vez de salirse, también con
+// el texto del sistema agrandado (Android / iOS).
+.boton {
+  max-width: 100%;
+}
+
+.dialogo__acciones .boton,
+.plan-botones .boton,
+.tarjeta .boton,
+.res-tarjeta .boton,
+.panel__vacio .boton {
+  min-width: 0;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.dialogo__acciones--apiladas .boton {
+  width: 100%;
+}
+
+@media (max-width: 560px) {
+  .plan-botones .boton {
+    flex: 1 1 100%;
+  }
+}

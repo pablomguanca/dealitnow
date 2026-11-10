@@ -1,6 +1,7 @@
 // Diálogos modales (confirmación, compartir, aceptar propuesta, eliminar cuenta, visor Lightbox), notificaciones y plantillas de listas dinámicas.
 
 import { DialogoAceptar, DialogoConfirmacion, Aviso, VisorLightbox } from './ModalesComunes.jsx';
+import { DialogoIA } from './DialogoIA.jsx';
 
 const TPL_CONTROLES = `<button type="button" class="icono-boton" data-accion="subir"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 10l4-4 4 4"/></svg></button>
   <button type="button" class="icono-boton" data-accion="bajar"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 6l4 4 4-4"/></svg></button>
@@ -403,6 +404,22 @@ export function AppModals() {
   </form>
 </dialog>
 
+      <DialogoIA />
+      <dialog className="dialogo dialogo-pago" id="dialogo-pago" aria-labelledby="pago-titulo">
+        <form method="dialog" id="pago-form" noValidate>
+          <h2 className="dialogo__titulo" id="pago-titulo">Dealit Pro</h2>
+          <p className="dialogo-pago__precio" id="pago-precio"></p>
+          <label className="campo">
+            <span className="campo__etiqueta">¿Con qué email entrás a Mercado Pago?</span>
+            <input className="control" id="pago-email" type="email" autoComplete="email" inputMode="email" maxLength="200" required />
+          </label>
+          <p className="dialogo__texto dialogo-pago__ayuda">Tiene que ser el de la cuenta con la que vas a pagar: si no coincide, Mercado Pago no te deja confirmar. Podés usar cualquier cuenta, aunque no sea la de Dealit.</p>
+          <div className="dialogo__acciones">
+            <button type="button" className="boton boton--texto" data-accion="pago-cancelar">Cancelar</button>
+            <button type="submit" className="boton boton--primario" id="pago-ir">Ir a pagar a Mercado Pago</button>
+          </div>
+        </form>
+      </dialog>
       <Aviso />
       <template id="tpl-controles" dangerouslySetInnerHTML={{ __html: TPL_CONTROLES }} />
       <template id="tpl-objetivos" dangerouslySetInnerHTML={{ __html: TPL_OBJETIVOS }} />

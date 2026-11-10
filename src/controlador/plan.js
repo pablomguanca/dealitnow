@@ -4,6 +4,7 @@
 
 import { $, $$, dinero } from '../lib/formato.js';
 import { LIMITE_ENVIOS_GRATIS, PRECIOS_PRO, enviosDelMes, esPro, proParaVerificar } from '../planes.js';
+import { LIMITE_IA_GRATIS } from '../ia.js';
 import { ctx, AteneaDB } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { avisar, avisarError, elegir } from './avisos.js';
@@ -88,6 +89,7 @@ export const consultarPlanesActivos = async (reintento = true) => {
   try {
     const r = await llamarApi('/api/plan', {});
     planesActivos = !!r?.activos;
+    document.body.classList.toggle('ia-disponible', r?.ia === true);
   } catch (e) {
     console.warn('No se pudo consultar si los planes están activos:', e.codigo || e.message);
     if (reintento) {
@@ -124,13 +126,36 @@ export const reiniciarPlan = () => {
   aplicarRestricciones();
 };
 
+// Paso previo al pago: Mercado Pago exige el email de la cuenta con la que se paga, que
+// puede no ser el de Dealit. Se confirma acá (con el de Dealit ya cargado).
+let periodoElegido = 'mensual';
+const CLAVE_EMAIL_PAGO = 'dealit-email-pago';
+const suscribir = periodo => {
+  periodoElegido = PRECIOS_PRO[periodo] ? periodo : 'mensual';
+  const dialogo = $('#dialogo-pago');
+  if (!dialogo) return;
+  $('#pago-precio').textContent = `Pro ${periodoElegido} · ${precioTexto(periodoElegido)}`;
+  let guardado = '';
+  try { guardado = localStorage.getItem(CLAVE_EMAIL_PAGO) || ''; } catch { }
+  $('#pago-email').value = guardado || AteneaDB?.auth.getUser()?.email || '';
+  $('#pago-ir').disabled = false;
+  dialogo.showModal();
+  $('#pago-email').select();
+};
+
 // Crea la suscripción en el servidor y lleva a pagar a Mercado Pago.
-const suscribir = async (periodo, boton) => {
-  if (boton) boton.disabled = true;
+const irAPagar = async () => {
+  const emailPago = $('#pago-email').value.trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailPago)) {
+    avisarError('Revisá el email de tu cuenta de Mercado Pago.');
+    $('#pago-email').focus();
+    return;
+  }
+  const boton = $('#pago-ir');
+  boton.disabled = true;
   try {
-    // Mercado Pago pide el email de la cuenta con la que se va a pagar (si no, el de Dealit).
-    const emailPago = $('#plan-email-pago')?.value.trim();
-    const { url } = await llamarApi('/api/suscripcion', emailPago ? { periodo, emailPago } : { periodo });
+    try { localStorage.setItem(CLAVE_EMAIL_PAGO, emailPago); } catch { }
+    const { url } = await llamarApi('/api/suscripcion', { periodo: periodoElegido, emailPago });
     location.href = url;
   } catch (e) {
     const mensajes = {
@@ -140,15 +165,14 @@ const suscribir = async (periodo, boton) => {
     };
     let mensaje = mensajes[e.codigo] || 'No pudimos iniciar el pago. Revisá tu conexión y probá de nuevo.';
     if (e.codigo === 'mercadopago-rechazo') {
-      // Vendedor y comprador tienen que ser los dos reales o los dos de prueba.
-      // En producción, el email tiene que ser el de la cuenta con la que se paga (en las
-      // pruebas, además, la de un comprador de prueba: «real or test users»).
-      mensaje += /real or test|test users|testuser|payer|email/i.test(e.detalle)
-        ? ' Revisá que el email sea el de tu cuenta de Mercado Pago: si pagás con otra, cargalo en «¿Pagás con otra cuenta de Mercado Pago?».'
-        : (e.detalle ? ` Motivo: ${e.detalle}` : ' Probá de nuevo en unos minutos.');
+      // Con las credenciales de prueba solo pagan compradores de prueba («real or test users»).
+      if (/real or test|test users/i.test(e.detalle)) mensaje += ' Mercado Pago está en modo de prueba: solo se puede pagar con una cuenta de comprador de prueba.';
+      else if (/email/i.test(e.detalle)) mensaje += ' Revisá que el email sea el de la cuenta de Mercado Pago con la que vas a pagar.';
+      // El motivo real siempre a la vista: sirve para entender qué pasó.
+      if (e.detalle) mensaje += ` Motivo: ${e.detalle}`;
     }
-    avisarError(mensaje, 12000);
-    if (boton) boton.disabled = false;
+    avisarError(mensaje, 14000);
+    boton.disabled = false;
   }
 };
 
@@ -166,6 +190,10 @@ const MOTIVOS = {
   'link-activo': (nombres = []) => ({
     titulo: 'Tu cliente ya tiene el link',
     texto: `${nombres.length ? lista(nombres) : 'Este diseño'} es PRO y tu cliente lo vería al abrir la propuesta. Con Pro lo aplicás; si no, probalo en una copia de la propuesta.`
+  }),
+  ia: () => ({
+    titulo: 'Usaste tus propuestas con IA de este mes',
+    texto: `En Gratis armás ${LIMITE_IA_GRATIS} propuestas por mes contándolas en un audio. Con Pro son ilimitadas, y además las enviás sin tope y sin la marca de Dealit.`
   }),
   seguimiento: () => ({
     titulo: 'Sabé cuándo tu cliente abre tu propuesta',
@@ -225,6 +253,10 @@ const sincronizar = async ({ manual = false, boton } = {}) => {
 
 export const instalarPlan = () => {
   pintarPlan();
+  $('#pago-form')?.addEventListener('submit', ev => {
+    ev.preventDefault();
+    irAPagar();
+  });
   // Vuelta desde Mercado Pago: se consulta enseguida y otra vez unos segundos después,
   // por si Mercado Pago todavía no actualizó el estado (el aviso por webhook puede tardar).
   const parametros = new URLSearchParams(location.search);
@@ -237,7 +269,8 @@ export const instalarPlan = () => {
     }, 2500);
   }
   registrarAcciones({
-    'suscribir-pro': boton => suscribir(boton.dataset.periodo, boton),
+    'suscribir-pro': boton => suscribir(boton.dataset.periodo),
+    'pago-cancelar': () => $('#dialogo-pago').close(),
     'ofrecer-pro': boton => ofrecerPro(boton?.dataset?.motivo || 'general'),
     'sincronizar-plan': boton => sincronizar({ manual: true, boton })
   });

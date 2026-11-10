@@ -230,8 +230,8 @@ describe('interruptor de los planes', () => {
 
   it('/api/plan le dice a la app si los planes están activos', async () => {
     const r = res();
-    await crearPlan({ sesionDe: async () => ({ uid: 'u', email: 'a@b.com' }), planesActivos: () => true })(post({}), r);
-    expect(r.cuerpo).toEqual({ activos: true });
+    await crearPlan({ sesionDe: async () => ({ uid: 'u', email: 'a@b.com' }), planesActivos: () => true, iaDisponible: () => false })(post({}), r);
+    expect(r.cuerpo).toEqual({ activos: true, ia: false });
     const sinSesion = res();
     await crearPlan({ sesionDe: async () => null, planesActivos: () => true })(post({}), sinSesion);
     expect(sinSesion.estado).toBe(401);

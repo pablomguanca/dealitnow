@@ -38,6 +38,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 | `src/lib/formato.js` | Utilidades de texto, números, fechas y DOM |
 | `api/visto.js` | `POST /api/visto`: registra visitas al link |
 | `api/aceptar.js` | `POST /api/aceptar`: aceptación del cliente, validada en una transacción |
+| `api/ia-propuesta.js` | `POST /api/ia-propuesta`: «Contala y la armamos». Claude arma la propuesta a partir de lo dictado (reglas, esquema y validación en `src/ia.js`; cliente en `api/_lib/claude.js`); cuenta el uso del mes en `planes/{uid}.ia` |
 | `api/activar.js` | `POST /api/activar`: el dueño activa el link; aplica el límite del plan |
 | `api/suscripcion.js` | `POST /api/suscripcion`: crea la suscripción a Pro en Mercado Pago y devuelve el link de pago |
 | `api/mercadopago.js` | `POST /api/mercadopago`: avisos de Mercado Pago (firma verificada); actualiza `planes/{uid}` |
@@ -69,7 +70,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 - **Directo en `main`, sin ramas ni pull requests.** Los deploys de prueba de Vercel piden login por la Deployment Protection, así que lo que se pushea a `main` va derecho a producción.
 - Por eso: verificar en local antes de pushear (`npm run check` y probar en `npm run dev:demo`), y pushear solo cuando el dueño lo pida.
 - Si un cambio necesita publicar reglas o índices de Firebase, avisar y hacerlo **antes** del push.
-- Secretos, solo como variables de entorno en Vercel y nunca en el repo: `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio), `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` (Mercado Pago; primero las de prueba). Opcional: `APP_URL` (URL de vuelta tras pagar y de los links en los emails). Avisos por email (Resend): `RESEND_API_KEY` y `EMAIL_REMITENTE` (ej. `Dealit <avisos@tudominio.com>`, de un dominio verificado en Resend); sin la clave no se mandan.
+- Secretos, solo como variables de entorno en Vercel y nunca en el repo: `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio), `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` (Mercado Pago; primero las de prueba). IA: `ANTHROPIC_API_KEY` (sin ella, los botones de «Contala y la armamos» no se muestran) y opcional `IA_MODELO` (por defecto `claude-opus-5-5`; `claude-haiku-5-5` es mucho más económico). Opcional: `APP_URL` (URL de vuelta tras pagar y de los links en los emails). Avisos por email (Resend): `RESEND_API_KEY` y `EMAIL_REMITENTE` (ej. `Dealit <avisos@tudominio.com>`, de un dominio verificado en Resend); sin la clave no se mandan.
 - Interruptor de los planes: `PLANES_ACTIVOS=1` prende el límite de Gratis y la oferta de Pro para todos; `PLANES_PRUEBA` (emails separados por coma) los prende solo para esas cuentas. Apagado, los envíos se cuentan pero no se frenan (ver `api/_lib/planes-activos.js`).
 
 ## Planes (freemium, definido el 2026-10-07)
@@ -78,7 +79,7 @@ Planes: **Gratis · Pro · Estudio**.
 
 - **Sin cuenta:** una propuesta en el navegador. No puede compartir, guardar ni bajar PDF, y lo impreso con Ctrl+P lleva marca de agua.
 - **Vencimiento:** Pro sigue mientras `vence` (próximo cobro) + 3 días de margen esté por delante. Si el cobro no entra, vuelve solo a Gratis; con la fecha pasada, la app consulta `/api/sincronizar` una vez.
-- **Gratis:** hasta 100 borradores y 2 propuestas enviadas (links activados) por mes calendario. Incluye aceptación online, logo y colores propios y la marca «Propuesta creada con Dealit» (o «Portfolio creado…») obligatoria en el link y el PDF (campo `marca`, lo escribe `api/activar`). Los diseños y plantillas PRO se pueden probar en el editor, pero no enviar (`diseno-pro`); al imprimir llevan marca de agua. Sin seguimiento de vistas ni avisos por email.
+- **Gratis:** hasta 100 borradores y 2 propuestas enviadas (links activados) por mes calendario. Incluye aceptación online, logo y colores propios y la marca «Propuesta creada con Dealit» (o «Portfolio creado…») obligatoria en el link y el PDF (campo `marca`, lo escribe `api/activar`). Los diseños y plantillas PRO se pueden probar en el editor, pero no enviar (`diseno-pro`); al imprimir llevan marca de agua. Sin seguimiento de vistas ni avisos por email. 3 propuestas armadas con IA por mes (Pro: sin límite visible, tope anti abuso de 150).
 - **Pro:** ARS 13.900/mes o 139.000/año; USD 9/mes o 90/año fuera de Argentina (los pesos se ajustan cada trimestre). Borradores y envíos ilimitados, sin marca, seguimiento completo (vistas, cuándo, avisos en vivo) y avisos por email al aceptar.
 - **Estudio:** equipos de hasta 3 usuarios, alrededor de ARS 38.900/mes. Sale como «Próximamente» con lista de espera.
 - Los límites se aplican en el servidor: activar un link pasa por una función de Vercel y las reglas no dejan que el navegador lo haga solo.

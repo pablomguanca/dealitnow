@@ -22,6 +22,7 @@ import { instalarPortafolios } from './portafolios.js';
 import { instalarCuenta } from './cuenta.js';
 import { instalarPlan } from './plan.js';
 import { instalarResultados } from './resultados.js';
+import { instalarIA } from './ia.js';
 import { instalarSesion, arrancarSesion } from './sesion.js';
 
 export { registrarNavegadorReact } from './navegacion.js';
@@ -42,6 +43,7 @@ export const inicializarControladorDealit = () => {
   instalarVersiones();
   instalarDocumento();
   instalarResultados();
+  instalarIA();
   instalarCompartir();
   instalarAceptar();
   instalarNavegacion();

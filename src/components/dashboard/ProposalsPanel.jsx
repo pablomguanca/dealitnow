@@ -12,9 +12,13 @@ export function ProposalsPanel() {
             <p className="panel__bajada" id="panel-resumen"></p>
           </div>
           <div className="panel__acciones">
-            <button type="button" className="boton boton--primario" data-accion="nueva">
+            <button type="button" className="boton boton--secundario" data-accion="nueva">
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" /></svg>
               Propuesta en blanco
+            </button>
+            <button type="button" className="boton boton--primario boton--ia" data-accion="abrir-ia">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="2" width="4" height="7.5" rx="2" /><path d="M3.8 7.5a4.2 4.2 0 0 0 8.4 0M8 11.7V14" /></svg>
+              Contala y la armamos
             </button>
           </div>
         </div>
@@ -42,9 +46,10 @@ export function ProposalsPanel() {
 
           <div className="panel__vacio" id="panel-vacio" hidden>
             <h2 className="panel__vacio-titulo">Todavía no tenés propuestas</h2>
-            <p>Elegí una plantilla de tu rubro y cambiá los datos por los de tu proyecto, o empezá desde cero.</p>
+            <p>Contanos el trabajo en un audio y armamos la propuesta por vos. También podés elegir una plantilla de tu rubro o empezar desde cero.</p>
             <div className="panel__acciones">
-              <a className="boton boton--primario" href="/plantillas" data-accion="panel-pestana" data-pestana="plantillas">Ver plantillas</a>
+              <button type="button" className="boton boton--primario boton--ia" data-accion="abrir-ia"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="2" width="4" height="7.5" rx="2" /><path d="M3.8 7.5a4.2 4.2 0 0 0 8.4 0M8 11.7V14" /></svg> Contala y la armamos</button>
+              <a className="boton boton--secundario" href="/plantillas" data-accion="panel-pestana" data-pestana="plantillas">Ver plantillas</a>
               <button type="button" className="boton boton--secundario" data-accion="nueva">Empezar en blanco</button>
             </div>
           </div>

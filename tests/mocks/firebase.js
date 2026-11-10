@@ -179,8 +179,44 @@ window.fetch = async (url, opciones = {}) => {
     const { contenido, ...resumen } = datos;
     return respuesta(200, { aceptacion: { ...resumen, fecha } });
   }
-  if (ruta === '/api/plan') return respuesta(uid ? 200 : 401, uid ? { activos: true } : { error: 'sin-sesion' });
+  if (ruta === '/api/plan') return respuesta(uid ? 200 : 401, uid ? { activos: true, ia: true } : { error: 'sin-sesion' });
   if (ruta === '/api/sincronizar') return respuesta(uid ? 200 : 401, uid ? { encontrada: leerPlan().tipo === 'pro', plan: leerPlan() } : { error: 'sin-sesion' });
+  if (ruta === '/api/ia-propuesta') {
+    if (!uid) return respuesta(401, { error: 'sin-sesion' });
+    const texto = String(cuerpo?.texto || '').trim();
+    if (texto.length < 15) return respuesta(400, { error: 'texto-corto' });
+    const plan = leerPlan();
+    const mes = mesDe();
+    const usados = Number(plan.ia?.[mes]) || 0;
+    if (!esPro(plan) && usados >= 3) return respuesta(403, { error: 'limite-ia' });
+    await new Promise(listo => setTimeout(listo, 1200));
+    guardarPlan({ ...plan, ia: { ...plan.ia, [mes]: usados + 1 } });
+    const { propuestaDesdeIA, temasPermitidos } = await import('../../src/ia.js');
+    return respuesta(200, {
+      ...propuestaDesdeIA({
+        titulo: 'Renovación de marca para Café Molino',
+        cliente: { nombre: '', empresa: 'Café Molino' },
+        contexto: `Propuesta armada en modo demo a partir de: «${texto.slice(0, 160)}»`,
+        objetivos: ['Una marca coherente en los dos locales', 'Comunicar mejor en redes'],
+        servicios: [
+          { nombre: 'Identidad visual', descripcion: 'Logo con tres propuestas y dos rondas de cambios.', entregables: ['Logo y versiones', 'Paleta y tipografías'], modalidad: 'unico', cantidad: 1, precio: 450000, opcional: false },
+          { nombre: 'Menú y plantillas para Instagram', descripcion: 'Menú impreso y piezas editables.', entregables: ['Menú listo para imprenta', '10 plantillas'], modalidad: 'unico', cantidad: 1, precio: 280000, opcional: false },
+          { nombre: 'Señalética del local nuevo', descripcion: 'Cartelería interior y exterior.', entregables: ['Diseño de 4 piezas'], modalidad: 'unico', cantidad: 1, precio: 220000, opcional: true }
+        ],
+        etapas: [{ nombre: 'Marca', duracion: '2 semanas', descripcion: 'Propuestas y ajustes.' }, { nombre: 'Piezas', duracion: '1 semana', descripcion: 'Menú y plantillas.' }],
+        moneda: 'ARS',
+        pagos: [{ concepto: 'Al aceptar', porcentaje: 50 }, { concepto: 'Al entregar', porcentaje: 50 }],
+        impuesto: 0,
+        validezDias: 15,
+        condiciones: ['Incluye dos rondas de cambios por entrega.', 'La impresión se abona aparte.'],
+        proximosPasos: ['Aceptar la propuesta desde este link.', 'Abonar la seña para reservar la fecha.'],
+        tema: 'calido',
+        avisos: ['Modo demo: la propuesta es un ejemplo fijo.']
+      }, { temas: temasPermitidos(esPro(plan)) }),
+      usados: usados + 1,
+      limite: esPro(plan) ? null : 3
+    });
+  }
   if (ruta === '/api/activar') {
     if (!uid) return respuesta(401, { error: 'sin-sesion' });
     if (!doc) return respuesta(404, { error: 'no-existe' });

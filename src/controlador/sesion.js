@@ -20,6 +20,7 @@ import { llenarFormulario, actualizarAvisoPagos } from './formulario.js';
 import { renderDocumento } from './vista.js';
 import { descargarPDF } from './documento.js';
 import { irAResultados } from './resultados.js';
+import { abrirIA } from './ia.js';
 import { irRuta, idEnUrl, idPortafolioEnUrl, seccionEnUrl } from './navegacion.js';
 import { escucharPropuestas, reiniciarPanel, irAlPanel, abrirPropuesta, mostrarEditor } from './propuestas.js';
 import { escucharPortafoliosNube, reiniciarPortafolios, irAPortafolios, abrirPortafolio } from './portafolios.js';
@@ -35,7 +36,8 @@ let entrar = () => { };
 const MOTIVOS_REGISTRO = {
   compartir: 'Creá tu cuenta gratis para compartir tu propuesta. Lo que armaste se guarda en tu cuenta.',
   pdf: 'Creá tu cuenta gratis para descargar tu propuesta en PDF. Lo que armaste se guarda en tu cuenta.',
-  guardar: 'Creá tu cuenta gratis para guardar tus propuestas y abrirlas desde cualquier dispositivo.'
+  guardar: 'Creá tu cuenta gratis para guardar tus propuestas y abrirlas desde cualquier dispositivo.',
+  ia: 'Creá tu cuenta gratis para armar propuestas con IA: contás el trabajo en un audio y queda lista en segundos.'
 };
 
 export const abrirRegistro = motivo => {
@@ -343,7 +345,10 @@ const iniciarConCuenta = async () => {
     sessionStorage.removeItem(`${CLAVE}:continuar`);
   } catch { }
   const id = idEnUrl();
-  if (migrada && continuar) {
+  if (continuar === 'ia') {
+    irAlPanel({ historial: false });
+    abrirIA();
+  } else if (migrada && continuar) {
     mostrarEditor(migrada.id, migrada.contenido, { historial: false });
     irRuta(`/propuesta/${encodeURIComponent(migrada.id)}`, { reemplazar: true });
     if (continuar === 'compartir') abrirCompartir();

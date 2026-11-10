@@ -1,0 +1,191 @@
+// «Contala y la armamos» (controlador/ia.js): diálogo de dictado y botones de entrada.
+
+// Sin la IA configurada en el servidor (/api/plan → ia), sus botones no se muestran.
+// A quien no tiene cuenta se le muestran igual: al tocar, se le pide crear la cuenta.
+body:not(.ia-disponible):not(.sin-cuenta) [data-accion="abrir-ia"] {
+  display: none;
+}
+
+.insignia-ia {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #00936F, #0B6E8C);
+  color: #FFF;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+}
+
+.boton--ia svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.dialogo-ia {
+  &__marca {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0 0 0.5rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--marfil-apagado);
+  }
+
+  &__dictado {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 1rem 0;
+    padding: 1rem;
+    border: 1px solid var(--superficie-borde);
+    border-radius: var(--radio-l);
+    background: var(--superficie);
+  }
+
+  &__microfono {
+    position: relative;
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 4.2rem;
+    height: 4.2rem;
+    border: 0;
+    border-radius: 50%;
+    background: var(--dorado);
+    color: #FFF;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s ease;
+
+    svg {
+      width: 1.8rem;
+      height: 1.8rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+    }
+
+    &:hover {
+      transform: scale(1.04);
+    }
+
+    &:focus-visible {
+      outline: 3px solid var(--dorado-tenue);
+      outline-offset: 3px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: wait;
+    }
+
+    // Escuchando: rojo con un pulso suave (sin animación si se pidió menos movimiento).
+    &--activo {
+      background: #C2410C;
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset: -6px;
+        border: 3px solid rgba(194, 65, 12, 0.35);
+        border-radius: 50%;
+        animation: ia-pulso 1.4s ease-out infinite;
+      }
+    }
+  }
+
+  &__estado-voz {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+
+    strong {
+      font-size: 0.98rem;
+    }
+
+    span {
+      font-size: 0.82rem;
+      line-height: 1.45;
+      color: var(--marfil-apagado);
+    }
+  }
+
+  &__texto {
+    min-height: 8rem;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  &__pie-texto {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 0.3rem;
+    font-size: 0.8rem;
+    color: var(--marfil-apagado);
+  }
+
+  &__cupo {
+    margin: 0.8rem 0 0;
+    font-size: 0.82rem;
+    color: var(--marfil-apagado);
+  }
+
+  &__progreso {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-top: 1rem;
+    padding: 0.8rem 1rem;
+    border-radius: var(--radio-m);
+    background: var(--dorado-tenue);
+    font-size: 0.9rem;
+    font-weight: 600;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  &__spinner {
+    width: 1.1rem;
+    height: 1.1rem;
+    border: 2px solid var(--dorado);
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: ia-girar 0.8s linear infinite;
+  }
+}
+
+@keyframes ia-pulso {
+  from { transform: scale(0.95); opacity: 1; }
+  to { transform: scale(1.25); opacity: 0; }
+}
+
+@keyframes ia-girar {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialogo-ia__microfono--activo::after,
+  .dialogo-ia__spinner {
+    animation: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .dialogo-ia__dictado {
+    flex-direction: column;
+    text-align: center;
+  }
+}

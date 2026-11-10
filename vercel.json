@@ -44,5 +44,10 @@
       "source": "/portafolio/:id",
       "destination": "/"
     }
-  ]
+  ],
+  "functions": {
+    "api/ia-propuesta.js": {
+      "maxDuration": 60
+    }
+  }
 }

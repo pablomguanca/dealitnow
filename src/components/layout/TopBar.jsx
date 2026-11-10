@@ -16,6 +16,10 @@ export function TopBar() {
           <Link className="barra__nav-link solo-cuenta" to="/cuenta" data-accion="ir-cuenta" data-seccion="cuenta">Mi cuenta</Link>
         </nav>
         <div className="barra__acciones">
+          <button type="button" className="boton boton--secundario boton--ia solo-invitado" data-accion="abrir-ia" title="Dictá el trabajo y armamos la propuesta">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="2" width="4" height="7.5" rx="2" /><path d="M3.8 7.5a4.2 4.2 0 0 0 8.4 0M8 11.7V14" /></svg>
+            <span className="boton__extra">Crear con IA</span>
+          </button>
           <button type="button" className="boton boton--secundario solo-invitado" data-accion="ingresar">Iniciar sesión</button>
           <button type="button" className="boton boton--secundario barra__pdf solo-editor" data-accion="pdf" title="Descargar PDF">
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5M5 7.5l3 3 3-3M3 12.5h10" /></svg>
@@ -64,6 +68,10 @@ export function TopBar() {
                 </div>
                 <div className="menu__grupo">
                   <span className="menu__grupo-titulo">Crear nuevo</span>
+                  <button type="button" className="boton boton--texto menu__opcion" data-accion="abrir-ia">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="2" width="4" height="7.5" rx="2" /><path d="M3.8 7.5a4.2 4.2 0 0 0 8.4 0M8 11.7V14" /></svg>
+                    <span>Contala y la armamos (IA)</span>
+                  </button>
                   <button type="button" className="boton boton--texto menu__opcion" data-accion="nueva">
                     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" /></svg>
                     <span>+ Nueva propuesta</span>
