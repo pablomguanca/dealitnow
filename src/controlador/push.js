@@ -105,7 +105,9 @@ const activarPush = async boton => {
     if (permiso !== 'granted') {
       avisar(permiso === 'denied'
         ? 'Bloqueaste las notificaciones. Podés habilitarlas desde la configuración del sitio.'
-        : 'No activamos las notificaciones. Podés hacerlo cuando quieras desde acá.', 7000);
+        // «default»: se cerró el cartel, el navegador lo mostró en silencio (la campanita
+        // tachada de Chrome y Edge) o dejó de preguntar después de varios rechazos.
+        : 'El navegador no dio el permiso. Tocá el candado o la campanita junto a la dirección, poné Notificaciones en «Permitir», recargá la página y volvé a tocar Activar.', 12000);
       return;
     }
     await registrarServiceWorker();
