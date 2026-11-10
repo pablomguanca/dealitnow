@@ -47,7 +47,7 @@ export const crearEnviadorPush = ({
   const webpush = await cargarWebPush();
   const opciones = {
     vapidDetails: {
-      subject: entorno.VAPID_SUBJECT || entorno.APP_URL || 'https://dealitnow.vercel.app',
+      subject: entorno.VAPID_SUBJECT || entorno.APP_URL || 'https://dealit.com.ar',
       publicKey: publica,
       privateKey: entorno.VAPID_PRIVATE_KEY
     },

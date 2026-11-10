@@ -57,6 +57,6 @@ export const crearHandler = ({ db, sesionDe, planesActivos, mp, urlApp, ahora = 
 };
 
 // La URL de vuelta tiene que ser https. En producción conviene fijarla con APP_URL.
-const urlApp = req => process.env.APP_URL || `https://${req.headers?.host || 'dealitnow.vercel.app'}`;
+const urlApp = req => process.env.APP_URL || `https://${req.headers?.host || 'dealit.com.ar'}`;
 
 export default crearHandler({ db: firestore, sesionDe: sesionDeLaSolicitud, planesActivos: planesActivosPara, mp: { crearSuscripcion }, urlApp });

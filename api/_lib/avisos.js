@@ -139,4 +139,4 @@ export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarP
   }
 };
 
-export const urlAppDe = req => process.env.APP_URL || `https://${req?.headers?.host || 'dealitnow.vercel.app'}`;
+export const urlAppDe = req => process.env.APP_URL || `https://${req?.headers?.host || 'dealit.com.ar'}`;

@@ -2,7 +2,7 @@
 // dan las reglas de Firestore y Storage, no ocultar estos valores.
 export const firebaseConfig = {
   apiKey:            'AIzaSyA4fAtms8k5hOEvtFiTnf6B2ijg2jiWDtg',
-  authDomain:        'dealitnow.vercel.app',
+  authDomain:        'dealit.com.ar',
   projectId:         'dealit-7f735',
   storageBucket:     'dealit-7f735.firebasestorage.app',
   messagingSenderId: '837213426465',
