@@ -15,6 +15,10 @@ import { configurarPush } from './push.js';
 
 let dejarDeEscuchar = null;
 let verificado = false;
+// La primera lectura del plan al cargar la página no es un cambio: solo se avisa «Ya tenés
+// Pro» si pasa a Pro mientras la app está abierta, o al volver de pagar en Mercado Pago.
+let planLeido = false;
+let volviendoDelPago = false;
 // El servidor dice si los planes están activos para esta cuenta (interruptor PLANES_ACTIVOS).
 let planesActivos = false;
 
@@ -107,10 +111,14 @@ export const escucharPlan = () => {
   consultarPlanesActivos();
   if (dejarDeEscuchar) dejarDeEscuchar();
   dejarDeEscuchar = AteneaDB.plan.escuchar(plan => {
-    const eraPro = esPro(ctx.plan);
+    const eraPro = planLeido ? esPro(ctx.plan) : !volviendoDelPago;
+    planLeido = true;
     ctx.plan = plan;
     pintarPlan();
-    if (!eraPro && esPro(plan) && ctx.plan.estado === 'activa') avisar('¡Listo! Ya tenés Dealit Pro.', 7000);
+    if (!eraPro && esPro(plan) && ctx.plan.estado === 'activa') {
+      volviendoDelPago = false;
+      avisar('¡Listo! Ya tenés Dealit Pro.', 7000);
+    }
     // Pasó la fecha de cobro y no llegó el aviso: se le pregunta a Mercado Pago (una vez).
     if (proParaVerificar(plan) && !verificado) {
       verificado = true;
@@ -123,6 +131,7 @@ export const reiniciarPlan = () => {
   if (dejarDeEscuchar) { dejarDeEscuchar(); dejarDeEscuchar = null; }
   planesActivos = false;
   verificado = false;
+  planLeido = false;
   avisoPruebaDado = false;
   ctx.plan = null;
   aplicarRestricciones();
@@ -263,6 +272,7 @@ export const instalarPlan = () => {
   // por si Mercado Pago todavía no actualizó el estado (el aviso por webhook puede tardar).
   const parametros = new URLSearchParams(location.search);
   if (parametros.get('suscripcion') === 'volver') {
+    volviendoDelPago = true;
     avisar('Estamos confirmando tu pago con Mercado Pago. En unos segundos se activa Pro.', 8000);
     irRuta('/cuenta', { reemplazar: true });
     setTimeout(async () => {
