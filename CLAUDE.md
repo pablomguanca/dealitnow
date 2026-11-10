@@ -42,7 +42,9 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 | `api/activar.js` | `POST /api/activar`: el dueño activa el link; aplica el límite del plan |
 | `api/suscripcion.js` | `POST /api/suscripcion`: crea la suscripción a Pro en Mercado Pago y devuelve el link de pago |
 | `api/mercadopago.js` | `POST /api/mercadopago`: avisos de Mercado Pago (firma verificada); actualiza `planes/{uid}` |
-| `api/_lib/` | Firebase Admin, verificación del token, utilidades HTTP, cliente de Mercado Pago y avisos por email al dueño (`avisos.js`: primera visita y aceptación, solo Pro) |
+| `api/push.js` | `POST /api/push`: alta y baja de las notificaciones push de cada dispositivo del dueño, y aviso de prueba |
+| `api/_lib/` | Firebase Admin, verificación del token, utilidades HTTP, cliente de Mercado Pago y avisos al dueño (`avisos.js`: primera visita y aceptación, solo Pro, por email y por push con `push.js`) |
+| `public/` | App instalable (PWA): `manifest.webmanifest`, `sw.js` (muestra los push; no cachea nada) e `iconos/`. El manifest solo se carga en la app del dueño (`main.jsx`); el botón para activar las push está en Mi cuenta (`controlador/push.js`) |
 | `firestore.rules`, `storage.rules` | Reglas de seguridad (versionadas) |
 | `index.html`, `terminos.html`, `privacidad.html` | Páginas; `/p/:id` se reescribe a `/` (ver `vercel.json`) |
 
@@ -56,6 +58,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
   - `proposals/{id}/versiones/{vid}` (y lo mismo en `portfolios`): versiones guardadas por el dueño (`payload`, `title`, `motivo`, `createdAt`). Se crean o se borran; no se editan.
 - `portfolios/{id}`: como las propuestas, sin aceptación. El navegador puede activar su link.
 - `payload.plantilla`: la plantilla de origen (si se cargó completa); con `payload.tema.preset` define si la propuesta usa algo PRO (`usosPro` en `src/planes.js`).
+- `push/{uid}/dispositivos/{id}`: suscripción push de cada dispositivo (`suscripcion`, `creado`; `id` = hash del endpoint, hasta 10 por cuenta). La escribe **solo el servidor** (`api/push`) y el navegador no la puede leer (cae en la regla general que lo niega todo).
 - `planes/{uid}`: `tipo` (`gratis | pro`), `estado` (`activa | pendiente | pausada | cancelada`), `periodo`, `vence`, `mpSuscripcionId`, `envios` (`{ "2026-11": 3 }`, en hora de Argentina). Lo escribe **solo el servidor**; el dueño lo lee.
 
 ## Principios
@@ -70,7 +73,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 - **Directo en `main`, sin ramas ni pull requests.** Los deploys de prueba de Vercel piden login por la Deployment Protection, así que lo que se pushea a `main` va derecho a producción.
 - Por eso: verificar en local antes de pushear (`npm run check` y probar en `npm run dev:demo`), y pushear solo cuando el dueño lo pida.
 - Si un cambio necesita publicar reglas o índices de Firebase, avisar y hacerlo **antes** del push.
-- Secretos, solo como variables de entorno en Vercel y nunca en el repo: `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio), `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` (Mercado Pago; primero las de prueba). IA: `ANTHROPIC_API_KEY` (sin ella, los botones de «Contala y la armamos» no se muestran) y opcional `IA_MODELO` (por defecto `claude-opus-5-5`; `claude-haiku-5-5` es mucho más económico). Opcional: `APP_URL` (URL de vuelta tras pagar y de los links en los emails). Avisos por email (Resend): `RESEND_API_KEY` y `EMAIL_REMITENTE` (ej. `Dealit <avisos@tudominio.com>`, de un dominio verificado en Resend); sin la clave no se mandan.
+- Secretos, solo como variables de entorno en Vercel y nunca en el repo: `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio), `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` (Mercado Pago; primero las de prueba). IA: `ANTHROPIC_API_KEY` (sin ella, los botones de «Contala y la armamos» no se muestran) y opcional `IA_MODELO` (por defecto `claude-opus-5-5`; `claude-haiku-5-5` es mucho más económico). Opcional: `APP_URL` (URL de vuelta tras pagar y de los links en los emails). Avisos por email (Resend): `RESEND_API_KEY` y `EMAIL_REMITENTE` (ej. `Dealit <avisos@tudominio.com>`, de un dominio verificado en Resend); sin la clave no se mandan. Notificaciones push: `VAPID_PUBLIC_KEY` y `VAPID_PRIVATE_KEY` (se generan con `npx web-push generate-vapid-keys`; si se cambian, cada dispositivo las tiene que volver a activar) y opcional `VAPID_SUBJECT` (`mailto:` o URL de contacto, por defecto `APP_URL`); sin ellas, Mi cuenta no ofrece activarlas.
 - Interruptor de los planes: `PLANES_ACTIVOS=1` prende el límite de Gratis y la oferta de Pro para todos; `PLANES_PRUEBA` (emails separados por coma) los prende solo para esas cuentas. Apagado, los envíos se cuentan pero no se frenan (ver `api/_lib/planes-activos.js`).
 
 ## Planes (freemium, definido el 2026-10-07)
@@ -80,7 +83,7 @@ Planes: **Gratis · Pro · Estudio**.
 - **Sin cuenta:** una propuesta en el navegador. No puede compartir, guardar ni bajar PDF, y lo impreso con Ctrl+P lleva marca de agua.
 - **Vencimiento:** Pro sigue mientras `vence` (próximo cobro) + 3 días de margen esté por delante. Si el cobro no entra, vuelve solo a Gratis; con la fecha pasada, la app consulta `/api/sincronizar` una vez.
 - **Gratis:** hasta 100 borradores y 2 propuestas enviadas (links activados) por mes calendario. Incluye aceptación online, logo y colores propios y la marca «Propuesta creada con Dealit» (o «Portfolio creado…») obligatoria en el link y el PDF (campo `marca`, lo escribe `api/activar`). Los diseños y plantillas PRO se pueden probar en el editor, pero no enviar (`diseno-pro`); al imprimir llevan marca de agua. Sin seguimiento de vistas ni avisos por email. 3 propuestas armadas con IA por mes (Pro: sin límite visible, tope anti abuso de 150).
-- **Pro:** ARS 13.900/mes o 139.000/año; USD 9/mes o 90/año fuera de Argentina (los pesos se ajustan cada trimestre). Borradores y envíos ilimitados, sin marca, seguimiento completo (vistas, cuándo, avisos en vivo) y avisos por email al aceptar.
+- **Pro:** ARS 13.900/mes o 139.000/año; USD 9/mes o 90/año fuera de Argentina (los pesos se ajustan cada trimestre). Borradores y envíos ilimitados, sin marca, seguimiento completo (vistas, cuándo, avisos en vivo) y avisos por email y push (en el celular o la computadora) cuando el cliente abre la propuesta por primera vez y cuando la acepta. En iPhone, las push solo funcionan con la app agregada a la pantalla de inicio.
 - **Estudio:** equipos de hasta 3 usuarios, alrededor de ARS 38.900/mes. Sale como «Próximamente» con lista de espera.
 - Los límites se aplican en el servidor: activar un link pasa por una función de Vercel y las reglas no dejan que el navegador lo haga solo.
 - Pagos con Mercado Pago Suscripciones dentro de la app. La landing va en este mismo repo (sin WordPress).

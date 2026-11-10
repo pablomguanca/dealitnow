@@ -9,6 +9,7 @@ import { avisarError, avisarExito } from './avisos.js';
 import { irRuta, mostrarVista, cerrarEdicion } from './navegacion.js';
 import { renderPanel } from './propuestas.js';
 import { consultarPlanesActivos } from './plan.js';
+import { desactivarPushEnTodos } from './push.js';
 
 let cuentaEditada = false;
 // Logo y foto del negocio: se suben a Storage y se guardan con «Guardar cambios».
@@ -173,6 +174,7 @@ const instalarEliminarCuenta = () => {
     eliminarBoton.textContent = 'Eliminando…';
     eliminarError.hidden = true;
     try {
+      await Promise.race([desactivarPushEnTodos(), new Promise(res => setTimeout(res, 3000))]);
       await AteneaDB.auth.eliminarCuenta(eliminarPass.value);
       try {
         Object.keys(localStorage).filter(k => k.startsWith(CLAVE)).forEach(k => localStorage.removeItem(k));

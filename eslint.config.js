@@ -26,6 +26,10 @@ export default [
     languageOptions: { globals: globals.node }
   },
   {
+    files: ['public/sw.js'],
+    languageOptions: { globals: globals.serviceworker }
+  },
+  {
     files: ['tests/**/*.js', '*.config.js'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } }
   }

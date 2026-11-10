@@ -1,8 +1,10 @@
-// Avisos por email al dueño (Pro): cuando su cliente abre la propuesta por primera vez y
-// cuando la acepta. Se mandan con Resend (RESEND_API_KEY). Sin la clave no se manda nada.
+// Avisos al dueño (Pro): cuando su cliente abre la propuesta por primera vez y cuando la
+// acepta. Van por email con Resend (RESEND_API_KEY) y como notificación push a los
+// dispositivos donde las activó (ver push.js). Sin las claves no se manda nada.
 // Un aviso que falla nunca rompe la visita ni la aceptación: solo queda en el log.
 import { esPro } from '../../src/planes.js';
 import { dinero, texto } from '../../src/lib/formato.js';
+import { enviarPush as enviarPushReal } from './push.js';
 
 const escapar = s => texto(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
@@ -74,6 +76,23 @@ export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, urlApp }) => {
   };
 };
 
+// Notificación push del mismo aviso: corta, para la pantalla bloqueada. Pura.
+export const contenidoPush = ({ tipo, id, propuesta, aceptacion, urlApp }) => {
+  const { titulo, cliente } = datosDe(propuesta);
+  const url = `${urlApp}/propuesta/${encodeURIComponent(id)}`;
+  const tag = `${tipo}-${id}`;
+  if (tipo === 'aceptada') {
+    const nombre = texto(aceptacion?.nombre).trim() || cliente || 'Tu cliente';
+    const moneda = aceptacion?.moneda || 'USD';
+    const inicial = Number(aceptacion?.inicial) || 0;
+    const mensual = Number(aceptacion?.mensual) || 0;
+    const total = `${dinero(inicial, moneda)}${mensual > 0 ? ` + ${dinero(mensual, moneda)} por mes` : ''}`;
+    return { titulo: `🎉 ${nombre} aceptó «${titulo}»`, cuerpo: `Total aceptado: ${total}. Escribile para arrancar.`, url, tag };
+  }
+  const quien = cliente || 'Tu cliente';
+  return { titulo: `${quien} abrió «${titulo}»`, cuerpo: 'La está mirando ahora: buen momento para escribirle.', url, tag };
+};
+
 export const enviarEmail = async ({ para, asunto, html, texto: plano }, { entorno = process.env, fetchFn = fetch } = {}) => {
   if (!entorno.RESEND_API_KEY) return false;
   const r = await fetchFn('https://api.resend.com/emails', {
@@ -92,8 +111,9 @@ export const enviarEmail = async ({ para, asunto, html, texto: plano }, { entorn
   return true;
 };
 
-// Avisa al dueño de la propuesta si le corresponde (Pro, o los planes apagados para su cuenta).
-export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail }) => async ({ tipo, id, propuesta, aceptacion, urlApp }) => {
+// Avisa al dueño de la propuesta si le corresponde (Pro, o los planes apagados para su cuenta):
+// por email y por push a la vez. Devuelve cómo le fue al email.
+export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarPush = enviarPushReal }) => async ({ tipo, id, propuesta, aceptacion, urlApp }) => {
   try {
     const uid = propuesta?.userId;
     if (!uid) return 'sin-duenio';
@@ -102,11 +122,17 @@ export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail }) => as
       db().collection('planes').doc(uid).get()
     ]);
     const email = snapUsuario.exists ? texto(snapUsuario.data()?.email).trim() : '';
-    if (!email) return 'sin-email';
     const plan = snapPlan.exists ? snapPlan.data() : {};
     if (!esPro(plan) && planesActivos(email)) return 'gratis';
-    const enviado = await enviar({ para: email, ...contenidoAviso({ tipo, id, propuesta, aceptacion, urlApp }) });
-    return enviado ? 'enviado' : 'sin-clave';
+    const datos = { tipo, id, propuesta, aceptacion, urlApp };
+    const [porEmail, porPush] = await Promise.allSettled([
+      email ? enviar({ para: email, ...contenidoAviso(datos) }) : Promise.resolve(null),
+      enviarPush({ db, uid, mensaje: contenidoPush(datos) })
+    ]);
+    if (porPush.status === 'rejected') console.error(`No se pudo mandar el aviso «${tipo}» por push:`, porPush.reason?.message);
+    if (!email) return 'sin-email';
+    if (porEmail.status === 'rejected') throw porEmail.reason;
+    return porEmail.value ? 'enviado' : 'sin-clave';
   } catch (e) {
     console.error(`No se pudo mandar el aviso «${tipo}» por email:`, e.message);
     return 'error';

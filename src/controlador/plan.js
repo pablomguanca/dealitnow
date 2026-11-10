@@ -11,6 +11,7 @@ import { avisar, avisarError, elegir } from './avisos.js';
 import { llamarApi } from './api.js';
 import { irRuta } from './navegacion.js';
 import { irADiseno } from './hoja.js';
+import { configurarPush } from './push.js';
 
 let dejarDeEscuchar = null;
 let verificado = false;
@@ -90,6 +91,7 @@ export const consultarPlanesActivos = async (reintento = true) => {
     const r = await llamarApi('/api/plan', {});
     planesActivos = !!r?.activos;
     document.body.classList.toggle('ia-disponible', r?.ia === true);
+    configurarPush(r?.push);
   } catch (e) {
     console.warn('No se pudo consultar si los planes están activos:', e.codigo || e.message);
     if (reintento) {

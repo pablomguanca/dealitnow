@@ -1,0 +1,18 @@
+{
+  "name": "Dealit",
+  "short_name": "Dealit",
+  "description": "Armá propuestas comerciales, compartilas como link y enterate al instante cuando tu cliente las abre o las acepta.",
+  "lang": "es-AR",
+  "dir": "ltr",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#06060A",
+  "theme_color": "#06060A",
+  "icons": [
+    { "src": "/iconos/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/iconos/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/iconos/icono-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

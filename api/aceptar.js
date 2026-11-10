@@ -1,6 +1,6 @@
 // POST /api/aceptar { id, nombre, acepto, opcionales } — el cliente acepta la propuesta.
 // Todo se valida acá (vigencia, opcionales, total): el navegador solo propone.
-// Después se avisa por email al dueño, si es Pro (ver _lib/avisos.js).
+// Después se avisa por email y por push al dueño, si es Pro (ver _lib/avisos.js).
 import { ID_PROPUESTA, validarAceptacion } from '../src/aceptacion.js';
 import { FieldValue, firestore, uidDeLaSolicitud } from './_lib/firebase-admin.js';
 import { ErrorHttp, fallar, leerPost, responder } from './_lib/http.js';

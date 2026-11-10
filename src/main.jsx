@@ -13,6 +13,13 @@ if (contenedor) {
   const esCliente = !!tipoLinkCliente();
   // El modo oscuro es solo de la app del dueño; se aplica antes de dibujar para que no parpadee.
   if (!esCliente) aplicarModoApp();
+  // Solo la app del dueño es instalable: el link del cliente no ofrece instalar Dealit.
+  if (!esCliente) {
+    const manifest = document.createElement('link');
+    manifest.rel = 'manifest';
+    manifest.href = '/manifest.webmanifest';
+    document.head.append(manifest);
+  }
   const modulo = esCliente ? import('./ClienteApp.jsx') : import('./App.jsx');
   modulo.then(({ default: Raiz }) => {
     createRoot(contenedor).render(

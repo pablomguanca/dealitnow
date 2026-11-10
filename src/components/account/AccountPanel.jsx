@@ -18,7 +18,7 @@ export function AccountPanel() {
           <li>Todas las plantillas y diseños PRO</li>
           <li>Propuestas con IA sin límite (en Gratis, 3 por mes)</li>
           <li>Sin la marca «Propuesta creada con Dealit»</li>
-          <li>Te avisamos por email cuando tu cliente abre o acepta</li>
+          <li>Te avisamos al instante, por email y en el celular, cuando tu cliente abre o acepta</li>
         </ul>
         <div className="plan-botones">
           <button type="button" className="boton boton--primario" data-accion="suscribir-pro" data-periodo="mensual">
@@ -32,6 +32,18 @@ export function AccountPanel() {
       </div>
       <button type="button" className="boton boton--texto boton--chico" id="plan-sincronizar" data-accion="sincronizar-plan">Ya pagué, actualizar mi plan</button>
       <a className="boton boton--texto" id="plan-administrar" href="https://www.mercadopago.com.ar/subscriptions" target="_blank" rel="noopener" hidden>Administrar o cancelar la suscripción en Mercado Pago</a>
+    </section>
+
+    <section className="tarjeta" id="tarjeta-push" aria-labelledby="push-titulo" hidden>
+      <div className="tarjeta__cabecera">
+        <h2 className="tarjeta__titulo" id="push-titulo">Notificaciones</h2>
+        <p className="tarjeta__ayuda" id="push-estado" role="status" aria-live="polite"></p>
+      </div>
+      <div className="plan-botones">
+        <button type="button" className="boton boton--primario" id="push-activar" data-accion="activar-push" hidden>Activar en este dispositivo</button>
+        <button type="button" className="boton boton--secundario" id="push-probar" data-accion="probar-push" hidden>Mandarme un aviso de prueba</button>
+        <button type="button" className="boton boton--texto boton--chico" id="push-desactivar" data-accion="desactivar-push" hidden>Desactivar en este dispositivo</button>
+      </div>
     </section>
 
     <form className="tarjeta" id="cuenta-form" noValidate>

@@ -21,6 +21,7 @@ import { instalarGaleriaPlantillas } from './galeria-plantillas.js';
 import { instalarPortafolios } from './portafolios.js';
 import { instalarCuenta } from './cuenta.js';
 import { instalarPlan } from './plan.js';
+import { instalarPush } from './push.js';
 import { instalarResultados } from './resultados.js';
 import { instalarIA } from './ia.js';
 import { instalarSesion, arrancarSesion } from './sesion.js';
@@ -55,6 +56,7 @@ export const inicializarControladorDealit = () => {
   instalarPortafolios();
   instalarCuenta();
   instalarPlan();
+  instalarPush();
   instalarSesion();
 
   if (!AteneaDB) document.body.classList.remove('auth-cargando');

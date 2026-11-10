@@ -149,6 +149,8 @@ export const AteneaDBError = null;
 const respuesta = (estado, cuerpo) => new Response(cuerpo === undefined ? null : JSON.stringify(cuerpo), {
   status: estado, headers: { 'Content-Type': 'application/json' }
 });
+// Clave pública VAPID de prueba (sin su privada: en demo no se manda ningún push real).
+const CLAVE_PUSH_DEMO = 'BOemXSiYz_TkO2Bc012Gh_basq6_TgJ1heIYnpSaFhyvYh5aGUa_m699pccgIXOhjI5zCDz8Vlbua3mBf8O5mPI';
 const fetchReal = window.fetch.bind(window);
 window.fetch = async (url, opciones = {}) => {
   const ruta = typeof url === 'string' ? url : url.url;
@@ -179,7 +181,17 @@ window.fetch = async (url, opciones = {}) => {
     const { contenido, ...resumen } = datos;
     return respuesta(200, { aceptacion: { ...resumen, fecha } });
   }
-  if (ruta === '/api/plan') return respuesta(uid ? 200 : 401, uid ? { activos: true, ia: true } : { error: 'sin-sesion' });
+  if (ruta === '/api/plan') return respuesta(uid ? 200 : 401, uid ? { activos: true, ia: true, push: CLAVE_PUSH_DEMO } : { error: 'sin-sesion' });
+  // Push: no hay servidor que mande avisos; la prueba se muestra desde el propio service worker.
+  if (ruta === '/api/push') {
+    if (!uid) return respuesta(401, { error: 'sin-sesion' });
+    if (cuerpo.accion === 'prueba') {
+      const reg = await navigator.serviceWorker?.ready;
+      await reg?.showNotification('Así te van a llegar los avisos', { body: 'Cuando tu cliente abra o acepte una propuesta, te avisamos acá al instante.', icon: '/iconos/icono-192.png', data: { url: '/cuenta' } });
+      return respuesta(200, { enviados: reg ? 1 : 0 });
+    }
+    return respuesta(204);
+  }
   if (ruta === '/api/sincronizar') return respuesta(uid ? 200 : 401, uid ? { encontrada: leerPlan().tipo === 'pro', plan: leerPlan() } : { error: 'sin-sesion' });
   if (ruta === '/api/ia-propuesta') {
     if (!uid) return respuesta(401, { error: 'sin-sesion' });

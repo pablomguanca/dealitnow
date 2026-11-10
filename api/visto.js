@@ -1,7 +1,7 @@
 // POST /api/visto { id } — registra que alguien abrió el link de una propuesta.
 // No guarda datos de quien la abre: solo cuántas veces y cuándo. Las visitas del
 // propio dueño (con la sesión iniciada) no cuentan. La primera visita se le avisa por email
-// al dueño, si es Pro (ver _lib/avisos.js).
+// y por push al dueño, si es Pro (ver _lib/avisos.js).
 import { ID_PROPUESTA } from '../src/aceptacion.js';
 import { FieldValue, firestore, uidDeLaSolicitud } from './_lib/firebase-admin.js';
 import { ErrorHttp, fallar, leerPost, responder } from './_lib/http.js';

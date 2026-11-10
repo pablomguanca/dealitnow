@@ -27,6 +27,7 @@ import { escucharPortafoliosNube, reiniciarPortafolios, irAPortafolios, abrirPor
 import { cargarPerfil, reiniciarCuenta, irACuenta, pintarAvatar } from './cuenta.js';
 import { abrirCompartir } from './compartir.js';
 import { escucharPlan, reiniciarPlan } from './plan.js';
+import { desactivarPushEnEsteDispositivo, reiniciarPush } from './push.js';
 
 let invitadoIniciado = false;
 let guardadoParaRegistro = false;
@@ -287,6 +288,7 @@ const limpiarEstadoMemoria = () => {
   reiniciarPortafolios();
   reiniciarCuenta();
   reiniciarPlan();
+  reiniciarPush();
   ctx.propuestaId = null;
   ctx.portafolioId = null;
   ctx.estado = vacio();
@@ -312,6 +314,8 @@ const cerrarSesion = async () => {
     peligro: true
   })) return;
   ctx.cerrandoSesion = true;
+  // Este dispositivo deja de recibir los avisos de la cuenta (con la sesión todavía abierta).
+  await Promise.race([desactivarPushEnEsteDispositivo(), new Promise(res => setTimeout(res, 3000))]);
   limpiarEstadoMemoria();
   limpiarAlmacenamientoLocal();
   await AteneaDB.auth.signOut();
