@@ -3,7 +3,7 @@
 
 import { $, texto } from '../lib/formato.js';
 import { vacioPortafolio, ejemploPortafolio, PLANTILLAS_PORTAFOLIO } from '../modelo.js';
-import { fechaDe, sinAcentos, portafolioItemHTML } from '../lib/paneles.js';
+import { fechaDe, sinAcentos, portafolioItemHTML, esqueletoFilasHTML } from '../lib/paneles.js';
 import { ctx, AteneaDB, nube, normalizarPf } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { avisarExito, avisarError, confirmar } from './avisos.js';
@@ -37,6 +37,8 @@ export const renderPanelPortafolios = () => {
   if (elVacio) elVacio.hidden = ctx.portafoliosCargando || ctx.portafoliosError || hay;
 
   const elEstado = $('#portafolios-estado');
+  const cargando = ctx.portafoliosCargando && !ctx.portafoliosError;
+  elEstado.classList.toggle('visualmente-oculto', cargando);
   if (ctx.portafoliosError) {
     elEstado.textContent = 'No pudimos cargar tus portfolios. Revisá tu conexión.';
   } else if (ctx.portafoliosCargando) {
@@ -47,7 +49,9 @@ export const renderPanelPortafolios = () => {
     elEstado.textContent = '';
   }
   const elLista = $('#lista-portafolios');
-  if (elLista) elLista.innerHTML = visibles.map(pf => portafolioItemHTML(pf, { conNube: !!nube() })).join('');
+  if (elLista) elLista.innerHTML = cargando && nube()
+    ? esqueletoFilasHTML(2)
+    : visibles.map(pf => portafolioItemHTML(pf, { conNube: !!nube() })).join('');
 };
 
 export const escucharPortafoliosNube = () => {

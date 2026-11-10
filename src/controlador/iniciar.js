@@ -7,6 +7,7 @@ import { usarBase, PREFIJO, PREFIJO_PORTAFOLIO } from './contexto.js';
 import { instalarAcciones } from './acciones.js';
 import { instalarNavegacion } from './navegacion.js';
 import { instalarHoja } from './hoja.js';
+import { instalarGestos } from './gestos.js';
 import { instalarVista } from './vista.js';
 import { instalarGuardado } from './guardado.js';
 import { instalarFormulario } from './formulario.js';
@@ -49,6 +50,7 @@ export const inicializarControladorDealit = () => {
   instalarAceptar();
   instalarNavegacion();
   instalarHoja();
+  instalarGestos();
   instalarVista();
   instalarAcciones();
   instalarPropuestas();

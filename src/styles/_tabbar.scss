@@ -125,6 +125,51 @@
   }
 }
 
+// ---------- Filas de carga (esqueletos) ----------
+// Un brillo que recorre la fila (sin animación si se pidió menos movimiento).
+
+.esqueleto-fila {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.05rem 1.1rem;
+  border-top: 1px solid var(--superficie-borde);
+
+  &:first-child {
+    border-top: 0;
+  }
+}
+
+.esqueleto {
+  display: block;
+  height: 0.8rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--superficie-borde) 0%, var(--dorado-fondo) 45%, var(--superficie-borde) 90%);
+  background-size: 250% 100%;
+  animation: esqueletoBrillo 1.4s ease-in-out infinite;
+  animation-delay: calc(var(--i, 0) * 0.12s);
+
+  &--titulo {
+    width: min(55%, 16rem);
+    height: 0.95rem;
+  }
+
+  &--linea {
+    width: min(35%, 10rem);
+  }
+}
+
+@keyframes esqueletoBrillo {
+  from { background-position: 100% 0; }
+  to { background-position: -150% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .esqueleto {
+    animation: none;
+  }
+}
+
 // ---------- Transiciones entre pantallas ----------
 // La pantalla nueva entra deslizándose: desde la derecha al avanzar (abrir una propuesta,
 // una pestaña más a la derecha) y desde la izquierda al volver. En computadora, apenas.
@@ -170,5 +215,26 @@ body.vista-entra-atras {
     #{$vistas} {
       animation: aparecerSuave 0.2s ease both;
     }
+  }
+}
+
+// ---------- Deslizar desde el borde para volver (controlador/gestos.js) ----------
+// La pantalla del editor sigue al dedo; al soltar sin llegar, vuelve a su lugar.
+
+body.arrastrando-volver {
+  overflow-x: clip;
+
+  .app > .visor,
+  .app > .editor {
+    transform: translateX(var(--arrastre, 0));
+    transition: none;
+    box-shadow: -1rem 0 2.5rem rgba(0, 0, 0, 0.18);
+  }
+}
+
+body.soltando-volver {
+  .app > .visor,
+  .app > .editor {
+    transition: transform 0.25s var(--ease-out-expo), height 0.32s var(--ease-out-expo);
   }
 }

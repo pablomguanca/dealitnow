@@ -9,7 +9,8 @@ import {
   sinAcentos,
   propuestaHTML,
   filtrosHTML,
-  metricasHTML
+  metricasHTML,
+  esqueletoFilasHTML
 } from '../lib/paneles.js';
 import { ctx, AteneaDB, nube, normalizar } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
@@ -69,6 +70,8 @@ export const renderPanel = () => {
   $('#panel-vacio').hidden = panelCargando || panelError || hay;
 
   const elPanelEstado = $('#panel-estado');
+  // Cargando: se ven las filas de carga y el texto queda solo para los lectores de pantalla.
+  elPanelEstado.classList.toggle('visualmente-oculto', panelCargando && !panelError);
   if (panelError) {
     elPanelEstado.innerHTML = 'No pudimos cargar tus propuestas. Revisá tu conexión. <button type="button" class="boton boton--texto boton--chico" data-accion="reintentar-panel">Reintentar</button>';
   } else if (panelCargando) {
@@ -80,7 +83,9 @@ export const renderPanel = () => {
   } else {
     elPanelEstado.textContent = '';
   }
-  $('#lista-propuestas').innerHTML = visibles.map(p => propuestaHTML(p, { conSeguimiento })).join('');
+  $('#lista-propuestas').innerHTML = panelCargando && !panelError
+    ? esqueletoFilasHTML()
+    : visibles.map(p => propuestaHTML(p, { conSeguimiento })).join('');
   $('#pestana-propuestas-cuenta').textContent = hay ? String(propuestas.length) : '';
   new Set(visibles.map(p => p.payload?.tema?.fuenteTitulos).filter(Boolean)).forEach(cargarFuente);
 };

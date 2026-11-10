@@ -218,3 +218,11 @@ export const portafolioItemHTML = (pf, { conNube = false } = {}) => {
       </span>
     </li>`;
 };
+
+// Filas de carga (esqueletos) mientras llegan las propuestas o los portfolios: dan la forma
+// de la lista en lugar de una pantalla vacía. Son decorativas: el estado lo anuncia el texto.
+export const esqueletoFilasHTML = (cantidad = 3) => Array.from({ length: cantidad }, (_, i) => `
+    <li class="esqueleto-fila" aria-hidden="true" style="--i: ${i}">
+      <span class="esqueleto esqueleto--titulo"></span>
+      <span class="esqueleto esqueleto--linea"></span>
+    </li>`).join('');
