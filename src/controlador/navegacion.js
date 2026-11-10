@@ -3,8 +3,8 @@
 
 import { $, $$ } from '../lib/formato.js';
 import { ctx, nube } from './contexto.js';
-import { registrarAcciones } from './acciones.js';
-import { avisar } from './avisos.js';
+import { registrarAcciones, ejecutarAccion } from './acciones.js';
+import { avisar, elegir } from './avisos.js';
 import { esModoOscuro, guardarModoApp } from '../lib/modo-app.js';
 import { hayCambiosSinEnviar, guardarAhora } from './guardado.js';
 import { irAlPanel, abrirPropuesta, volverAEditorPropuestaInvitado } from './propuestas.js';
@@ -81,7 +81,25 @@ const TITULOS_VISTA = {
   cuenta: 'Mi cuenta | Dealit',
   resultados: 'Resultados | Dealit'
 };
+// Orden de las pantallas para el sentido de la transición: hacia la derecha (o más adentro,
+// como el editor) se avanza; hacia la izquierda se vuelve. Igual que las pestañas de abajo.
+const ORDEN_VISTA = { panel: 0, resultados: 1, portafolios: 2, cuenta: 3, editor: 10 };
+let vistaActual = null;
+let finTransicion = null;
+const animarEntrada = (anterior, vista) => {
+  if (!anterior || anterior === vista) return;
+  const body = document.body;
+  const sentido = (ORDEN_VISTA[vista] ?? 0) > (ORDEN_VISTA[anterior] ?? 0) ? 'adelante' : 'atras';
+  body.classList.remove('vista-entra-adelante', 'vista-entra-atras');
+  void body.offsetWidth; // reinicia la animación si se navega rápido
+  body.classList.add(`vista-entra-${sentido}`);
+  clearTimeout(finTransicion);
+  finTransicion = setTimeout(() => body.classList.remove('vista-entra-adelante', 'vista-entra-atras'), 400);
+};
+
 export const mostrarVista = vista => {
+  animarEntrada(vistaActual, vista);
+  vistaActual = vista;
   const inicio = vista !== 'editor';
   document.body.classList.toggle('vista-inicio', inicio);
   document.body.classList.toggle('vista-panel', vista === 'panel');
@@ -95,7 +113,7 @@ export const mostrarVista = vista => {
   if (elPortafolios) elPortafolios.hidden = vista !== 'portafolios';
   $('#cuenta').hidden = vista !== 'cuenta';
   $('#app').hidden = inicio;
-  $$('.barra__nav-link, .menu__opcion[data-seccion]').forEach(a => {
+  $$('.barra__nav-link, .menu__opcion[data-seccion], .tabbar__item').forEach(a => {
     if (a.dataset.seccion === vista) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
   });
@@ -190,6 +208,20 @@ export const instalarNavegacion = () => {
       // Con View Transitions el modo se aplica un instante después: el interruptor se pinta ya.
       guardarModoApp(oscuro ? 'oscuro' : 'claro', { x: r.left + r.width / 2, y: r.top + r.height / 2 });
       pintarInterruptorModo(oscuro);
+    },
+    // Botón «+» de la barra de abajo: qué crear, como la hoja de acciones de una app.
+    'crear-nuevo': async () => {
+      const conIA = document.body.classList.contains('ia-disponible');
+      const accion = await elegir({
+        titulo: '¿Qué querés crear?',
+        opciones: [
+          ...(conIA ? [{ valor: 'abrir-ia', texto: 'Contala y la armamos (IA)', estilo: 'primario' }] : []),
+          { valor: 'nueva', texto: 'Nueva propuesta', estilo: conIA ? 'secundario' : 'primario' },
+          { valor: 'nuevo-portafolio', texto: 'Nuevo portfolio', estilo: 'secundario' },
+          { valor: null, texto: 'Cancelar', estilo: 'texto' }
+        ]
+      });
+      if (accion) ejecutarAccion(accion);
     },
     'contacto-demo': () => avisar('En tu portfolio compartido, este botón abre WhatsApp o email directo para contratarte.')
   });

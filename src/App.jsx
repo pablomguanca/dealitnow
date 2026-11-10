@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { DealitProvider } from './context/DealitContext.jsx';
 import { AuthScreen } from './components/auth/AuthScreen.jsx';
 import { TopBar } from './components/layout/TopBar.jsx';
+import { TabBar } from './components/layout/TabBar.jsx';
 import { EditorSidebar } from './components/editor/EditorSidebar.jsx';
 import { DocumentPreview } from './components/preview/DocumentPreview.jsx';
 import { ProposalsPanel } from './components/dashboard/ProposalsPanel.jsx';
@@ -25,6 +26,7 @@ function DealitWorkspace() {
       <PortfoliosPanel />
       <ResultsPanel />
       <AccountPanel />
+      <TabBar />
       <AppModals />
     </DealitProvider>
   );

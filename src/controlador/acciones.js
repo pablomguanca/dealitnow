@@ -8,6 +8,9 @@ export const registrarAcciones = mapa => {
   Object.entries(mapa).forEach(([accion, fn]) => manejadores.set(accion, fn));
 };
 
+// Corre una acción registrada como si se hubiera tocado su botón.
+export const ejecutarAccion = (accion, boton = null) => manejadores.get(accion)?.(boton, null);
+
 export const instalarAcciones = () => {
   document.addEventListener('click', async ev => {
     const boton = ev.target.closest('[data-accion]');
