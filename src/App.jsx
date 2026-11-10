@@ -8,6 +8,7 @@ import { EditorSidebar } from './components/editor/EditorSidebar.jsx';
 import { DocumentPreview } from './components/preview/DocumentPreview.jsx';
 import { ProposalsPanel } from './components/dashboard/ProposalsPanel.jsx';
 import { PortfoliosPanel } from './components/dashboard/PortfoliosPanel.jsx';
+import { ResultsPanel } from './components/dashboard/ResultsPanel.jsx';
 import { AccountPanel } from './components/account/AccountPanel.jsx';
 import { AppModals } from './components/modals/AppModals.jsx';
 
@@ -22,6 +23,7 @@ function DealitWorkspace() {
       </main>
       <ProposalsPanel />
       <PortfoliosPanel />
+      <ResultsPanel />
       <AccountPanel />
       <AppModals />
     </DealitProvider>
@@ -34,6 +36,7 @@ export function App() {
       <Route path="/" element={<DealitWorkspace seccion="panel" />} />
       <Route path="/plantillas" element={<DealitWorkspace seccion="plantillas" />} />
       <Route path="/portafolios" element={<DealitWorkspace seccion="portafolios" />} />
+      <Route path="/resultados" element={<DealitWorkspace seccion="resultados" />} />
       <Route path="/cuenta" element={<DealitWorkspace seccion="cuenta" />} />
       <Route path="/propuesta/:id" element={<DealitWorkspace seccion="editor" modo="propuesta" />} />
       <Route path="/editar-portafolio/:id" element={<DealitWorkspace seccion="editor" modo="portafolio" />} />

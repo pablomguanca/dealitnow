@@ -25,6 +25,10 @@
       "destination": "/"
     },
     {
+      "source": "/resultados",
+      "destination": "/"
+    },
+    {
       "source": "/propuesta/:id",
       "destination": "/"
     },

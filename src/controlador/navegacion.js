@@ -10,6 +10,7 @@ import { hayCambiosSinEnviar, guardarAhora } from './guardado.js';
 import { irAlPanel, abrirPropuesta, volverAEditorPropuestaInvitado } from './propuestas.js';
 import { irAPortafolios, abrirPortafolio } from './portafolios.js';
 import { irACuenta } from './cuenta.js';
+import { irAResultados } from './resultados.js';
 
 let navegarReactRouter = null;
 
@@ -47,6 +48,7 @@ export const seccionEnUrl = () => {
   if (location.pathname === '/plantillas' || location.pathname === '/plantillas/') return 'plantillas';
   if (location.pathname === '/portafolios' || location.pathname === '/portafolios/') return 'portafolios';
   if (location.pathname === '/cuenta' || location.pathname === '/cuenta/') return 'cuenta';
+  if (location.pathname === '/resultados' || location.pathname === '/resultados/') return 'resultados';
   return new URLSearchParams(location.search).get('seccion');
 };
 
@@ -76,7 +78,8 @@ export { cambiarPestana } from './hoja.js';
 const TITULOS_VISTA = {
   panel: 'Mis propuestas | Dealit',
   portafolios: 'Mis portfolios | Dealit',
-  cuenta: 'Mi cuenta | Dealit'
+  cuenta: 'Mi cuenta | Dealit',
+  resultados: 'Resultados | Dealit'
 };
 export const mostrarVista = vista => {
   const inicio = vista !== 'editor';
@@ -84,6 +87,9 @@ export const mostrarVista = vista => {
   document.body.classList.toggle('vista-panel', vista === 'panel');
   document.body.classList.toggle('vista-portafolios', vista === 'portafolios');
   document.body.classList.toggle('vista-cuenta', vista === 'cuenta');
+  document.body.classList.toggle('vista-resultados', vista === 'resultados');
+  const elResultados = $('#resultados');
+  if (elResultados) elResultados.hidden = vista !== 'resultados';
   $('#panel').hidden = vista !== 'panel';
   const elPortafolios = $('#portafolios');
   if (elPortafolios) elPortafolios.hidden = vista !== 'portafolios';
@@ -157,6 +163,7 @@ export const instalarNavegacion = () => {
     if (id) {
       if (id !== ctx.propuestaId) abrirPropuesta(id, { historial: false });
     } else if (seccionEnUrl() === 'cuenta') irACuenta({ historial: false });
+    else if (seccionEnUrl() === 'resultados') irAResultados({ historial: false });
     else irAlPanel({ historial: false, pestana: seccionEnUrl() });
   });
 
@@ -168,6 +175,10 @@ export const instalarNavegacion = () => {
       else volverAEditorPropuestaInvitado();
     }),
     'ir-portafolios': conLink(() => irAPortafolios()),
+    'ir-resultados': (boton, ev) => {
+      if (!nube()) return;
+      conLink(() => irAResultados())(boton, ev);
+    },
     'ir-cuenta': (boton, ev) => {
       if (!nube()) return;
       conLink(() => irACuenta())(boton, ev);

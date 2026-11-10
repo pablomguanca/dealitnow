@@ -39,7 +39,7 @@ const guardar = docs => {
 };
 
 // Firestore devuelve Timestamps: se imitan con { toDate }.
-const FECHAS = ['createdAt', 'updatedAt', 'vistoPrimero', 'vistoUltimo'];
+const FECHAS = ['createdAt', 'updatedAt', 'vistoPrimero', 'vistoUltimo', 'enviadaEn'];
 const comoFirestore = (id, d) => {
   const doc = { id, ...structuredClone(d) };
   for (const k of FECHAS) if (doc[k]) doc[k] = { toDate: () => new Date(d[k]) };

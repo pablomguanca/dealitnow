@@ -19,6 +19,7 @@ import {
 import { llenarFormulario, actualizarAvisoPagos } from './formulario.js';
 import { renderDocumento } from './vista.js';
 import { descargarPDF } from './documento.js';
+import { irAResultados } from './resultados.js';
 import { irRuta, idEnUrl, idPortafolioEnUrl, seccionEnUrl } from './navegacion.js';
 import { escucharPropuestas, reiniciarPanel, irAlPanel, abrirPropuesta, mostrarEditor } from './propuestas.js';
 import { escucharPortafoliosNube, reiniciarPortafolios, irAPortafolios, abrirPortafolio } from './portafolios.js';
@@ -351,6 +352,7 @@ const iniciarConCuenta = async () => {
   else if (id) await abrirPropuesta(id, { historial: false });
   else if (seccionEnUrl() === 'portafolios') irAPortafolios({ historial: false });
   else if (seccionEnUrl() === 'cuenta') irACuenta({ historial: false });
+  else if (seccionEnUrl() === 'resultados') irAResultados({ historial: false });
   else irAlPanel({ historial: false, pestana: seccionEnUrl() });
 };
 

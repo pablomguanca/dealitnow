@@ -63,7 +63,7 @@ export const renderPanel = () => {
   const elMetricas = $('#panel-metricas');
   elMetricas.hidden = !hay;
   const conSeguimiento = !restriccionesActivas();
-  if (hay) elMetricas.innerHTML = metricasHTML(propuestas, { conSeguimiento });
+  if (hay) elMetricas.innerHTML = `${metricasHTML(propuestas, { conSeguimiento })}<a class="metricas__mas" href="/resultados" data-accion="ir-resultados">Ver todos tus resultados →</a>`;
   $('#panel-herramientas').hidden = propuestas.length < 2;
   $('#panel-filtros').innerHTML = filtrosHTML(propuestas, filtroEstado);
   $('#panel-vacio').hidden = panelCargando || panelError || hay;
@@ -121,6 +121,7 @@ export const escucharPropuestas = () => {
   dejarDeEscuchar = AteneaDB.proposals.escuchar(docs => {
     // Más recientes primero; las que tienen cambios sin confirmar traen fecha estimada.
     ctx.propuestas = docs.sort((a, b) => (fechaDe(b.updatedAt) || 0) - (fechaDe(a.updatedAt) || 0));
+    document.dispatchEvent(new CustomEvent('dealit:propuestas'));
     panelCargando = false;
     panelError = false;
     avisarNovedades(docs);

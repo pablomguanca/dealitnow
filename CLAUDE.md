@@ -31,6 +31,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 | `src/controlador/` | Lógica de la interfaz por área: `iniciar.js` (dueño), `iniciar-cliente.js` (cliente), `contexto.js` (estado compartido), panel, editor, hoja en celular, plan, versiones, etc. |
 | `src/planes.js` | Reglas de los planes (límite de envíos, quién es Pro), compartidas por la app y el servidor |
 | `src/modelo.js` | Temas, valores por defecto, normalización y cálculo de totales |
+| `src/resultados.js` | Cálculo de la pantalla Resultados (`/resultados`): ganado, conversión, embudo, en juego y a quién seguir hoy; la pantalla está en `controlador/resultados.js` |
 | `src/aceptacion.js` | Reglas de aceptación, compartidas por la app y el servidor |
 | `src/firebase.js`, `src/firebase-publico.js`, `src/firebase-config.js` | Firebase de la app del dueño, de la vista del cliente y su configuración |
 | `src/link.js` | Links largos viejos (`#p=…`, propuesta comprimida); hoy solo para abrirlos |

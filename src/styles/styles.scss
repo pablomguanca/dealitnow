@@ -23,6 +23,7 @@
 // 4. Autenticación y paneles de gestión (Mis propuestas, Mis portfolios, Mi cuenta)
 @use 'auth';
 @use 'paneles';
+@use 'resultados';
 
 // 5. Estudio de diseño, variantes de portada/bloques, portfolios, galerías y Lightbox
 @use 'estudio';

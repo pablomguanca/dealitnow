@@ -1,0 +1,437 @@
+// Pantalla «Resultados» (controlador/resultados.js). Gráficos de una sola serie: barras finas,
+// punta redondeada de 4px y base recta, valor solo en las barras que cuentan la historia.
+
+:root {
+  --res-barra: #00936F; // validado contra #FFFFFF (contraste ≥ 3:1)
+  --res-pista: #EEF2F1;
+}
+
+:root[data-tema-app="oscuro"] {
+  --res-barra: #0FA67C; // validado contra #192226
+  --res-pista: #223036;
+}
+
+.resultados[hidden] {
+  display: none;
+}
+
+.resultados__periodos {
+  align-self: flex-end;
+}
+
+.res-heroe {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr);
+  gap: 1.2rem;
+  margin-bottom: 1rem;
+  padding: 1.4rem;
+  border: 1px solid var(--superficie-borde);
+  border-radius: var(--radio-l);
+  background: var(--superficie);
+
+  &__principal {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.35rem;
+    min-width: 0;
+    padding-right: 1.2rem;
+    border-right: 1px solid var(--superficie-borde);
+  }
+
+  &__etiqueta {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--marfil-apagado);
+  }
+
+  &__valor {
+    font-family: var(--fuente-display);
+    font-size: clamp(2.4rem, 6vw, 3.4rem);
+    line-height: 1;
+    color: var(--marfil);
+    overflow-wrap: anywhere;
+  }
+
+  &__detalle {
+    font-size: 0.85rem;
+    color: var(--marfil-apagado);
+  }
+
+  &__cifras {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.4rem;
+  }
+}
+
+.res-cifra {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+
+  &__valor {
+    font-family: var(--fuente-display);
+    font-size: 1.7rem;
+    line-height: 1.1;
+    color: var(--marfil);
+    overflow-wrap: anywhere;
+  }
+
+  &__etiqueta {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--marfil);
+  }
+
+  &__detalle {
+    font-size: 0.78rem;
+    color: var(--marfil-apagado);
+  }
+}
+
+.res-grilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.res-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-width: 0;
+  padding: 1.2rem 1.3rem;
+  border: 1px solid var(--superficie-borde);
+  border-radius: var(--radio-l);
+  background: var(--superficie);
+
+  &--ancha {
+    grid-column: 1 / -1;
+  }
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    font-size: 1rem;
+    color: var(--marfil);
+  }
+
+  &__ayuda {
+    margin: -0.4rem 0 0;
+    font-size: 0.8rem;
+    color: var(--marfil-apagado);
+  }
+}
+
+.res-vacio,
+.res-lectura,
+.res-destacado {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--marfil-apagado);
+}
+
+.res-lectura {
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--superficie-borde);
+  color: var(--marfil);
+}
+
+.res-destacado strong {
+  color: var(--marfil);
+}
+
+// Bloqueado en Gratis: se ve qué hay detrás y abre la oferta.
+.res-bloqueado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 1rem;
+  border: 1px dashed var(--superficie-borde);
+  border-radius: var(--radio-m);
+  background: var(--negro);
+  font: inherit;
+  text-align: left;
+  color: var(--marfil);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: #B45309;
+  }
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-weight: 700;
+  }
+
+  &__gancho {
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--marfil-apagado);
+  }
+
+  &__accion {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #B45309;
+  }
+}
+
+// Para seguir hoy
+.res-seguir {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__fila {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.7rem 0;
+    border-top: 1px solid var(--superficie-borde);
+
+    &:first-child {
+      border-top: 0;
+    }
+  }
+
+  // Estado con forma además de color: nunca solo color.
+  &__marca {
+    width: 0.65rem;
+    height: 0.65rem;
+    border-radius: 50%;
+
+    &--caliente { background: #C2410C; }
+    &--vence { border-radius: 2px; background: #B45309; }
+    &--sin-abrir { border: 2px solid var(--marfil-apagado); }
+  }
+
+  &__texto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+    color: var(--marfil);
+    text-decoration: none;
+
+    strong {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    span {
+      font-size: 0.8rem;
+      color: var(--marfil-apagado);
+    }
+
+    &:hover strong {
+      text-decoration: underline;
+    }
+  }
+}
+
+// Barras horizontales (embudo y franjas)
+.res-embudo {
+  display: grid;
+  gap: 0.7rem;
+
+  &__fila {
+    display: grid;
+    grid-template-columns: 6.5rem minmax(0, 1fr) 5.5rem;
+    align-items: center;
+    gap: 0.7rem;
+  }
+
+  &__etiqueta {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--marfil);
+  }
+
+  &__pista {
+    height: 14px;
+    border-radius: 0 4px 4px 0;
+    background: var(--res-pista);
+  }
+
+  &__barra {
+    display: block;
+    width: calc(var(--valor, 0) * 100%);
+    min-width: 2px;
+    height: 100%;
+    border-radius: 0 4px 4px 0;
+    background: var(--res-barra);
+    transition: width 0.6s var(--ease-out-expo);
+  }
+
+  &__valor {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--marfil);
+
+    small {
+      font-weight: 400;
+      color: var(--marfil-apagado);
+    }
+  }
+
+  &__fila--bloqueada .res-embudo__pista {
+    background: repeating-linear-gradient(135deg, var(--res-pista) 0 6px, transparent 6px 10px);
+  }
+}
+
+// Columnas por mes
+.res-meses {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  align-items: end;
+  gap: 2px;
+  height: 180px;
+  padding-top: 1.4rem;
+  border-bottom: 1px solid var(--superficie-borde);
+
+  &__col {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    height: 100%;
+    outline: none;
+  }
+
+  &__barra {
+    width: min(24px, 70%);
+    height: calc(var(--valor, 0) * (100% - 2.2rem));
+    min-height: 2px;
+    border-radius: 4px 4px 0 0;
+    background: var(--res-barra);
+    opacity: 0.55;
+  }
+
+  &__col--actual &__barra,
+  &__col:hover &__barra,
+  &__col:focus-visible &__barra {
+    opacity: 1;
+  }
+
+  &__valor {
+    margin-bottom: 0.25rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--marfil);
+  }
+
+  &__mes {
+    position: absolute;
+    bottom: -1.4rem;
+    font-size: 0.72rem;
+    white-space: nowrap;
+    color: var(--marfil-apagado);
+  }
+
+  &__tip {
+    position: absolute;
+    bottom: calc(100% - 1rem);
+    z-index: 2;
+    padding: 0.3rem 0.5rem;
+    border-radius: 6px;
+    background: var(--marfil);
+    color: var(--superficie);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
+  }
+
+  &__col:hover &__tip,
+  &__col:focus-visible &__tip {
+    opacity: 1;
+  }
+}
+
+.res-tarjeta .res-meses {
+  margin-bottom: 1.4rem;
+}
+
+.res-lista {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    font-size: 0.88rem;
+    color: var(--marfil);
+  }
+
+  small {
+    color: var(--marfil-apagado);
+  }
+
+  strong {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+}
+
+.res-pie {
+  margin: 1.2rem 0 0;
+  font-size: 0.78rem;
+  color: var(--marfil-apagado);
+}
+
+.metricas__mas {
+  grid-column: 1 / -1;
+  justify-self: end;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--marfil);
+}
+
+@media (max-width: 760px) {
+  .res-heroe {
+    grid-template-columns: 1fr;
+
+    &__principal {
+      padding: 0 0 1rem;
+      border-right: 0;
+      border-bottom: 1px solid var(--superficie-borde);
+    }
+  }
+
+  .res-grilla {
+    grid-template-columns: 1fr;
+  }
+
+  .res-embudo__fila {
+    grid-template-columns: 5.5rem minmax(0, 1fr) 4.5rem;
+  }
+
+  .resultados__periodos {
+    align-self: stretch;
+  }
+}
