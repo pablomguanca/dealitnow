@@ -211,3 +211,10 @@
     display: none;
   }
 }
+
+// Las opciones del menú van alineadas a la izquierda con su ícono. Este archivo se carga
+// antes que _botones.scss, cuyo .boton las centraba: acá se gana por especificidad.
+.menu__panel .menu__opcion {
+  justify-content: flex-start;
+  text-align: left;
+}
