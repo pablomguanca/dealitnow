@@ -66,18 +66,21 @@ export const imprimirNativo = async nombre => {
 // Notificaciones push de la app (Firebase Cloud Messaging). El token del celular se guarda
 // también acá para poder darlo de baja después (al apagarlas o al cerrar sesión).
 const CLAVE_TOKEN_PUSH = 'dealit-push-token';
-const mensajeria = () => import('@capacitor-firebase/messaging').then(m => m.FirebaseMessaging);
+// Ojo: el complemento nunca se devuelve desde una promesa. Al resolverla, JavaScript le pregunta
+// si tiene .then() y Capacitor lo toma como un pedido a Android («then() is not implemented»).
+// Por eso se devuelve el módulo entero y se usa .FirebaseMessaging recién al llamar.
+const mensajeria = () => import('@capacitor-firebase/messaging');
 export const pushNativo = {
   // 'granted' | 'denied' | 'prompt' (todavía no se preguntó)
-  permiso: async () => (await (await mensajeria()).checkPermissions()).receive,
-  pedirPermiso: async () => (await (await mensajeria()).requestPermissions()).receive,
-  token: async () => (await (await mensajeria()).getToken()).token,
-  borrarToken: async () => { try { await (await mensajeria()).deleteToken(); } catch { } },
+  permiso: async () => (await (await mensajeria()).FirebaseMessaging.checkPermissions()).receive,
+  pedirPermiso: async () => (await (await mensajeria()).FirebaseMessaging.requestPermissions()).receive,
+  token: async () => (await (await mensajeria()).FirebaseMessaging.getToken()).token,
+  borrarToken: async () => { try { await (await mensajeria()).FirebaseMessaging.deleteToken(); } catch { } },
   guardado: () => { try { return localStorage.getItem(CLAVE_TOKEN_PUSH) || ''; } catch { return ''; } },
   guardar: token => { try { localStorage.setItem(CLAVE_TOKEN_PUSH, token); } catch { } },
   olvidar: () => { try { localStorage.removeItem(CLAVE_TOKEN_PUSH); } catch { } },
   // Google renueva el token cada tanto: push.js lo vuelve a registrar en el servidor.
-  alRenovarToken: async fn => (await mensajeria()).addListener('tokenReceived', ev => ev?.token && fn(ev.token))
+  alRenovarToken: async fn => (await mensajeria()).FirebaseMessaging.addListener('tokenReceived', ev => ev?.token && fn(ev.token))
 };
 
 // Al tocar un aviso se abre la pantalla de la propuesta. Se navega dentro de la app (sin
@@ -92,7 +95,7 @@ const abrirDesdeAviso = url => {
 };
 
 const instalarAvisosNativos = async () => {
-  const FirebaseMessaging = await mensajeria();
+  const { FirebaseMessaging } = await mensajeria();
   // Canal de Android para los avisos (con sonido y que aparezcan arriba de la pantalla).
   await FirebaseMessaging.createChannel({
     id: 'avisos',
