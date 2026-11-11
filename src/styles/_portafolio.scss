@@ -97,7 +97,7 @@
   gap: 0.45em;
   padding: 0.38em 0.9em;
   border: 1px solid var(--dorado-tenue);
-  border-radius: 999px;
+  border-radius: var(--radio-pastilla, 999px);
   background: var(--dorado-fondo);
   color: var(--d-texto);
   font-size: 0.88em;
@@ -168,6 +168,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    gap: 0.9em;
     padding: 1.3em 1.45em;
     min-height: 9.2em;
     margin-bottom: 1.1em;
@@ -178,15 +179,18 @@
       linear-gradient(135deg, var(--d-panel) 0%, var(--d-fondo) 100%);
     overflow: hidden;
 
+    // Si la pastilla no entra al lado del número, baja: nunca se aprieta ni se deforma.
     &-top {
       display: flex;
+      flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 0.75em;
+      gap: 0.6em 0.75em;
       z-index: 1;
     }
 
     &-indice {
+      flex: none;
       font-family: var(--fuente-display);
       font-size: calc(2.8em * var(--escala-titulos, 1));
       font-weight: 700;
@@ -225,7 +229,7 @@
     display: inline-flex;
     align-items: center;
     padding: 0.18em 0.68em;
-    border-radius: 999px;
+    border-radius: var(--radio-pastilla, 999px);
     background: var(--dorado-fondo);
     border: 1px solid var(--dorado-tenue);
     color: var(--d-acento);
@@ -239,7 +243,7 @@
     display: inline-flex;
     align-items: center;
     padding: 0.18em 0.72em;
-    border-radius: 999px;
+    border-radius: var(--radio-pastilla, 999px);
     background: var(--dorado);
     color: var(--acento-tinta, var(--negro));
     border: 1px solid var(--acento-borde-contraste, transparent);
@@ -282,7 +286,7 @@
   &__tag {
     padding: 0.22em 0.65em;
     border: 1px solid var(--d-linea);
-    border-radius: 999px;
+    border-radius: var(--radio-pastilla, 999px);
     background: rgba(128, 128, 128, 0.06);
     color: var(--d-suave);
     font-size: 0.78em;

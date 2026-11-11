@@ -97,15 +97,22 @@ export const calcularResultados = (propuestas = [], { periodo = 'mes', ahora = n
     && !((venceDe(p) || Infinity) < ahora));
   const enJuego = sumarPorMoneda(abiertasAhora, p => p.amount);
 
-  // Para seguir hoy: las que el cliente mira y no acepta (calientes), y las que nunca abrió.
+  // Para seguir hoy, con paciencia (insistir antes de tiempo cansa al cliente):
+  // - calientes: la abrió más de una vez y no respondió, pero se le da un día para pensarla
+  //   (la última vez, hace entre 1 y 5 días);
+  // - sin abrir: a los 3 días del envío;
+  // - por vencer: en los últimos 3 días de vigencia.
   const calientes = abiertasAhora
-    .filter(p => Number(p.vistas) >= 2 && (ahora - (fechaDe(p.vistoUltimo) || 0)) <= 3 * DIA)
+    .filter(p => {
+      const desde = ahora - (fechaDe(p.vistoUltimo) || 0);
+      return Number(p.vistas) >= 2 && desde >= DIA && desde <= 5 * DIA;
+    })
     .sort((a, b) => fechaDe(b.vistoUltimo) - fechaDe(a.vistoUltimo));
   const sinAbrir = abiertasAhora
-    .filter(p => !(Number(p.vistas) > 0) && (ahora - (fechaEnvio(p) || ahora)) >= 2 * DIA)
+    .filter(p => !(Number(p.vistas) > 0) && (ahora - (fechaEnvio(p) || ahora)) >= 3 * DIA)
     .sort((a, b) => fechaEnvio(a) - fechaEnvio(b));
   const porVencer = abiertasAhora
-    .filter(p => { const v = venceDe(p); return v && v - ahora <= 5 * DIA; })
+    .filter(p => { const v = venceDe(p); return v && v - ahora <= 3 * DIA; })
     .sort((a, b) => venceDe(a) - venceDe(b));
 
   // Opcionales que más suman tus clientes al aceptar.

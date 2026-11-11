@@ -61,15 +61,17 @@ describe('resultados', () => {
   });
 
   it('para seguir: calientes, sin abrir y por vencer', () => {
-    const caliente = propuesta({ vistas: 4, vistoUltimo: dias(0.5) });
+    const caliente = propuesta({ vistas: 4, vistoUltimo: dias(1.5) });
+    // La abrió hace unas horas: todavía la está pensando, no se sugiere escribirle.
+    const pensando = propuesta({ vistas: 3, vistoUltimo: dias(0.3) });
     const sinAbrir = propuesta({ enviadaEn: dias(4) });
     const vence = propuesta({ vistas: 1, vistoUltimo: dias(10), payload: { inversion: { moneda: 'ARS' }, propuesta: { fecha: dias(13).slice(0, 10), validez: 15 } } });
     const vencida = propuesta({ payload: { inversion: { moneda: 'ARS' }, propuesta: { fecha: dias(40).slice(0, 10), validez: 15 } } });
-    const r = calcularResultados([caliente, sinAbrir, vence, vencida], { ahora: AHORA });
+    const r = calcularResultados([caliente, pensando, sinAbrir, vence, vencida], { ahora: AHORA });
     expect(r.calientes).toEqual([caliente]);
     expect(r.sinAbrir).toEqual([sinAbrir]);
     expect(r.porVencer).toEqual([vence]);
-    expect(r.abiertasAhora).toBe(3);
+    expect(r.abiertasAhora).toBe(4);
   });
 
   it('ganado por mes: 6 columnas con el mes actual al final', () => {

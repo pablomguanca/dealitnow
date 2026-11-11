@@ -36,7 +36,8 @@ const mensajeAceptacion = (firma = ctx.estado.cliente.nombre.trim()) => {
 };
 
 // Una visita cada media hora por navegador: recargar la página no suma visitas.
-const VISITA_INTERVALO = 30 * 60 * 1000;
+// El mismo navegador no registra otra visita antes de esto (recargar la página no cuenta).
+const VISITA_INTERVALO = 3 * 60 * 1000;
 export const registrarVisita = id => {
   const clave = `${CLAVE}:visto:${id}`;
   try {

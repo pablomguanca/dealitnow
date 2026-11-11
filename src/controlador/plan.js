@@ -49,12 +49,19 @@ const aplicarRestricciones = () => {
   if (antes !== ctx.restringido) document.dispatchEvent(new CustomEvent('dealit:plan'));
 };
 
-let avisoPruebaDado = false;
 // Al probar un diseño o una plantilla PRO en Gratis: se puede, pero no enviar.
-export const avisarPruebaPro = () => {
-  if (!restriccionesActivas() || avisoPruebaDado) return;
-  avisoPruebaDado = true;
-  avisar('Este diseño es PRO: probalo todo lo que quieras. Para enviarlo necesitás Dealit Pro.', 7000);
+// Elegir un diseño o una plantilla PRO en Gratis: antes de aplicarlo, un cartel que explica
+// que es de Pro y ofrece pasarse (con los dos precios) o seguir con un diseño gratis. El
+// diseño no se aplica. true = se puede usar (Pro, o planes apagados para esta cuenta).
+export const disenoProPermitido = async nombre => {
+  if (!restriccionesActivas()) return true;
+  const eleccion = await elegir({
+    titulo: `«${nombre}» es un diseño PRO`,
+    texto: 'Para usarlo en tus propuestas necesitás Dealit Pro: todos los diseños y plantillas PRO, envíos sin tope, sin la marca de Dealit y un aviso cada vez que tu cliente la abre. Si preferís seguir gratis, elegí un diseño sin la etiqueta PRO.',
+    opciones: [...opcionesPro(), { valor: null, texto: 'Elegir un diseño gratis', estilo: 'texto' }]
+  });
+  if (eleccion) suscribir(eleccion);
+  return false;
 };
 
 const pintarPlan = () => {
@@ -132,7 +139,6 @@ export const reiniciarPlan = () => {
   planesActivos = false;
   verificado = false;
   planLeido = false;
-  avisoPruebaDado = false;
   ctx.plan = null;
   aplicarRestricciones();
 };
@@ -196,7 +202,7 @@ const MOTIVOS = {
   }),
   diseno: (nombres = []) => ({
     titulo: 'Este diseño es de Dealit Pro',
-    texto: `Tu propuesta usa ${nombres.length ? lista(nombres) : 'un diseño PRO'}. Podés seguir probándolo, pero para enviarla necesitás Pro. También podés elegir un diseño sin la etiqueta PRO y mandarla gratis.`
+    texto: `Tu propuesta usa ${nombres.length ? lista(nombres) : 'un diseño PRO'}. Para enviarla necesitás Pro, o elegí un diseño sin la etiqueta PRO y mandala gratis.`
   }),
   'link-activo': (nombres = []) => ({
     titulo: 'Tu cliente ya tiene el link',

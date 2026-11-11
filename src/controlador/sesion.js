@@ -302,8 +302,22 @@ const limpiarEstadoMemoria = () => {
   if ($('#barra-avatar')) $('#barra-avatar').textContent = '';
 };
 
+// Pantalla que tapa todo mientras se cierra la sesión: sin ella, al limpiar los datos y
+// recargar se veía un instante la página de inicio. Se va sola con la recarga.
+const taparCierre = tapar => {
+  document.getElementById('cubre-cierre')?.remove();
+  if (!tapar) return;
+  const capa = document.createElement('div');
+  capa.id = 'cubre-cierre';
+  capa.className = 'cubre-pantalla';
+  capa.setAttribute('role', 'status');
+  capa.innerHTML = '<span class="cubre-pantalla__spinner" aria-hidden="true"></span><p>Cerrando sesión…</p>';
+  document.body.append(capa);
+};
+
 const cerrarSesion = async () => {
   if (!AteneaDB) return;
+  taparCierre(true);
   if (hayCambiosSinEnviar()) guardarAhora();
   // Cerrar sesión borra la caché local: antes hay que asegurar que todo llegó a la cuenta.
   const sincronizado = await Promise.race([
@@ -315,7 +329,10 @@ const cerrarSesion = async () => {
     texto: 'Los últimos cambios todavía no llegaron a tu cuenta, probablemente por falta de conexión. Si cerrás sesión ahora, se pierden.',
     aceptar: 'Cerrar sesión igual',
     peligro: true
-  })) return;
+  })) {
+    taparCierre(false);
+    return;
+  }
   ctx.cerrandoSesion = true;
   // Este dispositivo deja de recibir los avisos de la cuenta (con la sesión todavía abierta).
   await Promise.race([desactivarPushEnEsteDispositivo(), new Promise(res => setTimeout(res, 3000))]);

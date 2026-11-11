@@ -6,6 +6,7 @@ import { PLANTILLAS } from '../modelo.js';
 import { aplicarTema } from '../lib/tema.js';
 import { generarPropuestaHTML, mostrarSinAnimar } from '../lib/render.js';
 import { normalizar } from './contexto.js';
+import { disenoProPermitido } from './plan.js';
 import { registrarAcciones } from './acciones.js';
 import { avisarExito } from './avisos.js';
 import { nuevaPropuesta } from './propuestas.js';
@@ -87,9 +88,10 @@ const verPlantilla = id => {
 };
 
 // La plantilla aporta textos, servicios y diseño; los datos del negocio salen de Mi cuenta.
-const usarPlantilla = id => {
+const usarPlantilla = async id => {
   const tpl = PLANTILLAS[id];
   if (!tpl) return;
+  if (tpl.plan === 'pro' && !(await disenoProPermitido(tpl.nombre))) return;
   const datos = normalizar(tpl.crear());
   datos.plantilla = id;
   datos.emisor = emisorDeCuenta(datos.emisor);

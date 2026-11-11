@@ -175,8 +175,10 @@
   }
 }
 
-// Capa que tapa el cambio de ancho mientras la app de Android prepara el PDF (nativo.js).
-.cubre-impresion {
+// Capas que tapan la pantalla: mientras la app de Android prepara el PDF (cambia de ancho,
+// nativo.js) y mientras se cierra la sesión (sesion.js).
+.cubre-impresion,
+.cubre-pantalla {
   position: fixed;
   inset: 0;
   z-index: 100000;
@@ -205,7 +207,8 @@
 }
 
 @media print {
-  .cubre-impresion {
+  .cubre-impresion,
+  .cubre-pantalla {
     display: none !important;
   }
 }

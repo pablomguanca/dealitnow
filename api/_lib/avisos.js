@@ -77,10 +77,12 @@ export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, urlApp }) => {
 };
 
 // Notificación push del mismo aviso: corta, para la pantalla bloqueada. Pura.
-export const contenidoPush = ({ tipo, id, propuesta, aceptacion, urlApp }) => {
+export const contenidoPush = ({ tipo, id, propuesta, aceptacion, urlApp, vistas }) => {
   const { titulo, cliente } = datosDe(propuesta);
   const url = `${urlApp}/propuesta/${encodeURIComponent(id)}`;
-  const tag = `${tipo}-${id}`;
+  // Misma etiqueta para la primera visita y las siguientes: el aviso nuevo reemplaza al
+  // anterior de esa propuesta en vez de amontonarse.
+  const tag = `${tipo === 'revisita' ? 'vista' : tipo}-${id}`;
   if (tipo === 'aceptada') {
     const nombre = texto(aceptacion?.nombre).trim() || cliente || 'Tu cliente';
     const moneda = aceptacion?.moneda || 'USD';
@@ -90,6 +92,10 @@ export const contenidoPush = ({ tipo, id, propuesta, aceptacion, urlApp }) => {
     return { titulo: `🎉 ${nombre} aceptó «${titulo}»`, cuerpo: `Total aceptado: ${total}. Escribile para arrancar.`, url, tag };
   }
   const quien = cliente || 'Tu cliente';
+  if (tipo === 'revisita') {
+    const veces = Number(vistas) > 1 ? ` Ya la abrió ${Number(vistas)} veces.` : '';
+    return { titulo: `${quien} volvió a abrir «${titulo}»`, cuerpo: `La está mirando ahora.${veces}`, url, tag };
+  }
   return { titulo: `${quien} abrió «${titulo}»`, cuerpo: 'La está mirando ahora: buen momento para escribirle.', url, tag };
 };
 
@@ -113,7 +119,10 @@ export const enviarEmail = async ({ para, asunto, html, texto: plano }, { entorn
 
 // Avisa al dueño de la propuesta si le corresponde (Pro, o los planes apagados para su cuenta):
 // por email y por push a la vez. Devuelve cómo le fue al email.
-export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarPush = enviarPushReal }) => async ({ tipo, id, propuesta, aceptacion, urlApp }) => {
+// Las revisitas van solo por push: un email cada vez que el cliente abre el link sería demasiado.
+const SOLO_PUSH = new Set(['revisita']);
+
+export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarPush = enviarPushReal }) => async ({ tipo, id, propuesta, aceptacion, urlApp, vistas }) => {
   try {
     const uid = propuesta?.userId;
     if (!uid) return 'sin-duenio';
@@ -124,12 +133,14 @@ export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarP
     const email = snapUsuario.exists ? texto(snapUsuario.data()?.email).trim() : '';
     const plan = snapPlan.exists ? snapPlan.data() : {};
     if (!esPro(plan) && planesActivos(email)) return 'gratis';
-    const datos = { tipo, id, propuesta, aceptacion, urlApp };
+    const datos = { tipo, id, propuesta, aceptacion, urlApp, vistas };
+    const conEmail = email && !SOLO_PUSH.has(tipo);
     const [porEmail, porPush] = await Promise.allSettled([
-      email ? enviar({ para: email, ...contenidoAviso(datos) }) : Promise.resolve(null),
+      conEmail ? enviar({ para: email, ...contenidoAviso(datos) }) : Promise.resolve(null),
       enviarPush({ db, uid, mensaje: contenidoPush(datos) })
     ]);
     if (porPush.status === 'rejected') console.error(`No se pudo mandar el aviso «${tipo}» por push:`, porPush.reason?.message);
+    if (SOLO_PUSH.has(tipo)) return porPush.status === 'fulfilled' ? 'push' : 'error';
     if (!email) return 'sin-email';
     if (porEmail.status === 'rejected') throw porEmail.reason;
     return porEmail.value ? 'enviado' : 'sin-clave';

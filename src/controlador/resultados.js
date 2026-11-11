@@ -9,6 +9,7 @@ import { registrarAcciones } from './acciones.js';
 import { cerrarEdicion, irRuta, mostrarVista } from './navegacion.js';
 import { restriccionesActivas } from './plan.js';
 import { linkCorto } from './compartir.js';
+import { calcularVigencia } from '../lib/render.js';
 
 let periodo = 'mes';
 
@@ -75,13 +76,20 @@ const cifrasHTML = r => {
 const PERIODO_TEXTO = { mes: 'este mes', trimestre: 'últimos 90 días', anio: 'últimos 12 meses' };
 
 // --- Para seguir hoy: calientes, sin abrir y por vencer ---
+// Mensajes de WhatsApp que se ofrecen para escribirle al cliente (botón «Escribile»).
+// Cordiales y sin presionar: la idea es ayudar a cerrar, no cansar.
+// Para cambiar los textos, es acá.
 const mensajeWhatsApp = (p, tipo) => {
   const nombre = String(p.payload?.cliente?.nombre || '').trim().split(' ')[0];
-  const hola = nombre ? `Hola ${nombre}!` : 'Hola!';
+  const hola = nombre ? `Hola ${nombre}, ¿cómo estás?` : 'Hola, ¿cómo estás?';
   const link = linkCorto(p.id);
-  if (tipo === 'caliente') return `${hola} ¿Pudiste ver la propuesta? Si tenés alguna duda, la vemos juntos: ${link}`;
-  if (tipo === 'vence') return `${hola} Te recuerdo que la propuesta vence pronto. Si querés avanzar, la aceptás desde acá: ${link}`;
-  return `${hola} Te reenvío la propuesta por si se perdió entre los mensajes: ${link}`;
+  if (tipo === 'caliente') return `${hola} Si te quedó alguna duda con la propuesta o querés ajustar algo, contame y lo vemos. ${link}`;
+  if (tipo === 'vence') {
+    const vence = calcularVigencia(p.payload?.propuesta || {}).vence;
+    const hasta = vence ? ` hasta el ${fechaLarga(vence)}` : '';
+    return `${hola} Te cuento que los valores de la propuesta se mantienen${hasta}. Cualquier consulta, acá estoy. ${link}`;
+  }
+  return `${hola} Te dejo el link de la propuesta para cuando tengas un rato: ${link}`;
 };
 
 const filaSeguimiento = (p, tipo, detalle) => {

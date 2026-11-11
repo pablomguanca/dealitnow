@@ -371,3 +371,66 @@ body.soltando-volver {
     font-size: calc(1.6em * var(--escala-titulos, 1));
   }
 }
+
+// ---------- Números del panel y Resultados: compactos en el celular ----------
+// Menos alto en cada tarjeta para que se vea mucho más sin hacer scroll.
+@media (max-width: 768px) {
+  .metricas {
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .metrica {
+    gap: 0.1rem;
+    padding: 0.65rem 0.8rem;
+
+    &__etiqueta {
+      font-size: 0.72rem;
+      line-height: 1.25;
+    }
+
+    &__valor {
+      font-size: 1.45rem;
+    }
+
+    &__detalle {
+      display: -webkit-box;
+      overflow: hidden;
+      font-size: 0.7rem;
+      line-height: 1.3;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+  }
+
+  .metricas__mas {
+    font-size: 0.82rem;
+  }
+
+  .res-heroe {
+    gap: 0.8rem;
+    padding: 1rem;
+
+    &__principal {
+      padding-bottom: 0.8rem;
+    }
+
+    &__cifras {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem 0.9rem;
+    }
+  }
+
+  .res-cifra__valor {
+    font-size: 1.2rem;
+  }
+
+  .res-grilla {
+    gap: 0.7rem;
+  }
+
+  .res-tarjeta {
+    gap: 0.6rem;
+    padding: 0.9rem 1rem;
+  }
+}

@@ -68,7 +68,7 @@
     gap: 0.4em;
     padding: 0.36em 0.88em;
     border: 1px solid var(--portada-linea, rgba(255, 255, 255, 0.16));
-    border-radius: 999px;
+    border-radius: var(--radio-pastilla, 999px);
     background: var(--portada-superficie, rgba(255, 255, 255, 0.04));
     backdrop-filter: blur(6px);
     font-family: var(--fuente-texto);
@@ -162,7 +162,7 @@
       display: inline-block;
       padding: 0.38em 1.2em;
       border: 1px solid var(--portada-borde, var(--dorado-tenue));
-      border-radius: 999px;
+      border-radius: var(--radio-pastilla, 999px);
       background: var(--portada-superficie, rgba(255, 255, 255, 0.055));
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
       backdrop-filter: blur(8px);
@@ -257,7 +257,7 @@
   display: inline-flex;
   align-items: center;
   padding: 0.18em 0.65em;
-  border-radius: 999px;
+  border-radius: var(--radio-pastilla, 999px);
   background: var(--dorado-fondo);
   border: 1px solid var(--dorado-tenue);
   color: var(--d-acento);
@@ -318,7 +318,7 @@
 
 .doc-grupo__badge {
   padding: 0.22em 0.7em;
-  border-radius: 999px;
+  border-radius: var(--radio-pastilla, 999px);
   border: 1px solid var(--dorado-tenue);
   background: var(--dorado-fondo);
   color: var(--d-acento);
@@ -353,7 +353,7 @@
 .etapa__chip {
   display: inline-block;
   padding: 0.22em 0.75em;
-  border-radius: 999px;
+  border-radius: var(--radio-pastilla, 999px);
   background: var(--dorado-fondo);
   border: 1px solid var(--dorado-tenue);
   color: var(--d-acento);
@@ -563,7 +563,7 @@
         margin: 0;
         padding: 0.32em 0.78em;
         border: 1px solid var(--d-linea);
-        border-radius: 999px;
+        border-radius: var(--radio-pastilla, 999px);
         background: rgba(128, 128, 128, 0.06);
         font-size: 0.88em;
         align-items: center;
@@ -926,4 +926,33 @@
   .cierre {
     border-radius: 1em;
   }
+}
+
+// ---------- Pastillas con texto (chips, insignias, etiquetas) ----------
+// Con una línea, una cápsula; si el texto es largo y baja a dos líneas, un rectángulo con
+// esquinas redondeadas y el texto balanceado (con 999px se estiraba en un óvalo deformado).
+// El radio es medio renglón más el relleno: en una línea alcanza para la cápsula completa.
+.doc {
+  --radio-pastilla: calc(0.5lh + 0.45em);
+}
+
+.portada__numero,
+.portada__para-chip,
+.especialidad-chip,
+.proyecto-card__chip,
+.proyecto-card__destacado,
+.proyecto-card__tag,
+.servicio__chip,
+.doc-grupo__badge,
+.etapa__chip,
+.servicio__entregables li {
+  max-width: 100%;
+  white-space: normal;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+.proyecto-card__destacado {
+  line-height: 1.3;
+  text-align: left;
 }

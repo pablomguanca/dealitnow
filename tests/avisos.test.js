@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contenidoAviso, crearAvisador, enviarEmail } from '../api/_lib/avisos.js';
+import { contenidoAviso, contenidoPush, crearAvisador, enviarEmail } from '../api/_lib/avisos.js';
 import { crearHandler as crearAceptar } from '../api/aceptar.js';
 import { crearHandler as crearVisto } from '../api/visto.js';
 import { vacio } from '../src/modelo.js';
@@ -133,6 +133,32 @@ describe('cuándo se dispara', () => {
     await h(post({ id: ID }), res());
     expect(avisos.map(a => a.tipo)).toEqual(['vista']);
     expect(avisos[0].urlApp).toBe('https://dealit.test');
+  });
+
+  it('si vuelve a abrirla después de la pausa, avisa de nuevo (solo push, con las veces)', async () => {
+    const avisos = [];
+    const hace10min = new Date(Date.now() - 10 * 60 * 1000);
+    const db = crearDb({ proposals: { [ID]: { ...propuesta(), vistoPrimero: hace10min, vistoUltimo: hace10min, vistas: 2 } } });
+    await crearVisto({ db, uidDe: async () => null, avisar: async a => avisos.push(a) })(post({ id: ID }), res());
+    expect(avisos[0]).toMatchObject({ tipo: 'revisita', vistas: 3 });
+    const push = contenidoPush({ ...avisos[0], urlApp: URL_APP });
+    expect(push.titulo).toContain('volvió a abrir');
+    expect(push.cuerpo).toContain('3 veces');
+    expect(push.tag).toBe(`vista-${ID}`);
+  });
+
+  it('una revisita no manda email', async () => {
+    const emails = [];
+    const pushes = [];
+    const avisar = crearAvisador({
+      db: crearDb({ users: { duenio: { email: 'a@b.com' } }, planes: {}, proposals: {} }),
+      planesActivos: () => false,
+      enviar: async m => { emails.push(m); return true; },
+      enviarPush: async m => { pushes.push(m); return 1; }
+    });
+    expect(await avisar({ tipo: 'revisita', id: ID, propuesta: propuesta(), urlApp: URL_APP, vistas: 2 })).toBe('push');
+    expect(emails).toHaveLength(0);
+    expect(pushes).toHaveLength(1);
   });
 
   it('la aceptación avisa con el resumen, sin la copia de la propuesta', async () => {
