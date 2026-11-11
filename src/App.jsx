@@ -3,6 +3,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { DealitProvider } from './context/DealitContext.jsx';
 import { AuthScreen } from './components/auth/AuthScreen.jsx';
+import { Bienvenida } from './components/auth/Bienvenida.jsx';
 import { TopBar } from './components/layout/TopBar.jsx';
 import { TabBar } from './components/layout/TabBar.jsx';
 import { EditorSidebar } from './components/editor/EditorSidebar.jsx';
@@ -17,6 +18,7 @@ function DealitWorkspace() {
   return (
     <DealitProvider>
       <AuthScreen />
+      <Bienvenida />
       <TopBar />
       <main className="app" id="app">
         <EditorSidebar />

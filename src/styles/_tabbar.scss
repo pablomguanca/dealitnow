@@ -125,6 +125,80 @@
   }
 }
 
+// ---------- Sin menú lateral en el celular ----------
+
+.menu__icono-acciones {
+  display: none;
+  fill: currentColor;
+  stroke: none !important;
+}
+
+@media (max-width: 768px) {
+  body.vista-inicio:not(.invitado):not(.sin-cuenta) .menu {
+    display: none;
+  }
+
+  body:not(.vista-inicio) .menu__alternar {
+    .menu__icono-lista {
+      display: none;
+    }
+
+    .menu__icono-acciones {
+      display: block;
+    }
+  }
+
+  // Confirmaciones y hojas de acciones: suben desde abajo, a todo el ancho.
+  .dialogo--confirmacion {
+    width: 100%;
+    max-width: 100%;
+    max-height: 90dvh;
+    margin: auto 0 0;
+    padding: 1.4rem 1.2rem calc(1.2rem + env(safe-area-inset-bottom, 0px));
+    border-width: 1px 0 0;
+    border-radius: 1.2rem 1.2rem 0 0;
+
+    &[open] {
+      animation: hojaSubir 0.32s var(--ease-out-expo);
+    }
+
+    .dialogo__titulo {
+      font-size: 1.45rem;
+    }
+
+    .dialogo__acciones {
+      flex-direction: column-reverse;
+      align-items: stretch;
+
+      .boton {
+        width: 100%;
+        justify-content: center;
+        padding-block: 0.85rem;
+      }
+    }
+
+    .dialogo__acciones--apiladas {
+      flex-direction: column;
+    }
+  }
+}
+
+@keyframes hojaSubir {
+  from { transform: translateY(100%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialogo--confirmacion[open] {
+    animation: none;
+  }
+}
+
+.cuenta__interruptor {
+  width: min(100%, 22rem);
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 // ---------- Filas de carga (esqueletos) ----------
 // Un brillo que recorre la fila (sin animación si se pidió menos movimiento).
 

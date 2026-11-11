@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Color de los avisos de Dealit (Firebase Messaging) -->
+    <color name="dealit_notificacion">#00C896</color>
+</resources>

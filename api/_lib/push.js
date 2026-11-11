@@ -1,8 +1,11 @@
-// Notificaciones push al dueño (Web Push estándar con claves VAPID): el mismo aviso que el
-// email, pero al instante, en cada dispositivo donde las activó desde Mi cuenta.
-// Las suscripciones viven en push/{uid}/dispositivos/{id}: las escribe solo el servidor
-// (api/push), las reglas no dejan que el navegador las toque.
-// Sin VAPID_PUBLIC_KEY y VAPID_PRIVATE_KEY no se manda nada y la app no ofrece activarlas.
+// Notificaciones push al dueño: el mismo aviso que el email, pero al instante, en cada
+// dispositivo donde las activó desde Mi cuenta. Dos tipos de dispositivo:
+// - Navegador o app instalada desde la web: Web Push estándar con claves VAPID
+//   ({ suscripcion }). Sin VAPID_PUBLIC_KEY y VAPID_PRIVATE_KEY no se mandan.
+// - App de Android: Firebase Cloud Messaging ({ fcm: token }), con la cuenta de servicio
+//   de Firebase de siempre (no necesita claves aparte).
+// Viven en push/{uid}/dispositivos/{id}: las escribe solo el servidor (api/push), las reglas
+// no dejan que el navegador las toque.
 import { createHash } from 'node:crypto';
 
 export const MAX_DISPOSITIVOS = 10;
@@ -12,6 +15,26 @@ export const clavePublicaPush = (entorno = process.env) =>
   entorno.VAPID_PUBLIC_KEY && entorno.VAPID_PRIVATE_KEY ? entorno.VAPID_PUBLIC_KEY : '';
 
 export const idDispositivo = endpoint => createHash('sha256').update(String(endpoint)).digest('hex').slice(0, 40);
+export const idDispositivoFcm = token => idDispositivo(`fcm:${token}`);
+
+// Token de Firebase Cloud Messaging que manda la app de Android, o null.
+export const tokenFcmValido = t => (typeof t === 'string' && /^[\w:-]{20,4096}$/.test(t) ? t : null);
+
+// Errores de FCM que significan que el token ya no sirve (app desinstalada, etc.).
+const TOKEN_VENCIDO = new Set(['messaging/registration-token-not-registered', 'messaging/invalid-registration-token']);
+
+// Mensaje de FCM para Android: canal «avisos» (lo crea la app), ícono de la marca y, en
+// data, adónde lleva al tocarlo.
+export const mensajeFcm = (token, { titulo, cuerpo, url, tag }) => ({
+  token,
+  notification: { title: titulo, body: cuerpo },
+  data: { url: url || '', tag: tag || '' },
+  android: {
+    priority: 'high',
+    ttl: 24 * 60 * 60 * 1000,
+    notification: { channelId: 'avisos', icon: 'ic_stat_dealit', color: '#00C896', ...(tag ? { tag } : {}) }
+  }
+});
 
 // Solo servicios de push de los navegadores: el servidor le manda pedidos a esa URL, así que
 // no se acepta cualquier dirección (Chrome/Android/Edge, Firefox, Safari y Windows).
@@ -38,12 +61,31 @@ export const dispositivosDe = (db, uid) => db().collection('push').doc(uid).coll
 // Las suscripciones vencidas (404 o 410) se borran. Devuelve cuántos llegaron.
 export const crearEnviadorPush = ({
   entorno = process.env,
-  cargarWebPush = () => import('web-push').then(m => m.default || m)
+  cargarWebPush = () => import('web-push').then(m => m.default || m),
+  cargarMensajeria = () => import('./firebase-admin.js').then(m => m.mensajeria())
 } = {}) => async ({ db, uid, mensaje }) => {
+  if (!uid) return 0;
   const publica = clavePublicaPush(entorno);
-  if (!publica || !uid) return 0;
   const snap = await dispositivosDe(db, uid).get();
   if (snap.empty) return 0;
+  const web = snap.docs.filter(d => d.get('suscripcion'));
+  const android = snap.docs.filter(d => d.get('fcm'));
+  let enviados = 0;
+
+  if (android.length) {
+    const fcm = await cargarMensajeria();
+    await Promise.all(android.map(async d => {
+      try {
+        await fcm.send(mensajeFcm(d.get('fcm'), mensaje));
+        enviados++;
+      } catch (e) {
+        if (TOKEN_VENCIDO.has(e?.code)) await d.ref.delete().catch(() => {});
+        else console.error('No se pudo mandar un aviso a Android:', e?.code || '', e?.message);
+      }
+    }));
+  }
+
+  if (!publica || !web.length) return enviados;
   const webpush = await cargarWebPush();
   const opciones = {
     vapidDetails: {
@@ -56,8 +98,7 @@ export const crearEnviadorPush = ({
     timeout: 5000
   };
   const carga = JSON.stringify(mensaje);
-  let enviados = 0;
-  await Promise.all(snap.docs.map(async d => {
+  await Promise.all(web.map(async d => {
     try {
       await webpush.sendNotification(d.get('suscripcion'), carga, opciones);
       enviados++;

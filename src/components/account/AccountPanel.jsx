@@ -152,6 +152,17 @@ export function AccountPanel() {
 
     <section className="tarjeta">
       <div className="tarjeta__cabecera">
+        <h2 className="tarjeta__titulo">Apariencia</h2>
+        <p className="tarjeta__ayuda">Cambia los colores de la app. Tus propuestas se ven siempre con su propio diseño.</p>
+      </div>
+      <button type="button" className="boton boton--secundario cuenta__interruptor" data-accion="alternar-modo" role="switch" aria-checked="false" id="cuenta-modo-oscuro">
+        <span>Modo oscuro</span>
+        <span className="interruptor" aria-hidden="true"></span>
+      </button>
+    </section>
+
+    <section className="tarjeta">
+      <div className="tarjeta__cabecera">
         <h2 className="tarjeta__titulo">Sesión</h2>
         <p className="tarjeta__ayuda">Cerrar sesión borra la copia de tus propuestas guardada en este navegador.</p>
       </div>

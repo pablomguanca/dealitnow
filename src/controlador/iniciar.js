@@ -9,6 +9,7 @@ import { instalarNavegacion } from './navegacion.js';
 import { instalarHoja } from './hoja.js';
 import { instalarGestos } from './gestos.js';
 import { instalarNativo } from '../nativo.js';
+import { instalarBienvenida } from './bienvenida.js';
 import { instalarVista } from './vista.js';
 import { instalarGuardado } from './guardado.js';
 import { instalarFormulario } from './formulario.js';
@@ -60,6 +61,7 @@ export const inicializarControladorDealit = () => {
   instalarCuenta();
   instalarPlan();
   instalarPush();
+  instalarBienvenida();
   instalarSesion();
   instalarNativo();
 

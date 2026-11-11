@@ -2,12 +2,15 @@
 // (public/sw.js), pide permiso, suscribe el navegador y se lo pasa al servidor
 // (api/push). Qué avisos llegan y a quién lo decide el servidor (api/_lib/avisos.js).
 // En el celular dependen de que la app esté instalada (en iPhone es obligatorio).
+// En la app de Android no hay Web Push: se usa Firebase Cloud Messaging (nativo.js), que
+// no depende de las claves VAPID.
 
 import { $ } from '../lib/formato.js';
 import { ctx } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { avisar, avisarError, avisarExito } from './avisos.js';
 import { llamarApi } from './api.js';
+import { esAppNativa, pushNativo } from '../nativo.js';
 
 // Clave pública VAPID que manda /api/plan ('' = push no configurado en el servidor).
 let clave = '';
@@ -46,11 +49,51 @@ const suscripcionActual = async () => {
   return reg ? reg.pushManager.getSubscription() : null;
 };
 
+// Botón «Activar»: en Gratis ofrece Pro (los avisos son de Pro).
+const prepararActivar = activar => {
+  activar.dataset.accion = ctx.restringido ? 'ofrecer-pro' : 'activar-push';
+  activar.dataset.motivo = 'seguimiento';
+  activar.textContent = ctx.restringido ? 'Activar con Pro' : 'Activar en este dispositivo';
+};
+
+// App de Android: el permiso es el del sistema y el token se le pasa al servidor.
+const pintarPushNativo = async mostrar => {
+  const permiso = await pushNativo.permiso().catch(() => 'prompt');
+  if (permiso === 'denied') {
+    return mostrar('Bloqueaste las notificaciones de Dealit. Activalas en Ajustes → Aplicaciones → Dealit → Notificaciones y volvé a esta pantalla.');
+  }
+  const guardado = pushNativo.guardado();
+  if (permiso === 'granted' && guardado) {
+    mostrar(ctx.restringido
+      ? 'Activadas en este celular. Los avisos llegan con Dealit Pro.'
+      : 'Activadas en este celular: te avisamos al instante cuando tu cliente abre o acepta una propuesta.', { activa: true });
+    // Una vez por sesión se le recuerda al servidor (por si Google renovó el token).
+    if (!sincronizada) {
+      sincronizada = true;
+      registrarTokenNativo(guardado).catch(e => console.warn('No se pudo actualizar el aviso push:', e.codigo || e.message));
+    }
+    return;
+  }
+  prepararActivar($('#push-activar'));
+  mostrar(ctx.restringido
+    ? 'Con Dealit Pro te avisamos al instante en el celular cuando tu cliente abre o acepta una propuesta.'
+    : 'Te avisamos al instante en el celular cuando tu cliente abre o acepta una propuesta.', { conActivar: true });
+};
+
+// Pide el token actual y lo registra; si cambió, el viejo se da de baja.
+const registrarTokenNativo = async anterior => {
+  const token = await pushNativo.token();
+  if (anterior && anterior !== token) await llamarApi('/api/push', { accion: 'baja', token: anterior }).catch(() => {});
+  await llamarApi('/api/push', { accion: 'alta', token });
+  pushNativo.guardar(token);
+};
+
 const pintarPush = async () => {
   const tarjeta = $('#tarjeta-push');
   if (!tarjeta) return;
-  tarjeta.hidden = !clave;
-  if (!clave) return;
+  const nativa = esAppNativa();
+  tarjeta.hidden = !clave && !nativa;
+  if (tarjeta.hidden) return;
   const estado = $('#push-estado');
   const activar = $('#push-activar');
   const desactivar = $('#push-desactivar');
@@ -61,6 +104,7 @@ const pintarPush = async () => {
     desactivar.hidden = !activa;
     probar.hidden = !activa;
   };
+  if (nativa) return pintarPushNativo(mostrar);
 
   if (!soportaPush()) {
     return mostrar(esIOS() && !instalada()
@@ -82,10 +126,7 @@ const pintarPush = async () => {
     }
     return;
   }
-  // En Gratis el botón ofrece Pro: los avisos son de Pro.
-  activar.dataset.accion = ctx.restringido ? 'ofrecer-pro' : 'activar-push';
-  activar.dataset.motivo = 'seguimiento';
-  activar.textContent = ctx.restringido ? 'Activar con Pro' : 'Activar en este dispositivo';
+  prepararActivar(activar);
   mostrar(ctx.restringido
     ? 'Con Dealit Pro te avisamos al instante, en el celular o la computadora, cuando tu cliente abre o acepta una propuesta.'
     : `Te avisamos al instante cuando tu cliente abre o acepta una propuesta.${esIOS() || /Android/i.test(navigator.userAgent) ? ' Para que lleguen siempre, instalá Dealit en tu pantalla de inicio.' : ''}`, { conActivar: true });
@@ -97,7 +138,28 @@ export const configurarPush = clavePublica => {
   pintarPush();
 };
 
+const activarPushNativo = async boton => {
+  boton.disabled = true;
+  try {
+    const permiso = await pushNativo.pedirPermiso();
+    if (permiso !== 'granted') {
+      avisar('Sin el permiso no podemos avisarte. Podés darlo en Ajustes → Aplicaciones → Dealit → Notificaciones.', 9000);
+      return;
+    }
+    await registrarTokenNativo(pushNativo.guardado());
+    sincronizada = true;
+    avisarExito('Listo: te avisamos en este celular.');
+  } catch (e) {
+    console.error('No se pudieron activar las notificaciones:', e);
+    avisarError('No se pudieron activar las notificaciones. Revisá tu conexión y probá de nuevo.');
+  } finally {
+    boton.disabled = false;
+    pintarPush();
+  }
+};
+
 const activarPush = async boton => {
+  if (esAppNativa()) return activarPushNativo(boton);
   if (!clave || !soportaPush()) return;
   boton.disabled = true;
   try {
@@ -130,6 +192,13 @@ const activarPush = async boton => {
 
 // Al apagarlas o al cerrar sesión: este dispositivo deja de recibir avisos de la cuenta.
 export const desactivarPushEnEsteDispositivo = async () => {
+  if (esAppNativa()) {
+    const token = pushNativo.guardado();
+    if (token) await llamarApi('/api/push', { accion: 'baja', token }).catch(e => console.warn('No se pudo dar de baja el aviso push:', e.codigo || e.message));
+    await pushNativo.borrarToken();
+    pushNativo.olvidar();
+    return;
+  }
   const suscripcion = await suscripcionActual().catch(() => null);
   if (!suscripcion) return;
   await llamarApi('/api/push', { accion: 'baja', endpoint: suscripcion.endpoint }).catch(e => console.warn('No se pudo dar de baja la suscripción push:', e.codigo || e.message));
@@ -139,6 +208,11 @@ export const desactivarPushEnEsteDispositivo = async () => {
 // Al eliminar la cuenta: ningún dispositivo sigue suscripto.
 export const desactivarPushEnTodos = async () => {
   await llamarApi('/api/push', { accion: 'baja', todos: true }).catch(e => console.warn('No se pudieron borrar las suscripciones push:', e.codigo || e.message));
+  if (esAppNativa()) {
+    await pushNativo.borrarToken();
+    pushNativo.olvidar();
+    return;
+  }
   const suscripcion = await suscripcionActual().catch(() => null);
   if (suscripcion) await suscripcion.unsubscribe().catch(() => {});
 };
@@ -165,7 +239,14 @@ export const reiniciarPush = () => {
 
 export const instalarPush = () => {
   // El service worker hace instalable la app aunque no se activen las notificaciones.
-  registrarServiceWorker();
+  if (!esAppNativa()) registrarServiceWorker();
+  // En la app de Android: si Google renueva el token y estaban activadas, se actualiza.
+  else pushNativo.alRenovarToken(token => {
+    const anterior = pushNativo.guardado();
+    if (!anterior || anterior === token) return;
+    llamarApi('/api/push', { accion: 'baja', token: anterior }).catch(() => {});
+    llamarApi('/api/push', { accion: 'alta', token }).then(() => pushNativo.guardar(token)).catch(() => {});
+  }).catch(() => {});
   document.addEventListener('dealit:plan', () => pintarPush());
   registrarAcciones({
     'activar-push': boton => activarPush(boton),

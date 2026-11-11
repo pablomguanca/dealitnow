@@ -63,6 +63,53 @@ export const imprimirNativo = async nombre => {
   }
 };
 
+// Notificaciones push de la app (Firebase Cloud Messaging). El token del celular se guarda
+// también acá para poder darlo de baja después (al apagarlas o al cerrar sesión).
+const CLAVE_TOKEN_PUSH = 'dealit-push-token';
+const mensajeria = () => import('@capacitor-firebase/messaging').then(m => m.FirebaseMessaging);
+export const pushNativo = {
+  // 'granted' | 'denied' | 'prompt' (todavía no se preguntó)
+  permiso: async () => (await (await mensajeria()).checkPermissions()).receive,
+  pedirPermiso: async () => (await (await mensajeria()).requestPermissions()).receive,
+  token: async () => (await (await mensajeria()).getToken()).token,
+  borrarToken: async () => { try { await (await mensajeria()).deleteToken(); } catch { } },
+  guardado: () => { try { return localStorage.getItem(CLAVE_TOKEN_PUSH) || ''; } catch { return ''; } },
+  guardar: token => { try { localStorage.setItem(CLAVE_TOKEN_PUSH, token); } catch { } },
+  olvidar: () => { try { localStorage.removeItem(CLAVE_TOKEN_PUSH); } catch { } },
+  // Google renueva el token cada tanto: push.js lo vuelve a registrar en el servidor.
+  alRenovarToken: async fn => (await mensajeria()).addListener('tokenReceived', ev => ev?.token && fn(ev.token))
+};
+
+// Al tocar un aviso se abre la pantalla de la propuesta. Se navega dentro de la app (sin
+// recargar): la ruta nueva y un «popstate», que es lo que ya atiende navegacion.js.
+const abrirDesdeAviso = url => {
+  try {
+    const destino = new URL(url, location.origin);
+    if (destino.origin !== location.origin) return;
+    history.pushState(null, '', destino.pathname + destino.search);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  } catch { }
+};
+
+const instalarAvisosNativos = async () => {
+  const FirebaseMessaging = await mensajeria();
+  // Canal de Android para los avisos (con sonido y que aparezcan arriba de la pantalla).
+  await FirebaseMessaging.createChannel({
+    id: 'avisos',
+    name: 'Avisos de propuestas',
+    description: 'Cuando tu cliente abre o acepta una propuesta',
+    importance: 4,
+    visibility: 1,
+    vibration: true,
+    lights: true,
+    lightColor: '#00C896'
+  }).catch(() => {});
+  FirebaseMessaging.addListener('notificationActionPerformed', ev => {
+    const url = ev?.notification?.data?.url;
+    if (typeof url === 'string' && url) abrirDesdeAviso(url);
+  });
+};
+
 const cerrarDialogoAbierto = () => {
   const abiertos = [...document.querySelectorAll('dialog[open]')];
   const dialogo = abiertos[abiertos.length - 1];
@@ -79,6 +126,14 @@ const cerrarDialogoAbierto = () => {
 const alTocarAtras = App => {
   const body = document.body;
   if (cerrarDialogoAbierto()) return;
+  // El login abierto encima (sin cuenta) se cierra, como un diálogo.
+  const cerrarLogin = document.querySelector('#auth-pantalla:not([hidden]) #auth-cerrar:not([hidden])');
+  if (cerrarLogin) { cerrarLogin.click(); return; }
+  // En la bienvenida o en el editor sin cuenta no hay adónde volver: la app pasa a segundo plano.
+  if (body.classList.contains('bienvenida-activa') || body.classList.contains('invitado')) {
+    App.minimizeApp();
+    return;
+  }
   if (body.classList.contains('menu-abierto')) {
     document.querySelector('[data-accion="cerrar-menu"]')?.click();
     return;
@@ -111,6 +166,7 @@ export const instalarNativo = async () => {
   new MutationObserver(pintarBarras).observe(document.documentElement, { attributes: true, attributeFilter: ['data-tema-app'] });
 
   App.addListener('backButton', () => alTocarAtras(App));
+  instalarAvisosNativos().catch(e => console.warn('No se pudieron preparar los avisos:', e?.message));
 
   // La pantalla de inicio se va cuando Firebase ya decidió qué mostrar (login o panel),
   // así no se ve la página a medio armar. Con un tope, por si algo tarda.

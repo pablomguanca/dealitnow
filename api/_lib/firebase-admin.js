@@ -18,6 +18,12 @@ const app = () => getApps()[0] || initializeApp({ credential: cert(cuentaDeServi
 export const firestore = () => getFirestore(app());
 export { FieldValue };
 
+// Firebase Cloud Messaging (push de la app de Android). Se carga solo cuando hay que mandar.
+export const mensajeria = async () => {
+  const { getMessaging } = await import('firebase-admin/messaging');
+  return getMessaging(app());
+};
+
 // Verificación del token de sesión de Firebase con jose, como indica la documentación
 // de Firebase para librerías JWT propias. No se usa firebase-admin/auth porque arrastra
 // jwks-rsa, que carga jose con require() y rompe la función en el entorno de Vercel.

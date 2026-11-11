@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_DISPOSITIVOS, clavePublicaPush, crearEnviadorPush, idDispositivo, suscripcionValida } from '../api/_lib/push.js';
+import { MAX_DISPOSITIVOS, clavePublicaPush, crearEnviadorPush, idDispositivo, idDispositivoFcm, mensajeFcm, suscripcionValida, tokenFcmValido } from '../api/_lib/push.js';
 import { contenidoPush, crearAvisador } from '../api/_lib/avisos.js';
 import { crearHandler } from '../api/push.js';
 import { claveEnBytes } from '../src/controlador/push.js';
@@ -101,9 +101,38 @@ describe('envío de avisos push', () => {
     expect(dispositivos(datos)).toEqual([`push/duenio/dispositivos/${idDispositivo('a')}`]);
   });
 
-  it('sin claves no lee nada ni manda', async () => {
+  it('sin claves VAPID no manda a los navegadores', async () => {
+    const { db } = crearDb({ [`push/duenio/dispositivos/${idDispositivo('a')}`]: { suscripcion: suscripcion(1) } });
     const enviar = crearEnviadorPush({ entorno: {}, cargarWebPush: async () => { throw new Error('no debería cargarse'); } });
-    expect(await enviar({ db: () => { throw new Error('no debería leer'); }, uid: 'duenio', mensaje: {} })).toBe(0);
+    expect(await enviar({ db, uid: 'duenio', mensaje: {} })).toBe(0);
+  });
+
+  it('a la app de Android le manda por FCM (sin claves VAPID) y borra los tokens vencidos', async () => {
+    const tokenBueno = 'token-bueno:' + 'a'.repeat(40);
+    const tokenViejo = 'token-viejo:' + 'b'.repeat(40);
+    const { db, datos } = crearDb({
+      [`push/duenio/dispositivos/${idDispositivoFcm(tokenBueno)}`]: { fcm: tokenBueno },
+      [`push/duenio/dispositivos/${idDispositivoFcm(tokenViejo)}`]: { fcm: tokenViejo }
+    });
+    const enviados = [];
+    const fcm = {
+      send: async m => {
+        if (m.token === tokenViejo) throw Object.assign(new Error('no registrado'), { code: 'messaging/registration-token-not-registered' });
+        enviados.push(m);
+      }
+    };
+    const enviar = crearEnviadorPush({ entorno: {}, cargarMensajeria: async () => fcm, cargarWebPush: async () => { throw new Error('no debería cargarse'); } });
+    const n = await enviar({ db, uid: 'duenio', mensaje: { titulo: 'Hola', cuerpo: 'x', url: 'https://dealit.test/propuesta/1', tag: 'vista-1' } });
+    expect(n).toBe(1);
+    expect(enviados[0]).toMatchObject({ token: tokenBueno, notification: { title: 'Hola', body: 'x' }, data: { url: 'https://dealit.test/propuesta/1' } });
+    expect(enviados[0].android.notification).toMatchObject({ channelId: 'avisos', tag: 'vista-1' });
+    expect(dispositivos(datos)).toEqual([`push/duenio/dispositivos/${idDispositivoFcm(tokenBueno)}`]);
+  });
+
+  it('el mensaje de FCM lleva siempre texto en data (FCM no acepta otros tipos)', () => {
+    const m = mensajeFcm('t', { titulo: 'a', cuerpo: 'b' });
+    expect(m.data).toEqual({ url: '', tag: '' });
+    expect(m.android.notification.tag).toBeUndefined();
   });
 
   it('contenido: corto, con link a la propuesta y una etiqueta por aviso', () => {
@@ -176,6 +205,19 @@ describe('POST /api/push', () => {
     expect((await llamar(handler(db), { accion: 'alta', suscripcion: { endpoint: 'https://evil.test/x', keys: {} } })).cuerpo).toEqual({ error: 'suscripcion-invalida' });
     expect((await llamar(handler(db, { clave: '' }), { accion: 'alta', suscripcion: suscripcion() })).estado).toBe(503);
     expect((await llamar(handler(db), { accion: 'otra' })).estado).toBe(400);
+  });
+
+  it('alta y baja de la app de Android con su token, aunque no haya claves VAPID', async () => {
+    const { db, datos } = crearDb();
+    const token = 'abc:' + 'x'.repeat(60);
+    const h = handler(db, { clave: '' });
+    expect((await llamar(h, { accion: 'alta', token })).estado).toBe(204);
+    expect(datos[`push/duenio/dispositivos/${idDispositivoFcm(token)}`]).toMatchObject({ fcm: token, plataforma: 'android' });
+    expect((await llamar(h, { accion: 'alta', token: 'corto' })).cuerpo).toEqual({ error: 'token-invalido' });
+    expect((await llamar(h, { accion: 'alta', token: 'x'.repeat(30) + ' <script>' })).estado).toBe(400);
+    expect((await llamar(h, { accion: 'baja', token })).estado).toBe(204);
+    expect(dispositivos(datos)).toHaveLength(0);
+    expect(tokenFcmValido(123)).toBeNull();
   });
 
   it(`guarda hasta ${MAX_DISPOSITIVOS} dispositivos: los más viejos salen`, async () => {

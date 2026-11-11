@@ -28,6 +28,7 @@ import { cargarPerfil, reiniciarCuenta, irACuenta, pintarAvatar } from './cuenta
 import { abrirCompartir } from './compartir.js';
 import { escucharPlan, reiniciarPlan } from './plan.js';
 import { desactivarPushEnEsteDispositivo, reiniciarPush } from './push.js';
+import { mostrarBienvenida, ocultarBienvenida } from './bienvenida.js';
 
 let invitadoIniciado = false;
 let guardadoParaRegistro = false;
@@ -263,6 +264,8 @@ const iniciarInvitado = () => {
   actualizarAvisoPagos();
   ctx.editando = true;
   mostrarEstadoGuardado();
+  // Primera vez y sin nada armado: bienvenida para elegir su rubro.
+  if (!guardada && !pideIngresar) mostrarBienvenida();
   if (pideIngresar) abrirRegistro('ingresar');
 };
 
@@ -408,6 +411,7 @@ export const arrancarSesion = () => {
 
   entrar = async user => {
     ctx.cerrandoSesion = false;
+    ocultarBienvenida();
     $('#auth-verificar').hidden = true;
     $('#auth-ingreso').hidden = false;
     authPantalla.hidden = true;

@@ -32,7 +32,8 @@ export function TopBar() {
           <Link className="barra__avatar solo-cuenta" id="barra-avatar" to="/cuenta" data-accion="ir-cuenta" aria-label="Mi cuenta" title="Mi cuenta"></Link>
           <div className="menu" id="menu">
             <button type="button" className="boton boton--secundario menu__alternar" data-accion="menu" aria-expanded="false" aria-controls="menu-panel" aria-label="Abrir menú principal">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" /></svg>
+              <svg className="menu__icono-lista" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" /></svg>
+              <svg className="menu__icono-acciones" viewBox="0 0 16 16" aria-hidden="true"><circle cx="3.2" cy="8" r="1.25" /><circle cx="8" cy="8" r="1.25" /><circle cx="12.8" cy="8" r="1.25" /></svg>
               <span className="menu__alternar-texto">Menú</span>
             </button>
             <div className="menu__velo" id="menu-velo" data-accion="cerrar-menu" hidden></div>
@@ -74,11 +75,11 @@ export function TopBar() {
                   </button>
                   <button type="button" className="boton boton--texto menu__opcion" data-accion="nueva">
                     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" /></svg>
-                    <span>+ Nueva propuesta</span>
+                    <span>Nueva propuesta</span>
                   </button>
                   <button type="button" className="boton boton--texto menu__opcion" data-accion="nuevo-portafolio">
                     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" /></svg>
-                    <span>+ Nuevo portfolio</span>
+                    <span>Nuevo portfolio</span>
                   </button>
                 </div>
                 <div className="menu__grupo">

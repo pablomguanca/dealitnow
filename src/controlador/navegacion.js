@@ -139,7 +139,31 @@ const conLink = fn => (boton, ev) => {
 };
 
 const pintarInterruptorModo = (oscuro = esModoOscuro()) => {
-  $('#menu-modo-oscuro')?.setAttribute('aria-checked', String(oscuro));
+  $$('[data-accion="alternar-modo"][role="switch"]').forEach(b => b.setAttribute('aria-checked', String(oscuro)));
+};
+
+// En el celular no hay menú lateral (como en las apps): las secciones están en la barra de
+// abajo, el modo oscuro y la sesión en Mi cuenta, y en el editor el botón «⋯» abre esta hoja
+// con las acciones de la propuesta o el portfolio.
+const esCelular = () => typeof matchMedia === 'function' && matchMedia('(max-width: 768px)').matches;
+const abrirAccionesEditor = async () => {
+  const conCuenta = !!nube();
+  const esPf = ctx.modoEditor === 'portafolio';
+  const conIA = document.body.classList.contains('ia-disponible') || !conCuenta;
+  const accion = await elegir({
+    titulo: esPf ? 'Tu portfolio' : 'Tu propuesta',
+    opciones: [
+      { valor: 'guardar-version', texto: 'Guardar versión' },
+      ...(conCuenta ? [{ valor: 'ver-versiones', texto: 'Versiones anteriores' }] : []),
+      ...(esPf ? [] : [{ valor: 'pdf', texto: 'Descargar PDF' }]),
+      ...(conIA ? [{ valor: 'abrir-ia', texto: 'Contala y la armamos (IA)' }] : []),
+      { valor: 'nueva', texto: 'Nueva propuesta' },
+      { valor: 'nuevo-portafolio', texto: 'Nuevo portfolio' },
+      { valor: 'alternar-modo', texto: esModoOscuro() ? 'Pasar a modo claro' : 'Pasar a modo oscuro' },
+      { valor: null, texto: 'Cancelar', estilo: 'texto' }
+    ]
+  });
+  if (accion) ejecutarAccion(accion);
 };
 
 export const instalarNavegacion = () => {
@@ -186,7 +210,10 @@ export const instalarNavegacion = () => {
   });
 
   registrarAcciones({
-    'menu': () => abrirMenu(!menuAbierto()),
+    'menu': () => {
+      if (esCelular() && !document.body.classList.contains('vista-inicio')) abrirAccionesEditor();
+      else abrirMenu(!menuAbierto());
+    },
     'cerrar-menu': () => abrirMenu(false),
     'ir-panel': conLink(() => {
       if (nube()) irAlPanel();
@@ -201,12 +228,9 @@ export const instalarNavegacion = () => {
       if (!nube()) return;
       conLink(() => irACuenta())(boton, ev);
     },
-    // El modo nuevo se abre desde el interruptor que se tocó.
-    'alternar-modo': boton => {
-      const r = boton.getBoundingClientRect();
+    'alternar-modo': () => {
       const oscuro = !esModoOscuro();
-      // Con View Transitions el modo se aplica un instante después: el interruptor se pinta ya.
-      guardarModoApp(oscuro ? 'oscuro' : 'claro', { x: r.left + r.width / 2, y: r.top + r.height / 2 });
+      guardarModoApp(oscuro ? 'oscuro' : 'claro');
       pintarInterruptorModo(oscuro);
     },
     // Botón «+» de la barra de abajo: qué crear, como la hoja de acciones de una app.

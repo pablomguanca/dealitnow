@@ -20,7 +20,7 @@ npm run dev      # local contra el Firebase real
 npm run dev:demo # base simulada en el navegador (tests/mocks/firebase.js), sin tocar Firebase
 npm run check    # lint + tests + build, lo mismo que CI
 firebase deploy --only firestore:rules,firestore:indexes,storage   # reglas e índices
-npm run android  # sincroniza y abre el proyecto en Android Studio
+npm run android  # sincroniza y abre el proyecto en Android Studio (compila con Java 21, no con el 25 que trae Android Studio)
 ```
 
 En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista del cliente. Los datos quedan en la clave `dealit-demo` del localStorage.
@@ -44,7 +44,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 | `api/activar.js` | `POST /api/activar`: el dueño activa el link; aplica el límite del plan |
 | `api/suscripcion.js` | `POST /api/suscripcion`: crea la suscripción a Pro en Mercado Pago y devuelve el link de pago |
 | `api/mercadopago.js` | `POST /api/mercadopago`: avisos de Mercado Pago (firma verificada); actualiza `planes/{uid}` |
-| `api/push.js` | `POST /api/push`: alta y baja de las notificaciones push de cada dispositivo del dueño, y aviso de prueba |
+| `api/push.js` | `POST /api/push`: alta y baja de las notificaciones push de cada dispositivo del dueño (navegador con Web Push, o app de Android con su token de Firebase Messaging), y aviso de prueba |
 | `api/_lib/` | Firebase Admin, verificación del token, utilidades HTTP, cliente de Mercado Pago y avisos al dueño (`avisos.js`: primera visita y aceptación, solo Pro, por email y por push con `push.js`) |
 | `public/` | App instalable (PWA): `manifest.webmanifest`, `sw.js` (muestra los push; no cachea nada) e `iconos/`. El manifest solo se carga en la app del dueño (`main.jsx`); el botón para activar las push está en Mi cuenta (`controlador/push.js`) |
 | `firestore.rules`, `storage.rules` | Reglas de seguridad (versionadas) |
@@ -60,7 +60,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
   - `proposals/{id}/versiones/{vid}` (y lo mismo en `portfolios`): versiones guardadas por el dueño (`payload`, `title`, `motivo`, `createdAt`). Se crean o se borran; no se editan.
 - `portfolios/{id}`: como las propuestas, sin aceptación. El navegador puede activar su link.
 - `payload.plantilla`: la plantilla de origen (si se cargó completa); con `payload.tema.preset` define si la propuesta usa algo PRO (`usosPro` en `src/planes.js`).
-- `push/{uid}/dispositivos/{id}`: suscripción push de cada dispositivo (`suscripcion`, `creado`; `id` = hash del endpoint, hasta 10 por cuenta). La escribe **solo el servidor** (`api/push`) y el navegador no la puede leer (cae en la regla general que lo niega todo).
+- `push/{uid}/dispositivos/{id}`: cada dispositivo con push activadas: navegador (`suscripcion`, Web Push) o app de Android (`fcm` = token de Firebase Messaging, `plataforma`), con `creado`; `id` = hash del endpoint o del token, hasta 10 por cuenta. La escribe **solo el servidor** (`api/push`) y el navegador no la puede leer (cae en la regla general que lo niega todo).
 - `planes/{uid}`: `tipo` (`gratis | pro`), `estado` (`activa | pendiente | pausada | cancelada`), `periodo`, `vence`, `mpSuscripcionId`, `envios` (`{ "2026-11": 3 }`, en hora de Argentina). Lo escribe **solo el servidor**; el dueño lo lee.
 
 ## Principios
@@ -75,7 +75,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 - **Directo en `main`, sin ramas ni pull requests.** Los deploys de prueba de Vercel piden login por la Deployment Protection, así que lo que se pushea a `main` va derecho a producción.
 - Por eso: verificar en local antes de pushear (`npm run check` y probar en `npm run dev:demo`), y pushear solo cuando el dueño lo pida.
 - Si un cambio necesita publicar reglas o índices de Firebase, avisar y hacerlo **antes** del push.
-- Secretos, solo como variables de entorno en Vercel y nunca en el repo: `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio), `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` (Mercado Pago; primero las de prueba). IA: `ANTHROPIC_API_KEY` (sin ella, los botones de «Contala y la armamos» no se muestran) y opcional `IA_MODELO` (por defecto `claude-opus-5-5`; `claude-haiku-5-5` es mucho más económico). Opcional: `APP_URL` (URL de vuelta tras pagar y de los links en los emails). Avisos por email (Resend): `RESEND_API_KEY` y `EMAIL_REMITENTE` (ej. `Dealit <avisos@tudominio.com>`, de un dominio verificado en Resend); sin la clave no se mandan. Notificaciones push: `VAPID_PUBLIC_KEY` y `VAPID_PRIVATE_KEY` (se generan con `npx web-push generate-vapid-keys`; si se cambian, cada dispositivo las tiene que volver a activar) y opcional `VAPID_SUBJECT` (`mailto:` o URL de contacto, por defecto `APP_URL`); sin ellas, Mi cuenta no ofrece activarlas.
+- Secretos, solo como variables de entorno en Vercel y nunca en el repo: `FIREBASE_SERVICE_ACCOUNT` (JSON de la cuenta de servicio), `MP_ACCESS_TOKEN` y `MP_WEBHOOK_SECRET` (Mercado Pago; primero las de prueba). IA: `ANTHROPIC_API_KEY` (sin ella, los botones de «Contala y la armamos» no se muestran) y opcional `IA_MODELO` (por defecto `claude-opus-5-5`; `claude-haiku-5-5` es mucho más económico). Opcional: `APP_URL` (URL de vuelta tras pagar y de los links en los emails). Avisos por email (Resend): `RESEND_API_KEY` y `EMAIL_REMITENTE` (ej. `Dealit <avisos@tudominio.com>`, de un dominio verificado en Resend); sin la clave no se mandan. Notificaciones push: `VAPID_PUBLIC_KEY` y `VAPID_PRIVATE_KEY` (se generan con `npx web-push generate-vapid-keys`; si se cambian, cada dispositivo las tiene que volver a activar) y opcional `VAPID_SUBJECT` (`mailto:` o URL de contacto, por defecto `APP_URL`); sin ellas, Mi cuenta no las ofrece en el navegador. La app de Android usa Firebase Cloud Messaging con la cuenta de servicio de siempre (no necesita claves aparte; canal «avisos» e ícono `ic_stat_dealit`).
 - Interruptor de los planes: `PLANES_ACTIVOS=1` prende el límite de Gratis y la oferta de Pro para todos; `PLANES_PRUEBA` (emails separados por coma) los prende solo para esas cuentas. Apagado, los envíos se cuentan pero no se frenan (ver `api/_lib/planes-activos.js`).
 
 ## Planes (freemium, definido el 2026-10-07)

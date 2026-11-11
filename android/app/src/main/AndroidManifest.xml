@@ -24,6 +24,11 @@
 
         </activity>
 
+        <!-- Avisos de Firebase Messaging: ícono, color y canal por defecto (el canal lo crea src/nativo.js) -->
+        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@drawable/ic_stat_dealit" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@color/dealit_notificacion" />
+        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="avisos" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
