@@ -2,4 +2,6 @@
 <resources>
     <!-- Color de los avisos de Dealit (Firebase Messaging) -->
     <color name="dealit_notificacion">#00C896</color>
+    <!-- Fondo de la pantalla de inicio (el de la app) -->
+    <color name="dealit_fondo">#1B1B20</color>
 </resources>

@@ -165,7 +165,7 @@
     }
 
     .dialogo__titulo {
-      font-size: 1.45rem;
+      font-size: 1.3rem;
     }
 
     .dialogo__acciones {
@@ -312,5 +312,55 @@ body.soltando-volver {
   .app > .visor,
   .app > .editor {
     transition: transform 0.25s var(--ease-out-expo), height 0.32s var(--ease-out-expo);
+  }
+}
+
+// ---------- Títulos en Bebas Neue: más medidos ----------
+// Bebas Neue ocupa mucho a igual tamaño; en el celular los títulos bajan un escalón para
+// que la pantalla respire. En la computadora, apenas.
+
+.panel__titulo {
+  font-size: 2.1rem;
+}
+
+.editor__titulo {
+  font-size: 1.8rem;
+}
+
+@media (max-width: 768px) {
+  .panel__titulo {
+    font-size: 1.7rem;
+  }
+
+  .panel__vacio-titulo {
+    font-size: 1.4rem;
+  }
+
+  .editor__titulo {
+    font-size: 1.45rem;
+  }
+
+  .metrica__valor {
+    font-size: 1.6rem;
+  }
+
+  .res-heroe__valor {
+    font-size: 2.1rem;
+  }
+
+  .res-cifra__valor {
+    font-size: 1.4rem;
+  }
+
+  .dialogo__titulo {
+    font-size: 1.4rem;
+  }
+
+  .auth__logo {
+    font-size: 2.2rem;
+  }
+
+  .barra__logo {
+    font-size: 1.25rem;
   }
 }

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#1C1C21</color>
+    <!-- Transparente: el logo entero, con sus esquinas, sin fondo agregado por el sistema -->
+    <color name="ic_launcher_background">#00000000</color>
 </resources>
