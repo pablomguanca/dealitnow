@@ -8,6 +8,7 @@ import {
   GoogleAuthProvider,
   EmailAuthProvider,
   signInWithPopup,
+  signInWithCredential,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendEmailVerification,
@@ -16,6 +17,7 @@ import {
   reload,
   reauthenticateWithCredential,
   reauthenticateWithPopup,
+  reauthenticateWithCredential as reautenticarConCredencial,
   deleteUser,
   signOut as cerrarSesionAuth
 } from 'firebase/auth';
@@ -49,6 +51,7 @@ import {
   deleteObject
 } from 'firebase/storage';
 import { firebaseConfig, PREFIJO_URL_LOGO } from './firebase-config.js';
+import { esAppNativa, tokenGoogleNativo, cerrarSesionGoogleNativa } from './nativo.js';
 
 const crearAteneaDB = () => {
   if (firebaseConfig.apiKey === 'TU_API_KEY') throw new Error('Firebase no está configurado: falta la API key.');
@@ -124,7 +127,9 @@ const crearAteneaDB = () => {
     if (user) _crearPerfilSiNoExiste(user);
   });
 
-  const signInGoogle = () => {
+  const signInGoogle = async () => {
+    // En la app de Android, Google no deja entrar desde la ventana web: se usa la nativa.
+    if (esAppNativa()) return signInWithCredential(auth, GoogleAuthProvider.credential(await tokenGoogleNativo()));
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     return signInWithPopup(auth, provider);
@@ -169,6 +174,7 @@ const crearAteneaDB = () => {
   const signOut = async () => {
     _limpiarSuscripciones();
     await cerrarSesionAuth(auth);
+    await cerrarSesionGoogleNativa();
     await limpiarCacheLocal();
   };
 
@@ -431,6 +437,10 @@ const crearAteneaDB = () => {
     const user = auth.currentUser;
     if (usaPassword()) {
       await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, password));
+      return;
+    }
+    if (esAppNativa()) {
+      await reautenticarConCredencial(user, GoogleAuthProvider.credential(await tokenGoogleNativo()));
       return;
     }
     const provider = new GoogleAuthProvider();

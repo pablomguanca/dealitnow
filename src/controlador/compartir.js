@@ -23,6 +23,7 @@ import { guardarVersion } from './versiones.js';
 import { llamarApi } from './api.js';
 import { ofrecerPro, restriccionesActivas, confirmarUltimoEnvio, enviosRestantes } from './plan.js';
 import { usosPro } from '../planes.js';
+import { esAppNativa, compartirNativo } from '../nativo.js';
 
 let linkActual = '';
 
@@ -102,7 +103,7 @@ const mostrarDialogoCompartir = ({ titulo, mensaje, conCuenta, nota, avisos }) =
   $('#enlace-propuesta').value = linkActual;
   $('#compartir-abrir').href = linkActual;
   $('#compartir-whatsapp').href = `https://wa.me/?text=${encodeURIComponent(mensaje)}`;
-  $('#compartir-nativo').hidden = typeof navigator.share !== 'function';
+  $('#compartir-nativo').hidden = typeof navigator.share !== 'function' && !esAppNativa();
   $('#compartir-desactivar').hidden = !conCuenta;
   $('#compartir-nota').textContent = nota;
   const elAvisoCompartir = $('#compartir-aviso');
@@ -252,6 +253,8 @@ export const instalarCompartir = () => {
       else avisarError('No se pudo copiar el link.');
     },
     'compartir-nativo': async () => {
+      const titulo = ctx.estado.propuesta.titulo.trim() || 'Propuesta';
+      if (await compartirNativo({ titulo, url: linkActual })) return;
       try {
         await navigator.share({ title: ctx.estado.propuesta.titulo.trim() || 'Propuesta', url: linkActual });
       } catch { }

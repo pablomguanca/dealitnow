@@ -1,0 +1,46 @@
+<!doctype html>
+<!-- Pantalla de la app de Android cuando no hay internet (server.errorPath en capacitor.config.json). -->
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sin conexión | Dealit</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 2rem 1.5rem;
+    background: #1B1B20;
+    color: #E7EEEC;
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    text-align: center;
+  }
+  main { max-width: 22rem; }
+  svg { width: 4rem; height: 4rem; margin-bottom: 1.2rem; stroke: #8ADBAB; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  h1 { margin: 0 0 0.6rem; font-size: 1.35rem; }
+  p { margin: 0 0 1.8rem; color: #A6B3B0; line-height: 1.5; }
+  button {
+    width: 100%;
+    padding: 0.95rem 1rem;
+    border: 0;
+    border-radius: 0.8rem;
+    background: #00C896;
+    color: #06060A;
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+</style>
+</head>
+<body>
+<main>
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 8.8a15 15 0 0 1 20 0M5.2 12.3a10.5 10.5 0 0 1 13.6 0M8.5 15.8a5.8 5.8 0 0 1 7 0M12 19.5h.01M3 3l18 18"/></svg>
+  <h1>No hay conexión</h1>
+  <p>Dealit necesita internet para mostrar tus propuestas. Revisá el wifi o los datos y probá de nuevo.</p>
+  <button type="button" onclick="location.href='https://dealit.com.ar/'">Reintentar</button>
+</main>
+</body>
+</html>

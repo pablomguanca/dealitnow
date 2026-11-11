@@ -7,7 +7,8 @@ import { resolverColoresTema, aplicarTema } from '../lib/tema.js';
 import { proyectoConContenido, observarElementos } from '../lib/render.js';
 import { ctx, docActivo } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
-import { avisar } from './avisos.js';
+import { esAppNativa, imprimirNativo } from '../nativo.js';
+import { avisar, avisarError } from './avisos.js';
 import { guardarLuego, sincronizarPortafolioEnPropuesta } from './guardado.js';
 import { actualizarSubtotales, actualizarAvisoPagos } from './formulario.js';
 import { renderDocumento, alPrepararPropuesta } from './vista.js';
@@ -104,6 +105,12 @@ export const nombreArchivo = () => {
 };
 
 export const descargarPDF = () => {
+  // En la app de Android: diálogo de impresión del sistema, con «Guardar como PDF».
+  if (esAppNativa()) {
+    avisar('Elegí «Guardar como PDF» como impresora.', 6000);
+    imprimirNativo(nombreArchivo()).catch(() => avisarError('No se pudo abrir la impresión. Probá de nuevo.'));
+    return;
+  }
   const tituloOriginal = document.title;
   document.title = nombreArchivo();
   window.addEventListener('afterprint', () => { document.title = tituloOriginal; }, { once: true });

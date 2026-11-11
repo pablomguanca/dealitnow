@@ -1,0 +1,29 @@
+{
+  "appId": "ar.com.dealit.app",
+  "appName": "Dealit",
+  "webDir": "movil/www",
+  "server": {
+    "url": "https://dealit.com.ar",
+    "errorPath": "sin-conexion.html"
+  },
+  "android": {
+    "backgroundColor": "#1B1B20"
+  },
+  "plugins": {
+    "SystemBars": {
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover"
+    },
+    "SplashScreen": {
+      "launchAutoHide": false,
+      "backgroundColor": "#1B1B20",
+      "showSpinner": false
+    },
+    "FirebaseAuthentication": {
+      "skipNativeAuth": true,
+      "providers": [
+        "google.com"
+      ]
+    }
+  }
+}

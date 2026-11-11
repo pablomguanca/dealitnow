@@ -10,6 +10,7 @@ Repo: `github.com/pablomguanca/dealitnow`. Hosting en Vercel; datos en Firebase 
 - **Firebase:** Auth (Google y email/contraseña, con `signInWithPopup`), Firestore, Storage (logos) y App Check, con el SDK **modular**. La vista del cliente usa Firestore Lite (`src/firebase-publico.js`), solo lectura.
 - **Avisos y confirmaciones:** react-hot-toast y un modal propio (`elegir` / `confirmar` en `src/controlador/avisos.js`). Nunca `alert`, `confirm` ni `prompt`.
 - **Servidor:** funciones de Vercel en `api/` (Node 22) con `firebase-admin/firestore`. El token de sesión se verifica con `jose`, **no** con `firebase-admin/auth` (arrastra `jwks-rsa`, que rompe la función en Vercel).
+- **App de Android:** Capacitor 8 (`capacitor.config.json`, proyecto en `android/`). La app abre `https://dealit.com.ar` en una ventana nativa (`server.url`), así que cada push a `main` la actualiza sin publicar en la tienda; adentro solo va `movil/www/` (pantalla sin conexión). `src/nativo.js` suma lo nativo: botón «atrás», barras del sistema, pantalla de inicio, login con Google nativo (`@capacitor-firebase/authentication`; Google no deja entrar desde una ventana web embebida), compartir y PDF (complemento propio `ImprimirPlugin.java`). En el navegador no hace nada.
 - **Tests:** Vitest. **Lint:** ESLint. **CI:** GitHub Actions corre lint + tests + build en cada push a `main`.
 
 ## Comandos
@@ -19,6 +20,7 @@ npm run dev      # local contra el Firebase real
 npm run dev:demo # base simulada en el navegador (tests/mocks/firebase.js), sin tocar Firebase
 npm run check    # lint + tests + build, lo mismo que CI
 firebase deploy --only firestore:rules,firestore:indexes,storage   # reglas e índices
+npm run android  # sincroniza y abre el proyecto en Android Studio
 ```
 
 En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista del cliente. Los datos quedan en la clave `dealit-demo` del localStorage.

@@ -8,6 +8,7 @@ import { instalarAcciones } from './acciones.js';
 import { instalarNavegacion } from './navegacion.js';
 import { instalarHoja } from './hoja.js';
 import { instalarGestos } from './gestos.js';
+import { instalarNativo } from '../nativo.js';
 import { instalarVista } from './vista.js';
 import { instalarGuardado } from './guardado.js';
 import { instalarFormulario } from './formulario.js';
@@ -60,6 +61,7 @@ export const inicializarControladorDealit = () => {
   instalarPlan();
   instalarPush();
   instalarSesion();
+  instalarNativo();
 
   if (!AteneaDB) document.body.classList.remove('auth-cargando');
   arrancarSesion();
