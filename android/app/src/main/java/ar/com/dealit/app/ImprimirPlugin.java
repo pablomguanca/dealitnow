@@ -24,6 +24,23 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 @CapacitorPlugin(name = "Imprimir")
 public class ImprimirPlugin extends Plugin {
 
+    /**
+     * Android imprime la página con el ancho de la pantalla del celular, y así el PDF sale con
+     * el armado de celular (portada del alto de la pantalla, cortes raros). Mientras dura la
+     * impresión, la web pide un ancho de hoja (meta viewport) y esto hace que la ventana lo
+     * respete; al terminar se vuelve al ancho del celular.
+     */
+    @PluginMethod
+    public void anchoDeHoja(PluginCall call) {
+        final boolean activo = Boolean.TRUE.equals(call.getBoolean("activo", false));
+        getActivity().runOnUiThread(() -> {
+            WebView webView = getBridge().getWebView();
+            webView.getSettings().setUseWideViewPort(activo);
+            webView.getSettings().setLoadWithOverviewMode(activo);
+            call.resolve();
+        });
+    }
+
     @PluginMethod
     public void imprimir(PluginCall call) {
         final String nombre = call.getString("nombre", "Dealit");
