@@ -56,6 +56,13 @@
     background: none;
   }
 
+  // El documento arranca pegado al borde de la hoja: en el editor llevaba un margen arriba
+  // (regla del celular) que empujaba la portada y la cortaba entre la hoja 1 y la 2.
+  #documento,
+  .visor .doc {
+    margin: 0 !important;
+  }
+
   .visor__escenario,
   .visor__escenario--celular,
   .visor__escenario--escritorio,
