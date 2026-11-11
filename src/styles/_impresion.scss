@@ -15,15 +15,16 @@
     print-color-adjust: exact;
   }
 
-  // Fondo blanco: los márgenes de cada hoja toman el fondo de la página, y en el modo
-  // oscuro de la app salían franjas negras arriba y abajo.
+  // La hoja entera (márgenes y lo que sobra de la última) con el fondo del documento según
+  // el tema (--fondo-impresion, lo calcula vista.js al imprimir); si no, blanco. Nunca el
+  // fondo de la app: en modo oscuro salían franjas negras.
   html,
   body,
   body.modo-cliente {
     display: block;
     height: auto;
     overflow: visible;
-    background: #FFFFFF !important;
+    background: var(--fondo-impresion, #FFFFFF) !important;
   }
 
   .barra,
@@ -164,5 +165,40 @@
       -webkit-box-decoration-break: clone;
       box-decoration-break: clone;
     }
+  }
+}
+
+// Capa que tapa el cambio de ancho mientras la app de Android prepara el PDF (nativo.js).
+.cubre-impresion {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  background: var(--negro);
+  color: var(--marfil-apagado);
+  font-family: var(--fuente-texto);
+  font-size: 1rem;
+
+  p {
+    margin: 0;
+  }
+
+  &__spinner {
+    width: 2rem;
+    height: 2rem;
+    border: 3px solid var(--dorado-tenue);
+    border-top-color: var(--dorado);
+    border-radius: 50%;
+    animation: ia-girar 0.8s linear infinite;
+  }
+}
+
+@media print {
+  .cubre-impresion {
+    display: none !important;
   }
 }

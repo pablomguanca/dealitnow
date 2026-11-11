@@ -71,7 +71,23 @@ const anchoDeHoja = async activo => {
   } else {
     meta.setAttribute('content', meta.dataset.original || 'width=device-width, initial-scale=1, viewport-fit=cover');
     await Imprimir.anchoDeHoja({ activo: false }).catch(() => {});
+    // Hasta que vuelve al ancho del celular (con un tope), así no se ve el salto al destapar.
+    for (let i = 0; i < 20 && innerWidth > ANCHO_HOJA - 10; i++) await esperar(50);
+    await esperar(200);
   }
+};
+
+// Mientras la página cambia de ancho (antes de abrir la impresión y al volver), una pantalla
+// con el color de la app tapa el salto. No sale en el PDF (_impresion.scss la oculta).
+const taparPantalla = tapar => {
+  document.getElementById('cubre-impresion')?.remove();
+  if (!tapar) return;
+  const capa = document.createElement('div');
+  capa.id = 'cubre-impresion';
+  capa.className = 'cubre-impresion';
+  capa.setAttribute('role', 'status');
+  capa.innerHTML = '<span class="cubre-impresion__spinner" aria-hidden="true"></span><p>Preparando tu PDF…</p>';
+  document.body.append(capa);
 };
 
 // Hojas sin márgenes mientras imprime la app (ver html.imprimiendo-app en _impresion.scss).
@@ -87,15 +103,21 @@ const modoImpresionApp = activo => {
 };
 
 export const imprimirNativo = async nombre => {
-  await anchoDeHoja(true);
-  modoImpresionApp(true);
-  window.dispatchEvent(new Event('beforeprint'));
+  taparPantalla(true);
+  await esperar(80); // que la capa llegue a pintarse antes del cambio de ancho
   try {
-    await Imprimir.imprimir({ nombre });
+    await anchoDeHoja(true);
+    modoImpresionApp(true);
+    window.dispatchEvent(new Event('beforeprint'));
+    try {
+      await Imprimir.imprimir({ nombre });
+    } finally {
+      window.dispatchEvent(new Event('afterprint'));
+      modoImpresionApp(false);
+      await anchoDeHoja(false);
+    }
   } finally {
-    window.dispatchEvent(new Event('afterprint'));
-    modoImpresionApp(false);
-    await anchoDeHoja(false);
+    taparPantalla(false);
   }
 };
 

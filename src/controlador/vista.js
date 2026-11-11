@@ -98,14 +98,27 @@ export const renderDocumento = () => {
 export const instalarVista = () => {
   // Cambió el plan (por ejemplo, pasó a Pro): la marca del pie se recalcula.
   document.addEventListener('dealit:plan', () => { if (!ctx.esCliente && $('#documento')) renderDocumento(); });
+  // Al imprimir, la hoja entera (márgenes y el blanco que sobra en la última) toma el fondo
+  // del documento según el tema, en lugar de quedar blanca.
+  const fondoDelDocumento = () => {
+    for (const sel of ['#documento .cuerpo', '#documento .presu', '#documento']) {
+      const el = document.querySelector(sel);
+      const color = el && getComputedStyle(el).backgroundColor;
+      if (color && color !== 'transparent' && !/rgba\([^)]*,\s*0\)$/.test(color)) return color;
+    }
+    return '';
+  };
   window.addEventListener('beforeprint', () => {
     ctx.imprimiendo = true;
     renderDocumento();
+    const fondo = fondoDelDocumento();
+    if (fondo) document.documentElement.style.setProperty('--fondo-impresion', fondo);
     document.querySelector('.marca-agua')?.remove();
     if (llevaMarcaDeAgua()) document.body.insertAdjacentHTML('beforeend', marcaDeAguaHTML(ctx.modoEditor));
   });
   window.addEventListener('afterprint', () => {
     ctx.imprimiendo = false;
+    document.documentElement.style.removeProperty('--fondo-impresion');
     document.querySelector('.marca-agua')?.remove();
     renderDocumento();
   });
