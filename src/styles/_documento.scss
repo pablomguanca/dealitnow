@@ -989,6 +989,7 @@ body.modo-cliente {
   .barra {
     gap: 0.6rem;
     padding: 0.7rem 1rem;
+    padding-top: calc(0.7rem + env(safe-area-inset-top, 0px));
   }
 
   .barra__logo {

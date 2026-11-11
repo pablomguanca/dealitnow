@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "837213426465",
+    "project_id": "dealit-7f735",
+    "storage_bucket": "dealit-7f735.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:837213426465:android:f39e63892b7ab1f850e460",
+        "android_client_info": {
+          "package_name": "ar.com.dealit.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "837213426465-fbaofcm5t2rd1mmha3pouffrm2v1t5qp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ar.com.dealit.app",
+            "certificate_hash": "0e8d73f3d6607ad2da965f9c4c2a02d94407fe92"
+          }
+        },
+        {
+          "client_id": "837213426465-p48nbh7cc9plv85egmg4n268l3ig5h0t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ar.com.dealit.app",
+            "certificate_hash": "6817a5a69940cd008bfb50a48d10baffc56df927"
+          }
+        },
+        {
+          "client_id": "837213426465-4mvb79f2hrd8ts5kdt8fq2pjjir1ghei.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAe5jRVUQYNfuAsDyI6B91-g_9nhD85mhw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "837213426465-4mvb79f2hrd8ts5kdt8fq2pjjir1ghei.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
