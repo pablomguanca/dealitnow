@@ -127,10 +127,12 @@
 
 // ---------- Sin menú lateral en el celular ----------
 
-.menu__icono-acciones {
+// Los tres puntos son círculos rellenos: le gana a la regla general de los íconos de botón
+// (que van solo con trazo y sin relleno), por eso la especificidad mayor.
+.menu__alternar .menu__icono-acciones {
   display: none;
   fill: currentColor;
-  stroke: none !important;
+  stroke: none;
 }
 
 @media (max-width: 768px) {

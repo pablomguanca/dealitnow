@@ -11,10 +11,11 @@ import { volverAEditorPropuestaInvitado } from './propuestas.js';
 export const mostrarBienvenida = () => {
   const el = $('#bienvenida');
   if (!el) return;
+  // Los rubros y, al final, «En blanco» como una opción más.
   $('#bienvenida-rubros').innerHTML = Object.entries(PLANTILLAS)
     .filter(([id]) => id !== 'en-blanco')
     .map(([id, p]) => `<button type="button" class="bienvenida__rubro" data-accion="bienvenida-rubro" data-id="${esc(id)}">${esc(p.rubro)}</button>`)
-    .join('');
+    .join('') + '<button type="button" class="bienvenida__rubro bienvenida__rubro--blanco" data-accion="bienvenida-rubro" data-id="en-blanco">Empezar en blanco</button>';
   el.hidden = false;
   document.body.classList.add('bienvenida-activa');
 };
