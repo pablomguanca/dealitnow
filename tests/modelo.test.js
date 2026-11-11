@@ -265,3 +265,23 @@ describe('módulos de render, tema, imágenes y decoraciones', () => {
     expect(metricasHTML([])).toContain('Esperando respuesta');
   });
 });
+
+describe('formato presupuesto', () => {
+  it('la plantilla Presupuesto arranca en formato tabla; las demás, como propuesta', () => {
+    expect(normalizarPropuesta(PLANTILLAS.presupuesto.crear()).opciones.formato).toBe('presupuesto');
+    expect(normalizarPropuesta(ejemplo()).opciones.formato).toBe('propuesta');
+    expect(normalizarPropuesta({ ...ejemplo(), opciones: { formato: 'otra-cosa' } }).opciones.formato).toBe('propuesta');
+  });
+
+  it('dibuja la tabla, los opcionales para sumar en el link y el crédito sin link', () => {
+    const p = normalizarPropuesta(PLANTILLAS.presupuesto.crear());
+    const web = generarPropuestaHTML(p, { web: true });
+    expect(web).toContain('presu__tabla');
+    expect(web).toContain('data-accion="sumar"');
+    expect(web).toContain('Presupuesto creado con');
+    expect(web).not.toContain('href="/?ref=marca"');
+    const pdf = generarPropuestaHTML(p, { web: false });
+    expect(pdf).not.toContain('data-accion="sumar"');
+    expect(pdf).toContain('presu__firmas');
+  });
+});

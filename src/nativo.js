@@ -107,6 +107,12 @@ const instalarAvisosNativos = async () => {
     lights: true,
     lightColor: '#00C896'
   }).catch(() => {});
+  // Con la app abierta, Android no muestra el aviso en la barra: lo recibe la app, que lo
+  // muestra como cartel (push.js).
+  FirebaseMessaging.addListener('notificationReceived', ev => {
+    const n = ev?.notification || {};
+    window.dispatchEvent(new CustomEvent('dealit:aviso-push', { detail: { titulo: n.title || '', cuerpo: n.body || '', url: n.data?.url || '' } }));
+  });
   FirebaseMessaging.addListener('notificationActionPerformed', ev => {
     const url = ev?.notification?.data?.url;
     if (typeof url === 'string' && url) abrirDesdeAviso(url);

@@ -220,8 +220,11 @@ export const desactivarPushEnTodos = async () => {
 const probarPush = async boton => {
   boton.disabled = true;
   try {
-    const { enviados } = await llamarApi('/api/push', { accion: 'prueba' });
-    if (enviados > 0) avisar('Te mandamos un aviso de prueba. Si no lo ves, revisá que las notificaciones del sistema no estén silenciadas.', 7000);
+    // En la app: sale en 5 segundos, para alcanzar a salir y verlo en la barra del celular.
+    const nativa = esAppNativa();
+    if (nativa) avisar('Salí de la app: en 5 segundos te llega el aviso de prueba.', 5000);
+    const { enviados } = await llamarApi('/api/push', nativa ? { accion: 'prueba', demora: 5 } : { accion: 'prueba' });
+    if (enviados > 0 && !nativa) avisar('Te mandamos un aviso de prueba. Si no lo ves, revisá que las notificaciones del sistema no estén silenciadas.', 7000);
     else avisarError('No encontramos este dispositivo. Desactivá y volvé a activar las notificaciones.');
   } catch (e) {
     console.error('No se pudo mandar el aviso de prueba:', e);
@@ -238,6 +241,11 @@ export const reiniciarPush = () => {
 };
 
 export const instalarPush = () => {
+  // Aviso que llega con la app abierta (solo en la app de Android): cartel en pantalla.
+  window.addEventListener('dealit:aviso-push', ev => {
+    const { titulo, cuerpo } = ev.detail || {};
+    if (titulo || cuerpo) avisar([titulo, cuerpo].filter(Boolean).join(' · '), 8000);
+  });
   // El service worker hace instalable la app aunque no se activen las notificaciones.
   if (!esAppNativa()) registrarServiceWorker();
   // En la app de Android: si Google renueva el token y estaban activadas, se actualiza.

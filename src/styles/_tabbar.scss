@@ -364,3 +364,10 @@ body.soltando-volver {
     font-size: 1.25rem;
   }
 }
+
+// El «¿Avanzamos?» de la propuesta, más medido en el celular.
+@media (max-width: 768px) {
+  .cierre__titulo {
+    font-size: calc(1.6em * var(--escala-titulos, 1));
+  }
+}

@@ -1,0 +1,428 @@
+// Presupuesto en tabla (opciones.formato === 'presupuesto', ver generarPresupuestoHTML en
+// lib/render.js): una hoja sobria como la de toda la vida, con los colores del tema elegido.
+
+.presu {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: clamp(1.4rem, 4vw, 3rem) clamp(1.1rem, 4vw, 3rem) 2rem;
+  border-top: 4px solid var(--d-acento);
+  color: var(--d-texto);
+  font-family: var(--fuente-texto);
+  font-size: 0.95rem;
+  line-height: 1.5;
+
+  &__cabecera {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1.5rem;
+    padding-bottom: 1.2rem;
+    border-bottom: 1px solid var(--d-acento);
+  }
+
+  &__emisor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  &__logo {
+    max-width: 10rem;
+    max-height: 3.5rem;
+    object-fit: contain;
+    object-position: left;
+  }
+
+  &__marca {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--d-acento);
+    line-height: 1.2;
+  }
+
+  &__rol {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--d-suave);
+  }
+
+  &__datos {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.15rem;
+    text-align: right;
+    font-size: 0.82rem;
+    color: var(--d-suave);
+  }
+
+  &__etiqueta {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--d-tenue);
+  }
+
+  &__numero {
+    font-size: 1.2rem;
+    color: var(--d-texto);
+  }
+
+  &__partes {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+    padding: 1.2rem 0;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      font-size: 0.85rem;
+      color: var(--d-suave);
+    }
+
+    strong {
+      color: var(--d-texto);
+    }
+  }
+
+  &__titulo {
+    margin: 0.4rem 0 0.4rem;
+    font-family: var(--fuente-texto);
+    font-size: 1.3rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  &__detalle {
+    margin: 0 0 1.2rem;
+    font-size: 0.88rem;
+    color: var(--d-suave);
+  }
+
+  &__tabla {
+    width: 100%;
+    margin-top: 0.6rem;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+
+    th {
+      padding: 0.55rem 0.5rem;
+      border-bottom: 1px solid var(--d-linea);
+      font-size: 0.66rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-align: left;
+      text-transform: uppercase;
+      color: var(--d-tenue);
+    }
+
+    td {
+      padding: 0.75rem 0.5rem;
+      border-bottom: 1px solid var(--d-linea);
+      vertical-align: top;
+    }
+  }
+
+  &__num {
+    width: 1.5rem;
+    color: var(--d-tenue);
+  }
+
+  &__cifra {
+    text-align: right !important;
+    white-space: nowrap;
+  }
+
+  &__subtotal {
+    font-weight: 700;
+  }
+
+  &__concepto {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+  }
+
+  &__nombre {
+    font-weight: 600;
+  }
+
+  &__desc {
+    font-size: 0.8rem;
+    color: var(--d-suave);
+  }
+
+  &__subtitulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem 0.7rem;
+    margin: 1.6rem 0 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--d-tenue);
+
+    span {
+      font-size: 0.78rem;
+      font-weight: 500;
+      letter-spacing: 0;
+      text-transform: none;
+      color: var(--d-suave);
+    }
+  }
+
+  &__fila--opcional td {
+    color: var(--d-suave);
+  }
+
+  &__fila--sumada td {
+    color: var(--d-texto);
+    background: color-mix(in srgb, var(--d-acento) 7%, transparent);
+  }
+
+  &__sumar {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.35rem;
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--d-acento);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--d-acento);
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    svg {
+      width: 0.85rem;
+      height: 0.85rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+
+    &[aria-pressed="true"] {
+      background: var(--d-acento);
+      color: #FFF;
+    }
+  }
+
+  &__sumado {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.76rem;
+    font-weight: 600;
+    color: var(--d-acento);
+
+    svg {
+      width: 0.85rem;
+      height: 0.85rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+    }
+  }
+
+  // Totales a la derecha, en una caja con el color del tema.
+  &__totales {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.8rem;
+    margin-top: 1.4rem;
+  }
+
+  &__total {
+    width: min(100%, 20rem);
+    padding: 0.6rem 1rem;
+    border-radius: 0.6rem;
+    background: color-mix(in srgb, var(--d-acento) 9%, transparent);
+
+    .resumen__fila {
+      border-bottom-color: color-mix(in srgb, var(--d-acento) 18%, transparent);
+    }
+
+    .resumen__fila--total {
+      align-items: baseline;
+      border-bottom: 0;
+
+      dt,
+      dd {
+        font-family: var(--fuente-texto);
+        font-weight: 700;
+        letter-spacing: 0;
+      }
+
+      dt {
+        font-size: 0.95rem;
+      }
+
+      dd {
+        font-size: 1.35rem;
+        color: var(--d-acento);
+      }
+    }
+  }
+
+  &__total-titulo {
+    margin: 0.2rem 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--d-tenue);
+  }
+
+  &__pagos,
+  &__condiciones {
+    margin: 0.4rem 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.85rem;
+
+    li {
+      padding: 0.3rem 0;
+    }
+  }
+
+  &__pagos li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    border-bottom: 1px dashed var(--d-linea);
+  }
+
+  &__condiciones li {
+    position: relative;
+    padding-left: 1rem;
+    color: var(--d-suave);
+
+    &::before {
+      content: '·';
+      position: absolute;
+      left: 0.2rem;
+      font-weight: 700;
+      color: var(--d-acento);
+    }
+  }
+
+  &__cierre {
+    margin-top: 2rem;
+  }
+
+  &__firmas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2.5rem;
+    margin-top: 3.5rem;
+
+    p {
+      margin: 0;
+      padding-top: 0.5rem;
+      border-top: 1px solid var(--d-linea);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-align: center;
+      text-transform: uppercase;
+      color: var(--d-tenue);
+    }
+  }
+
+  &__pie {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1.2rem;
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--d-linea);
+    font-size: 0.78rem;
+    color: var(--d-tenue);
+  }
+}
+
+// En el celular: el número y la cantidad pasan debajo para que la tabla no se apriete.
+@media (max-width: 560px) {
+  .presu {
+    &__cabecera {
+      flex-direction: column;
+      gap: 0.8rem;
+    }
+
+    &__datos {
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    &__partes {
+      gap: 1rem;
+    }
+
+    &__tabla {
+      th:nth-child(1),
+      td:nth-child(1),
+      th:nth-child(4),
+      td:nth-child(4) {
+        display: none;
+      }
+
+      td,
+      th {
+        padding-inline: 0.3rem;
+      }
+    }
+  }
+}
+
+@media print {
+  .presu {
+    max-width: none;
+    padding: 0;
+    font-size: 10pt;
+
+    &__tabla tr {
+      break-inside: avoid;
+    }
+
+    &__totales,
+    &__firmas {
+      break-inside: avoid;
+    }
+  }
+}
+
+// El cierre («¿Avanzamos?» y el botón de aceptar) en el presupuesto: sobrio, con la letra
+// del documento y no en Bebas Neue a tamaño de propuesta.
+.presu .cierre {
+  padding: 1.2rem;
+  text-align: left;
+
+  &__titulo {
+    margin-bottom: 0.3rem;
+    font-family: var(--fuente-texto);
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  &__texto {
+    font-size: 0.88rem;
+  }
+}

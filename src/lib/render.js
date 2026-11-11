@@ -353,7 +353,7 @@ export const barraClienteHTML = (c, vig, { moneda = 'USD', esAceptada = false, c
     </div>`;
 };
 
-export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '', consultaUrl = '' } = {}) => {
+export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '', consultaUrl = '', tipo = 'propuesta' } = {}) => {
   const esAceptada = !!compartida?.aceptacion;
   if (esAceptada) {
     const a = compartida.aceptacion;
@@ -368,7 +368,7 @@ export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '',
   if (vig.vencida) {
     return `
       <div class="cierre">
-        <p class="cierre__titulo">Esta propuesta venció</p>
+        <p class="cierre__titulo">${tipo === 'presupuesto' ? 'Este presupuesto venció' : 'Esta propuesta venció'}</p>
         <p class="cierre__texto">Los valores y plazos pueden haber cambiado. Pedile ${nombreEmisor ? `a ${esc(nombreEmisor)} ` : ''}una versión actualizada.</p>
         ${consultaUrl ? `<div class="cierre__acciones"><a class="boton boton--primario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a></div>` : ''}
       </div>`;
@@ -381,7 +381,7 @@ export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '',
       <p class="cierre__titulo">¿Avanzamos?</p>
       <p class="cierre__texto">${textoCierre}</p>
       <div class="cierre__acciones">
-        <button type="button" class="boton boton--primario boton--grande" data-accion="aceptar">Aceptar propuesta</button>
+        <button type="button" class="boton boton--primario boton--grande" data-accion="aceptar">Aceptar ${tipo === 'presupuesto' ? 'presupuesto' : 'propuesta'}</button>
         ${consultaUrl ? `<a class="boton boton--secundario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a></div>` : ''}
       </div>
     </div>`;
@@ -439,14 +439,8 @@ export const observarElementos = (raiz, esCliente = false) => {
     observador.observe(el);
   });
 };
-
-// Marca de Dealit al pie: el nombre va con la tipografía del logo.
-const creditoHTML = (tipo, web) => {
-  const contenido = `${tipo === 'portafolio' ? 'Portfolio creado' : 'Propuesta creada'} con <b class="pie__marca">Dealit</b>`;
-  return web
-    ? `<a class="pie__credito" href="/?ref=marca" target="_blank" rel="noopener">${contenido}</a>`
-    : `<span class="pie__credito">${contenido}</span>`;
-};
+// Marca de Dealit al pie, con la tipografía del logo. Es solo texto (sin link), en el link y en el PDF.
+const creditoHTML = tipo => `<span class="pie__credito">${{ portafolio: 'Portfolio creado', presupuesto: 'Presupuesto creado' }[tipo] || 'Propuesta creada'} con <b class="pie__marca">Dealit</b></span>`;
 
 // Marca de agua al imprimir (sin cuenta, o en Gratis con un diseño PRO): tres franjas por hoja.
 export const marcaDeAguaHTML = tipo => `
@@ -658,6 +652,137 @@ export const generarPortafolioHTML = (s, { web = true, tipoDecoracion = 'marco',
   return portada + navLanding + cuerpo + barraInferior;
 };
 
+// Presupuesto en tabla (opciones.formato === 'presupuesto'): una hoja como la de toda la
+// vida, para cualquier oficio. Es el mismo link: el cliente suma opcionales y acepta online.
+const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
+  const m = s.inversion.moneda;
+  const c = calcularTotales(s, seleccion);
+  const e = s.emisor;
+  const cl = s.cliente;
+  const p = s.propuesta;
+  const vig = calcularVigencia(p);
+  const esAceptada = !!compartida?.aceptacion;
+  const nombreEm = (e.nombre || '').trim();
+  const titulo = p.titulo.trim() || 'el presupuesto';
+  const msgConsulta = `Hola${nombreEm ? ` ${nombreEm.split(' ')[0]}` : ''}, tengo una consulta sobre el presupuesto «${titulo}».`;
+  const consultaUrl = armarEnlaceWhatsApp(msgConsulta, e) || armarEnlaceEmail(`Consulta sobre ${titulo}`, msgConsulta, e);
+
+  const marca = e.logo
+    ? `<img class="presu__logo" src="${esc(e.logo)}" alt="${esc(e.nombre || 'Logo')}">`
+    : `<span class="presu__marca">${nombreEm ? esc(nombreEm) : vacioHTML('Tu nombre o tu negocio')}</span>`;
+  const numero_ = p.numero.trim();
+
+  const datos = (lista) => lista.filter(Boolean).map(x => `<span>${x}</span>`).join('');
+  const de = datos([
+    nombreEm ? `<strong>${esc(nombreEm)}</strong>` : '',
+    e.telefono.trim() ? esc(e.telefono.trim()) : '',
+    e.email.trim() ? esc(e.email.trim()) : ''
+  ]);
+  const para = datos([
+    cl.nombre.trim() || cl.empresa.trim() ? `<strong>${esc(cl.nombre.trim() || cl.empresa.trim())}</strong>` : '—',
+    cl.nombre.trim() && cl.empresa.trim() ? esc(cl.empresa.trim()) : ''
+  ]);
+
+  // Filas: concepto (con su descripción abajo), cantidad, precio unitario y subtotal.
+  const fila = (x, i) => {
+    const cant = numero(x.cantidad);
+    const precio = numero(x.precio);
+    const incluido = x.modalidad === 'incluido';
+    const sumado = x.opcional && seleccion.has(x.id);
+    const cantTexto = incluido ? '—' : `${cantidadTexto(cant)}${x.modalidad === 'hora' ? ' h' : ''}`;
+    const precioTexto = incluido ? '—' : `${dinero(precio, m)}${x.modalidad === 'mensual' ? ' /mes' : ''}`;
+    const subtotal = incluido ? 'Incluido' : dinero(totalServicio(x), m);
+    const boton = web && x.opcional
+      ? (esAceptada
+        ? (sumado ? `<span class="presu__sumado">${ICONO_SUMADO} Incluido en la aceptación</span>` : '')
+        : `<button type="button" class="presu__sumar" data-accion="sumar" data-id="${esc(x.id)}" aria-pressed="${sumado}">${sumado ? `${ICONO_SUMADO} Sumado` : `${ICONO_SUMAR} Sumar`}</button>`)
+      : (x.opcional && sumado ? '<span class="presu__sumado">Sumado por el cliente</span>' : '');
+    return `
+      <tr class="${x.opcional ? 'presu__fila--opcional' : ''}${sumado ? ' presu__fila--sumada' : ''}">
+        <td class="presu__num">${i}</td>
+        <td class="presu__concepto">
+          <span class="presu__nombre">${x.nombre.trim() ? esc(x.nombre) : vacioHTML('Trabajo sin nombre')}</span>
+          ${x.descripcion.trim() ? `<span class="presu__desc">${esc(x.descripcion.trim())}</span>` : ''}
+          ${boton}
+        </td>
+        <td class="presu__cifra">${cantTexto}</td>
+        <td class="presu__cifra">${precioTexto}</td>
+        <td class="presu__cifra presu__subtotal">${subtotal}</td>
+      </tr>`;
+  };
+  const incluidos = s.servicios.filter(x => !x.opcional && servicioConContenido(x));
+  const opcionales = s.servicios.filter(x => x.opcional && servicioConContenido(x));
+  const cabeza = '<thead><tr><th scope="col" class="presu__num">#</th><th scope="col">Concepto</th><th scope="col" class="presu__cifra">Cant.</th><th scope="col" class="presu__cifra">Precio</th><th scope="col" class="presu__cifra">Subtotal</th></tr></thead>';
+  const tabla = incluidos.length
+    ? `<table class="presu__tabla">${cabeza}<tbody>${incluidos.map((x, i) => fila(x, i + 1)).join('')}</tbody></table>`
+    : '<p class="doc-nota">Cargá los trabajos en el paso «Servicios» del editor.</p>';
+  const tablaOpcionales = opcionales.length ? `
+    <h3 class="presu__subtitulo">Opcionales${web && !esAceptada ? ' <span>Sumalos con un toque y el total se actualiza</span>' : ''}</h3>
+    <table class="presu__tabla presu__tabla--opcionales">${cabeza}<tbody>${opcionales.map((x, i) => fila(x, incluidos.length + i + 1)).join('')}</tbody></table>` : '';
+
+  const totales = [];
+  if (c.inicial.base > 0) totales.push(`<div class="presu__total">${filasResumenHTML(c.inicial, c, s.inversion)}</div>`);
+  if (c.mensual.base > 0) totales.push(`<div class="presu__total"><p class="presu__total-titulo">Mensual</p>${filasResumenHTML(c.mensual, c, s.inversion, 'por mes')}</div>`);
+
+  const pagos = s.inversion.pagos.filter(x => x.concepto.trim() || numero(x.porcentaje) > 0);
+  const pagosHTML = pagos.length && c.inicial.total > 0 ? `
+    <div class="presu__seccion">
+      <h3 class="presu__subtitulo">Forma de pago</h3>
+      <ul class="presu__pagos">${pagos.map(x => `<li><span>${x.concepto.trim() ? esc(x.concepto) : 'Pago'} (${cantidadTexto(numero(x.porcentaje))} %)</span><strong>${dinero(c.inicial.total * numero(x.porcentaje) / 100, m)}</strong></li>`).join('')}</ul>
+    </div>` : '';
+  const condiciones = lineas(s.condiciones);
+  const condicionesHTML = condiciones.length ? `
+    <div class="presu__seccion">
+      <h3 class="presu__subtitulo">Condiciones</h3>
+      <ul class="presu__condiciones">${condiciones.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
+    </div>` : '';
+
+  const firmas = !web && s.opciones.firmas ? `
+    <div class="presu__firmas">
+      <p>Firma del cliente</p>
+      <p>Firma de ${esc(nombreEm || 'quien presupuesta')}</p>
+    </div>` : '';
+
+  const pie = `
+    <footer class="presu__pie">
+      ${vig.vence ? `<span>${web && vig.vencida ? 'Venció el' : 'Válido hasta el'} ${esc(fechaLarga(vig.vence))}</span>` : ''}
+      ${web ? '<button type="button" class="pie__pdf" data-accion="pdf">Descargar en PDF</button>' : ''}
+      ${s.opciones.credito ? creditoHTML('presupuesto') : ''}
+    </footer>`;
+
+  const aviso = web && vig.vencida ? `<p class="doc-aviso">Este presupuesto venció el ${esc(fechaLarga(vig.vence))}. Los valores pueden haber cambiado.</p>` : '';
+  const cierre = web ? `<div class="presu__cierre">${cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, tipo: 'presupuesto' })}</div>` : '';
+
+  const hoja = `
+    <section class="presu" id="sec-prop-inicio" aria-label="Presupuesto">
+      ${aviso}
+      <header class="presu__cabecera">
+        <div class="presu__emisor">${marca}${e.rol.trim() ? `<span class="presu__rol">${esc(e.rol.trim())}</span>` : ''}</div>
+        <div class="presu__datos">
+          <span class="presu__etiqueta">Presupuesto</span>
+          ${numero_ ? `<strong class="presu__numero">${esc(numero_)}</strong>` : ''}
+          ${vig.fecha ? `<span>${esc(fechaLarga(vig.fecha))}</span>` : ''}
+        </div>
+      </header>
+      <div class="presu__partes">
+        <div><span class="presu__etiqueta">De</span>${de || '—'}</div>
+        <div><span class="presu__etiqueta">Para</span>${para}</div>
+      </div>
+      ${p.titulo.trim() ? `<h1 class="presu__titulo">${esc(p.titulo.trim())}</h1>` : ''}
+      ${s.contexto.trim() ? `<p class="presu__detalle">${esc(s.contexto.trim()).replace(/\n/g, '<br>')}</p>` : ''}
+      ${tabla}
+      ${tablaOpcionales}
+      ${totales.length ? `<div class="presu__totales">${totales.join('')}</div>` : ''}
+      ${pagosHTML}
+      ${condicionesHTML}
+      ${cierre}
+      ${firmas}
+      ${pie}
+    </section>`;
+
+  return hoja + (web ? barraClienteHTML(c, vig, { moneda: m, esAceptada, consultaUrl }) : '');
+};
+
 export const generarPropuestaHTML = (
   s,
   {
@@ -668,6 +793,7 @@ export const generarPropuestaHTML = (
     tipoPortada = 'editorial'
   } = {}
 ) => {
+  if (s.opciones?.formato === 'presupuesto') return generarPresupuestoHTML(s, { web, seleccion, compartida });
   const m = s.inversion.moneda;
   const c = calcularTotales(s, seleccion);
   const e = s.emisor;

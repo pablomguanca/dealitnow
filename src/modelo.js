@@ -255,6 +255,8 @@ export const vacio = () => ({
   condiciones: '',
   proximosPasos: '',
   opciones: {
+    // 'propuesta' (el documento completo) o 'presupuesto' (una hoja con la tabla de trabajos).
+    formato: 'propuesta',
     firmas: true,
     credito: true,
     barraNav: false,
@@ -354,6 +356,12 @@ export const ejemplo = () => ({
     espaciadoInterno: 100
   }
 });
+
+// Formatos del documento de una propuesta.
+export const FORMATOS_DOCUMENTO = {
+  propuesta: { nombre: 'Propuesta', desc: 'El documento completo: contexto, servicios, etapas e inversión.' },
+  presupuesto: { nombre: 'Presupuesto', desc: 'Una hoja con la tabla de trabajos, cantidades, precios y el total.' }
+};
 
 export const PLANTILLAS = {
   'en-blanco': {
@@ -817,6 +825,62 @@ export const PLANTILLAS = {
         estilo: 'suave'
       }
     })
+  },
+  // El presupuesto de siempre, para cualquier oficio o servicio (pintor, albañil,
+  // electricista, plomero…): trabajos con cantidad y precio, materiales, plazo y pago.
+  presupuesto: {
+    nombre: 'Presupuesto',
+    rubro: 'Otro rubro',
+    desc: 'El presupuesto de siempre para cualquier oficio o servicio: trabajos, materiales, plazo y forma de pago.',
+    plan: 'gratis',
+    crear: () => ({
+      emisor: {
+        nombre: 'Gómez Pintura y Reformas',
+        rol: 'Pintura de interiores y exteriores',
+        email: 'gomezpintura@gmail.com',
+        telefono: '+54 9 11 5555-0147',
+        web: '',
+        presentacion: 'Hace quince años pintamos casas, departamentos y locales en zona oeste. Trabajamos prolijo, protegemos muebles y pisos, y dejamos todo limpio al terminar.',
+        logo: ''
+      },
+      cliente: { nombre: 'Marcela Ruiz', empresa: '', cargo: '' },
+      propuesta: { titulo: 'Presupuesto de pintura interior', numero: 'P-2026-012', fecha: hoyISO(), validez: 15 },
+      contexto: 'Pintura de living, comedor y dos dormitorios de un departamento en Haedo: unos 85 m² de paredes y 40 m² de cielorraso. Hay humedad en una pared del dormitorio principal que conviene tratar antes de pintar.',
+      objetivos: [],
+      servicios: [
+        { id: uid(), nombre: 'Pintura de paredes (por m²)', modalidad: 'unico', cantidad: 85, precio: 4500, descripcion: 'Dos manos de látex interior lavable, con enduido y lijado de las imperfecciones.', entregables: '', opcional: false },
+        { id: uid(), nombre: 'Pintura de cielorrasos (por m²)', modalidad: 'unico', cantidad: 40, precio: 5200, descripcion: 'Dos manos de látex para cielorrasos, antihongos.', entregables: '', opcional: false },
+        { id: uid(), nombre: 'Tratamiento de humedad', modalidad: 'unico', cantidad: 1, precio: 95000, descripcion: 'Picado del revoque dañado, hidrófugo y revoque nuevo en la pared del dormitorio principal.', entregables: '', opcional: false },
+        { id: uid(), nombre: 'Materiales', modalidad: 'unico', cantidad: 1, precio: 310000, descripcion: 'Pintura, enduido, lijas, cinta y nylon de protección. Se compran con la seña y se entregan las facturas.', entregables: '', opcional: false },
+        { id: uid(), nombre: 'Pintura de puertas y marcos', modalidad: 'unico', cantidad: 5, precio: 38000, descripcion: 'Lijado y dos manos de esmalte sintético satinado.', entregables: '', opcional: true }
+      ],
+      etapas: [],
+      inversion: {
+        moneda: 'ARS',
+        descuento: 0,
+        impuestoNombre: 'IVA',
+        impuesto: 0,
+        pagos: [
+          { id: uid(), concepto: 'Seña para materiales al aceptar', porcentaje: 50 },
+          { id: uid(), concepto: 'Al terminar el trabajo', porcentaje: 50 }
+        ]
+      },
+      condiciones: 'Plazo de trabajo: 6 días hábiles desde la fecha de inicio.\nIncluye la protección de muebles y pisos, y la limpieza al terminar.\nGarantía de 6 meses sobre la mano de obra.\nLos precios se mantienen por 15 días.',
+      proximosPasos: 'Aceptar el presupuesto desde este link.\nAbonar la seña para comprar los materiales.\nCoordinar la fecha de inicio.',
+      opciones: { formato: 'presupuesto', firmas: true, credito: true },
+      tema: {
+        preset: 'corporativo',
+        acento: '#2563EB',
+        colorTexto: '',
+        colorSvg: '',
+        opacidadSvg: 100,
+        fuenteTitulos: 'Inter',
+        fuenteCuerpo: 'Inter',
+        portada: 'franja',
+        decoracion: 'ninguna',
+        estilo: 'minimal'
+      }
+    })
   }
 };
 
@@ -852,6 +916,7 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
     opciones: {
       ...base.opciones,
       ...(d.opciones || {}),
+      formato: FORMATOS_DOCUMENTO[d.opciones?.formato] ? d.opciones.formato : 'propuesta',
       firmas: d.opciones?.firmas !== undefined ? !!d.opciones.firmas : true,
       credito: d.opciones?.credito !== undefined ? !!d.opciones.credito : true,
       barraNav: d.opciones?.barraNav !== undefined ? !!d.opciones.barraNav : false,

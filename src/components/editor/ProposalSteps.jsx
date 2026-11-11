@@ -33,6 +33,13 @@ export function ProposalSteps() {
         </summary>
         <div className="paso__contenido grilla">
           <label className="campo campo--ancho">
+            <span className="campo__etiqueta">Formato del documento</span>
+            <select className="control" data-campo="opciones.formato">
+              <option value="propuesta">Propuesta: el documento completo, con contexto y etapas</option>
+              <option value="presupuesto">Presupuesto: una hoja con la tabla de trabajos y el total</option>
+            </select>
+          </label>
+          <label className="campo campo--ancho">
             <span className="campo__etiqueta">Título del proyecto</span>
             <input className="control" type="text" data-campo="propuesta.titulo" placeholder="Ej.: Rediseño del sitio web" />
           </label>

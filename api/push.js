@@ -4,7 +4,7 @@
 //   { accion: 'baja', endpoint }     lo desactiva (al apagarlas o al cerrar sesión)
 //   { accion: 'baja', token }        lo mismo, en la app de Android
 //   { accion: 'baja', todos: true }  desactiva todos (al eliminar la cuenta)
-//   { accion: 'prueba' }             manda un aviso de prueba a sus dispositivos
+//   { accion: 'prueba', demora? }    manda un aviso de prueba a sus dispositivos (demora: 0 a 8 s)
 import { FieldValue, firestore, sesionDeLaSolicitud } from './_lib/firebase-admin.js';
 import { fallar, leerPost, responder } from './_lib/http.js';
 import { urlAppDe } from './_lib/avisos.js';
@@ -12,7 +12,9 @@ import { MAX_DISPOSITIVOS, clavePublicaPush, dispositivosDe, enviarPush, idDispo
 
 const milis = d => d.get('creado')?.toMillis?.() || 0;
 
-export const crearHandler = ({ db, sesionDe, clave = () => clavePublicaPush(), enviar = enviarPush }) => async (req, res) => {
+const esperarPorDefecto = ms => new Promise(listo => setTimeout(listo, ms));
+
+export const crearHandler = ({ db, sesionDe, clave = () => clavePublicaPush(), enviar = enviarPush, esperar = esperarPorDefecto }) => async (req, res) => {
   const cuerpo = leerPost(req, res);
   if (!cuerpo) return;
   try {
@@ -63,6 +65,8 @@ export const crearHandler = ({ db, sesionDe, clave = () => clavePublicaPush(), e
     }
 
     if (cuerpo.accion === 'prueba') {
+      const demora = Math.min(8, Math.max(0, Number(cuerpo.demora) || 0));
+      if (demora) await esperar(demora * 1000);
       const enviados = await enviar({
         db,
         uid: sesion.uid,

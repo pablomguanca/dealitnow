@@ -239,6 +239,16 @@ describe('POST /api/push', () => {
     expect(datos['push/otro/dispositivos/c']).toBeDefined();
   });
 
+  it('prueba con demora: espera (con tope de 8 s) antes de mandar', async () => {
+    const { db } = crearDb();
+    const esperas = [];
+    const h = crearHandler({ db, sesionDe: async () => ({ uid: 'duenio' }), clave: () => '', enviar: async () => 1, esperar: async ms => { esperas.push(ms); } });
+    await llamar(h, { accion: 'prueba', demora: 5 });
+    await llamar(h, { accion: 'prueba', demora: 99 });
+    await llamar(h, { accion: 'prueba' });
+    expect(esperas).toEqual([5000, 8000]);
+  });
+
   it('prueba: manda un aviso a los dispositivos propios', async () => {
     const { db } = crearDb();
     const pedidos = [];
