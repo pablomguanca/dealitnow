@@ -54,12 +54,48 @@ export const compartirNativo = async ({ titulo, url }) => {
 
 // «Descargar PDF»: en la app no existe window.print(). Se avisa a la página como si fuera
 // la impresión del navegador (beforeprint / afterprint), así suma y saca lo de siempre.
+// Android arma el PDF con el ancho de la pantalla del celular: mientras imprime, la página se
+// arma con el ancho de una hoja A4 (como en la compu) y después vuelve al del celular.
+const ANCHO_HOJA = 820;
+const esperar = ms => new Promise(listo => setTimeout(listo, ms));
+const anchoDeHoja = async activo => {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (!meta) return;
+  if (activo) {
+    meta.dataset.original = meta.getAttribute('content') || '';
+    await Imprimir.anchoDeHoja({ activo: true }).catch(() => {});
+    meta.setAttribute('content', `width=${ANCHO_HOJA}, viewport-fit=cover`);
+    // Hasta que la página se vuelve a armar con el ancho nuevo (con un tope).
+    for (let i = 0; i < 20 && innerWidth < ANCHO_HOJA - 10; i++) await esperar(50);
+    await esperar(150);
+  } else {
+    meta.setAttribute('content', meta.dataset.original || 'width=device-width, initial-scale=1, viewport-fit=cover');
+    await Imprimir.anchoDeHoja({ activo: false }).catch(() => {});
+  }
+};
+
+// Hojas sin márgenes mientras imprime la app (ver html.imprimiendo-app en _impresion.scss).
+const modoImpresionApp = activo => {
+  document.documentElement.classList.toggle('imprimiendo-app', activo);
+  document.getElementById('impresion-app')?.remove();
+  if (activo) {
+    const estilo = document.createElement('style');
+    estilo.id = 'impresion-app';
+    estilo.textContent = '@page { margin: 0 !important; }';
+    document.head.append(estilo);
+  }
+};
+
 export const imprimirNativo = async nombre => {
+  await anchoDeHoja(true);
+  modoImpresionApp(true);
   window.dispatchEvent(new Event('beforeprint'));
   try {
     await Imprimir.imprimir({ nombre });
   } finally {
     window.dispatchEvent(new Event('afterprint'));
+    modoImpresionApp(false);
+    await anchoDeHoja(false);
   }
 };
 

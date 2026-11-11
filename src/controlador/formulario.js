@@ -216,6 +216,8 @@ const sincronizarModoEditorUI = () => {
   if (pasosPf) pasosPf.hidden = !esPf;
   if (wrapTplProp) wrapTplProp.hidden = esPf;
   if (wrapTplPf) wrapTplPf.hidden = !esPf;
+  const wrapFormato = $('#formato-propuesta-wrap');
+  if (wrapFormato) wrapFormato.hidden = esPf;
   if (campoVincularPf) campoVincularPf.hidden = esPf;
   if (subtituloBarra) subtituloBarra.textContent = esPf ? 'Armá tu portfolio' : 'Generá tu propuesta';
   if (tituloEditor) tituloEditor.textContent = esPf ? 'Armá tu portfolio' : 'Armá tu propuesta';

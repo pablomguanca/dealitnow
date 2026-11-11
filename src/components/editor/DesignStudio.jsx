@@ -84,6 +84,16 @@ export function DesignStudio() {
             </div>
           </div>
 
+          <div id="formato-propuesta-wrap">
+            <h3 className="separador-campos">Formato del documento</h3>
+            <label className="campo campo--ancho">
+              <select className="control" data-campo="opciones.formato" aria-label="Formato del documento">
+                <option value="propuesta">Propuesta: el documento completo, con contexto y etapas</option>
+                <option value="presupuesto">Presupuesto: una hoja con la tabla de trabajos y el total</option>
+              </select>
+            </label>
+          </div>
+
           <h3 className="separador-campos">Tema visual</h3>
           <div className="temas" id="temas-grid">
             <button type="button" className="tema-card" data-tema="lienzo-blanco">

@@ -15,13 +15,15 @@
     print-color-adjust: exact;
   }
 
+  // Fondo blanco: los márgenes de cada hoja toman el fondo de la página, y en el modo
+  // oscuro de la app salían franjas negras arriba y abajo.
   html,
   body,
   body.modo-cliente {
     display: block;
     height: auto;
     overflow: visible;
-    background: var(--papel);
+    background: #FFFFFF !important;
   }
 
   .barra,
@@ -65,7 +67,12 @@
     box-shadow: none;
   }
 
-  .portada {
+  // La portada ocupa justo la primera hoja: sin el alto mínimo de la pantalla (en el
+  // celular medía lo que la pantalla y se cortaba al pasar a la hoja).
+  .portada,
+  .doc--web .portada {
+    min-height: 0 !important;
+    aspect-ratio: 210 / 296.6;
     box-shadow: none;
     break-after: page;
   }
@@ -132,4 +139,30 @@
 
 .marca-agua {
   display: none;
+}
+
+// App de Android (html.imprimiendo-app, lo pone imprimirNativo en nativo.js): esa ventana
+// web no respeta «@page :first { margin: 0 }» y pinta los márgenes con el fondo oscuro de la
+// app. Ahí las hojas van sin márgenes (@page margin 0, también lo agrega imprimirNativo) y el
+// espacio de arriba y abajo lo da el propio documento, repetido en cada hoja (clone).
+@media print {
+  html.imprimiendo-app {
+    .portada,
+    .doc--web .portada {
+      aspect-ratio: 210 / 293;
+    }
+
+    .cuerpo {
+      padding-top: 16mm;
+      padding-bottom: 18mm;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+
+    .presu {
+      padding-bottom: 14mm;
+      -webkit-box-decoration-break: clone;
+      box-decoration-break: clone;
+    }
+  }
 }
