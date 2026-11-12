@@ -230,8 +230,13 @@ describe('interruptor de los planes', () => {
 
   it('/api/plan le dice a la app si los planes están activos', async () => {
     const r = res();
-    await crearPlan({ sesionDe: async () => ({ uid: 'u', email: 'a@b.com' }), planesActivos: () => true, iaDisponible: () => false, clavePush: () => 'clave-vapid' })(post({}), r);
-    expect(r.cuerpo).toEqual({ activos: true, ia: false, push: 'clave-vapid' });
+    await crearPlan({ sesionDe: async () => ({ uid: 'u', email: 'a@b.com' }), planesActivos: () => true, iaDisponible: () => false, clavePush: () => 'clave-vapid', esProDe: async () => false })(post({}), r);
+    expect(r.cuerpo).toEqual({ activos: true, ia: false, push: 'clave-vapid', pro: false });
+    // También dice si la cuenta es Pro según el servidor (planes/{uid}).
+    const db = () => ({ collection: () => ({ doc: () => ({ get: async () => ({ exists: true, data: () => ({ tipo: 'pro', estado: 'activa', periodo: 'anual' }) }) }) }) });
+    const conPro = res();
+    await crearPlan({ sesionDe: async () => ({ uid: 'u', email: 'a@b.com' }), planesActivos: () => true, iaDisponible: () => false, clavePush: () => '', db })(post({}), conPro);
+    expect(conPro.cuerpo.pro).toBe(true);
     const sinSesion = res();
     await crearPlan({ sesionDe: async () => null, planesActivos: () => true })(post({}), sinSesion);
     expect(sinSesion.estado).toBe(401);

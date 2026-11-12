@@ -7,7 +7,7 @@ import { LIMITE_ENVIOS_GRATIS, PRECIOS_PRO, enviosDelMes, esPro, proParaVerifica
 import { LIMITE_IA_GRATIS } from '../ia.js';
 import { ctx, AteneaDB } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
-import { avisar, avisarError, elegir } from './avisos.js';
+import { avisar, avisarError, avisarExito, elegir } from './avisos.js';
 import { llamarApi } from './api.js';
 import { irRuta } from './navegacion.js';
 import { irADiseno } from './hoja.js';
@@ -19,8 +19,13 @@ let verificado = false;
 // Pro» si pasa a Pro mientras la app está abierta, o al volver de pagar en Mercado Pago.
 let planLeido = false;
 let volviendoDelPago = false;
-// El servidor dice si los planes están activos para esta cuenta (interruptor PLANES_ACTIVOS).
+// El servidor dice si los planes están activos para esta cuenta (interruptor PLANES_ACTIVOS)
+// y si la cuenta es Pro. Lo segundo cubre el caso en que el plan de Firestore todavía no
+// llegó o no se pudo leer: nunca se trata a un Pro como Gratis.
 let planesActivos = false;
+let proServidor = false;
+let consultado = false;
+let planLlegado = false;
 
 // Meses que regala el anual frente a pagar 12 mensuales (hoy, 2).
 export const mesesGratisAnual = () => Math.round(12 - PRECIOS_PRO.anual.monto / PRECIOS_PRO.mensual.monto);
@@ -36,10 +41,17 @@ const opcionesPro = () => [
   { valor: 'anual', texto: `Pro anual · ${precioTexto('anual')}`, estilo: 'secundario' }
 ];
 
-export const usuarioEsPro = () => esPro(ctx.plan);
+export const usuarioEsPro = () => esPro(ctx.plan) || proServidor;
 
 // Límites de Gratis en la app: solo con los planes activos para esta cuenta y sin Pro.
-export const restriccionesActivas = () => planesActivos && !esPro(ctx.plan);
+export const restriccionesActivas = () => planesActivos && !usuarioEsPro();
+
+// Antes de frenar algo por Gratis: se espera a saber el plan (respuesta del servidor y plan
+// de Firestore), con un tope. Así, recién entrando, un Pro no ve el cartel de Pro.
+const esperarPlan = async (tope = 4000) => {
+  const inicio = Date.now();
+  while ((!consultado || !planLlegado) && Date.now() - inicio < tope) await new Promise(r => setTimeout(r, 150));
+};
 
 // Avisa al resto de la app (panel, editor) que cambió el plan, sin importarlos acá.
 const aplicarRestricciones = () => {
@@ -54,6 +66,8 @@ const aplicarRestricciones = () => {
 // que es de Pro y ofrece pasarse (con los dos precios) o seguir con un diseño gratis. El
 // diseño no se aplica. true = se puede usar (Pro, o planes apagados para esta cuenta).
 export const disenoProPermitido = async nombre => {
+  if (!restriccionesActivas()) return true;
+  await esperarPlan();
   if (!restriccionesActivas()) return true;
   const eleccion = await elegir({
     titulo: `«${nombre}» es un diseño PRO`,
@@ -108,6 +122,8 @@ export const consultarPlanesActivos = async (reintento = true) => {
   try {
     const r = await llamarApi('/api/plan', {});
     planesActivos = !!r?.activos;
+    proServidor = r?.pro === true;
+    consultado = true;
     document.body.classList.toggle('ia-disponible', r?.ia === true);
     configurarPush(r?.push);
   } catch (e) {
@@ -127,7 +143,9 @@ export const escucharPlan = () => {
   dejarDeEscuchar = AteneaDB.plan.escuchar(plan => {
     const eraPro = planLeido ? esPro(ctx.plan) : !volviendoDelPago;
     planLeido = true;
+    planLlegado = true;
     ctx.plan = plan;
+    if (esPro(plan)) proServidor = true;
     pintarPlan();
     if (!eraPro && esPro(plan) && ctx.plan.estado === 'activa') {
       volviendoDelPago = false;
@@ -144,6 +162,9 @@ export const escucharPlan = () => {
 export const reiniciarPlan = () => {
   if (dejarDeEscuchar) { dejarDeEscuchar(); dejarDeEscuchar = null; }
   planesActivos = false;
+  proServidor = false;
+  consultado = false;
+  planLlegado = false;
   verificado = false;
   planLeido = false;
   ctx.plan = null;
@@ -182,6 +203,15 @@ const irAPagar = async () => {
     const { url } = await llamarApi('/api/suscripcion', { periodo: periodoElegido, emailPago });
     location.href = url;
   } catch (e) {
+    if (e.codigo === 'ya-es-pro') {
+      // El servidor ya te tiene como Pro: la app se pone al día y no hay nada que pagar.
+      $('#dialogo-pago')?.close();
+      proServidor = true;
+      pintarPlan();
+      avisarExito('Ya tenés Dealit Pro activo: tenés todos los diseños y funciones disponibles.');
+      boton.disabled = false;
+      return;
+    }
     const mensajes = {
       'ya-es-pro': 'Ya tenés Dealit Pro activo.',
       'email-invalido': 'Revisá el email de tu cuenta de Mercado Pago.',
@@ -230,6 +260,7 @@ const MOTIVOS = {
 };
 
 export const ofrecerPro = async (motivo = 'general', nombres = []) => {
+  if (planesActivos && usuarioEsPro()) return;
   const { titulo, texto } = (MOTIVOS[motivo] || MOTIVOS.general)(nombres);
   // Con un diseño PRO, la salida gratis es cambiar de diseño (no abandonar el envío).
   const salida = motivo === 'diseno' || motivo === 'link-activo'
