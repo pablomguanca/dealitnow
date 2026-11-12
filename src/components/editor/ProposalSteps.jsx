@@ -198,12 +198,13 @@ export function ProposalSteps() {
             </div>
             <div className="cobro-editor__mp" id="cobro-mercadopago" hidden>
             <div className="cobro-mp" data-mp-bloque>
+              {/* Logo oficial de Mercado Pago (public/marcas, del sitio oficial; no se edita), sobre
+                  blanco como piden sus pautas, también en modo oscuro. */}
               <div className="cobro-mp__cabecera">
-                <span className="cobro-mp__logo" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12.5" rx="2.2" /><path d="M3 10h18M6.5 15h4" /></svg>
+                <span className="cobro-mp__marca">
+                  <img src="/marcas/mercadopago-horizontal.svg" alt="Mercado Pago" width="104" height="42" />
                 </span>
                 <div>
-                  <p className="cobro-mp__titulo">Mercado Pago</p>
                   <p className="cobro-mp__estado" data-mp-estado>Tu cliente paga con tarjeta o dinero en cuenta y la plata va directo a tu Mercado Pago. Mercado Pago cobra su comisión; Dealit, ninguna.</p>
                 </div>
               </div>
