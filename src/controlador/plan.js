@@ -3,7 +3,7 @@
 // decide el servidor (api/mercadopago); acá solo se lee planes/{uid}.
 
 import { $, $$, dinero } from '../lib/formato.js';
-import { LIMITE_ENVIOS_GRATIS, PRECIOS_PRO, enviosDelMes, esPro, proParaVerificar } from '../planes.js';
+import { LIMITE_ENVIOS_GRATIS, PRECIOS_PRO, enviosDelMes, esPro, finDePro, proParaVerificar } from '../planes.js';
 import { LIMITE_IA_GRATIS } from '../ia.js';
 import { ctx, AteneaDB } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
@@ -78,6 +78,55 @@ export const disenoProPermitido = async nombre => {
   return false;
 };
 
+const fechaLarga = fecha => fecha.toLocaleDateString('es-AR', { day: 'numeric', month: 'long', timeZone: 'America/Argentina/Buenos_Aires' });
+const cuentaRegresiva = dias => (dias <= 0 ? 'Termina hoy' : dias === 1 ? 'Termina mañana' : `Quedan ${dias} días`);
+const noPagaDosVeces = fin => `No pagás dos veces: si seguís ahora, el primer cobro es recién el ${fechaLarga(fin.vence)}, cuando termina lo que ya pagaste.`;
+
+// Pro sin renovación: cuánto le queda (o si ya terminó). Solo con los planes activos.
+const finPro = () => (planesActivos ? finDePro(ctx.plan) : null);
+
+// Aviso en el panel: en los últimos 7 días de Pro y hasta 14 días después de que terminó.
+// Se puede cerrar: mientras termina, vuelve al día siguiente; ya terminado, no vuelve.
+const CLAVE_AVISO_PRO = 'dealit-aviso-pro';
+const DIAS_AVISO = 7;
+const claveCierre = fin => (fin.terminado ? `${fin.vence.getTime()}|fin` : `${fin.vence.getTime()}|${new Date().toDateString()}`);
+const avisoCerrado = fin => {
+  try { return localStorage.getItem(CLAVE_AVISO_PRO) === claveCierre(fin); } catch { return false; }
+};
+
+const pintarAvisoPro = fin => {
+  const aviso = $('#aviso-pro');
+  if (!aviso) return;
+  const porTerminar = fin && !fin.terminado && fin.dias <= DIAS_AVISO;
+  const terminado = fin && fin.terminado && fin.dias >= -14;
+  aviso.hidden = !(porTerminar || terminado) || avisoCerrado(fin);
+  if (aviso.hidden) return;
+  aviso.classList.toggle('aviso-pro--urgente', !!porTerminar && fin.dias <= 1);
+  if (porTerminar) {
+    $('#aviso-pro-titulo').textContent = fin.dias <= 0 ? 'Tu Dealit Pro termina hoy' : fin.dias === 1 ? 'Tu Dealit Pro termina mañana' : `Tu Dealit Pro termina en ${fin.dias} días`;
+    $('#aviso-pro-bajada').textContent = `Después: ${LIMITE_ENVIOS_GRATIS} envíos por mes, la marca de Dealit en tus propuestas y sin avisos cuando tu cliente las abre.`;
+    $('#aviso-pro-accion').textContent = 'Seguir con Pro';
+  } else {
+    $('#aviso-pro-titulo').textContent = 'Tu Dealit Pro terminó';
+    $('#aviso-pro-bajada').textContent = 'Los diseños PRO, los envíos sin tope y los avisos en vivo te esperan. Volvés en un minuto.';
+    $('#aviso-pro-accion').textContent = 'Volver a Pro';
+  }
+};
+
+// «Seguir con Pro» desde el aviso: los dos precios y, si todavía tiene días, que no paga dos veces.
+const reactivarPro = async () => {
+  const fin = finPro();
+  const porTerminar = fin && !fin.terminado;
+  const eleccion = await elegir({
+    titulo: porTerminar ? 'Seguí con Dealit Pro' : 'Volvé a Dealit Pro',
+    texto: porTerminar
+      ? `Mantenés los envíos sin tope, todos los diseños PRO, tus propuestas sin la marca de Dealit y los avisos cuando tu cliente las abre. ${noPagaDosVeces(fin)}`
+      : 'Recuperás los envíos sin tope, todos los diseños PRO, tus propuestas sin la marca de Dealit y los avisos cuando tu cliente las abre.',
+    opciones: [...opcionesPro(), { valor: null, texto: 'Ahora no', estilo: 'texto' }]
+  });
+  if (eleccion) suscribir(eleccion);
+};
+
 const pintarPlan = () => {
   const tarjeta = $('.tarjeta--plan');
   if (tarjeta) tarjeta.hidden = !planesActivos;
@@ -86,25 +135,44 @@ const pintarPlan = () => {
   const usados = enviosDelMes(plan);
   const estado = $('#plan-estado');
   if (!estado) return;
+  const fin = finPro();
+  const porTerminar = pro && fin && !fin.terminado;
   if (pro) {
     const vence = plan.vence ? new Date(plan.vence).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
     estado.textContent = plan.estado === 'activa'
       ? `Plan Pro ${plan.periodo === 'anual' ? 'anual' : 'mensual'} activo.${vence ? ` Próximo cobro: ${vence}.` : ''}`
-      : `Plan Pro hasta el ${vence}. Cancelaste la renovación.`;
+      : `Tu plan Pro finaliza el ${fin ? fechaLarga(fin.vence) : vence}.`;
   } else {
     const quedan = Math.max(0, LIMITE_ENVIOS_GRATIS - usados);
-    estado.textContent = `Plan Gratis: ${usados} de ${LIMITE_ENVIOS_GRATIS} propuestas enviadas este mes. ${quedan === 0 ? 'No te quedan envíos: se renuevan el mes que viene.' : quedan === 1 ? 'Te queda 1 envío.' : `Te quedan ${quedan} envíos.`}`;
+    const termino = fin?.terminado && fin.dias >= -30 ? `Tu Pro terminó el ${fechaLarga(fin.vence)}. ` : '';
+    estado.textContent = `${termino}Plan Gratis: ${usados} de ${LIMITE_ENVIOS_GRATIS} propuestas enviadas este mes. ${quedan === 0 ? 'No te quedan envíos: se renuevan el mes que viene.' : quedan === 1 ? 'Te queda 1 envío.' : `Te quedan ${quedan} envíos.`}`;
   }
   // Con Pro, la tarjeta se viste de Pro: logo, «Dealit Pro» y lo que incluye.
   $('.tarjeta--plan')?.classList.toggle('tarjeta--pro', pro);
   const bloquePro = $('#plan-pro');
   if (bloquePro) {
     bloquePro.hidden = !pro;
-    $('#plan-pro-estado').textContent = estado.textContent.replace(/^Plan Pro /, 'Plan ');
+    $('#plan-pro-estado').textContent = porTerminar ? estado.textContent : estado.textContent.replace(/^Plan Pro /, 'Plan ');
   }
-  $('#plan-ofertas').hidden = pro && plan.estado === 'activa';
-  $('#plan-administrar').hidden = !pro;
-  $('#plan-sincronizar').hidden = pro && plan.estado === 'activa';
+  // Canceló la renovación: cuenta regresiva, qué pierde y cómo seguir sin pagar dos veces.
+  $('.tarjeta--plan')?.classList.toggle('tarjeta--por-terminar', !!porTerminar);
+  const renovar = $('#plan-renovar');
+  if (renovar) {
+    renovar.hidden = !porTerminar;
+    if (porTerminar) {
+      const cuenta = $('#plan-renovar-cuenta');
+      cuenta.textContent = cuentaRegresiva(fin.dias);
+      cuenta.classList.toggle('plan-renovar__cuenta--urgente', fin.dias <= DIAS_AVISO);
+      $('#plan-renovar-fecha').textContent = fechaLarga(fin.vence);
+      $('#plan-renovar-nota').textContent = noPagaDosVeces(fin);
+    }
+  }
+  // Un punto en «Cuenta» mientras el Pro está por terminar: se ve sin interrumpir.
+  document.body.classList.toggle('pro-por-terminar', !!porTerminar);
+  pintarAvisoPro(fin);
+  $('#plan-ofertas').hidden = pro;
+  $('#plan-administrar').hidden = !pro || !!porTerminar;
+  $('#plan-sincronizar').hidden = pro;
   $$('[data-precio-pro]').forEach(el => { el.textContent = precioTexto(el.dataset.precioPro); });
   const barra = $('#plan-uso');
   if (barra) {
@@ -180,6 +248,12 @@ const suscribir = periodo => {
   const dialogo = $('#dialogo-pago');
   if (!dialogo) return;
   $('#pago-precio').textContent = `Pro ${periodoElegido} · ${precioTexto(periodoElegido)}`;
+  const fin = finPro();
+  const nota = $('#pago-nota');
+  if (nota) {
+    nota.hidden = !(fin && !fin.terminado && esPro(ctx.plan));
+    if (!nota.hidden) nota.textContent = noPagaDosVeces(fin);
+  }
   let guardado = '';
   try { guardado = localStorage.getItem(CLAVE_EMAIL_PAGO) || ''; } catch { }
   $('#pago-email').value = guardado || AteneaDB?.auth.getUser()?.email || '';
@@ -328,6 +402,12 @@ export const instalarPlan = () => {
     'suscribir-pro': boton => suscribir(boton.dataset.periodo),
     'pago-cancelar': () => $('#dialogo-pago').close(),
     'ofrecer-pro': boton => ofrecerPro(boton?.dataset?.motivo || 'general'),
-    'sincronizar-plan': boton => sincronizar({ manual: true, boton })
+    'sincronizar-plan': boton => sincronizar({ manual: true, boton }),
+    'reactivar-pro': () => reactivarPro(),
+    'cerrar-aviso-pro': () => {
+      const fin = finPro();
+      if (fin) try { localStorage.setItem(CLAVE_AVISO_PRO, claveCierre(fin)); } catch { }
+      $('#aviso-pro').hidden = true;
+    }
   });
 };

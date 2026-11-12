@@ -1,3 +1,4 @@
+import { LIMITE_ENVIOS_GRATIS } from '../../planes.js';
 // Panel «Mi cuenta»: perfil de usuario, datos predefinidos del negocio, seguridad y eliminación de cuenta.
 
 export function AccountPanel() {
@@ -27,6 +28,26 @@ export function AccountPanel() {
           <li>Sin la marca de Dealit</li>
           <li>Avisos en vivo</li>
         </ul>
+        {/* Canceló la renovación: cuánto le queda, qué pierde y cómo seguir (plan.js). */}
+        <div className="plan-renovar" id="plan-renovar" hidden>
+          <p className="plan-renovar__cuenta" id="plan-renovar-cuenta"></p>
+          <p className="plan-renovar__titulo">Desde el <span id="plan-renovar-fecha"></span>, tu cuenta pasa a Gratis:</p>
+          <ul className="plan-renovar__perdidas">
+            <li>Solo {LIMITE_ENVIOS_GRATIS} propuestas enviadas por mes</li>
+            <li>Tus propuestas vuelven a llevar la marca de Dealit</li>
+            <li>Ya no te avisamos cuando tu cliente abre tu propuesta</li>
+            <li>Los diseños y plantillas PRO no se pueden enviar</li>
+          </ul>
+          <div className="plan-botones">
+            <button type="button" className="boton boton--primario" data-accion="suscribir-pro" data-periodo="mensual">
+              Seguir con Pro · <span data-precio-pro="mensual"></span>
+            </button>
+            <button type="button" className="boton boton--secundario" data-accion="suscribir-pro" data-periodo="anual">
+              Pro anual · <span data-precio-pro="anual"></span>
+            </button>
+          </div>
+          <p className="plan-renovar__nota" id="plan-renovar-nota"></p>
+        </div>
       </div>
       <div className="plan-uso" id="plan-uso" aria-hidden="true"><span></span></div>
       <div className="plan-ofertas" id="plan-ofertas">

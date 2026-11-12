@@ -1,7 +1,7 @@
 // POST /api/suscripcion { periodo: 'mensual' | 'anual', emailPago? } — crea la suscripción
 // a Pro en Mercado Pago y devuelve el link donde la persona paga. El plan NO se activa
 // acá: lo activa /api/mercadopago cuando Mercado Pago confirma el pago.
-import { PRECIOS_PRO, esPro } from '../src/planes.js';
+import { PRECIOS_PRO, esPro, finDePro } from '../src/planes.js';
 import { firestore, sesionDeLaSolicitud } from './_lib/firebase-admin.js';
 import { planesActivosPara } from './_lib/planes-activos.js';
 import { fallar, leerPost, responder } from './_lib/http.js';
@@ -31,6 +31,11 @@ export const crearHandler = ({ db, sesionDe, planesActivos, mp, urlApp, ahora = 
     const email = String(cuerpo.emailPago || (snapUsuario.exists && snapUsuario.data().email) || '').trim().toLowerCase();
     if (!EMAIL.test(email)) return responder(res, 400, { error: 'email-invalido' });
 
+    // Canceló y todavía le quedan días de Pro: la suscripción nueva arranca cuando termina lo
+    // que ya pagó, así no paga dos veces el mismo período.
+    const fin = esPro(plan, ahora()) ? finDePro(plan, ahora()) : null;
+    const inicio = fin && fin.vence.getTime() - ahora().getTime() > 3600000 ? fin.vence.toISOString() : null;
+
     const suscripcion = await mp.crearSuscripcion({
       reason: `Dealit Pro (${precio.nombre})`,
       external_reference: uid,
@@ -39,7 +44,8 @@ export const crearHandler = ({ db, sesionDe, planesActivos, mp, urlApp, ahora = 
         frequency: precio.meses,
         frequency_type: 'months',
         transaction_amount: precio.monto,
-        currency_id: precio.moneda
+        currency_id: precio.moneda,
+        ...(inicio ? { start_date: inicio } : {})
       },
       back_url: `${urlApp(req)}/cuenta?suscripcion=volver`,
       status: 'pending'

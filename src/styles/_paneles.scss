@@ -1450,3 +1450,254 @@ body.invitado .editor__invitado {
     }
   }
 }
+
+/* ---------- Pro por terminar (canceló la renovación) ---------- */
+// En la tarjeta Pro: la cuenta regresiva, lo que pierde y los botones para seguir. Los
+// beneficios en pastillas se esconden: los reemplaza la lista de lo que deja de tener.
+
+.tarjeta--por-terminar .plan-pro__beneficios {
+  display: none;
+}
+
+.plan-renovar {
+  margin-top: 1.2rem;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &__cuenta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0 0 1rem;
+    padding: 0.3rem 0.8rem;
+    border: 1px solid rgba(138, 219, 171, 0.35);
+    border-radius: 999px;
+    background: rgba(138, 219, 171, 0.1);
+    color: #8ADBAB;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+
+    &::before {
+      content: '';
+      width: 0.5rem;
+      height: 0.5rem;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    &--urgente {
+      border-color: rgba(251, 191, 36, 0.45);
+      background: rgba(251, 191, 36, 0.12);
+      color: #FCD34D;
+
+      &::before {
+        animation: proLatido 1.8s ease-in-out infinite;
+      }
+    }
+  }
+
+  &__titulo {
+    margin: 0 0 0.55rem;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #E7EEEC;
+  }
+
+  &__perdidas {
+    display: grid;
+    gap: 0.45rem;
+    margin: 0 0 1.3rem;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.55rem;
+      font-size: 0.86rem;
+      line-height: 1.4;
+      color: #A6B3B0;
+
+      &::before {
+        content: '';
+        flex: none;
+        width: 0.8rem;
+        height: 0.8rem;
+        margin-top: 0.25rem;
+        background: #F59E9E;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 4l8 8M12 4l-8 8' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 4l8 8M12 4l-8 8' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E") center / contain no-repeat;
+      }
+    }
+  }
+
+  // Sobre la tarjeta oscura: el botón principal con el verde de Pro.
+  .boton--primario {
+    border-color: transparent;
+    background: linear-gradient(135deg, #8ADBAB, #00C896);
+    color: #0E1315;
+
+    &:hover {
+      filter: brightness(1.06);
+    }
+  }
+
+  .boton--secundario {
+    border-color: rgba(231, 238, 236, 0.35);
+    background: transparent;
+    color: #E7EEEC;
+
+    &:hover {
+      background: rgba(231, 238, 236, 0.08);
+    }
+  }
+
+  &__nota {
+    margin: 0.85rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: #A6B3B0;
+  }
+}
+
+@keyframes proLatido {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+// Aviso en el panel (últimos días de Pro o recién terminado).
+.aviso-pro {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin: 0 0 1.2rem;
+  padding: 0.85rem 0.9rem 0.85rem 1rem;
+  border: 1px solid rgba(0, 200, 150, 0.35);
+  border-radius: var(--radio-m);
+  background: linear-gradient(120deg, rgba(0, 200, 150, 0.12), transparent 70%), var(--superficie);
+  animation: cobroAparecer 0.5s var(--ease-out-expo) both;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &--urgente {
+    border-color: rgba(245, 158, 11, 0.5);
+    background: linear-gradient(120deg, rgba(245, 158, 11, 0.14), transparent 70%), var(--superficie);
+  }
+
+  &__logo {
+    flex: none;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.65rem;
+  }
+
+  &__texto {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  &__titulo {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--marfil);
+  }
+
+  &__bajada {
+    margin: 0.15rem 0 0;
+    font-size: 0.82rem;
+    line-height: 1.4;
+    color: var(--marfil-apagado);
+  }
+
+  &__accion {
+    flex: none;
+  }
+
+  &__cerrar {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--marfil-apagado);
+    cursor: pointer;
+
+    svg {
+      width: 0.85rem;
+      height: 0.85rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: var(--superficie-borde);
+      color: var(--marfil);
+    }
+  }
+
+  @media (max-width: 640px) {
+    flex-wrap: wrap;
+    align-items: flex-start;
+
+    &__accion {
+      order: 3;
+      width: 100%;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aviso-pro,
+  .plan-renovar__cuenta--urgente::before {
+    animation: none;
+  }
+}
+
+// Punto en «Cuenta» (barra de arriba, avatar y pestañas) mientras el Pro está por terminar.
+.pro-por-terminar {
+  .barra__nav-link[data-seccion="cuenta"],
+  #barra-avatar,
+  .tabbar__item[data-seccion="cuenta"] {
+    position: relative;
+
+    &::after {
+      content: '';
+      position: absolute;
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      background: #F59E0B;
+      box-shadow: 0 0 0 2px var(--negro);
+      pointer-events: none;
+    }
+  }
+
+  .barra__nav-link[data-seccion="cuenta"]::after {
+    top: 0.1rem;
+    right: -0.35rem;
+  }
+
+  #barra-avatar::after {
+    top: 0;
+    right: 0;
+  }
+
+  .tabbar__item[data-seccion="cuenta"]::after {
+    top: 0.35rem;
+    left: calc(50% + 0.45rem);
+  }
+}

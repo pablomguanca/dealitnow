@@ -281,7 +281,9 @@ window.fetch = async (url, opciones = {}) => {
   if (ruta === '/api/suscripcion') {
     if (!uid) return respuesta(401, { error: 'sin-sesion' });
     if (!['mensual', 'anual'].includes(cuerpo.periodo)) return respuesta(400, { error: 'periodo-invalido' });
-    const vence = new Date(Date.now() + (cuerpo.periodo === 'anual' ? 365 : 30) * 86400000).toISOString();
+    const actual = leerPlan();
+    const desde = esPro(actual) && actual.vence ? Math.max(Date.parse(actual.vence), Date.now()) : Date.now();
+    const vence = new Date(desde + (cuerpo.periodo === 'anual' ? 365 : 30) * 86400000).toISOString();
     guardarPlan({ ...leerPlan(), tipo: 'pro', estado: 'activa', periodo: cuerpo.periodo, vence, mpSuscripcionId: 'demo' });
     return respuesta(200, { url: '/cuenta?suscripcion=volver' });
   }

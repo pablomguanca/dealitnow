@@ -23,6 +23,19 @@ export function ProposalsPanel() {
           </div>
         </div>
 
+        {/* Pro por terminar (últimos 7 días) o recién terminado: aviso con salida (plan.js). */}
+        <aside className="aviso-pro" id="aviso-pro" aria-labelledby="aviso-pro-titulo" hidden>
+          <img className="aviso-pro__logo" src="/iconos/icono-192.png" alt="" width="40" height="40" />
+          <div className="aviso-pro__texto">
+            <p className="aviso-pro__titulo" id="aviso-pro-titulo"></p>
+            <p className="aviso-pro__bajada" id="aviso-pro-bajada"></p>
+          </div>
+          <button type="button" className="boton boton--primario boton--chico aviso-pro__accion" id="aviso-pro-accion" data-accion="reactivar-pro">Seguir con Pro</button>
+          <button type="button" className="aviso-pro__cerrar" data-accion="cerrar-aviso-pro" aria-label="Cerrar el aviso">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+          </button>
+        </aside>
+
         <div className="panel-pestanas" role="tablist" aria-label="Secciones del panel">
           <a className="panel-pestana" role="tab" id="pestana-propuestas" href="/" data-accion="panel-pestana" data-pestana="propuestas" aria-controls="panel-propuestas" aria-selected="true">
             Mis propuestas <span className="panel-pestana__cuenta" id="pestana-propuestas-cuenta"></span>

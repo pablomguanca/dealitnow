@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createHmac } from 'node:crypto';
-import { LIMITE_ENVIOS_GRATIS, enviosDelMes, esPro, mesDe, planDesdeSuscripcion, proParaVerificar, puedeEnviar, usosPro } from '../src/planes.js';
+import { LIMITE_ENVIOS_GRATIS, enviosDelMes, esPro, finDePro, mesDe, planDesdeSuscripcion, proParaVerificar, puedeEnviar, usosPro } from '../src/planes.js';
 import { crearHandler as crearActivar } from '../api/activar.js';
 import { crearHandler as crearSuscripcion } from '../api/suscripcion.js';
 import { crearHandler as crearWebhook } from '../api/mercadopago.js';
@@ -80,6 +80,23 @@ describe('reglas del plan', () => {
     expect(pendiente.tipo).toBe('gratis');
     const cancelada = planDesdeSuscripcion({ id: 'mp1', status: 'cancelled' }, activa);
     expect(cancelada).toMatchObject({ tipo: 'pro', estado: 'cancelada', vence: activa.vence });
+  });
+});
+
+describe('fin de Pro (canceló la renovación)', () => {
+  const ahora = new Date('2026-11-12T15:00:00Z');
+  it('cuenta los días calendario que quedan, en hora de Argentina', () => {
+    expect(finDePro({ tipo: 'pro', estado: 'cancelada', vence: '2026-12-09T15:00:00Z' }, ahora)).toMatchObject({ dias: 27, terminado: false });
+    expect(finDePro({ tipo: 'pro', estado: 'cancelada', vence: '2026-11-13T02:00:00Z' }, ahora)).toMatchObject({ dias: 0, terminado: false });
+    expect(finDePro({ tipo: 'pro', estado: 'pausada', vence: '2026-11-13T15:00:00Z' }, ahora)).toMatchObject({ dias: 1 });
+  });
+  it('avisa cuando ya terminó', () => {
+    expect(finDePro({ tipo: 'pro', estado: 'cancelada', vence: '2026-11-10T15:00:00Z' }, ahora)).toMatchObject({ dias: -2, terminado: true });
+  });
+  it('no aplica a un Pro que se renueva ni a Gratis', () => {
+    expect(finDePro({ tipo: 'pro', estado: 'activa', vence: '2026-12-09T15:00:00Z' }, ahora)).toBeNull();
+    expect(finDePro({ tipo: 'gratis' }, ahora)).toBeNull();
+    expect(finDePro(null, ahora)).toBeNull();
   });
 });
 
@@ -199,6 +216,25 @@ describe('POST /api/suscripcion', () => {
     expect(r.cuerpo.url).toBe('https://mp/pagar');
     expect(enviado).toMatchObject({ external_reference: 'duenio', payer_email: 'hola@estudio.com', status: 'pending' });
     expect(enviado.auto_recurring).toMatchObject({ frequency: 12, transaction_amount: 139000, currency_id: 'ARS' });
+  });
+
+  it('si canceló y le quedan días de Pro, el primer cobro es cuando termina lo ya pagado', async () => {
+    const vence = '2026-12-09T12:00:00.000Z';
+    const { db } = crearDb({ users: { duenio: { email: 'a@b.com' } }, planes: { duenio: { tipo: 'pro', estado: 'cancelada', vence } } });
+    let enviado;
+    const mp = { crearSuscripcion: async d => { enviado = d; return { init_point: 'https://mp/pagar' }; } };
+    const r = res();
+    await crearSuscripcion({ db, sesionDe: async () => ({ uid: 'duenio', email: 'a@b.com' }), planesActivos: () => true, mp, urlApp: () => 'https://x', ahora: () => new Date('2026-11-12T12:00:00Z') })(post({ periodo: 'mensual' }), r);
+    expect(r.estado).toBe(200);
+    expect(enviado.auto_recurring.start_date).toBe(vence);
+  });
+
+  it('sin días de Pro, la suscripción arranca en el momento', async () => {
+    const { db } = crearDb({ users: { duenio: { email: 'a@b.com' } }, planes: { duenio: { tipo: 'pro', estado: 'cancelada', vence: '2026-10-01T00:00:00Z' } } });
+    let enviado;
+    const mp = { crearSuscripcion: async d => { enviado = d; return { init_point: 'x' }; } };
+    await crearSuscripcion({ db, sesionDe: async () => ({ uid: 'duenio', email: 'a@b.com' }), planesActivos: () => true, mp, urlApp: () => 'https://x', ahora: () => new Date('2026-11-12T12:00:00Z') })(post({ periodo: 'mensual' }), res());
+    expect(enviado.auto_recurring.start_date).toBeUndefined();
   });
 
   it('rechaza períodos desconocidos y a quien ya es Pro', async () => {

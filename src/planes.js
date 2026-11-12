@@ -33,6 +33,19 @@ export const esPro = (plan, ahora = new Date()) => {
   return !!vence && vence > ahora;
 };
 
+// Pro que no se renueva (canceló o se pausó): cuándo termina y cuántos días quedan, en días
+// calendario de Argentina (0 = hoy, 1 = mañana; negativo = terminó hace esos días).
+// null si el Pro se renueva solo o nunca tuvo Pro.
+const formatoDia = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires', year: 'numeric', month: '2-digit', day: '2-digit' });
+const diaDe = fecha => Date.parse(formatoDia.format(fecha));
+
+export const finDePro = (plan, ahora = new Date()) => {
+  if (plan?.tipo !== 'pro' || plan.estado === 'activa') return null;
+  const vence = fechaValida(plan.vence);
+  if (!vence) return null;
+  return { vence, dias: Math.round((diaDe(vence) - diaDe(ahora)) / 86400000), terminado: vence <= ahora };
+};
+
 // Pro según el registro, pero con la fecha de cobro ya pasada: conviene preguntarle a
 // Mercado Pago si el último cobro entró (por si se perdió el aviso).
 export const proParaVerificar = (plan, ahora = new Date()) => {

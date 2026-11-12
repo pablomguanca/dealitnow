@@ -409,6 +409,7 @@ export function AppModals() {
         <form method="dialog" id="pago-form" noValidate>
           <h2 className="dialogo__titulo" id="pago-titulo">Dealit Pro</h2>
           <p className="dialogo-pago__precio" id="pago-precio"></p>
+          <p className="dialogo__texto dialogo-pago__nota" id="pago-nota" hidden></p>
           <label className="campo">
             <span className="campo__etiqueta">¿Con qué email entrás a Mercado Pago?</span>
             <input className="control" id="pago-email" type="email" autoComplete="email" inputMode="email" maxLength="200" required />
