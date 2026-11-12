@@ -200,7 +200,7 @@ export function ProposalSteps() {
             <div className="cobro-mp" data-mp-bloque>
               <div className="cobro-mp__cabecera">
                 <span className="cobro-mp__logo" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M12 5.5c-4.7 0-8.5 2.9-8.5 6.5s3.8 6.5 8.5 6.5 8.5-2.9 8.5-6.5-3.8-6.5-8.5-6.5z" /><path d="M7.5 12.2l2.4-1.8 2.1 1.4 2.1-1.4 2.4 1.8" /></svg>
+                  <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="12.5" rx="2.2" /><path d="M3 10h18M6.5 15h4" /></svg>
                 </span>
                 <div>
                   <p className="cobro-mp__titulo">Mercado Pago</p>
@@ -210,6 +210,10 @@ export function ProposalSteps() {
               <div className="cobro-mp__acciones">
                 <button type="button" className="boton boton--primario cobro-mp__vincular" data-accion="vincular-mp" data-mp-vincular>Vincular Mercado Pago</button>
                 <button type="button" className="boton boton--texto boton--chico" data-accion="desvincular-mp" data-mp-desvincular hidden>Desvincular</button>
+              </div>
+              <div className="cobro-mp__vista" data-mp-vista hidden>
+                <span className="cobro-mp__vista-etiqueta">Así lo ve tu cliente</span>
+                <div className="mp-marca" data-mp-marca><span className="mp-marca__respaldo">Pagá con <strong>Mercado Pago</strong>: tarjeta o dinero en cuenta</span></div>
               </div>
               <p className="campo__ayuda cobro-mp__aviso" data-mp-moneda hidden>Mercado Pago cobra en pesos: en las propuestas en dólares no se muestra el botón de pago.</p>
             </div>

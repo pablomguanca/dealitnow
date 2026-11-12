@@ -350,3 +350,19 @@ describe('cobro con Mercado Pago', () => {
     expect(html).toContain('O, si preferís, transferí');
   });
 });
+
+describe('marca de Mercado Pago en la propuesta', () => {
+  it('antes de aceptar muestra «Medios de pago» con el lugar del Brick; en el PDF, solo texto', () => {
+    const p = normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'ambos', conMp: true, conDatos: true } });
+    p.inversion.moneda = 'ARS';
+    const web = generarPropuestaHTML(p, { web: true });
+    expect(web).toContain('Medios de pago');
+    expect(web).toContain('data-mp-marca');
+    expect(web).toContain('También podés pagar por transferencia bancaria');
+    const pdf = generarPropuestaHTML(p, { web: false });
+    expect(pdf).not.toContain('data-mp-marca');
+    expect(pdf).toContain('Medios de pago: Mercado Pago');
+    const sinMp = normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'transferencia', conDatos: true } });
+    expect(generarPropuestaHTML(sinMp, { web: true })).not.toContain('data-mp-marca');
+  });
+});

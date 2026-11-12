@@ -384,15 +384,35 @@ export const tarjetaCobroHTML = (cobro, { pago = null, conCopiar = true } = {}) 
     </div>`;
 };
 
+// Lugar para la marca oficial de Mercado Pago (Brand Brick, lib/mp-marca.js). Adentro va
+// un texto que queda si el Brick no carga.
+export const marcaMpHTML = () => `
+    <div class="mp-marca" data-mp-marca><span class="mp-marca__respaldo">Pagá con <strong>Mercado Pago</strong>: tarjeta o dinero en cuenta</span></div>`;
+
+// «Medios de pago» antes de aceptar: el cliente sabe desde el principio cómo va a pagar.
+// En el PDF, solo el texto.
+export const mediosPagoHTML = (s, web, esAceptada) => {
+  if (esAceptada || !pagaConMp(s)) return '';
+  const transferencia = cobraPorTransferencia(s) ? ' o por transferencia bancaria' : '';
+  if (!web) return `<p class="doc-nota medios-pago__pdf">Medios de pago: Mercado Pago (tarjeta o dinero en cuenta)${transferencia}.</p>`;
+  return `
+    <div class="medios-pago">
+      <h3 class="doc-subtitulo">Medios de pago</h3>
+      ${marcaMpHTML()}
+      ${transferencia ? '<p class="doc-nota">También podés pagar por transferencia bancaria.</p>' : ''}
+    </div>`;
+};
+
 // Botón para pagar con Mercado Pago (cuenta del freelancer vinculada). El link de pago lo
 // crea el servidor (api/cobro-mp) al tocarlo, con el monto que calcula él.
 export const pagoMpHTML = (pago, { conTransferencia = false } = {}) => `
     <div class="pago-mp">
       <button type="button" class="pago-mp__boton" data-accion="pagar-mp">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5c-4.7 0-8.5 2.9-8.5 6.5s3.8 6.5 8.5 6.5 8.5-2.9 8.5-6.5-3.8-6.5-8.5-6.5z"/><path d="M7.5 12.2l2.4-1.8 2.1 1.4 2.1-1.4 2.4 1.8"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12.5" rx="2.2"/><path d="M3 10h18M6.5 15h4"/></svg>
         <span>Pagar con Mercado Pago</span>
       </button>
       <p class="pago-mp__nota">${pago ? `${esc(pago.concepto)}: <strong>${esc(pago.monto)}</strong>. ` : ''}Con tarjeta o dinero en cuenta, en Mercado Pago.${conTransferencia ? ' O, si preferís, transferí:' : ''}</p>
+      ${marcaMpHTML()}
     </div>`;
 
 // El primer pago a transferir: el primero de la forma de pago, o el total si no hay pagos.
@@ -837,6 +857,7 @@ const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
       ${tablaOpcionales}
       ${totales.length ? `<div class="presu__totales">${totales.join('')}</div>` : ''}
       ${pagosHTML}
+      ${mediosPagoHTML(s, web, esAceptada)}
       ${condicionesHTML}
       ${cierre}
       ${firmas}
@@ -1016,6 +1037,7 @@ export const generarPropuestaHTML = (
         </table>`;
       if (c.mensual.base > 0) html += '<p class="doc-nota">El servicio mensual se factura por mes adelantado, desde que empieza ese servicio.</p>';
     }
+    html += mediosPagoHTML(s, web, esAceptada);
     bloques.push({ titulo: 'Inversión', html });
   }
 

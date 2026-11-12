@@ -15,6 +15,7 @@ import {
 import { ctx, aceptada } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { avisar } from './avisos.js';
+import { montarMarcasMp } from '../lib/mp-marca.js';
 
 // En el editor, antes de dibujar la propuesta se actualiza el portfolio adjunto con la
 // lista del dueño. El cliente no tiene esa lista: usa el resumen guardado en la propuesta.
@@ -93,6 +94,8 @@ export const renderDocumento = () => {
     tipoPortada
   });
   terminarDocumento(doc, web);
+  // En el editor el documento se redibuja con cada tecla: el Brick se monta al dejar de escribir.
+  if (web) montarMarcasMp(doc, { espera: ctx.esCliente ? 0 : 900 });
 };
 
 export const instalarVista = () => {

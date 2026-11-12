@@ -4,6 +4,7 @@
 import { $, esc, dinero } from '../lib/formato.js';
 import { servicioConContenido, tarjetaCobroHTML, primerPagoTexto, pagoMpHTML, pagaConMp } from '../lib/render.js';
 import { cobraPorTransferencia, calcularTotales } from '../modelo.js';
+import { montarMarcasMp } from '../lib/mp-marca.js';
 import { MENSAJES_ACEPTACION, NOMBRE_MIN, limpiarNombre } from '../aceptacion.js';
 import {
   ctx,
@@ -150,6 +151,7 @@ const confirmarAceptacion = async () => {
     const elCobro = $('#aceptar-cobro');
     elCobro.innerHTML = (conMp ? pagoMpHTML(pago, { conTransferencia: !!cobro }) : '') + tarjetaCobroHTML(cobro, { pago: conMp ? null : pago });
     elCobro.hidden = !cobro && !conMp;
+    if (conMp) montarMarcasMp(elCobro);
     $('#aceptar-texto').textContent = cobro || conMp
       ? `Gracias, ${nombre.split(' ')[0]}. ${emisor || 'Quien te mandó la propuesta'} ya recibió tu aceptación.${hay ? ` Cuando ${cobro ? 'transfieras' : 'pagues'}, avisale por mensaje.` : ''}`
       : `Listo, ${nombre.split(' ')[0]}. ${emisor || 'Quien te mandó la propuesta'} ya puede ver tu aceptación.${hay ? ' Si querés, avisale también por mensaje.' : ''}`;

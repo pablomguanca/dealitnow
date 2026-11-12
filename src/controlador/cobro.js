@@ -13,6 +13,7 @@ import { actualizar } from './documento.js';
 import { registrarAcciones } from './acciones.js';
 import { avisar, avisarExito, avisarError, confirmar } from './avisos.js';
 import { llamarApi } from './api.js';
+import { montarMarcasMp } from '../lib/mp-marca.js';
 
 const CLAVE_LOCAL = 'dealit-cobro';
 let datos = { titular: '', cbu: '', alias: '' };
@@ -38,6 +39,8 @@ const pintarMp = () => {
     estado.innerHTML = mp.vinculado
       ? `Vinculado${mp.nombre || mp.email ? ` con <strong>${esc(mp.nombre || mp.email)}</strong>` : ''}. Tus clientes pagan desde la propuesta aceptada y la plata va directo a tu cuenta.`
       : 'Tu cliente paga con tarjeta o dinero en cuenta y la plata va directo a tu Mercado Pago. Mercado Pago cobra su comisión; Dealit, ninguna.';
+    const vista = b.querySelector('[data-mp-vista]');
+    if (vista) vista.hidden = !mp.vinculado;
     const enDolares = ctx.estado?.inversion?.moneda && ctx.estado.inversion.moneda !== 'ARS';
     const aviso = b.querySelector('[data-mp-moneda]');
     if (aviso) aviso.hidden = !(b.closest('#cobro-editor') && enDolares);
@@ -46,6 +49,7 @@ const pintarMp = () => {
   $$('#cobro-metodo option[data-requiere-mp]').forEach(o => { o.hidden = !mp.configurado; o.disabled = !mp.configurado; });
   const tarjeta = $('#tarjeta-mp');
   if (tarjeta) tarjeta.hidden = !mp.configurado;
+  if (mp.vinculado) montarMarcasMp(document);
 };
 
 export const consultarMp = async () => {
