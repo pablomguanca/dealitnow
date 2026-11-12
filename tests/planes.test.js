@@ -83,6 +83,16 @@ describe('reglas del plan', () => {
   });
 });
 
+describe('Pro cargado a mano', () => {
+  it('acepta mayúsculas, «activo» y sin estado', () => {
+    expect(esPro({ tipo: 'Pro' })).toBe(true);
+    expect(esPro({ tipo: 'pro', estado: 'Activo' })).toBe(true);
+    expect(esPro({ tipo: ' PRO ', estado: 'activa', vence: '2999-01-01' })).toBe(true);
+    expect(esPro({ tipo: 'pro', estado: 'cancelada' })).toBe(false);
+    expect(esPro({ tipo: 'gratis' })).toBe(false);
+  });
+});
+
 describe('fin de Pro (canceló la renovación)', () => {
   const ahora = new Date('2026-11-12T15:00:00Z');
   it('cuenta los días calendario que quedan, en hora de Argentina', () => {

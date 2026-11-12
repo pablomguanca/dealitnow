@@ -131,7 +131,8 @@ const pintarPlan = () => {
   const tarjeta = $('.tarjeta--plan');
   if (tarjeta) tarjeta.hidden = !planesActivos;
   const plan = ctx.plan || {};
-  const pro = esPro(plan);
+  // Pro según el plan de Firestore o según el servidor (lo mismo, leído de otro lado).
+  const pro = usuarioEsPro();
   const usados = enviosDelMes(plan);
   const estado = $('#plan-estado');
   if (!estado) return;
@@ -139,8 +140,8 @@ const pintarPlan = () => {
   const porTerminar = pro && fin && !fin.terminado;
   if (pro) {
     const vence = plan.vence ? new Date(plan.vence).toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-    estado.textContent = plan.estado === 'activa'
-      ? `Plan Pro ${plan.periodo === 'anual' ? 'anual' : 'mensual'} activo.${vence ? ` Próximo cobro: ${vence}.` : ''}`
+    estado.textContent = !porTerminar
+      ? `Plan Pro${plan.periodo === 'anual' ? ' anual' : plan.periodo === 'mensual' ? ' mensual' : ''} activo.${vence ? ` Próximo cobro: ${vence}.` : ''}`
       : `Tu plan Pro finaliza el ${fin ? fechaLarga(fin.vence) : vence}.`;
   } else {
     const quedan = Math.max(0, LIMITE_ENVIOS_GRATIS - usados);

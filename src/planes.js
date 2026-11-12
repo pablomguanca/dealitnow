@@ -26,10 +26,18 @@ const fechaValida = v => {
 // Pro mientras la suscripción esté al día: activa y con la próxima fecha de cobro (más el
 // margen) por delante. Si se canceló o se pausó, hasta el fin del período ya pago. Si un
 // cobro no entra, la fecha no avanza y, pasado el margen, vuelve a Gratis sola.
+// Un plan cargado a mano en la consola de Firebase cuenta igual: «Pro», «activo» o sin
+// estado se entienden como Pro activo (sin vence = sin fecha de fin).
+const texto = v => String(v ?? '').trim().toLowerCase();
+const estadoDe = plan => {
+  const e = texto(plan?.estado);
+  return !e || e === 'activo' ? 'activa' : e;
+};
+
 export const esPro = (plan, ahora = new Date()) => {
-  if (plan?.tipo !== 'pro') return false;
+  if (texto(plan?.tipo) !== 'pro') return false;
   const vence = fechaValida(plan.vence);
-  if (plan.estado === 'activa') return !vence || vence.getTime() + GRACIA_MS > ahora.getTime();
+  if (estadoDe(plan) === 'activa') return !vence || vence.getTime() + GRACIA_MS > ahora.getTime();
   return !!vence && vence > ahora;
 };
 
@@ -40,7 +48,7 @@ const formatoDia = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argenti
 const diaDe = fecha => Date.parse(formatoDia.format(fecha));
 
 export const finDePro = (plan, ahora = new Date()) => {
-  if (plan?.tipo !== 'pro' || plan.estado === 'activa') return null;
+  if (texto(plan?.tipo) !== 'pro' || estadoDe(plan) === 'activa') return null;
   const vence = fechaValida(plan.vence);
   if (!vence) return null;
   return { vence, dias: Math.round((diaDe(vence) - diaDe(ahora)) / 86400000), terminado: vence <= ahora };
