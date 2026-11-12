@@ -31,7 +31,7 @@
     height: 1rem;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.6;
+    stroke-width: var(--icono-trazo);
     stroke-linecap: round;
     stroke-linejoin: round;
   }

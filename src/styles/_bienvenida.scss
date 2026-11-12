@@ -98,7 +98,7 @@ body.bienvenida-activa {
       background: rgba(138, 219, 171, 0.1);
       fill: none;
       stroke: #8ADBAB;
-      stroke-width: 1.5;
+      stroke-width: var(--icono-trazo);
       stroke-linecap: round;
       stroke-linejoin: round;
     }

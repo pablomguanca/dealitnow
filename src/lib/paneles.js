@@ -69,9 +69,9 @@ export const tonoDe = nombre => [...texto(nombre)].reduce((h, c) => (h * 31 + c.
 export const estadoDe = p => (ESTADOS_PROPUESTA[p.status] ? p.status : 'draft');
 
 const ICONO_LINK = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.3 0l2-2a3 3 0 0 0-4.3-4.3l-.9.9M9.2 6.8a3 3 0 0 0-4.3 0l-2 2a3 3 0 0 0 4.3 4.3l.9-.9"/></svg>';
-const ICONO_DUPLICAR = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.2"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>';
-const ICONO_BORRAR = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>';
-const ICONO_VER = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg>';
+const ICONO_DUPLICAR = '<svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8.25" height="8.25" rx="1.5"/><path d="M10.5 5.5V3.75a1.5 1.5 0 0 0-1.5-1.5H3.75a1.5 1.5 0 0 0-1.5 1.5V9a1.5 1.5 0 0 0 1.5 1.5H5.5"/></svg>';
+const ICONO_BORRAR = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 4.25h11M6.25 4.25v-1.5h3.5v1.5M4 4.25l.65 8.45a1.25 1.25 0 0 0 1.25 1.05h4.2a1.25 1.25 0 0 0 1.25-1.05L12 4.25M6.75 7v4M9.25 7v4"/></svg>';
+const ICONO_VER = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.6 8.35a.9.9 0 0 1 0-.7C2.75 5.2 5.2 3.5 8 3.5s5.25 1.7 6.4 4.15a.9.9 0 0 1 0 .7C13.25 10.8 10.8 12.5 8 12.5S2.75 10.8 1.6 8.35z"/><circle cx="8" cy="8" r="2.1"/></svg>';
 
 // Colores y tipografía de la portada de cada propuesta, para reconocerla en la grilla.
 export const estiloPortadaTarjeta = tema => {
