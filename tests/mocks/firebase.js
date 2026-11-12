@@ -5,7 +5,7 @@
 //   /p/DEMO0000000000000001 → el cliente, sin sesión (abrilo en otra pestaña)
 // Para empezar de cero: localStorage.removeItem('dealit-demo') y recargar.
 import { validarAceptacion } from '../../src/aceptacion.js';
-import { ejemplo, normalizarCobro, normalizarDatosCobro } from '../../src/modelo.js';
+import { ejemplo, normalizarCobro, normalizarDatosCobro, usaTransferencia } from '../../src/modelo.js';
 import { LIMITE_ENVIOS_GRATIS, enviosDelMes, esPro, mesDe, usosPro } from '../../src/planes.js';
 
 const CLAVE = 'dealit-demo';
@@ -180,7 +180,7 @@ window.fetch = async (url, opciones = {}) => {
     const { datos, error, estado } = validarAceptacion({ doc, cuerpo });
     if (error) return respuesta(estado, { error });
     // Como api/aceptar: con transferencia, los datos de cobro del dueño van con la aceptación.
-    if (normalizarCobro(doc.payload?.cobro).metodo === 'transferencia') {
+    if (usaTransferencia(normalizarCobro(doc.payload?.cobro).metodo)) {
       const cobro = normalizarDatosCobro(JSON.parse(localStorage.getItem(`${CLAVE}:cobro`) || 'null') || {});
       if (cobro) datos.cobro = cobro;
     }
@@ -189,6 +189,27 @@ window.fetch = async (url, opciones = {}) => {
     guardar(docs);
     const { contenido, ...resumen } = datos;
     return respuesta(200, { aceptacion: { ...resumen, fecha } });
+  }
+  // Mercado Pago simulado: vincular «autoriza» al instante y pagar vuelve como aprobado.
+  if (ruta === '/api/cobro-mp') {
+    const claveMp = `${CLAVE}:mp`;
+    if (cuerpo.accion === 'pagar') {
+      if (!doc?.aceptacion) return respuesta(409, { error: 'sin-aceptar' });
+      return respuesta(200, { url: `/p/${cuerpo.id}?pago=aprobado` });
+    }
+    if (!uid) return respuesta(401, { error: 'sin-sesion' });
+    if (cuerpo.accion === 'estado') {
+      const vinculado = localStorage.getItem(claveMp) === '1';
+      return respuesta(200, { configurado: true, vinculado, nombre: vinculado ? 'CUENTADEMO' : '', email: '' });
+    }
+    if (cuerpo.accion === 'vincular') {
+      localStorage.setItem(claveMp, '1');
+      return respuesta(200, { url: '/cuenta?mp=vinculado' });
+    }
+    if (cuerpo.accion === 'desvincular') {
+      localStorage.removeItem(claveMp);
+      return respuesta(204);
+    }
   }
   if (ruta === '/api/plan') return respuesta(uid ? 200 : 401, uid ? { activos: true, ia: true, push: CLAVE_PUSH_DEMO } : { error: 'sin-sesion' });
   // Push: no hay servidor que mande avisos; la prueba se muestra desde el propio service worker.

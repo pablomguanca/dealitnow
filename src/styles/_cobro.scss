@@ -210,3 +210,159 @@
     display: none;
   }
 }
+
+// ---------- Mercado Pago: vincular la cuenta (editor y Mi cuenta) ----------
+.cobro-editor__mp {
+  grid-column: 1 / -1;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.cobro-mp {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--superficie-borde);
+  border-radius: var(--radio-m);
+  background: var(--superficie);
+
+  &--vinculado {
+    border-color: rgba(0, 158, 227, 0.45);
+    background: linear-gradient(135deg, rgba(0, 158, 227, 0.08), transparent 70%), var(--superficie);
+  }
+
+  &__cabecera {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+  }
+
+  &__logo {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.7rem;
+    background: #009EE3;
+
+    svg {
+      width: 1.6rem;
+      height: 1.6rem;
+      fill: none;
+      stroke: #FFF;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  }
+
+  &__titulo {
+    margin: 0;
+    font-weight: 700;
+  }
+
+  &__estado {
+    margin: 0.2rem 0 0;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    color: var(--marfil-apagado);
+
+    strong {
+      color: var(--marfil);
+    }
+  }
+
+  &__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+  }
+
+  .cobro-mp__vincular {
+    border-color: #009EE3;
+    background: #009EE3;
+    color: #FFF;
+
+    &:hover {
+      background: #0086C3;
+    }
+  }
+
+  &__aviso {
+    margin-top: 0.6rem;
+    color: #B45309;
+  }
+}
+
+// ---------- Mercado Pago: el botón de pago del cliente ----------
+.pago-mp {
+  margin: 1.2rem 0 0;
+  text-align: center;
+
+  &__boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    width: min(100%, 26rem);
+    padding: 0.95rem 1.2rem;
+    border: 0;
+    border-radius: 0.8rem;
+    background: #009EE3;
+    color: #FFF;
+    font: inherit;
+    font-size: 1.02rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 0.5rem 1.4rem rgba(0, 158, 227, 0.3);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, background-color 0.2s ease;
+
+    svg {
+      width: 1.5rem;
+      height: 1.5rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    &:hover {
+      background: #0086C3;
+    }
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: wait;
+    }
+  }
+
+  &__nota {
+    margin: 0.6rem auto 0;
+    max-width: 26rem;
+    font-size: 0.82rem;
+    color: var(--d-suave, var(--marfil-apagado));
+
+    strong {
+      color: var(--d-texto, var(--marfil));
+    }
+  }
+}
+
+.dialogo--aceptada .pago-mp:not([hidden]) {
+  animation: cobroAparecer 0.5s 0.12s var(--ease-out-expo) both;
+}
+
+@media print {
+  .pago-mp {
+    display: none;
+  }
+}

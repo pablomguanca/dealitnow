@@ -363,20 +363,30 @@ export const ejemplo = () => ({
 // La propuesta guarda solo el método y si hay datos cargados (conDatos, para el texto del
 // botón). Los datos bancarios (titular, CBU/CVU, alias) viven aparte, en cobros/{uid}, que
 // solo lee el dueño: el cliente los recibe del servidor (api/aceptar) recién al aceptar.
-// 'acordar': el pago se coordina por fuera y no se muestran datos.
+// 'mercadopago': el cliente paga con Mercado Pago (tarjeta o dinero en cuenta) y la plata
+// va directo a la cuenta del freelancer, vinculada con OAuth (api/cobro-mp). 'ambos': el
+// cliente elige. 'acordar': el pago se coordina por fuera y no se muestran datos.
 export const METODOS_COBRO = {
   transferencia: 'Transferencia bancaria · 0 % de comisión',
+  mercadopago: 'Mercado Pago · tarjeta o dinero en cuenta',
+  ambos: 'Transferencia o Mercado Pago (elige tu cliente)',
   acordar: 'Lo coordino con mi cliente'
 };
+const CON_TRANSFERENCIA = ['transferencia', 'ambos'];
+const CON_MERCADOPAGO = ['mercadopago', 'ambos'];
+export const usaTransferencia = metodo => CON_TRANSFERENCIA.includes(metodo);
+export const usaMercadoPago = metodo => CON_MERCADOPAGO.includes(metodo);
 
 // El CBU y el CVU tienen 22 dígitos. El alias, de 6 a 20 caracteres: letras, números,
 // puntos y guiones.
 export const cbuValido = cbu => /^\d{22}$/.test(String(cbu || ''));
 export const aliasValido = alias => /^[a-zA-Z0-9.-]{6,20}$/.test(String(alias || ''));
 
+// conDatos: hay datos bancarios cargados. conMp: la cuenta de Mercado Pago está vinculada.
 export const normalizarCobro = (c = {}) => ({
   metodo: METODOS_COBRO[c?.metodo] ? c.metodo : 'transferencia',
-  conDatos: c?.conDatos === true
+  conDatos: c?.conDatos === true,
+  conMp: c?.conMp === true
 });
 
 // Los datos bancarios, limpios (solo los dígitos del CBU), o null si no hay CBU ni alias.
@@ -392,7 +402,24 @@ export const normalizarDatosCobro = (d = {}) => {
 // ¿El cliente va a ver datos para transferir al aceptar? (para el texto del botón)
 export const cobraPorTransferencia = estado => {
   const c = normalizarCobro(estado?.cobro);
-  return c.metodo === 'transferencia' && c.conDatos;
+  return usaTransferencia(c.metodo) && c.conDatos;
+};
+
+// ¿El cliente va a poder pagar con Mercado Pago al aceptar?
+export const cobraConMercadoPago = estado => {
+  const c = normalizarCobro(estado?.cobro);
+  return usaMercadoPago(c.metodo) && c.conMp;
+};
+
+// Cuánto se paga ahora: el primer pago de la forma de pago (o el total, si no hay pagos),
+// sobre el total inicial aceptado. Lo usan el link y el servidor (api/cobro-mp), así coinciden.
+export const primerPago = (estado, totalInicial) => {
+  const total = Number(totalInicial) || 0;
+  if (!(total > 0)) return null;
+  const pago = (estado?.inversion?.pagos || []).find(x => Number(x?.porcentaje) > 0);
+  if (!pago) return { concepto: 'Total', porcentaje: 100, monto: Math.round(total * 100) / 100 };
+  const porcentaje = Number(pago.porcentaje);
+  return { concepto: String(pago.concepto || '').trim() || 'Primer pago', porcentaje, monto: Math.round(total * porcentaje) / 100 };
 };
 
 // Formatos del documento de una propuesta.

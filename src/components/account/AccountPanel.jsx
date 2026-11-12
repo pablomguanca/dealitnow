@@ -51,6 +51,29 @@ export function AccountPanel() {
       <a className="boton boton--texto" id="plan-administrar" href="https://www.mercadopago.com.ar/subscriptions" target="_blank" rel="noopener" hidden>Administrar o cancelar la suscripción en Mercado Pago</a>
     </section>
 
+    <section className="tarjeta" id="tarjeta-mp" aria-labelledby="mp-titulo" hidden>
+      <div className="tarjeta__cabecera">
+        <h2 className="tarjeta__titulo" id="mp-titulo">Cobrar con Mercado Pago</h2>
+        <p className="tarjeta__ayuda">Vinculá tu cuenta en dos toques y tus clientes pagan desde la propuesta aceptada.</p>
+      </div>
+      <div className="cobro-mp" data-mp-bloque>
+              <div className="cobro-mp__cabecera">
+                <span className="cobro-mp__logo" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 5.5c-4.7 0-8.5 2.9-8.5 6.5s3.8 6.5 8.5 6.5 8.5-2.9 8.5-6.5-3.8-6.5-8.5-6.5z" /><path d="M7.5 12.2l2.4-1.8 2.1 1.4 2.1-1.4 2.4 1.8" /></svg>
+                </span>
+                <div>
+                  <p className="cobro-mp__titulo">Mercado Pago</p>
+                  <p className="cobro-mp__estado" data-mp-estado>Tu cliente paga con tarjeta o dinero en cuenta y la plata va directo a tu Mercado Pago. Mercado Pago cobra su comisión; Dealit, ninguna.</p>
+                </div>
+              </div>
+              <div className="cobro-mp__acciones">
+                <button type="button" className="boton boton--primario cobro-mp__vincular" data-accion="vincular-mp" data-mp-vincular>Vincular Mercado Pago</button>
+                <button type="button" className="boton boton--texto boton--chico" data-accion="desvincular-mp" data-mp-desvincular hidden>Desvincular</button>
+              </div>
+              <p className="campo__ayuda cobro-mp__aviso" data-mp-moneda hidden>Mercado Pago cobra en pesos: en las propuestas en dólares no se muestra el botón de pago.</p>
+            </div>
+    </section>
+
     <section className="tarjeta" id="tarjeta-push" aria-labelledby="push-titulo" hidden>
       <div className="tarjeta__cabecera">
         <h2 className="tarjeta__titulo" id="push-titulo">Notificaciones</h2>

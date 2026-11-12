@@ -3,11 +3,16 @@
 // cuenta (cobros/{uid}, que solo lee el dueño), y sirven para todas las propuestas. El
 // cliente los recibe del servidor recién al aceptar (api/aceptar).
 // Sin cuenta, se guardan en este navegador y pasan a la cuenta al registrarse.
+// Mercado Pago: el freelancer vincula su cuenta (OAuth, api/cobro-mp) desde el editor o
+// desde Mi cuenta, y el cliente paga desde la propuesta aceptada.
 
-import { $ } from '../lib/formato.js';
-import { cbuValido, aliasValido, normalizarCobro, normalizarDatosCobro } from '../modelo.js';
+import { $, $$, esc } from '../lib/formato.js';
+import { cbuValido, aliasValido, normalizarCobro, normalizarDatosCobro, usaTransferencia, usaMercadoPago } from '../modelo.js';
 import { ctx, nube, AteneaDB } from './contexto.js';
 import { actualizar } from './documento.js';
+import { registrarAcciones } from './acciones.js';
+import { avisar, avisarExito, avisarError, confirmar } from './avisos.js';
+import { llamarApi } from './api.js';
 
 const CLAVE_LOCAL = 'dealit-cobro';
 let datos = { titular: '', cbu: '', alias: '' };
@@ -18,6 +23,95 @@ const leerLocal = () => { try { return JSON.parse(localStorage.getItem(CLAVE_LOC
 const guardarLocal = d => { try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify(d)); } catch { } };
 
 export const hayDatosDeCobro = () => !!normalizarDatosCobro(datos);
+
+// Estado de Mercado Pago de la cuenta (lo pregunta al servidor): configurado en Dealit y
+// cuenta vinculada.
+let mp = { configurado: false, vinculado: false, nombre: '', email: '' };
+export const mpVinculado = () => mp.vinculado;
+
+const pintarMp = () => {
+  $$('[data-mp-bloque]').forEach(b => {
+    const estado = b.querySelector('[data-mp-estado]');
+    b.querySelector('[data-mp-vincular]').hidden = mp.vinculado;
+    b.querySelector('[data-mp-desvincular]').hidden = !mp.vinculado;
+    b.classList.toggle('cobro-mp--vinculado', mp.vinculado);
+    estado.innerHTML = mp.vinculado
+      ? `Vinculado${mp.nombre || mp.email ? ` con <strong>${esc(mp.nombre || mp.email)}</strong>` : ''}. Tus clientes pagan desde la propuesta aceptada y la plata va directo a tu cuenta.`
+      : 'Tu cliente paga con tarjeta o dinero en cuenta y la plata va directo a tu Mercado Pago. Mercado Pago cobra su comisión; Dealit, ninguna.';
+    const enDolares = ctx.estado?.inversion?.moneda && ctx.estado.inversion.moneda !== 'ARS';
+    const aviso = b.querySelector('[data-mp-moneda]');
+    if (aviso) aviso.hidden = !(b.closest('#cobro-editor') && enDolares);
+  });
+  // Sin Mercado Pago configurado en el servidor, no se ofrecen esas opciones.
+  $$('#cobro-metodo option[data-requiere-mp]').forEach(o => { o.hidden = !mp.configurado; o.disabled = !mp.configurado; });
+  const tarjeta = $('#tarjeta-mp');
+  if (tarjeta) tarjeta.hidden = !mp.configurado;
+};
+
+export const consultarMp = async () => {
+  if (!nube()) return;
+  try {
+    mp = { ...mp, ...(await llamarApi('/api/cobro-mp', { accion: 'estado' })) };
+  } catch (e) {
+    console.warn('No se pudo consultar Mercado Pago:', e.codigo || e.message);
+  }
+  pintarMp();
+  pintarCobroEditor();
+};
+
+const vincularMp = async boton => {
+  if (!nube()) return;
+  boton.disabled = true;
+  try {
+    const { url } = await llamarApi('/api/cobro-mp', { accion: 'vincular' });
+    // Por si se vuelve a esta pantalla en otra pestaña o desde la app: se vuelve a preguntar.
+    try { sessionStorage.setItem('dealit-mp-vinculando', '1'); } catch { }
+    location.href = url;
+  } catch (e) {
+    console.error('No se pudo iniciar la vinculación con Mercado Pago:', e);
+    avisarError('No pudimos abrir Mercado Pago. Probá de nuevo en un minuto.');
+    boton.disabled = false;
+  }
+};
+
+const desvincularMp = async boton => {
+  if (!await confirmar({
+    titulo: '¿Desvincular Mercado Pago?',
+    texto: 'Tus clientes ya no van a poder pagarte con Mercado Pago desde las propuestas. Podés volver a vincularlo cuando quieras.',
+    aceptar: 'Desvincular',
+    peligro: true
+  })) return;
+  boton.disabled = true;
+  try {
+    await llamarApi('/api/cobro-mp', { accion: 'desvincular' });
+    mp = { ...mp, vinculado: false, nombre: '', email: '' };
+    avisar('Listo: tu Mercado Pago quedó desvinculado.');
+  } catch {
+    avisarError('No pudimos desvincular la cuenta. Probá de nuevo.');
+  } finally {
+    boton.disabled = false;
+    pintarMp();
+    pintarCobroEditor();
+  }
+};
+
+// Vuelta de Mercado Pago (/cuenta?mp=…): avisa cómo salió y limpia la dirección.
+const MENSAJES_VUELTA = {
+  vinculado: ['ok', '¡Listo! Tu Mercado Pago quedó vinculado. Tus clientes ya pueden pagarte desde la propuesta.'],
+  cancelado: ['aviso', 'No se vinculó Mercado Pago: cancelaste el permiso. Podés volver a intentarlo cuando quieras.'],
+  vencido: ['error', 'El pedido para vincular Mercado Pago venció. Tocá «Vincular Mercado Pago» de nuevo.'],
+  error: ['error', 'No pudimos vincular tu Mercado Pago. Probá de nuevo en unos minutos.'],
+  'no-configurado': ['error', 'Mercado Pago todavía no está disponible en Dealit.']
+};
+const leerVuelta = () => {
+  const parametros = new URLSearchParams(location.search);
+  const resultado = parametros.get('mp');
+  if (!resultado || !MENSAJES_VUELTA[resultado]) return;
+  const [tipo, texto] = MENSAJES_VUELTA[resultado];
+  (tipo === 'ok' ? avisarExito : tipo === 'error' ? avisarError : avisar)(texto, 8000);
+  parametros.delete('mp');
+  history.replaceState(null, '', location.pathname + (parametros.toString() ? `?${parametros}` : ''));
+};
 
 const campos = () => ({ titular: $('#cobro-titular'), cbu: $('#cobro-cbu'), alias: $('#cobro-alias') });
 
@@ -31,10 +125,12 @@ const pintarCampos = () => {
 export const pintarCobroEditor = () => {
   if (!$('#cobro-editor')) return;
   const c = normalizarCobro(ctx.estado?.cobro);
-  const transferencia = c.metodo === 'transferencia';
+  const transferencia = usaTransferencia(c.metodo);
   $('#cobro-transferencia').hidden = !transferencia;
-  $('#cobro-acordar').hidden = transferencia;
+  $('#cobro-mercadopago').hidden = !usaMercadoPago(c.metodo);
+  $('#cobro-acordar').hidden = c.metodo !== 'acordar';
   if (!transferencia) $('#cobro-estado').textContent = '';
+  pintarMp();
   // Solo se marca un dato mal escrito cuando ya hay algo cargado.
   const cbu = String(datos.cbu || '').replace(/\D/g, '');
   $('#cobro-cbu-ayuda').hidden = !cbu || cbuValido(cbu);
@@ -43,12 +139,16 @@ export const pintarCobroEditor = () => {
   sincronizarPropuesta();
 };
 
-// La propuesta anota si hay datos de cobro (para el texto del botón del cliente).
+// La propuesta anota si hay datos bancarios y si Mercado Pago está vinculado (para lo que
+// ve el cliente: el texto del botón y el botón de pago).
+let mpConsultado = false;
 const sincronizarPropuesta = () => {
   if (!ctx.estado?.cobro || !cargados) return;
+  const actual = normalizarCobro(ctx.estado.cobro);
   const conDatos = hayDatosDeCobro();
-  if (ctx.estado.cobro.conDatos === conDatos) return;
-  ctx.estado.cobro = { ...normalizarCobro(ctx.estado.cobro), conDatos };
+  const conMp = mpConsultado ? mp.vinculado : actual.conMp;
+  if (actual.conDatos === conDatos && actual.conMp === conMp) return;
+  ctx.estado.cobro = { ...actual, conDatos, conMp };
   if (ctx.editando) actualizar();
 };
 
@@ -117,6 +217,9 @@ const limpiarPropuestasViejas = () => {
 export const reiniciarCobro = () => {
   datos = { titular: '', cbu: '', alias: '' };
   cargados = false;
+  mp = { configurado: false, vinculado: false, nombre: '', email: '' };
+  mpConsultado = false;
+  pintarMp();
   limpiadas.clear();
 };
 
@@ -134,5 +237,23 @@ export const instalarCobro = () => {
     if (!nube()) return;
     if (!cargados) cargarCobroCuenta();
     else limpiarPropuestasViejas();
+    if (!mpConsultado) {
+      mpConsultado = true;
+      consultarMp().then(leerVuelta);
+    }
+  });
+  // Al volver a la app (por ejemplo, después de autorizar en Mercado Pago desde el
+  // navegador), se vuelve a preguntar si quedó vinculado.
+  document.addEventListener('visibilitychange', () => {
+    let vinculando = false;
+    try { vinculando = sessionStorage.getItem('dealit-mp-vinculando') === '1'; } catch { }
+    if (document.visibilityState === 'visible' && vinculando && nube()) {
+      try { sessionStorage.removeItem('dealit-mp-vinculando'); } catch { }
+      consultarMp();
+    }
+  });
+  registrarAcciones({
+    'vincular-mp': boton => vincularMp(boton),
+    'desvincular-mp': boton => desvincularMp(boton)
   });
 };

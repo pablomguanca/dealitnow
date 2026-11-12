@@ -16,7 +16,8 @@ import {
   ENCUADRES_IMAGEN,
   totalServicio,
   calcularTotales,
-  cobraPorTransferencia
+  cobraPorTransferencia,
+  cobraConMercadoPago
 } from '../modelo.js';
 import { decoracionPortadaSVG } from './decoraciones.js';
 import { resolverColoresTema } from './tema.js';
@@ -383,7 +384,21 @@ export const tarjetaCobroHTML = (cobro, { pago = null, conCopiar = true } = {}) 
     </div>`;
 };
 
+// Botón para pagar con Mercado Pago (cuenta del freelancer vinculada). El link de pago lo
+// crea el servidor (api/cobro-mp) al tocarlo, con el monto que calcula él.
+export const pagoMpHTML = (pago, { conTransferencia = false } = {}) => `
+    <div class="pago-mp">
+      <button type="button" class="pago-mp__boton" data-accion="pagar-mp">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5c-4.7 0-8.5 2.9-8.5 6.5s3.8 6.5 8.5 6.5 8.5-2.9 8.5-6.5-3.8-6.5-8.5-6.5z"/><path d="M7.5 12.2l2.4-1.8 2.1 1.4 2.1-1.4 2.4 1.8"/></svg>
+        <span>Pagar con Mercado Pago</span>
+      </button>
+      <p class="pago-mp__nota">${pago ? `${esc(pago.concepto)}: <strong>${esc(pago.monto)}</strong>. ` : ''}Con tarjeta o dinero en cuenta, en Mercado Pago.${conTransferencia ? ' O, si preferís, transferí:' : ''}</p>
+    </div>`;
+
 // El primer pago a transferir: el primero de la forma de pago, o el total si no hay pagos.
+// Mercado Pago cobra en pesos: el botón se ofrece solo en las propuestas en ARS.
+export const pagaConMp = s => cobraConMercadoPago(s) && s.inversion?.moneda === 'ARS';
+
 export const primerPagoTexto = (s, c) => {
   const m = s.inversion.moneda;
   if (!(c.inicial.total > 0)) return null;
@@ -398,7 +413,7 @@ export const primerPagoTexto = (s, c) => {
 
 // conCobro: el botón avisa que al aceptar se ven los datos de pago. Los datos (para la
 // tarjeta de la propuesta ya aceptada) los entrega el servidor con la aceptación.
-export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '', consultaUrl = '', tipo = 'propuesta', conCobro = false, pago = null } = {}) => {
+export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '', consultaUrl = '', tipo = 'propuesta', conCobro = false, conMp = false, pago = null } = {}) => {
   const esAceptada = !!compartida?.aceptacion;
   const que = tipo === 'presupuesto' ? 'presupuesto' : 'propuesta';
   if (esAceptada) {
@@ -408,7 +423,8 @@ export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '',
       <div class="cierre cierre--aceptada">
         <p class="cierre__titulo">${que === 'presupuesto' ? 'Presupuesto aceptado' : 'Propuesta aceptada'}</p>
         <p class="cierre__texto">Aceptada por ${esc(a.nombre)}${fecha ? ` el ${esc(fechaLarga(fecha))}` : ''}. Esta es la versión que se aceptó.</p>
-        ${tarjetaCobroHTML(a.cobro || null, { pago })}
+        ${conMp ? pagoMpHTML(pago, { conTransferencia: !!a.cobro }) : ''}
+        ${tarjetaCobroHTML(a.cobro || null, { pago: conMp ? null : pago })}
         ${consultaUrl ? `<div class="cierre__acciones"><a class="boton boton--secundario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a></div>` : ''}
       </div>`;
   }
@@ -428,7 +444,7 @@ export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '',
       <p class="cierre__titulo">¿Avanzamos?</p>
       <p class="cierre__texto">${textoCierre}</p>
       <div class="cierre__acciones">
-        <button type="button" class="boton boton--primario boton--grande" data-accion="aceptar">Aceptar ${que}${conCobro ? ' y ver datos de pago' : ''}</button>
+        <button type="button" class="boton boton--primario boton--grande" data-accion="aceptar">Aceptar ${que}${conCobro || conMp ? ' y ver datos de pago' : ''}</button>
         ${consultaUrl ? `<a class="boton boton--secundario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a></div>` : ''}
       </div>
     </div>`;
@@ -798,7 +814,7 @@ const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
     </footer>`;
 
   const aviso = web && vig.vencida ? `<p class="doc-aviso">Este presupuesto venció el ${esc(fechaLarga(vig.vence))}. Los valores pueden haber cambiado.</p>` : '';
-  const cierre = web ? `<div class="presu__cierre">${cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, tipo: 'presupuesto', conCobro: cobraPorTransferencia(s), pago: primerPagoTexto(s, c) })}</div>` : '';
+  const cierre = web ? `<div class="presu__cierre">${cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, tipo: 'presupuesto', conCobro: cobraPorTransferencia(s), conMp: pagaConMp(s), pago: primerPagoTexto(s, c) })}</div>` : '';
 
   const hoja = `
     <section class="presu" id="sec-prop-inicio" aria-label="Presupuesto">
@@ -1042,7 +1058,7 @@ export const generarPropuestaHTML = (
   const firmas = !web && s.opciones.firmas;
   if (pasos.length || firmas || web) {
     let html = pasos.length ? `<ol class="pasos">${pasos.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : '';
-    if (web) html += cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, conCobro: cobraPorTransferencia(s), pago: primerPagoTexto(s, c) });
+    if (web) html += cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, conCobro: cobraPorTransferencia(s), conMp: pagaConMp(s), pago: primerPagoTexto(s, c) });
     if (firmas) {
       const quienCliente = cl.nombre.trim() || cl.empresa.trim() || 'Cliente';
       const quienEmisor = e.nombre.trim() || 'Responsable de la propuesta';

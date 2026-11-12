@@ -293,8 +293,8 @@ describe('formato presupuesto', () => {
 describe('método de cobro', () => {
   it('la propuesta guarda solo el método y si hay datos: nunca el CBU, el alias ni el titular', () => {
     const p = normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'transferencia', conDatos: true, cbu: '0000003100012345678901', alias: 'ana.web', titular: 'Ana' } });
-    expect(p.cobro).toEqual({ metodo: 'transferencia', conDatos: true });
-    expect(normalizarPropuesta(ejemplo()).cobro).toEqual({ metodo: 'transferencia', conDatos: false });
+    expect(p.cobro).toEqual({ metodo: 'transferencia', conDatos: true, conMp: false });
+    expect(normalizarPropuesta(ejemplo()).cobro).toEqual({ metodo: 'transferencia', conDatos: false, conMp: false });
     expect(normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'cripto' } }).cobro.metodo).toBe('transferencia');
   });
 
@@ -325,5 +325,28 @@ describe('método de cobro', () => {
     expect(aceptada).toContain('cobro-tarjeta');
     expect(aceptada).toContain('gomez.pintura');
     expect(aceptada).toContain('Seña (50 %)');
+  });
+});
+
+describe('cobro con Mercado Pago', () => {
+  it('el botón de pago aparece en la propuesta aceptada, solo en pesos y con la cuenta vinculada', () => {
+    const base = normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'mercadopago', conMp: true } });
+    base.inversion.moneda = 'ARS';
+    const aceptada = { aceptacion: { nombre: 'Laura', fecha: '2026-11-10T12:00:00Z' } };
+    expect(generarPropuestaHTML(base, { web: true })).toContain('Aceptar propuesta y ver datos de pago');
+    expect(generarPropuestaHTML(base, { web: true, compartida: aceptada })).toContain('data-accion="pagar-mp"');
+    const enDolares = normalizarPropuesta({ ...base, inversion: { ...base.inversion, moneda: 'USD' } });
+    expect(generarPropuestaHTML(enDolares, { web: true, compartida: aceptada })).not.toContain('pagar-mp');
+    const sinVincular = normalizarPropuesta({ ...base, cobro: { metodo: 'mercadopago', conMp: false } });
+    expect(generarPropuestaHTML(sinVincular, { web: true, compartida: aceptada })).not.toContain('pagar-mp');
+  });
+
+  it('con «ambos», el cliente ve el botón de Mercado Pago y los datos para transferir', () => {
+    const p = normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'ambos', conMp: true, conDatos: true } });
+    p.inversion.moneda = 'ARS';
+    const html = generarPropuestaHTML(p, { web: true, compartida: { aceptacion: { nombre: 'L', fecha: '2026-11-10T12:00:00Z', cobro: { titular: 'A', cbu: '0000003100012345678901', alias: 'a.b.c' } } } });
+    expect(html).toContain('pagar-mp');
+    expect(html).toContain('cobro-tarjeta');
+    expect(html).toContain('O, si preferís, transferí');
   });
 });

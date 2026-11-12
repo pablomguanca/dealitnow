@@ -2,7 +2,7 @@
 // (visitas y aceptación). El servidor valida todo; acá solo se propone.
 
 import { $, esc, dinero } from '../lib/formato.js';
-import { servicioConContenido, tarjetaCobroHTML, primerPagoTexto } from '../lib/render.js';
+import { servicioConContenido, tarjetaCobroHTML, primerPagoTexto, pagoMpHTML, pagaConMp } from '../lib/render.js';
 import { cobraPorTransferencia, calcularTotales } from '../modelo.js';
 import { MENSAJES_ACEPTACION, NOMBRE_MIN, limpiarNombre } from '../aceptacion.js';
 import {
@@ -81,7 +81,7 @@ const esPresupuesto = () => ctx.estado?.opciones?.formato === 'presupuesto';
 const queEs = () => (esPresupuesto() ? 'presupuesto' : 'propuesta');
 
 // Texto del botón principal: con transferencia, el cliente sabe que al aceptar ve cómo pagar.
-const textoBotonAceptar = () => `Aceptar ${queEs()}${cobraPorTransferencia(ctx.estado) ? ' y ver datos de pago' : ''}`;
+const textoBotonAceptar = () => `Aceptar ${queEs()}${cobraPorTransferencia(ctx.estado) || pagaConMp(ctx.estado) ? ' y ver datos de pago' : ''}`;
 
 const modoAceptar = modo => {
   $('#aceptar-formulario').hidden = modo !== 'formulario';
@@ -142,13 +142,16 @@ const confirmarAceptacion = async () => {
     modoAceptar('listo');
     const emisor = nombreEmisor();
     const hay = prepararMensajeria(mensajeAceptacion(nombre).texto, { whatsapp: 'Avisar por WhatsApp', email: 'Avisar por email' });
-    // Con transferencia: los datos para pagar, que recién ahora entrega el servidor.
+    // Con transferencia: los datos para pagar, que recién ahora entrega el servidor. Con
+    // Mercado Pago: el botón para pagar.
     const cobro = aceptacion.cobro || null;
+    const conMp = pagaConMp(ctx.estado);
+    const pago = primerPagoTexto(ctx.estado, calcularTotales(ctx.estado, ctx.seleccion));
     const elCobro = $('#aceptar-cobro');
-    elCobro.innerHTML = tarjetaCobroHTML(cobro, { pago: primerPagoTexto(ctx.estado, calcularTotales(ctx.estado, ctx.seleccion)) });
-    elCobro.hidden = !cobro;
-    $('#aceptar-texto').textContent = cobro
-      ? `Gracias, ${nombre.split(' ')[0]}. ${emisor || 'Quien te mandó la propuesta'} ya recibió tu aceptación.${hay ? ' Cuando transfieras, avisale por mensaje.' : ''}`
+    elCobro.innerHTML = (conMp ? pagoMpHTML(pago, { conTransferencia: !!cobro }) : '') + tarjetaCobroHTML(cobro, { pago: conMp ? null : pago });
+    elCobro.hidden = !cobro && !conMp;
+    $('#aceptar-texto').textContent = cobro || conMp
+      ? `Gracias, ${nombre.split(' ')[0]}. ${emisor || 'Quien te mandó la propuesta'} ya recibió tu aceptación.${hay ? ` Cuando ${cobro ? 'transfieras' : 'pagues'}, avisale por mensaje.` : ''}`
       : `Listo, ${nombre.split(' ')[0]}. ${emisor || 'Quien te mandó la propuesta'} ya puede ver tu aceptación.${hay ? ' Si querés, avisale también por mensaje.' : ''}`;
   } catch (e) {
     console.error('No se pudo aceptar la propuesta:', e);
@@ -160,6 +163,25 @@ const confirmarAceptacion = async () => {
   }
 };
 
+const MENSAJES_PAGO = {
+  'mp-no-vinculado': 'Quien te mandó la propuesta todavía no tiene Mercado Pago vinculado. Escribile para coordinar el pago.',
+  'moneda-no-soportada': 'Mercado Pago cobra en pesos y esta propuesta está en otra moneda. Escribile a quien te la mandó para coordinar el pago.',
+  'sin-aceptar': 'Primero aceptá la propuesta.',
+  'mercadopago-rechazo': 'Mercado Pago no pudo crear el pago. Probá de nuevo en un minuto.'
+};
+
+// Vuelta de Mercado Pago al link (/p/…?pago=…): cómo salió el pago.
+export const avisarVueltaDePago = () => {
+  const parametros = new URLSearchParams(location.search);
+  const pago = parametros.get('pago');
+  if (!pago) return;
+  if (pago === 'aprobado') avisarExito('¡Pago realizado! Mercado Pago te manda el comprobante por email.', 9000);
+  else if (pago === 'pendiente') avisar('Tu pago quedó pendiente en Mercado Pago. Te avisan por email cuando se acredite.', 9000);
+  else avisarError('El pago no se completó. Podés intentarlo de nuevo desde el botón.', 9000);
+  ['pago', 'collection_id', 'collection_status', 'payment_id', 'status', 'external_reference', 'payment_type', 'merchant_order_id', 'preference_id', 'site_id', 'processing_mode', 'merchant_account_id'].forEach(k => parametros.delete(k));
+  history.replaceState(null, '', location.pathname + (parametros.toString() ? `?${parametros}` : ''));
+};
+
 export const instalarAceptar = () => {
   $('#aceptar-nombre').addEventListener('input', actualizarBotonAceptar);
   $('#aceptar-conformidad').addEventListener('change', actualizarBotonAceptar);
@@ -167,6 +189,21 @@ export const instalarAceptar = () => {
 
   registrarAcciones({
     'aceptar': () => abrirAceptar(),
+    // Pagar con Mercado Pago: el servidor crea el pago con la cuenta del freelancer.
+    'pagar-mp': async boton => {
+      if (!ctx.esCliente || !ctx.compartida?.id) {
+        avisar('Así lo ve tu cliente: al tocarlo, paga con Mercado Pago y la plata va a tu cuenta.');
+        return;
+      }
+      boton.disabled = true;
+      try {
+        const { url } = await llamarApi('/api/cobro-mp', { accion: 'pagar', id: ctx.compartida.id });
+        location.href = url;
+      } catch (e) {
+        avisarError(MENSAJES_PAGO[e.codigo] || 'No pudimos abrir Mercado Pago. Revisá tu conexión y probá de nuevo.', 9000);
+        boton.disabled = false;
+      }
+    },
     // Copiar el CBU, el alias o el titular de la tarjeta de transferencia.
     'copiar-dato-cobro': async boton => {
       if (await copiar(boton.dataset.valor || '')) {

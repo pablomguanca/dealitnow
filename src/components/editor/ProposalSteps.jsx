@@ -171,6 +171,8 @@ export function ProposalSteps() {
               <span className="campo__etiqueta">¿Cómo te paga tu cliente?</span>
               <select className="control" data-campo="cobro.metodo" id="cobro-metodo">
                 <option value="transferencia">Transferencia bancaria · 0 % de comisión</option>
+                <option value="mercadopago" data-requiere-mp>Mercado Pago · tarjeta o dinero en cuenta</option>
+                <option value="ambos" data-requiere-mp>Transferencia o Mercado Pago (elige tu cliente)</option>
                 <option value="acordar">Lo coordino con mi cliente</option>
               </select>
             </label>
@@ -193,6 +195,24 @@ export function ProposalSteps() {
                 <input className="control" type="text" id="cobro-alias" placeholder="Ej.: gomez.pintura" autoComplete="off" autoCapitalize="none" maxLength="40" />
                 <span className="campo__ayuda" id="cobro-alias-ayuda" hidden>El alias va de 6 a 20 caracteres: letras, números, puntos o guiones.</span>
               </label>
+            </div>
+            <div className="cobro-editor__mp" id="cobro-mercadopago" hidden>
+            <div className="cobro-mp" data-mp-bloque>
+              <div className="cobro-mp__cabecera">
+                <span className="cobro-mp__logo" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 5.5c-4.7 0-8.5 2.9-8.5 6.5s3.8 6.5 8.5 6.5 8.5-2.9 8.5-6.5-3.8-6.5-8.5-6.5z" /><path d="M7.5 12.2l2.4-1.8 2.1 1.4 2.1-1.4 2.4 1.8" /></svg>
+                </span>
+                <div>
+                  <p className="cobro-mp__titulo">Mercado Pago</p>
+                  <p className="cobro-mp__estado" data-mp-estado>Tu cliente paga con tarjeta o dinero en cuenta y la plata va directo a tu Mercado Pago. Mercado Pago cobra su comisión; Dealit, ninguna.</p>
+                </div>
+              </div>
+              <div className="cobro-mp__acciones">
+                <button type="button" className="boton boton--primario cobro-mp__vincular" data-accion="vincular-mp" data-mp-vincular>Vincular Mercado Pago</button>
+                <button type="button" className="boton boton--texto boton--chico" data-accion="desvincular-mp" data-mp-desvincular hidden>Desvincular</button>
+              </div>
+              <p className="campo__ayuda cobro-mp__aviso" data-mp-moneda hidden>Mercado Pago cobra en pesos: en las propuestas en dólares no se muestra el botón de pago.</p>
+            </div>
             </div>
             <p className="campo__ayuda" id="cobro-estado" role="status" aria-live="polite"></p>
             <p className="campo__ayuda" id="cobro-acordar" hidden>Tu cliente acepta la propuesta y el pago lo coordinan ustedes por fuera de Dealit.</p>

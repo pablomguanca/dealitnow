@@ -15,7 +15,7 @@ import {
   normalizarPf
 } from './contexto.js';
 import { renderDocumento, renderPortafolio } from './vista.js';
-import { registrarVisita } from './aceptar.js';
+import { registrarVisita, avisarVueltaDePago } from './aceptar.js';
 
 const LINK_INCOMPLETO = 'El link llegó incompleto o se cortó al copiarlo. Pedile a quien te lo mandó que lo comparta de nuevo.';
 const SIN_CONEXION = 'Hubo un problema al conectar. Revisá tu conexión y recargá la página.';
@@ -82,6 +82,7 @@ const iniciarClienteCorto = async id => {
       if (datos.aceptacion) ctx.seleccion = new Set((datos.aceptacion.opcionales || []).map(o => o.id));
       mostrarCliente(datos.aceptacion?.contenido || datos.payload);
       registrarVisita(id);
+      avisarVueltaDePago();
     } else errorCliente('Esta propuesta ya no está disponible', 'Puede que el link se haya desactivado. Pedile a quien te la mandó que te comparta uno nuevo.');
   } catch (e) {
     console.error('No se pudo abrir la propuesta compartida:', e);
