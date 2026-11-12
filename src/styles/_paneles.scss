@@ -1332,3 +1332,121 @@ body.invitado .editor__invitado {
   max-width: 26rem;
   margin-bottom: 0.9rem;
 }
+
+/* ---------- Tu plan con Pro: tarjeta premium ---------- */
+// Siempre oscura, con el brillo verde de la marca, en modo claro y en oscuro.
+
+.tarjeta--pro {
+  position: relative;
+  overflow: hidden;
+  border-color: rgba(138, 219, 171, 0.35);
+  background:
+    radial-gradient(28rem 14rem at 100% 0%, rgba(0, 200, 150, 0.28), transparent 65%),
+    radial-gradient(20rem 12rem at 0% 100%, rgba(138, 219, 171, 0.12), transparent 70%),
+    linear-gradient(160deg, #1E2427 0%, #14181A 100%);
+  color: #E7EEEC;
+  box-shadow: 0 0.8rem 2.4rem rgba(0, 0, 0, 0.18);
+
+  // El encabezado genérico («Tu plan» y el estado) lo reemplaza el bloque Pro; queda
+  // solo para los lectores de pantalla.
+  > .tarjeta__cabecera {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  #plan-administrar {
+    margin-top: 1.1rem;
+    padding: 0;
+    color: #A6B3B0;
+    font-size: 0.82rem;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+
+    &:hover {
+      color: #E7EEEC;
+    }
+  }
+}
+
+.plan-pro {
+  &[hidden] {
+    display: none;
+  }
+
+  &__cabecera {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+
+  &__logo {
+    width: 3.2rem;
+    height: 3.2rem;
+    border-radius: 0.8rem;
+    box-shadow: 0 0.4rem 1.2rem rgba(0, 0, 0, 0.35);
+  }
+
+  &__marca {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-family: var(--fuente-display);
+    font-size: 2rem;
+    letter-spacing: 0.04em;
+    line-height: 1;
+    text-transform: uppercase;
+    color: #FFF;
+
+    span {
+      padding: 0.2rem 0.55rem 0.1rem;
+      border-radius: 0.45rem;
+      background: linear-gradient(135deg, #8ADBAB, #00C896);
+      color: #0E1315;
+      font-size: 1.35rem;
+      letter-spacing: 0.08em;
+    }
+  }
+
+  &__estado {
+    margin: 0.35rem 0 0;
+    font-size: 0.88rem;
+    color: #A6B3B0;
+  }
+
+  &__beneficios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin: 1.3rem 0 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem 0.35rem 0.6rem;
+      border: 1px solid rgba(138, 219, 171, 0.28);
+      border-radius: 999px;
+      background: rgba(138, 219, 171, 0.08);
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #E7EEEC;
+
+      &::before {
+        content: '';
+        width: 0.8rem;
+        height: 0.8rem;
+        flex: none;
+        background: #8ADBAB;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-6.5' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / contain no-repeat;
+      }
+    }
+  }
+}

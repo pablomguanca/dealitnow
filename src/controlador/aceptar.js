@@ -2,7 +2,8 @@
 // (visitas y aceptación). El servidor valida todo; acá solo se propone.
 
 import { $, esc, dinero } from '../lib/formato.js';
-import { servicioConContenido } from '../lib/render.js';
+import { servicioConContenido, tarjetaCobroHTML, primerPagoTexto } from '../lib/render.js';
+import { datosDeCobro, calcularTotales } from '../modelo.js';
 import { MENSAJES_ACEPTACION, NOMBRE_MIN, limpiarNombre } from '../aceptacion.js';
 import {
   ctx,
@@ -75,12 +76,25 @@ const prepararMensajeria = (mensaje, { whatsapp, email }) => {
 
 // 'mensaje': link largo, se confirma por WhatsApp o email. 'formulario': link corto,
 // se acepta con nombre y casilla. 'listo': aceptación registrada.
+// Propuesta o presupuesto (formato del documento), para los textos.
+const esPresupuesto = () => ctx.estado?.opciones?.formato === 'presupuesto';
+const queEs = () => (esPresupuesto() ? 'presupuesto' : 'propuesta');
+
+// Texto del botón principal: con transferencia, el cliente sabe que al aceptar ve cómo pagar.
+const textoBotonAceptar = () => `Aceptar ${queEs()}${datosDeCobro(ctx.estado) ? ' y ver datos de pago' : ''}`;
+
 const modoAceptar = modo => {
   $('#aceptar-formulario').hidden = modo !== 'formulario';
   $('#aceptar-confirmar').hidden = modo !== 'formulario';
   if (modo === 'formulario') ['#aceptar-whatsapp', '#aceptar-email', '#aceptar-copiar'].forEach(sel => { $(sel).hidden = true; });
-  $('#aceptar-titulo').textContent = modo === 'listo' ? '¡Propuesta aceptada!' : 'Confirmar la propuesta';
-  $('#aceptar-cerrar').textContent = modo === 'listo' ? 'Cerrar' : 'Volver a la propuesta';
+  if (modo !== 'listo') $('#aceptar-cobro').hidden = true;
+  $('#dialogo-aceptar').classList.toggle('dialogo--aceptada', modo === 'listo');
+  $('#aceptar-titulo').textContent = modo === 'listo'
+    ? `¡Excelente! ${esPresupuesto() ? 'Presupuesto aceptado' : 'Propuesta aceptada'}`
+    : `Confirmar ${esPresupuesto() ? 'el presupuesto' : 'la propuesta'}`;
+  $('#aceptar-conformidad-texto').textContent = `Acepto los términos, condiciones y el alcance detallado en ${esPresupuesto() ? 'este presupuesto' : 'esta propuesta'}.`;
+  $('#aceptar-confirmar').textContent = textoBotonAceptar();
+  $('#aceptar-cerrar').textContent = modo === 'listo' ? 'Cerrar' : `Volver ${esPresupuesto() ? 'al presupuesto' : 'a la propuesta'}`;
 };
 
 const actualizarBotonAceptar = () => {
@@ -128,13 +142,20 @@ const confirmarAceptacion = async () => {
     modoAceptar('listo');
     const emisor = nombreEmisor();
     const hay = prepararMensajeria(mensajeAceptacion(nombre).texto, { whatsapp: 'Avisar por WhatsApp', email: 'Avisar por email' });
-    $('#aceptar-texto').textContent = `Listo, ${nombre.split(' ')[0]}. ${emisor || 'Quien te mandó la propuesta'} ya puede ver tu aceptación.${hay ? ' Si querés, avisale también por mensaje.' : ''}`;
+    // Con transferencia: los datos para pagar, ahí mismo.
+    const cobro = datosDeCobro(ctx.estado);
+    const elCobro = $('#aceptar-cobro');
+    elCobro.innerHTML = tarjetaCobroHTML(cobro, { pago: primerPagoTexto(ctx.estado, calcularTotales(ctx.estado, ctx.seleccion)) });
+    elCobro.hidden = !cobro;
+    $('#aceptar-texto').textContent = cobro
+      ? `Gracias, ${nombre.split(' ')[0]}. ${emisor || 'Quien te mandó la propuesta'} ya recibió tu aceptación.${hay ? ' Cuando transfieras, avisale por mensaje.' : ''}`
+      : `Listo, ${nombre.split(' ')[0]}. ${emisor || 'Quien te mandó la propuesta'} ya puede ver tu aceptación.${hay ? ' Si querés, avisale también por mensaje.' : ''}`;
   } catch (e) {
     console.error('No se pudo aceptar la propuesta:', e);
     errorAceptacion.textContent = MENSAJES_ACEPTACION[e.codigo] || 'No pudimos registrar tu aceptación. Revisá tu conexión y probá de nuevo.';
     errorAceptacion.hidden = false;
   } finally {
-    boton.textContent = 'Aceptar propuesta';
+    boton.textContent = textoBotonAceptar();
     actualizarBotonAceptar();
   }
 };
@@ -146,6 +167,14 @@ export const instalarAceptar = () => {
 
   registrarAcciones({
     'aceptar': () => abrirAceptar(),
+    // Copiar el CBU, el alias o el titular de la tarjeta de transferencia.
+    'copiar-dato-cobro': async boton => {
+      if (await copiar(boton.dataset.valor || '')) {
+        avisarExito(`${boton.dataset.que === 'titular' ? 'Titular' : boton.dataset.que === 'alias' ? 'Alias' : 'CBU'} copiado.`);
+        boton.textContent = 'Copiado';
+        setTimeout(() => { boton.textContent = 'Copiar'; }, 1800);
+      } else avisarError('No se pudo copiar. Probá de nuevo.');
+    },
     'copiar-aceptacion': async () => {
       if (await copiar(mensajeAceptacion().texto)) avisarExito('Mensaje copiado. Pegalo en tu chat o mail.');
       else avisarError('No se pudo copiar. Probá de nuevo.');

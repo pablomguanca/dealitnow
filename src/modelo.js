@@ -254,6 +254,8 @@ export const vacio = () => ({
   inversion: { moneda: 'USD', abonoMensual: 0, montoGlobal: 0, descuento: 0, impuestoNombre: 'IVA', impuesto: 0, pagos: [] },
   condiciones: '',
   proximosPasos: '',
+  // Cómo le paga el cliente. Con transferencia, al aceptar ve estos datos (ver datosDeCobro).
+  cobro: { metodo: 'transferencia', titular: '', cbu: '', alias: '' },
   opciones: {
     // 'propuesta' (el documento completo) o 'presupuesto' (una hoja con la tabla de trabajos).
     formato: 'propuesta',
@@ -356,6 +358,35 @@ export const ejemplo = () => ({
     espaciadoInterno: 100
   }
 });
+
+// ---------- Método de cobro (Fase 1: transferencia, sin comisiones) ----------
+// 'transferencia': el cliente ve los datos bancarios al aceptar. 'acordar': el pago se
+// coordina por fuera y no se muestran datos.
+export const METODOS_COBRO = {
+  transferencia: 'Transferencia bancaria · 0 % de comisión',
+  acordar: 'Lo coordino con mi cliente'
+};
+
+// El CBU y el CVU tienen 22 dígitos. El alias, de 6 a 20 caracteres: letras, números,
+// puntos y guiones.
+export const cbuValido = cbu => /^\d{22}$/.test(String(cbu || ''));
+export const aliasValido = alias => /^[a-zA-Z0-9.-]{6,20}$/.test(String(alias || ''));
+
+export const normalizarCobro = (c = {}) => ({
+  metodo: METODOS_COBRO[c?.metodo] ? c.metodo : 'transferencia',
+  titular: texto(c?.titular).slice(0, 120),
+  // Se guarda como se escribió (con espacios o guiones); al mostrarlo se deja solo los dígitos.
+  cbu: texto(c?.cbu).slice(0, 40),
+  alias: texto(c?.alias).trim().slice(0, 40)
+});
+
+// Datos para que el cliente transfiera, o null si no corresponde (otro método o sin datos).
+export const datosDeCobro = estado => {
+  const c = normalizarCobro(estado?.cobro);
+  const cbu = c.cbu.replace(/\D/g, '');
+  if (c.metodo !== 'transferencia' || (!cbu && !c.alias)) return null;
+  return { titular: c.titular.trim(), cbu, alias: c.alias };
+};
 
 // Formatos del documento de una propuesta.
 export const FORMATOS_DOCUMENTO = {
@@ -913,6 +944,7 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
     inversion: { ...limpiar(d.inversion, base.inversion), pagos: lista(d.inversion?.pagos, LISTAS.pagos.nuevo) },
     condiciones: texto(d.condiciones),
     proximosPasos: texto(d.proximosPasos),
+    cobro: normalizarCobro(d.cobro),
     opciones: {
       ...base.opciones,
       ...(d.opciones || {}),

@@ -12,6 +12,8 @@ export function DialogoAceptar() {
         <h2 className="dialogo__titulo" id="aceptar-titulo">Confirmar la propuesta</h2>
         <dl className="dialogo__resumen" id="aceptar-resumen"></dl>
         <p className="dialogo__texto" id="aceptar-texto"></p>
+        {/* Al aceptar, con método de cobro «transferencia»: los datos para transferir. */}
+        <div className="aceptar__cobro" id="aceptar-cobro" hidden></div>
         <div className="aceptar__formulario" id="aceptar-formulario" hidden>
           <label className="campo">
             <span className="campo__etiqueta">Tu nombre completo</span>
@@ -19,7 +21,7 @@ export function DialogoAceptar() {
           </label>
           <label className="casilla">
             <input type="checkbox" id="aceptar-conformidad" />
-            <span>Acepto la propuesta y sus condiciones.</span>
+            <span id="aceptar-conformidad-texto">Acepto los términos, condiciones y el alcance detallado en esta propuesta.</span>
           </label>
           <p className="auth__error" id="aceptar-error" role="alert" hidden></p>
         </div>

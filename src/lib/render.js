@@ -15,7 +15,8 @@ import {
   DISPOSICIONES_FOTOS,
   ENCUADRES_IMAGEN,
   totalServicio,
-  calcularTotales
+  calcularTotales,
+  datosDeCobro
 } from '../modelo.js';
 import { decoracionPortadaSVG } from './decoraciones.js';
 import { resolverColoresTema } from './tema.js';
@@ -353,15 +354,59 @@ export const barraClienteHTML = (c, vig, { moneda = 'USD', esAceptada = false, c
     </div>`;
 };
 
-export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '', consultaUrl = '', tipo = 'propuesta' } = {}) => {
+// Tarjeta con los datos para transferir (método de cobro «transferencia»). La ve el
+// cliente al aceptar la propuesta y cada vez que vuelve a abrir el link aceptado.
+// pago: { concepto, monto } del primer pago (o el total), ya con formato.
+export const tarjetaCobroHTML = (cobro, { pago = null, conCopiar = true } = {}) => {
+  if (!cobro) return '';
+  const copiar = (valor, que) => (conCopiar && valor
+    ? `<button type="button" class="cobro-tarjeta__copiar" data-accion="copiar-dato-cobro" data-valor="${esc(valor)}" data-que="${esc(que)}">Copiar</button>`
+    : '');
+  const fila = (etiqueta, valor, que, clase = '', visible = valor) => (valor ? `
+    <div class="cobro-tarjeta__fila">
+      <dt>${esc(etiqueta)}</dt>
+      <dd class="${clase}"><span>${esc(visible)}</span>${copiar(valor, que)}</dd>
+    </div>` : '');
+  return `
+    <div class="cobro-tarjeta">
+      <p class="cobro-tarjeta__titulo">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M2 6.2L8 3l6 3.2M3 6.5v5.5M6.3 6.5v5.5M9.7 6.5v5.5M13 6.5v5.5M2 13.2h12"/></svg>
+        Datos para la transferencia
+      </p>
+      <p class="cobro-tarjeta__texto">Para dar inicio al servicio, realizá la transferencia a esta cuenta.</p>
+      ${pago ? `<p class="cobro-tarjeta__monto"><span>${esc(pago.concepto)}</span><strong>${esc(pago.monto)}</strong></p>` : ''}
+      <dl class="cobro-tarjeta__datos">
+        ${fila('Titular', cobro.titular, 'titular')}
+        ${fila('CBU / CVU', cobro.cbu, 'CBU', 'cobro-tarjeta__cbu', cobro.cbu.length === 22 ? `${cobro.cbu.slice(0, 8)} ${cobro.cbu.slice(8)}` : cobro.cbu)}
+        ${fila('Alias', cobro.alias, 'alias')}
+      </dl>
+    </div>`;
+};
+
+// El primer pago a transferir: el primero de la forma de pago, o el total si no hay pagos.
+export const primerPagoTexto = (s, c) => {
+  const m = s.inversion.moneda;
+  if (!(c.inicial.total > 0)) return null;
+  const pago = s.inversion.pagos.find(x => numero(x.porcentaje) > 0);
+  if (!pago) return { concepto: 'Total a transferir', monto: dinero(c.inicial.total, m) };
+  const pct = numero(pago.porcentaje);
+  return {
+    concepto: `${pago.concepto.trim() || 'Primer pago'} (${cantidadTexto(pct)} %)`,
+    monto: dinero(c.inicial.total * pct / 100, m)
+  };
+};
+
+export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '', consultaUrl = '', tipo = 'propuesta', cobro = null, pago = null } = {}) => {
   const esAceptada = !!compartida?.aceptacion;
+  const que = tipo === 'presupuesto' ? 'presupuesto' : 'propuesta';
   if (esAceptada) {
     const a = compartida.aceptacion;
     const fecha = fechaDeAceptacion(a);
     return `
       <div class="cierre cierre--aceptada">
-        <p class="cierre__titulo">Propuesta aceptada</p>
+        <p class="cierre__titulo">${que === 'presupuesto' ? 'Presupuesto aceptado' : 'Propuesta aceptada'}</p>
         <p class="cierre__texto">Aceptada por ${esc(a.nombre)}${fecha ? ` el ${esc(fechaLarga(fecha))}` : ''}. Esta es la versión que se aceptó.</p>
+        ${tarjetaCobroHTML(cobro, { pago })}
         ${consultaUrl ? `<div class="cierre__acciones"><a class="boton boton--secundario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a></div>` : ''}
       </div>`;
   }
@@ -381,7 +426,7 @@ export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '',
       <p class="cierre__titulo">¿Avanzamos?</p>
       <p class="cierre__texto">${textoCierre}</p>
       <div class="cierre__acciones">
-        <button type="button" class="boton boton--primario boton--grande" data-accion="aceptar">Aceptar ${tipo === 'presupuesto' ? 'presupuesto' : 'propuesta'}</button>
+        <button type="button" class="boton boton--primario boton--grande" data-accion="aceptar">Aceptar ${que}${cobro ? ' y ver datos de pago' : ''}</button>
         ${consultaUrl ? `<a class="boton boton--secundario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a></div>` : ''}
       </div>
     </div>`;
@@ -751,7 +796,7 @@ const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
     </footer>`;
 
   const aviso = web && vig.vencida ? `<p class="doc-aviso">Este presupuesto venció el ${esc(fechaLarga(vig.vence))}. Los valores pueden haber cambiado.</p>` : '';
-  const cierre = web ? `<div class="presu__cierre">${cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, tipo: 'presupuesto' })}</div>` : '';
+  const cierre = web ? `<div class="presu__cierre">${cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, tipo: 'presupuesto', cobro: datosDeCobro(s), pago: primerPagoTexto(s, c) })}</div>` : '';
 
   const hoja = `
     <section class="presu" id="sec-prop-inicio" aria-label="Presupuesto">
@@ -995,7 +1040,7 @@ export const generarPropuestaHTML = (
   const firmas = !web && s.opciones.firmas;
   if (pasos.length || firmas || web) {
     let html = pasos.length ? `<ol class="pasos">${pasos.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : '';
-    if (web) html += cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl });
+    if (web) html += cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, cobro: datosDeCobro(s), pago: primerPagoTexto(s, c) });
     if (firmas) {
       const quienCliente = cl.nombre.trim() || cl.empresa.trim() || 'Cliente';
       const quienEmisor = e.nombre.trim() || 'Responsable de la propuesta';

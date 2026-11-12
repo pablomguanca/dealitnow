@@ -162,6 +162,40 @@ export function ProposalSteps() {
           <p className="aviso-campo" id="aviso-pagos" hidden></p>
           <div className="lista" data-lista="pagos" data-vacio="Sin pagos cargados, la propuesta muestra solo el total."></div>
           <button type="button" className="boton boton--agregar" data-accion="agregar" data-lista="pagos">Agregar pago</button>
+
+          {/* Método de cobro (controlador/cobro.js): con transferencia, el cliente ve estos
+              datos apenas acepta la propuesta. */}
+          <h3 className="separador-campos">Método de cobro</h3>
+          <div className="cobro-editor" id="cobro-editor">
+            <label className="campo campo--ancho">
+              <span className="campo__etiqueta">¿Cómo te paga tu cliente?</span>
+              <select className="control" data-campo="cobro.metodo" id="cobro-metodo">
+                <option value="transferencia">Transferencia bancaria · 0 % de comisión</option>
+                <option value="acordar">Lo coordino con mi cliente</option>
+              </select>
+            </label>
+            <div className="cobro-editor__datos" id="cobro-transferencia">
+              <p className="cobro-editor__ayuda">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6.5" /></svg>
+                <span>Al elegir transferencia, cobrás el 100 % de tu propuesta sin pagar comisiones a pasarelas de pago. Tu cliente ve estos datos apenas la acepta.</span>
+              </p>
+              <label className="campo campo--ancho">
+                <span className="campo__etiqueta">Titular de la cuenta</span>
+                <input className="control" type="text" data-campo="cobro.titular" placeholder="Ej.: Juan Gómez" autoComplete="name" maxLength="120" />
+              </label>
+              <label className="campo">
+                <span className="campo__etiqueta">CBU o CVU</span>
+                <input className="control" type="text" data-campo="cobro.cbu" id="cobro-cbu" placeholder="22 números" inputMode="numeric" autoComplete="off" maxLength="40" />
+                <span className="campo__ayuda" id="cobro-cbu-ayuda" hidden>El CBU o CVU tiene 22 números.</span>
+              </label>
+              <label className="campo">
+                <span className="campo__etiqueta">Alias</span>
+                <input className="control" type="text" data-campo="cobro.alias" id="cobro-alias" placeholder="Ej.: gomez.pintura" autoComplete="off" autoCapitalize="none" maxLength="40" />
+                <span className="campo__ayuda" id="cobro-alias-ayuda" hidden>El alias va de 6 a 20 caracteres: letras, números, puntos o guiones.</span>
+              </label>
+            </div>
+            <p className="campo__ayuda" id="cobro-acordar" hidden>Tu cliente acepta la propuesta y el pago lo coordinan ustedes por fuera de Dealit.</p>
+          </div>
         </div>
       </details>
 

@@ -11,6 +11,23 @@ export function AccountPanel() {
         <h2 className="tarjeta__titulo" id="plan-titulo">Tu plan</h2>
         <p className="tarjeta__ayuda" id="plan-estado" role="status">Plan Gratis.</p>
       </div>
+      {/* Con Pro: la tarjeta se viste de Pro (plan.js pone .tarjeta--pro y muestra esto). */}
+      <div className="plan-pro" id="plan-pro" hidden>
+        <div className="plan-pro__cabecera">
+          <img className="plan-pro__logo" src="/iconos/icono-192.png" alt="" width="52" height="52" />
+          <div>
+            <p className="plan-pro__marca">Dealit <span>Pro</span></p>
+            <p className="plan-pro__estado" id="plan-pro-estado"></p>
+          </div>
+        </div>
+        <ul className="plan-pro__beneficios" aria-label="Lo que incluye tu plan">
+          <li>Envíos ilimitados</li>
+          <li>Diseños y plantillas PRO</li>
+          <li>IA sin límite</li>
+          <li>Sin la marca de Dealit</li>
+          <li>Avisos en vivo</li>
+        </ul>
+      </div>
       <div className="plan-uso" id="plan-uso" aria-hidden="true"><span></span></div>
       <div className="plan-ofertas" id="plan-ofertas">
         <ul className="plan-beneficios">

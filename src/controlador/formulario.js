@@ -19,6 +19,7 @@ import { sincronizarPortafolioEnPropuesta } from './guardado.js';
 import { actualizar } from './documento.js';
 import { llenarTemaEditor } from './diseno.js';
 import { actualizarSeccionesHoja } from './hoja.js';
+import { pintarCobroEditor } from './cobro.js';
 
 export const actualizarImagenGenericaItem = (nodo, urlImg, prefijo, textoSubir = 'Subir foto', textoCambiar = 'Cambiar foto') => {
   const img = $(`[${prefijo}-vista]`, nodo);
@@ -265,6 +266,7 @@ export const llenarFormulario = () => {
   actualizarLogo();
   renderListas();
   llenarTemaEditor();
+  pintarCobroEditor();
 };
 
 export const reemplazarEstado = nuevo => {

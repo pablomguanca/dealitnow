@@ -81,6 +81,13 @@ const pintarPlan = () => {
     const quedan = Math.max(0, LIMITE_ENVIOS_GRATIS - usados);
     estado.textContent = `Plan Gratis: ${usados} de ${LIMITE_ENVIOS_GRATIS} propuestas enviadas este mes. ${quedan === 0 ? 'No te quedan envíos: se renuevan el mes que viene.' : quedan === 1 ? 'Te queda 1 envío.' : `Te quedan ${quedan} envíos.`}`;
   }
+  // Con Pro, la tarjeta se viste de Pro: logo, «Dealit Pro» y lo que incluye.
+  $('.tarjeta--plan')?.classList.toggle('tarjeta--pro', pro);
+  const bloquePro = $('#plan-pro');
+  if (bloquePro) {
+    bloquePro.hidden = !pro;
+    $('#plan-pro-estado').textContent = estado.textContent.replace(/^Plan Pro /, 'Plan ');
+  }
   $('#plan-ofertas').hidden = pro && plan.estado === 'activa';
   $('#plan-administrar').hidden = !pro;
   $('#plan-sincronizar').hidden = pro && plan.estado === 'activa';

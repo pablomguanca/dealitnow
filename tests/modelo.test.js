@@ -12,7 +12,10 @@ import {
   calcularTotales,
   ejemplo,
   normalizarPropuesta,
-  vacio
+  vacio,
+  datosDeCobro,
+  cbuValido,
+  aliasValido
 } from '../src/modelo.js';
 import { LOGO_MAX_ARCHIVO, FOTO_MAX_ARCHIVO } from '../src/lib/imagenes.js';
 
@@ -283,5 +286,41 @@ describe('formato presupuesto', () => {
     const pdf = generarPropuestaHTML(p, { web: false });
     expect(pdf).not.toContain('data-accion="sumar"');
     expect(pdf).toContain('presu__firmas');
+  });
+});
+
+describe('método de cobro', () => {
+  const conCobro = cobro => normalizarPropuesta({ ...ejemplo(), cobro });
+
+  it('por defecto es transferencia, y sin CBU ni alias no hay datos que mostrar', () => {
+    const p = normalizarPropuesta(ejemplo());
+    expect(p.cobro.metodo).toBe('transferencia');
+    expect(datosDeCobro(p)).toBeNull();
+    expect(normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'cripto' } }).cobro.metodo).toBe('transferencia');
+  });
+
+  it('deja solo los dígitos del CBU y valida su largo y el alias', () => {
+    const p = conCobro({ titular: 'Juan Gómez', cbu: '0000 0031-0001 2345 6789 01', alias: 'gomez.pintura' });
+    expect(datosDeCobro(p)).toEqual({ titular: 'Juan Gómez', cbu: '0000003100012345678901', alias: 'gomez.pintura' });
+    expect(cbuValido('0000003100012345678901')).toBe(true);
+    expect(cbuValido('123')).toBe(false);
+    expect(aliasValido('gomez.pintura')).toBe(true);
+    expect(aliasValido('a b')).toBe(false);
+  });
+
+  it('«Lo coordino con mi cliente» no muestra datos', () => {
+    expect(datosDeCobro(conCobro({ metodo: 'acordar', cbu: '0000003100012345678901' }))).toBeNull();
+  });
+
+  it('en el link: el botón invita a ver los datos de pago, y aceptada muestra la tarjeta con el primer pago', () => {
+    const p = conCobro({ titular: 'Juan Gómez', cbu: '0000003100012345678901', alias: 'gomez.pintura' });
+    p.inversion.pagos = [{ id: 'a', concepto: 'Seña', porcentaje: 50 }, { id: 'b', concepto: 'Final', porcentaje: 50 }];
+    expect(generarPropuestaHTML(p, { web: true })).toContain('Aceptar propuesta y ver datos de pago');
+    expect(generarPropuestaHTML(p, { web: true })).not.toContain('cobro-tarjeta');
+    const aceptada = generarPropuestaHTML(p, { web: true, compartida: { aceptacion: { nombre: 'Laura', fecha: '2026-11-10T12:00:00Z' } } });
+    expect(aceptada).toContain('cobro-tarjeta');
+    expect(aceptada).toContain('gomez.pintura');
+    expect(aceptada).toContain('Seña (50 %)');
+    expect(generarPropuestaHTML(p, { web: false })).not.toContain('cobro-tarjeta');
   });
 });
