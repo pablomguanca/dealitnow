@@ -5,6 +5,7 @@ import { AteneaDB, AteneaDBError } from '../firebase-publico.js';
 import { usarBase } from './contexto.js';
 import { instalarAcciones } from './acciones.js';
 import { instalarVista } from './vista.js';
+import { instalarVideos } from './video.js';
 import { instalarAceptar } from './aceptar.js';
 import { iniciarVistaCliente } from './cliente.js';
 import { tipoLinkCliente } from '../lib/links-cliente.js';
@@ -16,6 +17,7 @@ export const inicializarVistaCliente = () => {
   iniciado = true;
   usarBase(AteneaDB, AteneaDBError);
   instalarVista();
+  instalarVideos();
   instalarAceptar();
   instalarAcciones();
   document.body.classList.remove('auth-cargando');

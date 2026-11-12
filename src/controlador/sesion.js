@@ -40,6 +40,7 @@ const MOTIVOS_REGISTRO = {
   compartir: 'Creá tu cuenta gratis para compartir tu propuesta. Lo que armaste se guarda en tu cuenta.',
   pdf: 'Creá tu cuenta gratis para descargar tu propuesta en PDF. Lo que armaste se guarda en tu cuenta.',
   guardar: 'Creá tu cuenta gratis para guardar tus propuestas y abrirlas desde cualquier dispositivo.',
+  plantillas: 'Creá tu cuenta gratis para explorar todas las plantillas: oficios, legal, contable, bodas, e-commerce y muchas más.',
   ia: 'Creá tu cuenta gratis para armar propuestas con IA: contás el trabajo en un audio y queda lista en segundos.'
 };
 
@@ -374,6 +375,9 @@ const iniciarConCuenta = async () => {
   if (continuar === 'ia') {
     irAlPanel({ historial: false });
     abrirIA();
+  } else if (continuar === 'plantillas') {
+    // Se registró desde «Explorar más plantillas»: su propuesta ya quedó en la cuenta.
+    irAlPanel({ historial: false, pestana: 'plantillas' });
   } else if (migrada && continuar) {
     mostrarEditor(migrada.id, migrada.contenido, { historial: false });
     irRuta(`/propuesta/${encodeURIComponent(migrada.id)}`, { reemplazar: true });

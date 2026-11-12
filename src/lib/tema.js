@@ -102,6 +102,9 @@ export const resolverColoresTema = t => {
     portadaBg = fondoBase;
   } else if (fondoPersonalizado) {
     portadaBg = fondoPersonalizado;
+  } else if (preset.portadaFondo) {
+    // Diseños con un fondo de portada propio (por ejemplo, grafito con acento naranja).
+    portadaBg = preset.portadaFondo;
   } else {
     portadaBg = esClaro ? mezclar(acento, false, 0.72) : preset.fondo;
   }

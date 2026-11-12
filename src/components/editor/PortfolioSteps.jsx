@@ -124,6 +124,24 @@ export function PortfolioSteps() {
             <div className="lista" data-lista-pf="especialidades" data-vacio="Sumá las áreas, tecnologías o servicios en los que te especializás."></div>
             <button type="button" className="boton boton--agregar" data-accion="agregar-pf" data-lista-pf="especialidades">Agregar especialidad</button>
 
+            <h3 className="separador-campos">Video (opcional)</h3>
+            <div className="campo-video" data-video-editor>
+              <p className="campo__ayuda campo-video__intro">Contale un poco más a tu cliente con un video: quién sos, cómo trabajás o un mensaje para este proyecto. Un video corto (1 a 3 minutos) suele funcionar mejor.</p>
+              <label className="campo">
+                <span className="campo__etiqueta">Link del video</span>
+                <input className="control" type="url" inputMode="url" autoComplete="off" spellCheck="false" data-campo-pf="video.url" data-video-url placeholder="https://youtu.be/… · vimeo.com/… · loom.com/share/…" />
+                <span className="campo__ayuda campo-video__estado" data-video-estado aria-live="polite">Pegá el link de YouTube, Vimeo, Loom, Google Drive o un link directo a un archivo .mp4.</span>
+              </label>
+              <label className="campo">
+                <span className="campo__etiqueta">Título de la sección</span>
+                <input className="control" type="text" maxLength="120" data-campo-pf="video.titulo" placeholder="Mirá cómo trabajo" />
+              </label>
+              <label className="campo">
+                <span className="campo__etiqueta">Texto que acompaña (opcional)</span>
+                <textarea className="control" rows="2" maxLength="600" data-campo-pf="video.texto" placeholder="Ej.: Te grabé un video corto para contarte cómo encararía tu proyecto."></textarea>
+              </label>
+            </div>
+
             <h3 className="separador-campos">Servicios o packs ofrecidos (opcional)</h3>
             <label className="campo" style={{ marginBottom: '0.75rem' }}>
               <span className="campo__etiqueta">Título de la sección de servicios</span>

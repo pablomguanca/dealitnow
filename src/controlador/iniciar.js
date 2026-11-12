@@ -12,6 +12,7 @@ import { instalarNativo } from '../nativo.js';
 import { instalarBienvenida } from './bienvenida.js';
 import { instalarCobro } from './cobro.js';
 import { instalarVista } from './vista.js';
+import { instalarVideos } from './video.js';
 import { instalarGuardado } from './guardado.js';
 import { instalarFormulario } from './formulario.js';
 import { instalarDiseno } from './diseno.js';
@@ -56,6 +57,7 @@ export const inicializarControladorDealit = () => {
   instalarHoja();
   instalarGestos();
   instalarVista();
+  instalarVideos();
   instalarAcciones();
   instalarPropuestas();
   instalarGaleriaPlantillas();

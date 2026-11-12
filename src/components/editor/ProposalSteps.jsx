@@ -81,6 +81,23 @@ export function ProposalSteps() {
             <span className="campo__etiqueta">El punto de partida</span>
             <textarea className="control" rows="6" data-campo="contexto" placeholder="Resumí la situación actual de tu cliente con sus propias palabras. Dejá una línea en blanco entre párrafos."></textarea>
           </label>
+          <h3 className="separador-campos">Video (opcional)</h3>
+          <div className="campo-video" data-video-editor>
+            <p className="campo__ayuda campo-video__intro">Contale un poco más a tu cliente con un video: quién sos, cómo trabajás o un mensaje para este proyecto. Un video corto (1 a 3 minutos) suele funcionar mejor.</p>
+            <label className="campo">
+              <span className="campo__etiqueta">Link del video</span>
+              <input className="control" type="url" inputMode="url" autoComplete="off" spellCheck="false" data-campo="video.url" data-video-url placeholder="https://youtu.be/… · vimeo.com/… · loom.com/share/…" />
+              <span className="campo__ayuda campo-video__estado" data-video-estado aria-live="polite">Pegá el link de YouTube, Vimeo, Loom, Google Drive o un link directo a un archivo .mp4.</span>
+            </label>
+            <label className="campo">
+              <span className="campo__etiqueta">Título de la sección</span>
+              <input className="control" type="text" maxLength="120" data-campo="video.titulo" placeholder="Te lo cuento en video" />
+            </label>
+            <label className="campo">
+              <span className="campo__etiqueta">Texto que acompaña (opcional)</span>
+              <textarea className="control" rows="2" maxLength="600" data-campo="video.texto" placeholder="Ej.: Te grabé un video corto para contarte cómo encararía tu proyecto."></textarea>
+            </label>
+          </div>
           <h3 className="separador-campos">Objetivos</h3>
           <div className="lista" data-lista="objetivos" data-vacio="Sumá lo que tu cliente quiere lograr con el proyecto."></div>
           <button type="button" className="boton boton--agregar" data-accion="agregar" data-lista="objetivos">Agregar objetivo</button>

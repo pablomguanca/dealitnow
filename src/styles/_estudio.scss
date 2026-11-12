@@ -223,3 +223,63 @@
   content: ' · Con Pro podés sacarla';
   color: var(--marfil-apagado);
 }
+
+// «Explorar más plantillas»: debajo de los atajos, lleva al catálogo completo.
+.plantillas-explorar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  margin: 0.35rem 0 0.6rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px dashed var(--dorado-tenue);
+  border-radius: var(--radio-m);
+  background: var(--dorado-fondo);
+  color: var(--marfil);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transicion), background-color var(--transicion), transform 0.2s ease;
+
+  &__texto {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__titulo {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--dorado-papel);
+  }
+
+  &__sub {
+    font-size: 0.76rem;
+    line-height: 1.35;
+    color: var(--marfil-apagado);
+  }
+
+  svg {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    fill: none;
+    stroke: var(--dorado-papel);
+    stroke-width: var(--icono-trazo);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform 0.2s ease;
+  }
+
+  &:hover,
+  &:focus-visible {
+    border-style: solid;
+    border-color: var(--dorado);
+
+    svg {
+      transform: translateX(3px);
+    }
+  }
+}

@@ -13,7 +13,7 @@ export const mostrarBienvenida = () => {
   if (!el) return;
   // Los rubros y, al final, «En blanco» como una opción más.
   $('#bienvenida-rubros').innerHTML = Object.entries(PLANTILLAS)
-    .filter(([id]) => id !== 'en-blanco')
+    .filter(([id, p]) => id !== 'en-blanco' && !p.catalogo)
     .map(([id, p]) => `<button type="button" class="bienvenida__rubro" data-accion="bienvenida-rubro" data-id="${esc(id)}">${esc(p.rubro)}</button>`)
     .join('') + '<button type="button" class="bienvenida__rubro bienvenida__rubro--blanco" data-accion="bienvenida-rubro" data-id="en-blanco">Empezar en blanco</button>';
   el.hidden = false;

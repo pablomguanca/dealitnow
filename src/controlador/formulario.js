@@ -20,6 +20,7 @@ import { actualizar } from './documento.js';
 import { llenarTemaEditor } from './diseno.js';
 import { actualizarSeccionesHoja } from './hoja.js';
 import { pintarCobroEditor } from './cobro.js';
+import { pintarEstadosVideo } from './video.js';
 
 export const actualizarImagenGenericaItem = (nodo, urlImg, prefijo, textoSubir = 'Subir foto', textoCambiar = 'Cambiar foto') => {
   const img = $(`[${prefijo}-vista]`, nodo);
@@ -255,6 +256,7 @@ export const llenarFormulario = () => {
     actualizarLogo();
     renderListasPortafolio();
     llenarTemaEditor();
+    pintarEstadosVideo();
     return;
   }
   actualizarSelectorPortafolio();
@@ -267,6 +269,7 @@ export const llenarFormulario = () => {
   renderListas();
   llenarTemaEditor();
   pintarCobroEditor();
+  pintarEstadosVideo();
 };
 
 export const reemplazarEstado = nuevo => {

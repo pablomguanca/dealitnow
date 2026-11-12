@@ -4,6 +4,8 @@ import {
   numero,
   texto
 } from './lib/formato.js';
+import { normalizarVideo, vacioVideo } from './video.js';
+import { TEMAS_CATALOGO, PLANTILLAS_CATALOGO } from './plantillas-catalogo.js';
 
 export const MODALIDADES = {
   unico: { cantidad: 'Cantidad', precio: 'Precio' },
@@ -213,6 +215,9 @@ export const TEMAS = {
   }
 };
 
+// Diseños del catálogo ampliado (plantillas-catalogo.js).
+Object.assign(TEMAS, TEMAS_CATALOGO);
+
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
 export const hoyISO = () => {
@@ -245,6 +250,8 @@ export const vacio = () => ({
   cliente: { nombre: '', empresa: '', cargo: '' },
   propuesta: { titulo: '', numero: '', fecha: hoyISO(), validez: 15, imagenPortada: '', opacidadPortada: 35 },
   contexto: '',
+  // Video opcional: link de YouTube, Vimeo, Loom, Drive o un .mp4 (src/video.js).
+  video: vacioVideo(),
   objetivos: [],
   servicios: [],
   etapas: [],
@@ -949,6 +956,50 @@ export const PLANTILLAS = {
   }
 };
 
+// Plantillas del catálogo ampliado: se suman con catalogo: true (no van en los atajos del
+// editor, sino en «Explorar más plantillas»). Acá se completan IDs, fecha y diseño.
+const temaDePreset = preset => {
+  const t = TEMAS[preset] || TEMAS['elegante-oscuro'];
+  return {
+    ...vacio().tema,
+    preset: TEMAS[preset] ? preset : 'elegante-oscuro',
+    acento: t.acento,
+    fuenteTitulos: t.fuenteTitulos,
+    fuenteCuerpo: t.fuenteCuerpo,
+    portada: t.portada,
+    decoracion: t.decoracion,
+    estilo: t.estilo
+  };
+};
+
+const desdeCatalogo = d => {
+  const base = vacio();
+  return {
+    ...base,
+    emisor: { ...base.emisor, ...d.emisor },
+    cliente: { ...base.cliente, ...d.cliente },
+    propuesta: { ...base.propuesta, ...d.propuesta, fecha: hoyISO() },
+    contexto: d.contexto || '',
+    objetivos: (d.objetivos || []).map(texto => ({ id: uid(), texto })),
+    servicios: (d.servicios || []).map(s => ({ ...LISTAS.servicios.nuevo(), ...s })),
+    etapas: (d.etapas || []).map(e => ({ ...LISTAS.etapas.nuevo(), ...e })),
+    faqs: (d.faqs || []).map(f => ({ ...LISTAS.faqs.nuevo(), ...f })),
+    inversion: {
+      ...base.inversion,
+      moneda: d.inversion?.moneda || 'USD',
+      pagos: (d.inversion?.pagos || []).map(([concepto, porcentaje]) => ({ id: uid(), concepto, porcentaje }))
+    },
+    condiciones: d.condiciones || '',
+    proximosPasos: d.proximosPasos || '',
+    opciones: { ...base.opciones, firmas: true, credito: true },
+    tema: temaDePreset(d.tema)
+  };
+};
+
+Object.entries(PLANTILLAS_CATALOGO).forEach(([id, { datos, ...meta }]) => {
+  PLANTILLAS[id] = { ...meta, catalogo: true, crear: () => desdeCatalogo(datos()) };
+});
+
 export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\//.test(logo) } = {}) => {
   const base = vacio();
   const d = datos && typeof datos === 'object' ? datos : {};
@@ -969,6 +1020,7 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
       opacidadPortada: opPortadaValida
     },
     contexto: texto(d.contexto),
+    video: normalizarVideo(d.video, texto),
     objetivos: lista(d.objetivos, LISTAS.objetivos.nuevo),
     servicios: lista(d.servicios, LISTAS.servicios.nuevo),
     etapas: lista(d.etapas, LISTAS.etapas.nuevo),
@@ -1137,6 +1189,7 @@ export const vacioPortafolio = () => ({
     cierreTexto: 'Escribime por WhatsApp o email para conversar sobre tu proyecto o solicitar una propuesta a medida.'
   },
   especialidades: [],
+  video: vacioVideo(),
   proyectos: [],
   galeria: [],
   serviciosWeb: [],
@@ -1665,6 +1718,7 @@ export const normalizarPortafolio = (datos, { logoValido = logo => /^data:image\
       opacidadPortada: opPortadaValida
     },
     especialidades: lista(d.especialidades, LISTAS_PORTAFOLIO.especialidades.nuevo),
+    video: normalizarVideo(d.video, texto),
     proyectos: lista(d.proyectos, LISTAS_PORTAFOLIO.proyectos.nuevo),
     galeria: lista(d.galeria, LISTAS_PORTAFOLIO.galeria.nuevo),
     serviciosWeb: lista(d.serviciosWeb, LISTAS_PORTAFOLIO.serviciosWeb.nuevo),

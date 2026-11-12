@@ -1,6 +1,9 @@
 // Estudio de diseño visual: plantillas por rubro, temas cromáticos, decoraciones SVG, portadas, estilos de bloques, tipografías y escalas.
 
 import { FUENTES_TITULOS, FUENTES_CUERPO, COMBINACIONES_FUENTES } from '../../modelo.js';
+import { TEMAS_CATALOGO, PLANTILLAS_CATALOGO } from '../../plantillas-catalogo.js';
+
+const CANTIDAD_CATALOGO = Object.keys(PLANTILLAS_CATALOGO).length;
 
 export function DesignStudio() {
   return (
@@ -54,6 +57,14 @@ export function DesignStudio() {
               <span className="plantilla-chip__nombre">Coaching y Capacitación</span>
             </button>
           </div>
+          {/* El catálogo completo (con las plantillas nuevas) está en la pestaña Plantillas del panel. */}
+          <button type="button" className="plantillas-explorar" data-accion="explorar-plantillas">
+            <span className="plantillas-explorar__texto">
+              <span className="plantillas-explorar__titulo">Explorar más plantillas</span>
+              <span className="plantillas-explorar__sub">{CANTIDAD_CATALOGO} rubros más: oficios, legal, contable, bodas, UX, e-commerce y más</span>
+            </span>
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" /></svg>
+          </button>
           </div>
           <div id="plantillas-portafolio-wrap" hidden>
             <div className="estudio-cabecera">
@@ -184,6 +195,18 @@ export function DesignStudio() {
               <span className="tema-card__nombre">Rosa Editorial</span>
               <span className="tema-card__sub">Moda &amp; Lifestyle</span>
             </button>
+            {Object.entries(TEMAS_CATALOGO).map(([id, t]) => (
+              <button key={id} type="button" className="tema-card" data-tema={id}>
+                {t.plan === 'pro' && <span className="tema-card__badge">PRO</span>}
+                <div className="tema-card__muestra">
+                  <span style={t.modo === 'claro' ? { background: t.fondo, border: `1px solid ${t.superficieBorde}` } : { background: t.fondo }}></span>
+                  <span style={{ background: t.acento }}></span>
+                  <span style={{ background: t.texto }}></span>
+                </div>
+                <span className="tema-card__nombre">{t.nombre}</span>
+                <span className="tema-card__sub">{t.etiqueta}</span>
+              </button>
+            ))}
           </div>
 
           <h3 className="separador-campos">Decoración gráfica</h3>

@@ -18,7 +18,9 @@ import { avisar, avisarExito, elegir } from './avisos.js';
 import { guardarLuego } from './guardado.js';
 import { llenarFormulario, reemplazarEstado } from './formulario.js';
 import { actualizar, actualizarTemaEnVivo, congelarAnimaciones } from './documento.js';
-import { nuevaPropuesta } from './propuestas.js';
+import { nuevaPropuesta, irAlPanel } from './propuestas.js';
+import { abrirRegistro } from './sesion.js';
+import { registrarAcciones } from './acciones.js';
 import { disenoProPermitido } from './plan.js';
 
 // Escalas y espaciados ajustables: [id del control, id del valor mostrado, propiedad del tema].
@@ -199,7 +201,15 @@ const aplicarPlantillaPortafolio = (id, soloDiseno = false) => {
   $$('[data-plantilla-portafolio]').forEach(c => c.classList.toggle('plantilla-chip--activa', c.dataset.plantillaPortafolio === id));
 };
 
+// «Explorar más plantillas»: el catálogo completo está en la pestaña Plantillas del panel.
+// Sin cuenta, se invita a crearla (el panel es de las cuentas).
+const explorarPlantillas = () => {
+  if (nube()) irAlPanel({ pestana: 'plantillas' });
+  else abrirRegistro('plantillas');
+};
+
 export const instalarDiseno = () => {
+  registrarAcciones({ 'explorar-plantillas': () => explorarPlantillas() });
   $('#temas-grid')?.addEventListener('click', async ev => {
     const card = ev.target.closest('.tema-card');
     if (!card) return;

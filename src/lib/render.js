@@ -20,12 +20,43 @@ import {
   cobraConMercadoPago
 } from '../modelo.js';
 import { decoracionPortadaSVG } from './decoraciones.js';
+import { analizarVideo } from '../video.js';
 import { resolverColoresTema } from './tema.js';
 
 export const ICONO_SUMAR = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>';
 export const ICONO_SUMADO = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
 export const ICONO_CHECK = '<svg class="icono-check" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-6.5"/></svg>';
 export const ICONO_EXTERNO = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5h6.5V10M12 4L4.5 11.5"/></svg>';
+
+// Video («Contale un poco más a tu cliente con un video»). En la web, una portada con el
+// botón de play: el reproductor se carga recién al tocarla (vista.js), así la propuesta abre
+// rápido y el editor no recarga el video con cada tecla. En el PDF, el link para verlo.
+const ICONO_PLAY = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.8v12.4a.9.9 0 0 0 1.37.77l10.1-6.2a.9.9 0 0 0 0-1.54l-10.1-6.2a.9.9 0 0 0-1.37.77z"/></svg>';
+
+export const videoSeccionHTML = (datos, web = true) => {
+  const v = analizarVideo(datos?.url);
+  if (!v) return '';
+  const texto = (datos.texto || '').trim();
+  const intro = texto ? `<p class="video-bloque__texto">${esc(texto).replace(/\n/g, '<br>')}</p>` : '';
+  if (!web) {
+    return `
+      <div class="video-bloque video-bloque--impreso">
+        ${intro}
+        <p class="video-bloque__enlace">Mirá el video en ${esc(v.nombre)}: <a href="${esc(v.enlace)}">${esc(v.enlace)}</a></p>
+      </div>`;
+  }
+  return `
+    <div class="video-bloque${v.vertical ? ' video-bloque--vertical' : ''}">
+      ${intro}
+      <div class="video-bloque__marco video-bloque__marco--${esc(v.proveedor)}" data-video-embed="${esc(v.embed || '')}" data-video-archivo="${esc(v.archivo || '')}" data-video-titulo="${esc(datos.titulo?.trim() || 'Video')}">
+        <button type="button" class="video-bloque__play" data-video-reproducir aria-label="Reproducir el video">
+          ${v.miniatura ? `<img class="video-bloque__miniatura" src="${esc(v.miniatura)}" alt="" loading="lazy" decoding="async">` : '<span class="video-bloque__fondo" aria-hidden="true"></span>'}
+          <span class="video-bloque__boton" aria-hidden="true">${ICONO_PLAY}</span>
+          <span class="video-bloque__fuente">${esc(v.nombre)}</span>
+        </button>
+      </div>
+    </div>`;
+};
 
 export const vacioHTML = t => `<span class="doc__vacio">${esc(t)}</span>`;
 
@@ -593,6 +624,16 @@ export const generarPortafolioHTML = (s, { web = true, tipoDecoracion = 'marco',
     });
   }
 
+  const videoPf = videoSeccionHTML(s.video, web);
+  if (videoPf) {
+    bloques.push({
+      id: 'sec-video',
+      nav: 'Video',
+      titulo: s.video.titulo.trim() || 'Mirá cómo trabajo',
+      html: videoPf
+    });
+  }
+
   if (proyectosValidos.length) {
     bloques.push({
       id: 'sec-proyectos',
@@ -957,6 +998,16 @@ export const generarPropuestaHTML = (
         html: htmlPf
       });
     }
+  }
+
+  const videoProp = videoSeccionHTML(s.video, web);
+  if (videoProp) {
+    bloques.push({
+      id: 'sec-prop-video',
+      nav: 'Video',
+      titulo: s.video.titulo.trim() || 'Te lo cuento en video',
+      html: videoProp
+    });
   }
 
   if (s.contexto.trim()) {
