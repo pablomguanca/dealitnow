@@ -8,7 +8,7 @@
   border-top: 4px solid var(--d-acento);
   color: var(--d-texto);
   font-family: var(--fuente-texto);
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--escala-texto, 1));
   line-height: 1.5;
 
   &__cabecera {
@@ -28,8 +28,8 @@
   }
 
   &__logo {
-    max-width: 10rem;
-    max-height: 3.5rem;
+    max-width: calc(10rem * var(--escala-logo, 1));
+    max-height: calc(3.5rem * var(--escala-logo, 1));
     object-fit: contain;
     object-position: left;
   }

@@ -44,11 +44,11 @@ const TPL_SERVICIOS = `<div class="item">
         <span class="campo__etiqueta">Descripción</span>
         <textarea class="control" rows="3" data-item="descripcion" placeholder="Qué resuelve este servicio para tu cliente."></textarea>
       </label>
-      <label class="campo campo--ancho">
+      <label class="campo campo--ancho" data-solo-propuesta>
         <span class="campo__etiqueta">Entregables, uno por línea</span>
         <textarea class="control" rows="3" data-item="entregables" placeholder="Ej.: Diseño de cinco páginas"></textarea>
       </label>
-      <div class="campo campo--ancho">
+      <div class="campo campo--ancho" data-solo-propuesta>
         <span class="campo__etiqueta">Foto o imagen del servicio (opcional)</span>
         <div class="logo">
           <img class="logo__vista proyecto-imagen__vista" data-srv-img-vista alt="Foto del servicio" hidden>

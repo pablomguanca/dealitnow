@@ -103,6 +103,10 @@ export function DesignStudio() {
                 <option value="presupuesto">Presupuesto: una hoja con la tabla de trabajos y el total</option>
               </select>
             </label>
+            <p className="formato-aviso" data-solo-presupuesto>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" /><path d="M8 7.25v3.75M8 5h.01" /></svg>
+              <span>En formato Presupuesto ves solo lo que aparece en la hoja: tus datos de contacto, el cliente, los trabajos con sus precios, la forma de pago y las condiciones. Etapas, galería, video, decoraciones y portadas son del formato Propuesta.</span>
+            </p>
           </div>
 
           <h3 className="separador-campos">Tema visual</h3>
@@ -209,8 +213,8 @@ export function DesignStudio() {
             ))}
           </div>
 
-          <h3 className="separador-campos">Decoración gráfica</h3>
-          <div className="opciones-visuales" id="decoraciones-grid">
+          <h3 data-solo-propuesta className="separador-campos">Decoración gráfica</h3>
+          <div data-solo-propuesta className="opciones-visuales" id="decoraciones-grid">
             <button type="button" className="opcion-visual opcion-visual--activa" data-decoracion="marco">
               <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="3" y="3" width="30" height="18" fill="none" stroke="currentColor" strokeWidth="1.3"/><rect x="5.5" y="5.5" width="25" height="13" fill="none" stroke="currentColor" strokeWidth="0.7" opacity="0.55"/><circle cx="27" cy="8.5" r="3.2" fill="none" stroke="currentColor" strokeWidth="0.8" opacity="0.7"/><polygon points="18,1.8 19.6,3 18,4.2 16.4,3" fill="currentColor"/></svg>
               <span>Marco</span>
@@ -241,8 +245,8 @@ export function DesignStudio() {
             </button>
           </div>
 
-          <h3 className="separador-campos">Disposición de portada</h3>
-          <div className="opciones-visuales opciones-visuales--4" id="portadas-grid">
+          <h3 data-solo-propuesta className="separador-campos">Disposición de portada</h3>
+          <div data-solo-propuesta className="opciones-visuales opciones-visuales--4" id="portadas-grid">
             <button type="button" className="opcion-visual opcion-visual--activa" data-portada="editorial">
               <svg viewBox="0 0 36 24" aria-hidden="true"><rect x="4" y="4" width="10" height="2" fill="currentColor"/><rect x="4" y="10" width="24" height="4" fill="currentColor"/><rect x="4" y="19" width="28" height="1.5" fill="currentColor" opacity="0.45"/></svg>
               <span>Editorial</span>
@@ -273,8 +277,8 @@ export function DesignStudio() {
             </button>
           </div>
 
-          <h3 className="separador-campos">Estilo de bloques y servicios</h3>
-          <div className="opciones-visuales opciones-visuales--4" id="estilos-grid">
+          <h3 data-solo-propuesta className="separador-campos">Estilo de bloques y servicios</h3>
+          <div data-solo-propuesta className="opciones-visuales opciones-visuales--4" id="estilos-grid">
             <button type="button" className="opcion-visual opcion-visual--activa" data-estilo="editorial">
               <svg viewBox="0 0 36 24" aria-hidden="true"><text x="4" y="12" fontSize="8" fill="currentColor" fontWeight="bold">01</text><line x1="14" y1="7" x2="32" y2="7" stroke="currentColor" strokeWidth="2"/><line x1="14" y1="13" x2="30" y2="13" stroke="currentColor" strokeWidth="1.2" opacity="0.5"/><line x1="14" y1="18" x2="32" y2="18" stroke="currentColor" strokeWidth="1.2" opacity="0.5"/></svg>
               <span>Editorial</span>
@@ -301,9 +305,9 @@ export function DesignStudio() {
             </button>
           </div>
 
-          <h3 className="separador-campos">Combinaciones de tipografía</h3>
+          <h3 data-solo-propuesta className="separador-campos">Combinaciones de tipografía</h3>
           <p className="campo__ayuda">Títulos y texto que combinan bien. Después podés cambiar cada una por separado.</p>
-          <div className="combinaciones" id="combinaciones-grid">
+          <div data-solo-propuesta className="combinaciones" id="combinaciones-grid">
             {COMBINACIONES_FUENTES.map(c => (
               <button type="button" className="combinacion" data-combinacion={c.id} key={c.id}>
                 <span className="combinacion__muestra" style={{ fontFamily: `'${c.titulos}', serif` }}>Aa</span>
@@ -332,7 +336,7 @@ export function DesignStudio() {
                 <span className="color-campo__texto">Títulos y textos</span>
               </span>
             </label>
-            <label className="campo">
+            <label data-solo-propuesta className="campo">
               <span className="campo__etiqueta">Fondo de portada</span>
               <span className="color-campo">
                 <input className="color-input" type="color" id="tema-color-portada" defaultValue="#06060A" />
@@ -346,21 +350,21 @@ export function DesignStudio() {
                 <span className="color-campo__texto">Cuerpo y secciones</span>
               </span>
             </label>
-            <label className="campo">
+            <label data-solo-propuesta className="campo">
               <span className="campo__etiqueta">Color de decoración SVG</span>
               <span className="color-campo">
                 <input className="color-input" type="color" id="tema-color-svg" defaultValue="#C9A84C" />
                 <span className="color-campo__texto">Líneas, tramas y sello</span>
               </span>
             </label>
-            <label className="campo">
+            <label data-solo-propuesta className="campo">
               <span className="campo__etiqueta campo__etiqueta--fila">
                 <span>Intensidad del SVG</span>
                 <output className="campo__valor" id="tema-opacidad-valor" htmlFor="tema-opacidad-svg">100%</output>
               </span>
               <input className="rango-input" type="range" id="tema-opacidad-svg" min="0" max="200" step="5" defaultValue="100" />
             </label>
-            <label className="campo">
+            <label data-solo-propuesta className="campo">
               <span className="campo__etiqueta">Tipografía de títulos</span>
               <select className="control" id="tema-fuente-titulos">
                 {FUENTES_TITULOS.map(f => <option key={f}>{f}</option>)}
@@ -379,14 +383,14 @@ export function DesignStudio() {
               </span>
               <input className="rango-input" type="range" id="tema-escala-logo" min="50" max="250" step="5" defaultValue="100" />
             </label>
-            <label className="campo">
+            <label data-solo-propuesta className="campo">
               <span className="campo__etiqueta campo__etiqueta--fila">
                 <span>Tamaño título de portada</span>
                 <output className="campo__valor" id="tema-escala-portada-valor" htmlFor="tema-escala-portada">100%</output>
               </span>
               <input className="rango-input" type="range" id="tema-escala-portada" min="60" max="150" step="5" defaultValue="100" />
             </label>
-            <label className="campo">
+            <label data-solo-propuesta className="campo">
               <span className="campo__etiqueta campo__etiqueta--fila">
                 <span>Tamaño títulos de sección</span>
                 <output className="campo__valor" id="tema-escala-titulos-valor" htmlFor="tema-escala-titulos">100%</output>
@@ -400,14 +404,14 @@ export function DesignStudio() {
               </span>
               <input className="rango-input" type="range" id="tema-escala-texto" min="85" max="125" step="5" defaultValue="100" />
             </label>
-            <label className="campo">
+            <label data-solo-propuesta className="campo">
               <span className="campo__etiqueta campo__etiqueta--fila">
                 <span>Espaciado entre secciones</span>
                 <output className="campo__valor" id="tema-espaciado-secciones-valor" htmlFor="tema-espaciado-secciones">100%</output>
               </span>
               <input className="rango-input" type="range" id="tema-espaciado-secciones" min="40" max="170" step="5" defaultValue="100" />
             </label>
-            <label className="campo campo--ancho">
+            <label data-solo-propuesta className="campo campo--ancho">
               <span className="campo__etiqueta campo__etiqueta--fila">
                 <span>Espaciado interno de bloques y tarjetas</span>
                 <output className="campo__valor" id="tema-espaciado-interno-valor" htmlFor="tema-espaciado-interno">100%</output>

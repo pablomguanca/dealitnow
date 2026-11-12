@@ -220,6 +220,7 @@ const sincronizarModoEditorUI = () => {
   if (wrapTplPf) wrapTplPf.hidden = !esPf;
   const wrapFormato = $('#formato-propuesta-wrap');
   if (wrapFormato) wrapFormato.hidden = esPf;
+  aplicarFormatoEditor();
   if (campoVincularPf) campoVincularPf.hidden = esPf;
   if (subtituloBarra) subtituloBarra.textContent = esPf ? 'Armá tu portfolio' : 'Generá tu propuesta';
   if (tituloEditor) tituloEditor.textContent = esPf ? 'Armá tu portfolio' : 'Armá tu propuesta';
@@ -239,6 +240,17 @@ const sincronizarModoEditorUI = () => {
   }
   if (grupoActual) grupoActual.textContent = esPf ? 'Portfolio actual' : 'Propuesta actual';
   actualizarSeccionesHoja();
+};
+
+// Formato Presupuesto: el editor muestra solo lo que aparece en la hoja (lo marcado con
+// data-solo-propuesta se oculta y aparece lo marcado con data-solo-presupuesto).
+export const aplicarFormatoEditor = () => {
+  const presupuesto = ctx.modoEditor !== 'portafolio' && ctx.estado?.opciones?.formato === 'presupuesto';
+  const cambio = document.body.classList.contains('formato-presupuesto') !== presupuesto;
+  document.body.classList.toggle('formato-presupuesto', presupuesto);
+  const paso = $('#paso-objetivos');
+  if (paso) paso.dataset.corto = presupuesto ? 'Detalle' : 'Objetivos';
+  if (cambio) actualizarSeccionesHoja();
 };
 
 export const llenarFormulario = () => {
@@ -317,6 +329,7 @@ const alEditar = ev => {
     asignar(ctx.estado, el.dataset.campo, leerValor(el));
     if (el.dataset.campo === 'opciones.portafolioId') sincronizarPortafolioEnPropuesta();
     if (el.dataset.campo === 'propuesta.opacidadPortada') actualizarLogo();
+    if (el.dataset.campo === 'opciones.formato') aplicarFormatoEditor();
     actualizar();
     return;
   }

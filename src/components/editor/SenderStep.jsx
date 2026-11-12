@@ -26,11 +26,11 @@ export function SenderStep() {
             <input className="control" type="tel" data-campo="emisor.telefono" autoComplete="tel" placeholder="+54 9 11 0000-0000" />
           </label>
           <p className="campo__ayuda campo--ancho">Tu cliente acepta la propuesta con un mensaje a tu WhatsApp o a tu email: cargá al menos uno. Para WhatsApp incluí el código de país.</p>
-          <label className="campo campo--ancho">
+          <label data-solo-propuesta className="campo campo--ancho">
             <span className="campo__etiqueta">Sitio web o portfolio</span>
             <input className="control" type="text" data-campo="emisor.web" placeholder="tumarca.com" />
           </label>
-          <label className="campo campo--ancho">
+          <label data-solo-propuesta className="campo campo--ancho">
             <span className="campo__etiqueta">Presentación breve</span>
             <textarea className="control" rows="4" data-campo="emisor.presentacion" placeholder="Contale a tu cliente quién sos, cómo trabajás y por qué sos la persona indicada para este proyecto."></textarea>
           </label>
@@ -53,7 +53,7 @@ export function SenderStep() {
               <input className="rango-input" type="range" id="logo-escala-input" min="50" max="250" step="5" defaultValue="100" />
             </div>
           </div>
-          <div className="campo">
+          <div data-solo-propuesta className="campo">
             <span className="campo__etiqueta">Foto de perfil o equipo (opcional)</span>
             <div className="logo">
               <img className="logo__vista logo__vista--avatar" id="foto-emisor-vista" alt="Foto de perfil" hidden />
@@ -65,23 +65,23 @@ export function SenderStep() {
             </div>
             <p className="campo__ayuda">Se luce en tu presentación «Sobre mí».</p>
           </div>
-          <label className="campo">
+          <label data-solo-propuesta className="campo">
             <span className="campo__etiqueta">Ubicación / Modalidad (opcional)</span>
             <input className="control" type="text" data-campo="emisor.ubicacion" placeholder="Ej.: Buenos Aires · Remoto" />
           </label>
-          <label className="campo">
+          <label data-solo-propuesta className="campo">
             <span className="campo__etiqueta">Instagram (opcional)</span>
             <input className="control" type="text" data-campo="emisor.instagram" placeholder="Ej.: @tumarca" />
           </label>
-          <label className="campo">
+          <label data-solo-propuesta className="campo">
             <span className="campo__etiqueta">LinkedIn (opcional)</span>
             <input className="control" type="text" data-campo="emisor.linkedin" placeholder="linkedin.com/in/tuperfil" />
           </label>
-          <label className="campo">
+          <label data-solo-propuesta className="campo">
             <span className="campo__etiqueta">Behance / Dribbble / GitHub</span>
             <input className="control" type="text" data-campo="emisor.behance" placeholder="behance.net/tuperfil o github.com/..." />
           </label>
-          <div className="campo campo--ancho portafolio-vincular" id="campo-vincular-portafolio">
+          <div data-solo-propuesta className="campo campo--ancho portafolio-vincular" id="campo-vincular-portafolio">
             <div className="portafolio-vincular__cabecera">
               <span className="campo__etiqueta">Mostrar portfolio en esta propuesta</span>
               <div className="portafolio-vincular__links">

@@ -18,7 +18,7 @@ export function ProposalSteps() {
             <span className="campo__etiqueta">Empresa o proyecto</span>
             <input className="control" type="text" data-campo="cliente.empresa" placeholder="Ej.: Café Central" />
           </label>
-          <label className="campo">
+          <label data-solo-propuesta className="campo">
             <span className="campo__etiqueta">Cargo</span>
             <input className="control" type="text" data-campo="cliente.cargo" placeholder="Ej.: Dueña" />
           </label>
@@ -49,7 +49,7 @@ export function ProposalSteps() {
             <input className="control" type="number" min="0" step="1" inputMode="numeric" data-campo="propuesta.validez" data-tipo="numero" />
           </label>
           <p className="campo__ayuda campo--ancho">El link le muestra a tu cliente cuántos días le quedan. Cuando vence, el botón de aceptar se cambia por uno para pedirte una actualización.</p>
-          <div className="campo campo--ancho">
+          <div data-solo-propuesta className="campo campo--ancho">
             <span className="campo__etiqueta">Foto de fondo en portada Hero (opcional)</span>
             <div className="logo">
               <img className="logo__vista proyecto-imagen__vista" id="portada-prop-vista" alt="Fondo de portada" hidden />
@@ -60,7 +60,7 @@ export function ProposalSteps() {
               <button type="button" className="boton boton--texto boton--chico" data-accion="quitar-portada-prop" id="portada-prop-quitar" hidden>Quitar</button>
             </div>
           </div>
-          <label className="campo campo--ancho" id="portada-prop-opacidad-wrap" hidden>
+          <label data-solo-propuesta className="campo campo--ancho" id="portada-prop-opacidad-wrap" hidden>
             <span className="campo__etiqueta campo__etiqueta--fila">
               <span>Intensidad de la foto de portada</span>
               <output className="campo__valor" id="portada-prop-opacidad-val">35%</output>
@@ -70,19 +70,19 @@ export function ProposalSteps() {
         </div>
       </details>
 
-      <details className="paso" data-corto="Objetivos">
+      <details className="paso" data-corto="Objetivos" id="paso-objetivos">
         <summary className="paso__resumen">
           <span className="paso__num">4</span>
-          <span className="paso__titulo">Contexto y objetivos</span>
-          <span className="paso__desc">Qué entendiste del proyecto</span>
+          <span className="paso__titulo"><span data-solo-propuesta>Contexto y objetivos</span><span data-solo-presupuesto>Detalle del trabajo</span></span>
+          <span className="paso__desc"><span data-solo-propuesta>Qué entendiste del proyecto</span><span data-solo-presupuesto>Aparece debajo del título del presupuesto</span></span>
         </summary>
         <div className="paso__contenido">
           <label className="campo">
-            <span className="campo__etiqueta">El punto de partida</span>
+            <span className="campo__etiqueta"><span data-solo-propuesta>El punto de partida</span><span data-solo-presupuesto>Detalle (opcional)</span></span>
             <textarea className="control" rows="6" data-campo="contexto" placeholder="Resumí la situación actual de tu cliente con sus propias palabras. Dejá una línea en blanco entre párrafos."></textarea>
           </label>
-          <h3 className="separador-campos">Video (opcional)</h3>
-          <div className="campo-video" data-video-editor>
+          <h3 data-solo-propuesta className="separador-campos">Video (opcional)</h3>
+          <div data-solo-propuesta className="campo-video" data-video-editor>
             <p className="campo__ayuda campo-video__intro">Contale un poco más a tu cliente con un video: quién sos, cómo trabajás o un mensaje para este proyecto. Un video corto (1 a 3 minutos) suele funcionar mejor.</p>
             <label className="campo">
               <span className="campo__etiqueta">Link del video</span>
@@ -98,9 +98,9 @@ export function ProposalSteps() {
               <textarea className="control" rows="2" maxLength="600" data-campo="video.texto" placeholder="Ej.: Te grabé un video corto para contarte cómo encararía tu proyecto."></textarea>
             </label>
           </div>
-          <h3 className="separador-campos">Objetivos</h3>
-          <div className="lista" data-lista="objetivos" data-vacio="Sumá lo que tu cliente quiere lograr con el proyecto."></div>
-          <button type="button" className="boton boton--agregar" data-accion="agregar" data-lista="objetivos">Agregar objetivo</button>
+          <h3 data-solo-propuesta className="separador-campos">Objetivos</h3>
+          <div data-solo-propuesta className="lista" data-lista="objetivos" data-vacio="Sumá lo que tu cliente quiere lograr con el proyecto."></div>
+          <button data-solo-propuesta type="button" className="boton boton--agregar" data-accion="agregar" data-lista="objetivos">Agregar objetivo</button>
         </div>
       </details>
 
@@ -117,7 +117,7 @@ export function ProposalSteps() {
         </div>
       </details>
 
-      <details className="paso" data-corto="Etapas">
+      <details data-solo-propuesta className="paso" data-corto="Etapas">
         <summary className="paso__resumen">
           <span className="paso__num">6</span>
           <span className="paso__titulo">Etapas</span>
@@ -242,7 +242,7 @@ export function ProposalSteps() {
         </div>
       </details>
 
-      <details className="paso" data-corto="Galería">
+      <details data-solo-propuesta className="paso" data-corto="Galería">
         <summary className="paso__resumen">
           <span className="paso__num">8</span>
           <span className="paso__titulo">Galería de fotos y bloques web</span>
@@ -309,14 +309,14 @@ export function ProposalSteps() {
         <summary className="paso__resumen">
           <span className="paso__num">9</span>
           <span className="paso__titulo">Cierre</span>
-          <span className="paso__desc">Condiciones y próximos pasos</span>
+          <span className="paso__desc"><span data-solo-propuesta>Condiciones y próximos pasos</span><span data-solo-presupuesto>Condiciones y firmas</span></span>
         </summary>
         <div className="paso__contenido grilla">
           <label className="campo campo--ancho">
             <span className="campo__etiqueta">Condiciones, una por línea</span>
             <textarea className="control" rows="6" data-campo="condiciones" placeholder="Ej.: Incluye dos rondas de cambios por entrega."></textarea>
           </label>
-          <label className="campo campo--ancho">
+          <label data-solo-propuesta className="campo campo--ancho">
             <span className="campo__etiqueta">Próximos pasos, uno por línea</span>
             <textarea className="control" rows="4" data-campo="proximosPasos" placeholder="Ej.: Aceptar la propuesta y abonar el primer pago."></textarea>
           </label>

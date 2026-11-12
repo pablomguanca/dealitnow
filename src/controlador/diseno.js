@@ -68,9 +68,10 @@ export const llenarTemaEditor = () => {
   const decoracionActiva = DECORACIONES[t.decoracion] ? t.decoracion : (preset.decoracion || 'marco');
   const portadaActiva = PORTADAS[t.portada] ? t.portada : (preset.portada || 'editorial');
   const estiloActivo = ESTILOS_BLOQUES[t.estilo] ? t.estilo : (preset.estilo || 'editorial');
-  $$('[data-decoracion]').forEach(el => el.classList.toggle('opcion-visual--activa', el.dataset.decoracion === decoracionActiva));
-  $$('[data-portada]').forEach(el => el.classList.toggle('opcion-visual--activa', el.dataset.portada === portadaActiva));
-  $$('[data-estilo]').forEach(el => el.classList.toggle('opcion-visual--activa', el.dataset.estilo === estiloActivo));
+  // Solo los botones de cada grilla: el documento también lleva data-decoracion y data-portada.
+  $$('#decoraciones-grid [data-decoracion]').forEach(el => el.classList.toggle('opcion-visual--activa', el.dataset.decoracion === decoracionActiva));
+  $$('#portadas-grid [data-portada]').forEach(el => el.classList.toggle('opcion-visual--activa', el.dataset.portada === portadaActiva));
+  $$('#estilos-grid [data-estilo]').forEach(el => el.classList.toggle('opcion-visual--activa', el.dataset.estilo === estiloActivo));
   ponerValor('#tema-acento', col.acento);
   ponerValor('#tema-color-texto', col.cuerpoTexto);
   ponerValor('#tema-color-portada', col.portadaBg);

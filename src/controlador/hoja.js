@@ -32,7 +32,8 @@ export const cambiarPestana = previa => {
   if (esCelular()) fijarHoja(previa ? 'cerrada' : 'media');
 };
 
-const pasosVisibles = () => $$('#formulario details.paso[data-corto]').filter(d => !d.closest('[hidden]'));
+const pasosVisibles = () => $$('#formulario details.paso[data-corto]').filter(d => !d.closest('[hidden]')
+  && !(document.body.classList.contains('formato-presupuesto') && d.matches('[data-solo-propuesta]')));
 
 // Se rehace al cambiar entre propuesta y portfolio (cada uno tiene sus pasos).
 export const actualizarSeccionesHoja = () => {
