@@ -20,6 +20,16 @@ const mismoEmail = (a, b) => String(a || '').trim().toLowerCase() === String(b |
 
 // Antes de arrancar la sesión. Devuelve false si la página se va a otro lado (Firebase).
 export const resolverAccionEmail = async () => {
+  // Vuelta desde la página de Firebase (botón «Continuar»): el email ya quedó verificado allá.
+  const vuelta = new URLSearchParams(location.search).get('verificado');
+  if (vuelta && location.pathname !== '/accion') {
+    const resto = new URLSearchParams(location.search);
+    resto.delete('verificado');
+    const query = resto.toString();
+    history.replaceState(null, '', `${location.pathname}${query ? `?${query}` : ''}${location.hash}`);
+    if (/^[^\s@]+@[^\s@]+$/.test(vuelta)) verificado = { email: vuelta };
+    return true;
+  }
   if (location.pathname !== '/accion') return true;
   const parametros = new URLSearchParams(location.search);
   const modo = parametros.get('mode');

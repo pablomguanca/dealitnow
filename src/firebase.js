@@ -139,10 +139,14 @@ const crearAteneaDB = () => {
 
   const signIn = (email, password) => signInWithEmailAndPassword(auth, email, password);
 
-  // Al volver desde el link del email, Firebase redirige a la web.
-  const _ajustesEmail = () => ({ url: `${location.origin}/` });
+  // Al volver desde el link del email, Firebase redirige a la web. En la verificación, la
+  // vuelta lleva el email (?verificado=), por si el link pasa por la página de Firebase en
+  // lugar de /accion: así igual se sabe qué cuenta se verificó (controlador/accion-email.js).
+  const _ajustesEmail = email => ({
+    url: email ? `${location.origin}/?verificado=${encodeURIComponent(email)}` : `${location.origin}/`
+  });
 
-  const enviarVerificacion = () => sendEmailVerification(auth.currentUser, _ajustesEmail());
+  const enviarVerificacion = () => sendEmailVerification(auth.currentUser, _ajustesEmail(auth.currentUser.email));
 
   // Después de tocar el link del email hay que recargar el usuario y renovar el
   // token: las reglas de Firestore leen email_verified del token.
@@ -165,7 +169,7 @@ const crearAteneaDB = () => {
   const signUp = async (email, password, displayName) => {
     const cred = await createUserWithEmailAndPassword(auth, email, password);
     try {
-      await sendEmailVerification(cred.user, _ajustesEmail());
+      await sendEmailVerification(cred.user, _ajustesEmail(cred.user.email));
     } catch (e) {
       console.warn('No se pudo enviar el email de verificación:', e); // se puede reenviar desde la app
     }
