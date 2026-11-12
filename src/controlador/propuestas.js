@@ -25,7 +25,7 @@ import { renderGaleriaPlantillas } from './galeria-plantillas.js';
 import { linkCorto } from './compartir.js';
 import { cargarFuente } from '../lib/tema.js';
 import { restriccionesActivas } from './plan.js';
-import { cobroReciente } from './cobro.js';
+import { hayDatosDeCobro } from './cobro.js';
 
 // La lista se escucha en tiempo real toda la sesión: refleja al instante lo que se
 // edita, se duplica o se borra, también sin conexión.
@@ -203,11 +203,8 @@ export const nuevaPropuesta = base => {
   cerrarEdicion();
   const nueva = base ? normalizar(base) : vacio();
   if (!base) nueva.emisor = emisorDeCuenta(nueva.emisor);
-  // Los datos de cobro, de la última propuesta que los tenga (así no se cargan cada vez).
-  if (!nueva.cobro?.cbu?.trim() && !nueva.cobro?.alias?.trim()) {
-    const previo = cobroReciente();
-    if (previo) nueva.cobro = previo;
-  }
+  // Los datos de cobro son de la cuenta: la propuesta solo anota si existen (para el botón).
+  nueva.cobro = { ...nueva.cobro, conDatos: hayDatosDeCobro() };
   const creada = crearEnCuenta(nueva);
   if (creada) mostrarEditor(creada.id, nueva);
 };

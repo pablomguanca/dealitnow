@@ -391,6 +391,19 @@ const crearAteneaDB = () => {
     return unsub;
   };
 
+  // Datos para cobrar por transferencia: aparte de las propuestas, solo los lee el dueño.
+  const obtenerCobro = async () => {
+    const snap = await getDoc(doc(db, 'cobros', getUid()));
+    return snap.exists() ? snap.data() : null;
+  };
+  const guardarCobro = ({ titular = '', cbu = '', alias = '' }) =>
+    setDoc(doc(db, 'cobros', getUid()), {
+      titular: String(titular).slice(0, 120),
+      cbu: String(cbu).slice(0, 40),
+      alias: String(alias).slice(0, 40),
+      actualizado: serverTimestamp()
+    });
+
   const _limpiarSuscripciones = () => {
     _unsubSnapshots.forEach(fn => fn());
     _unsubSnapshots = [];
@@ -466,6 +479,7 @@ const crearAteneaDB = () => {
     // El perfil va primero: si las reglas no permiten borrar, falla antes de tocar
     // las propuestas. Y si algo falla después, el perfil se vuelve a crear al iniciar sesión.
     await deleteDoc(doc(db, 'users', uid));
+    await deleteDoc(doc(db, 'cobros', uid)).catch(e => console.warn('No se pudieron borrar los datos de cobro:', e));
     _limpiarSuscripciones();
 
     const propias = await getDocs(query(_colProposals(), where('userId', '==', uid)));
@@ -500,6 +514,7 @@ const crearAteneaDB = () => {
     versiones: { listar: listarVersiones, crear: crearVersion },
     plan: { escuchar: escucharPlan },
     perfil: { obtener: obtenerPerfil, guardar: guardarPerfil },
+    cobro: { obtener: obtenerCobro, guardar: guardarCobro },
     proposals: {
       nuevoId:    nuevoIdPropuesta,
       crear:      crearPropuesta,

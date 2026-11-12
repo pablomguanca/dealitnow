@@ -3,7 +3,7 @@
 
 import { $, esc, dinero } from '../lib/formato.js';
 import { servicioConContenido, tarjetaCobroHTML, primerPagoTexto } from '../lib/render.js';
-import { datosDeCobro, calcularTotales } from '../modelo.js';
+import { cobraPorTransferencia, calcularTotales } from '../modelo.js';
 import { MENSAJES_ACEPTACION, NOMBRE_MIN, limpiarNombre } from '../aceptacion.js';
 import {
   ctx,
@@ -81,7 +81,7 @@ const esPresupuesto = () => ctx.estado?.opciones?.formato === 'presupuesto';
 const queEs = () => (esPresupuesto() ? 'presupuesto' : 'propuesta');
 
 // Texto del botón principal: con transferencia, el cliente sabe que al aceptar ve cómo pagar.
-const textoBotonAceptar = () => `Aceptar ${queEs()}${datosDeCobro(ctx.estado) ? ' y ver datos de pago' : ''}`;
+const textoBotonAceptar = () => `Aceptar ${queEs()}${cobraPorTransferencia(ctx.estado) ? ' y ver datos de pago' : ''}`;
 
 const modoAceptar = modo => {
   $('#aceptar-formulario').hidden = modo !== 'formulario';
@@ -142,8 +142,8 @@ const confirmarAceptacion = async () => {
     modoAceptar('listo');
     const emisor = nombreEmisor();
     const hay = prepararMensajeria(mensajeAceptacion(nombre).texto, { whatsapp: 'Avisar por WhatsApp', email: 'Avisar por email' });
-    // Con transferencia: los datos para pagar, ahí mismo.
-    const cobro = datosDeCobro(ctx.estado);
+    // Con transferencia: los datos para pagar, que recién ahora entrega el servidor.
+    const cobro = aceptacion.cobro || null;
     const elCobro = $('#aceptar-cobro');
     elCobro.innerHTML = tarjetaCobroHTML(cobro, { pago: primerPagoTexto(ctx.estado, calcularTotales(ctx.estado, ctx.seleccion)) });
     elCobro.hidden = !cobro;

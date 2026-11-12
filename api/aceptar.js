@@ -1,7 +1,10 @@
 // POST /api/aceptar { id, nombre, acepto, opcionales } — el cliente acepta la propuesta.
 // Todo se valida acá (vigencia, opcionales, total): el navegador solo propone.
 // Después se avisa por email y por push al dueño, si es Pro (ver _lib/avisos.js).
+// Con cobro por transferencia, los datos bancarios del dueño (cobros/{uid}, que el cliente
+// no puede leer) se guardan con la aceptación y se le devuelven al cliente: recién ahí los ve.
 import { ID_PROPUESTA, validarAceptacion } from '../src/aceptacion.js';
+import { normalizarCobro, normalizarDatosCobro } from '../src/modelo.js';
 import { FieldValue, firestore, uidDeLaSolicitud } from './_lib/firebase-admin.js';
 import { ErrorHttp, fallar, leerPost, responder } from './_lib/http.js';
 import { crearAvisador, urlAppDe } from './_lib/avisos.js';
@@ -23,6 +26,11 @@ export const crearHandler = ({ db, uidDe, ahora = () => new Date(), avisar = asy
       const { datos, error, estado } = validarAceptacion({ doc, cuerpo, ahora: ahora() });
       if (error) throw new ErrorHttp(estado, error);
       propuesta = doc;
+      if (normalizarCobro(doc.payload?.cobro).metodo === 'transferencia') {
+        const snapCobro = await tx.get(db().collection('cobros').doc(doc.userId));
+        const cobro = snapCobro.exists ? normalizarDatosCobro(snapCobro.data()) : null;
+        if (cobro) datos.cobro = cobro;
+      }
       tx.update(ref, {
         status: 'accepted',
         aceptacion: { ...datos, fecha: FieldValue.serverTimestamp() },

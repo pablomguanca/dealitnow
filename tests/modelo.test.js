@@ -13,7 +13,8 @@ import {
   ejemplo,
   normalizarPropuesta,
   vacio,
-  datosDeCobro,
+  normalizarDatosCobro,
+  cobraPorTransferencia,
   cbuValido,
   aliasValido
 } from '../src/modelo.js';
@@ -290,37 +291,39 @@ describe('formato presupuesto', () => {
 });
 
 describe('método de cobro', () => {
-  const conCobro = cobro => normalizarPropuesta({ ...ejemplo(), cobro });
-
-  it('por defecto es transferencia, y sin CBU ni alias no hay datos que mostrar', () => {
-    const p = normalizarPropuesta(ejemplo());
-    expect(p.cobro.metodo).toBe('transferencia');
-    expect(datosDeCobro(p)).toBeNull();
+  it('la propuesta guarda solo el método y si hay datos: nunca el CBU, el alias ni el titular', () => {
+    const p = normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'transferencia', conDatos: true, cbu: '0000003100012345678901', alias: 'ana.web', titular: 'Ana' } });
+    expect(p.cobro).toEqual({ metodo: 'transferencia', conDatos: true });
+    expect(normalizarPropuesta(ejemplo()).cobro).toEqual({ metodo: 'transferencia', conDatos: false });
     expect(normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'cripto' } }).cobro.metodo).toBe('transferencia');
   });
 
-  it('deja solo los dígitos del CBU y valida su largo y el alias', () => {
-    const p = conCobro({ titular: 'Juan Gómez', cbu: '0000 0031-0001 2345 6789 01', alias: 'gomez.pintura' });
-    expect(datosDeCobro(p)).toEqual({ titular: 'Juan Gómez', cbu: '0000003100012345678901', alias: 'gomez.pintura' });
+  it('limpia los datos bancarios y valida el CBU y el alias', () => {
+    expect(normalizarDatosCobro({ titular: ' Juan Gómez ', cbu: '0000 0031-0001 2345 6789 01', alias: 'gomez.pintura' }))
+      .toEqual({ titular: 'Juan Gómez', cbu: '0000003100012345678901', alias: 'gomez.pintura' });
+    expect(normalizarDatosCobro({ titular: 'Sin datos' })).toBeNull();
     expect(cbuValido('0000003100012345678901')).toBe(true);
     expect(cbuValido('123')).toBe(false);
     expect(aliasValido('gomez.pintura')).toBe(true);
     expect(aliasValido('a b')).toBe(false);
   });
 
-  it('«Lo coordino con mi cliente» no muestra datos', () => {
-    expect(datosDeCobro(conCobro({ metodo: 'acordar', cbu: '0000003100012345678901' }))).toBeNull();
+  it('el botón invita a ver los datos de pago solo con transferencia y datos cargados', () => {
+    const con = normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'transferencia', conDatos: true } });
+    expect(cobraPorTransferencia(con)).toBe(true);
+    expect(cobraPorTransferencia(normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'acordar', conDatos: true } }))).toBe(false);
+    expect(cobraPorTransferencia(normalizarPropuesta(ejemplo()))).toBe(false);
+    expect(generarPropuestaHTML(con, { web: true })).toContain('Aceptar propuesta y ver datos de pago');
   });
 
-  it('en el link: el botón invita a ver los datos de pago, y aceptada muestra la tarjeta con el primer pago', () => {
-    const p = conCobro({ titular: 'Juan Gómez', cbu: '0000003100012345678901', alias: 'gomez.pintura' });
+  it('el link no lleva los datos bancarios; aceptada, muestra los que entregó el servidor', () => {
+    const p = normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'transferencia', conDatos: true } });
     p.inversion.pagos = [{ id: 'a', concepto: 'Seña', porcentaje: 50 }, { id: 'b', concepto: 'Final', porcentaje: 50 }];
-    expect(generarPropuestaHTML(p, { web: true })).toContain('Aceptar propuesta y ver datos de pago');
     expect(generarPropuestaHTML(p, { web: true })).not.toContain('cobro-tarjeta');
-    const aceptada = generarPropuestaHTML(p, { web: true, compartida: { aceptacion: { nombre: 'Laura', fecha: '2026-11-10T12:00:00Z' } } });
+    const cobro = { titular: 'Juan Gómez', cbu: '0000003100012345678901', alias: 'gomez.pintura' };
+    const aceptada = generarPropuestaHTML(p, { web: true, compartida: { aceptacion: { nombre: 'Laura', fecha: '2026-11-10T12:00:00Z', cobro } } });
     expect(aceptada).toContain('cobro-tarjeta');
     expect(aceptada).toContain('gomez.pintura');
     expect(aceptada).toContain('Seña (50 %)');
-    expect(generarPropuestaHTML(p, { web: false })).not.toContain('cobro-tarjeta');
   });
 });

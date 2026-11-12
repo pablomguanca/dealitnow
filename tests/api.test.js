@@ -98,6 +98,24 @@ describe('POST /api/aceptar', () => {
     expect(escrituras[0].cambios.aceptacion.contenido.propuesta.titulo).toBe('Web');
   });
 
+  it('con transferencia, entrega los datos de cobro del dueño y los guarda con la aceptación', async () => {
+    const { db, escrituras } = crearDb({ [ID]: propuesta(), duenio: { titular: 'Ana', cbu: '0000 0031 0001 2345 6789 01', alias: 'ana.web' } });
+    const r = res();
+    await crearAceptar({ db, uidDe: async () => null, ahora })(post({ id: ID, nombre: 'Laura', acepto: true }), r);
+    expect(r.cuerpo.aceptacion.cobro).toEqual({ titular: 'Ana', cbu: '0000003100012345678901', alias: 'ana.web' });
+    expect(escrituras[0].cambios.aceptacion.cobro.alias).toBe('ana.web');
+  });
+
+  it('con «Lo coordino con mi cliente» no entrega datos de cobro', async () => {
+    const p = propuesta();
+    p.payload.cobro = { metodo: 'acordar' };
+    const { db } = crearDb({ [ID]: p, duenio: { titular: 'Ana', alias: 'ana.web' } });
+    const r = res();
+    await crearAceptar({ db, uidDe: async () => null, ahora })(post({ id: ID, nombre: 'Laura', acepto: true }), r);
+    expect(r.estado).toBe(200);
+    expect(r.cuerpo.aceptacion.cobro).toBeUndefined();
+  });
+
   it('no deja aceptar dos veces', async () => {
     const { db } = crearDb({ [ID]: propuesta() });
     const h = crearAceptar({ db, uidDe: async () => null, ahora });

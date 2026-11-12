@@ -29,6 +29,7 @@ import { abrirCompartir } from './compartir.js';
 import { escucharPlan, reiniciarPlan } from './plan.js';
 import { desactivarPushEnEsteDispositivo, reiniciarPush } from './push.js';
 import { mostrarBienvenida, ocultarBienvenida } from './bienvenida.js';
+import { reiniciarCobro } from './cobro.js';
 
 let invitadoIniciado = false;
 let guardadoParaRegistro = false;
@@ -291,6 +292,7 @@ const limpiarEstadoMemoria = () => {
   reiniciarPortafolios();
   reiniciarCuenta();
   reiniciarPlan();
+  reiniciarCobro();
   reiniciarPush();
   ctx.propuestaId = null;
   ctx.portafolioId = null;

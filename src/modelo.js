@@ -254,8 +254,8 @@ export const vacio = () => ({
   inversion: { moneda: 'USD', abonoMensual: 0, montoGlobal: 0, descuento: 0, impuestoNombre: 'IVA', impuesto: 0, pagos: [] },
   condiciones: '',
   proximosPasos: '',
-  // Cómo le paga el cliente. Con transferencia, al aceptar ve estos datos (ver datosDeCobro).
-  cobro: { metodo: 'transferencia', titular: '', cbu: '', alias: '' },
+  // Cómo le paga el cliente (los datos bancarios van aparte: ver «Método de cobro» abajo).
+  cobro: { metodo: 'transferencia', conDatos: false },
   opciones: {
     // 'propuesta' (el documento completo) o 'presupuesto' (una hoja con la tabla de trabajos).
     formato: 'propuesta',
@@ -359,9 +359,11 @@ export const ejemplo = () => ({
   }
 });
 
-// ---------- Método de cobro (Fase 1: transferencia, sin comisiones) ----------
-// 'transferencia': el cliente ve los datos bancarios al aceptar. 'acordar': el pago se
-// coordina por fuera y no se muestran datos.
+// ---------- Método de cobro: transferencia, sin comisiones ----------
+// La propuesta guarda solo el método y si hay datos cargados (conDatos, para el texto del
+// botón). Los datos bancarios (titular, CBU/CVU, alias) viven aparte, en cobros/{uid}, que
+// solo lee el dueño: el cliente los recibe del servidor (api/aceptar) recién al aceptar.
+// 'acordar': el pago se coordina por fuera y no se muestran datos.
 export const METODOS_COBRO = {
   transferencia: 'Transferencia bancaria · 0 % de comisión',
   acordar: 'Lo coordino con mi cliente'
@@ -374,18 +376,23 @@ export const aliasValido = alias => /^[a-zA-Z0-9.-]{6,20}$/.test(String(alias ||
 
 export const normalizarCobro = (c = {}) => ({
   metodo: METODOS_COBRO[c?.metodo] ? c.metodo : 'transferencia',
-  titular: texto(c?.titular).slice(0, 120),
-  // Se guarda como se escribió (con espacios o guiones); al mostrarlo se deja solo los dígitos.
-  cbu: texto(c?.cbu).slice(0, 40),
-  alias: texto(c?.alias).trim().slice(0, 40)
+  conDatos: c?.conDatos === true
 });
 
-// Datos para que el cliente transfiera, o null si no corresponde (otro método o sin datos).
-export const datosDeCobro = estado => {
+// Los datos bancarios, limpios (solo los dígitos del CBU), o null si no hay CBU ni alias.
+export const normalizarDatosCobro = (d = {}) => {
+  const datos = {
+    titular: texto(d?.titular).trim().slice(0, 120),
+    cbu: texto(d?.cbu).replace(/\D/g, '').slice(0, 30),
+    alias: texto(d?.alias).trim().slice(0, 40)
+  };
+  return datos.cbu || datos.alias ? datos : null;
+};
+
+// ¿El cliente va a ver datos para transferir al aceptar? (para el texto del botón)
+export const cobraPorTransferencia = estado => {
   const c = normalizarCobro(estado?.cobro);
-  const cbu = c.cbu.replace(/\D/g, '');
-  if (c.metodo !== 'transferencia' || (!cbu && !c.alias)) return null;
-  return { titular: c.titular.trim(), cbu, alias: c.alias };
+  return c.metodo === 'transferencia' && c.conDatos;
 };
 
 // Formatos del documento de una propuesta.

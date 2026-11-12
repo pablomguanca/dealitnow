@@ -5,7 +5,7 @@
 //   /p/DEMO0000000000000001 → el cliente, sin sesión (abrilo en otra pestaña)
 // Para empezar de cero: localStorage.removeItem('dealit-demo') y recargar.
 import { validarAceptacion } from '../../src/aceptacion.js';
-import { ejemplo } from '../../src/modelo.js';
+import { ejemplo, normalizarCobro, normalizarDatosCobro } from '../../src/modelo.js';
 import { LIMITE_ENVIOS_GRATIS, enviosDelMes, esPro, mesDe, usosPro } from '../../src/planes.js';
 
 const CLAVE = 'dealit-demo';
@@ -122,6 +122,10 @@ export const AteneaDB = {
     obtener: async () => JSON.parse(localStorage.getItem(`${CLAVE}:perfil`) || '{}'),
     guardar: async datos => { localStorage.setItem(`${CLAVE}:perfil`, JSON.stringify(datos)); }
   },
+  cobro: {
+    obtener: async () => JSON.parse(localStorage.getItem(`${CLAVE}:cobro`) || 'null'),
+    guardar: async datos => { localStorage.setItem(`${CLAVE}:cobro`, JSON.stringify(datos)); }
+  },
   proposals: {
     nuevoId: () => `DEMO${String(Date.now()).slice(-12)}${String(++n).padStart(4, '0')}`,
     crear: async (datos, id) => {
@@ -175,6 +179,11 @@ window.fetch = async (url, opciones = {}) => {
     if (doc && uid === doc.userId) return respuesta(403, { error: 'propia' });
     const { datos, error, estado } = validarAceptacion({ doc, cuerpo });
     if (error) return respuesta(estado, { error });
+    // Como api/aceptar: con transferencia, los datos de cobro del dueño van con la aceptación.
+    if (normalizarCobro(doc.payload?.cobro).metodo === 'transferencia') {
+      const cobro = normalizarDatosCobro(JSON.parse(localStorage.getItem(`${CLAVE}:cobro`) || 'null') || {});
+      if (cobro) datos.cobro = cobro;
+    }
     const fecha = new Date().toISOString();
     Object.assign(doc, { status: 'accepted', aceptacion: { ...datos, fecha }, updatedAt: fecha });
     guardar(docs);
