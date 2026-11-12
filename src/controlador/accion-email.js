@@ -1,5 +1,8 @@
-// Links de los emails de Firebase Auth. En la consola de Firebase (Authentication →
-// Plantillas → URL de acción) apuntan a https://dealit.com.ar/accion.
+// Links de los emails de Firebase Auth. Hoy la URL de acción de las plantillas es la de
+// Firebase (https://dealit-7f735.firebaseapp.com/__/auth/action) y no se puede cambiar
+// desde la consola: el email se verifica allá y el botón «Continuar» vuelve a
+// https://dealit.com.ar/?verificado=<email> (firebase.js). Si algún día la URL de acción
+// apunta a https://dealit.com.ar/accion, esta página también la resuelve.
 //
 // · Verificar el email se resuelve acá, con la marca de Dealit y sabiendo qué cuenta se
 //   verificó: si en este navegador hay otra sesión abierta (por ejemplo, tu cuenta de
