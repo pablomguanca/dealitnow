@@ -38,6 +38,16 @@ body.bienvenida-activa {
     box-sizing: border-box;
   }
 
+  // Las dos mitades de la tarjeta de la compu; en el celular no cuentan.
+  &__lado,
+  &__panel {
+    display: contents;
+  }
+
+  &__pie {
+    display: none;
+  }
+
   &__cabecera {
     display: flex;
     align-items: center;
@@ -183,9 +193,107 @@ body.bienvenida-activa {
   }
 }
 
+// Compu: tarjeta dividida en el centro de la pantalla. A la izquierda la marca, el título y
+// los beneficios; a la derecha elegir el rubro y entrar.
+@media (min-width: 900px) {
+  .bienvenida {
+    background:
+      radial-gradient(50rem 30rem at 0% 0%, rgba(138, 219, 171, 0.1), transparent 60%),
+      radial-gradient(40rem 30rem at 100% 100%, rgba(138, 219, 171, 0.06), transparent 60%),
+      #121216;
+  }
+
+  .bienvenida__contenido {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0;
+    align-content: center;
+    width: min(100% - 4rem, 68rem);
+    min-height: 100dvh;
+    padding: 2rem 0;
+  }
+
+  .bienvenida__lado,
+  .bienvenida__panel {
+    display: flex;
+    flex-direction: column;
+    padding: clamp(2rem, 4.5vw, 3.25rem);
+  }
+
+  // Una sola tarjeta con las dos mitades: el borde y el fondo van en cada mitad para que la
+  // grilla quede simple.
+  .bienvenida__lado {
+    gap: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-right: none;
+    border-radius: 1.5rem 0 0 1.5rem;
+    background: linear-gradient(160deg, #23252A 0%, #1A1B20 100%);
+  }
+
+  .bienvenida__panel {
+    justify-content: center;
+    gap: 2rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0 1.5rem 1.5rem 0;
+    background: #17181C;
+    box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .bienvenida__presentacion {
+    flex: 1;
+  }
+
+  .bienvenida__titulo {
+    margin-bottom: 1.6rem;
+    font-size: clamp(2.2rem, 3.4vw, 2.9rem);
+  }
+
+  .bienvenida__beneficios {
+    gap: 0.9rem;
+
+    li {
+      font-size: 0.95rem;
+    }
+  }
+
+  .bienvenida__pie {
+    display: block;
+    margin: 0;
+    font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: #6F7C79;
+  }
+
+  .bienvenida__pregunta {
+    font-size: 1.6rem;
+  }
+
+  .bienvenida__ayuda {
+    display: block;
+    margin: 0.35rem 0 1.2rem;
+    font-size: 0.9rem;
+  }
+
+  .bienvenida__rubros {
+    gap: 0.6rem;
+  }
+
+  .bienvenida__rubro {
+    min-height: 2.9rem;
+    font-size: 0.85rem;
+  }
+
+  .bienvenida__acciones .boton {
+    min-height: 3.1rem;
+    font-size: 0.92rem;
+  }
+}
+
 // Celulares bajos (con las barras del sistema, menos de ~780 px): sin la línea de ayuda y
 // con los rubros un poco más bajos, para que siga entrando todo sin scroll.
-@media (max-height: 780px) {
+@media (max-height: 780px) and (max-width: 899px) {
   .bienvenida__ayuda {
     display: none;
   }
