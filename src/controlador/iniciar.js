@@ -29,6 +29,7 @@ import { instalarPush } from './push.js';
 import { instalarResultados } from './resultados.js';
 import { instalarIA } from './ia.js';
 import { instalarSesion, arrancarSesion } from './sesion.js';
+import { resolverAccionEmail, avisarAccionEmail } from './accion-email.js';
 
 export { registrarNavegadorReact } from './navegacion.js';
 
@@ -68,7 +69,12 @@ export const inicializarControladorDealit = () => {
   instalarNativo();
 
   if (!AteneaDB) document.body.classList.remove('auth-cargando');
-  arrancarSesion();
+  // Si se llega desde el link de verificación del email (/accion), primero se resuelve eso.
+  resolverAccionEmail().then(seguir => {
+    if (!seguir) return;
+    arrancarSesion();
+    avisarAccionEmail();
+  });
 
   // Si pegan un link largo de cliente en esta pestaña, se recarga para abrirlo como cliente.
   window.addEventListener('hashchange', () => {

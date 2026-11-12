@@ -98,6 +98,7 @@ export const AteneaDB = {
     },
     enviarVerificacion: async () => {},
     comprobarVerificacion: async () => true,
+    aplicarVerificacion: async () => 'nueva@dealit.test',
     recuperarPassword: async () => {},
     usaPassword: () => false,
     eliminarCuenta: async () => { localStorage.removeItem(CLAVE); },

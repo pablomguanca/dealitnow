@@ -36,6 +36,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 | `src/resultados.js` | Cálculo de la pantalla Resultados (`/resultados`): ganado, conversión, embudo, en juego y a quién seguir hoy; la pantalla está en `controlador/resultados.js` |
 | `src/aceptacion.js` | Reglas de aceptación, compartidas por la app y el servidor |
 | `src/firebase.js`, `src/firebase-publico.js`, `src/firebase-config.js` | Firebase de la app del dueño, de la vista del cliente y su configuración |
+| `src/controlador/accion-email.js` | Página `/accion`: el link de verificación de los emails de Firebase Auth (la URL de acción de las plantillas apunta a `https://dealit.com.ar/accion`). Verifica, avisa qué email quedó verificado y, si hay otra sesión abierta, ofrece entrar con la cuenta nueva. Restablecer contraseña y lo demás va a la página de Firebase (`/__/auth/action`) |
 | `src/link.js` | Links largos viejos (`#p=…`, propuesta comprimida); hoy solo para abrirlos |
 | `src/lib/formato.js` | Utilidades de texto, números, fechas y DOM |
 | `api/visto.js` | `POST /api/visto`: registra visitas al link |

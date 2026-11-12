@@ -12,6 +12,8 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  applyActionCode,
+  checkActionCode,
   sendPasswordResetEmail,
   updateProfile,
   reload,
@@ -149,6 +151,13 @@ const crearAteneaDB = () => {
     if (!auth.currentUser.emailVerified) return false;
     await auth.currentUser.getIdToken(true);
     return true;
+  };
+
+  // Link del email de verificación (página /accion): verifica y devuelve qué email era.
+  const aplicarVerificacion = async codigo => {
+    const info = await checkActionCode(auth, codigo);
+    await applyActionCode(auth, codigo);
+    return info.data.email;
   };
 
   const recuperarPassword = email => sendPasswordResetEmail(auth, email, _ajustesEmail());
@@ -508,7 +517,7 @@ const crearAteneaDB = () => {
   return {
     auth: {
       getUser, getUid, onAuthChange, signInGoogle, signIn, signUp, signOut,
-      enviarVerificacion, comprobarVerificacion, recuperarPassword, usaPassword, eliminarCuenta, tokenDeSesion
+      enviarVerificacion, comprobarVerificacion, aplicarVerificacion, recuperarPassword, usaPassword, eliminarCuenta, tokenDeSesion
     },
     logos: { subir: subirLogo, prefijoURL: PREFIJO_URL_LOGO },
     versiones: { listar: listarVersiones, crear: crearVersion },

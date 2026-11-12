@@ -317,7 +317,7 @@ const taparCierre = tapar => {
   document.body.append(capa);
 };
 
-const cerrarSesion = async () => {
+export const cerrarSesion = async () => {
   if (!AteneaDB) return;
   taparCierre(true);
   if (hayCambiosSinEnviar()) guardarAhora();
