@@ -57,10 +57,27 @@ const prepararActivar = activar => {
 };
 
 // App de Android: el permiso es el del sistema y el token se le pasa al servidor.
+// Al cerrar sesión se dan de baja las push del celular (para que no le lleguen avisos de
+// esta cuenta a quien entre después). Al volver a entrar, si Android ya tiene el permiso,
+// se reactivan solas, salvo que el dueño las haya apagado a mano desde Mi cuenta.
+const CLAVE_APAGADO = 'dealit-push-apagado';
+const apagadoAMano = () => { try { return localStorage.getItem(CLAVE_APAGADO) === '1'; } catch { return false; } };
+const marcarApagado = apagado => { try { if (apagado) localStorage.setItem(CLAVE_APAGADO, '1'); else localStorage.removeItem(CLAVE_APAGADO); } catch { } };
+let reactivacionIntentada = false;
+
 const pintarPushNativo = async mostrar => {
   const permiso = await pushNativo.permiso().catch(() => 'prompt');
   if (permiso === 'denied') {
     return mostrar('Bloqueaste las notificaciones de Dealit. Activalas en Ajustes → Aplicaciones → Dealit → Notificaciones y volvé a esta pantalla.');
+  }
+  if (permiso === 'granted' && !pushNativo.guardado() && !ctx.restringido && !apagadoAMano() && !reactivacionIntentada) {
+    reactivacionIntentada = true;
+    try {
+      await registrarTokenNativo('');
+      sincronizada = true;
+    } catch (e) {
+      console.warn('No se pudieron reactivar las notificaciones:', e.codigo || e.message);
+    }
   }
   const guardado = pushNativo.guardado();
   if (permiso === 'granted' && guardado) {
@@ -148,6 +165,7 @@ const activarPushNativo = async boton => {
     }
     await registrarTokenNativo(pushNativo.guardado());
     sincronizada = true;
+    marcarApagado(false);
     avisarExito('Listo: te avisamos en este celular.');
   } catch (e) {
     console.error('No se pudieron activar las notificaciones:', e);
@@ -237,6 +255,7 @@ const probarPush = async boton => {
 export const reiniciarPush = () => {
   clave = '';
   sincronizada = false;
+  reactivacionIntentada = false;
   pintarPush();
 };
 
@@ -260,6 +279,8 @@ export const instalarPush = () => {
     'activar-push': boton => activarPush(boton),
     'desactivar-push': async boton => {
       boton.disabled = true;
+      // Apagadas a mano: no se reactivan solas al volver a entrar.
+      if (esAppNativa()) marcarApagado(true);
       await desactivarPushEnEsteDispositivo();
       boton.disabled = false;
       avisar('Listo: este dispositivo ya no recibe avisos.');
