@@ -78,6 +78,13 @@ export const TEMAS_CATALOGO = {
     fuenteTitulos: 'Fraunces', fuenteCuerpo: 'Source Sans 3',
     portada: 'editorial', decoracion: 'ninguna', estilo: 'editorial'
   },
+  'atlas': {
+    nombre: 'Atlas', etiqueta: 'Idiomas & Global', plan: 'pro', acento: '#0369A1', modo: 'claro',
+    fondo: '#F5F9FC', fondo2: '#EAF2F8', superficie: '#D9E8F2', superficieBorde: '#C2D8E8',
+    texto: '#0C2233', textoApagado: '#4B6578', textoTenue: '#8AA0B0',
+    fuenteTitulos: 'Outfit', fuenteCuerpo: 'Nunito',
+    portada: 'tarjeta', decoracion: 'ondas', estilo: 'contorno'
+  },
   'olivo-noche': {
     nombre: 'Olivo', etiqueta: 'Real Estate Premium', plan: 'pro', acento: '#C8B07A', modo: 'oscuro',
     fondo: '#0F1210', fondo2: '#161A17', superficie: '#212722', superficieBorde: '#323A33',
@@ -659,6 +666,53 @@ export const PLANTILLAS_CATALOGO = {
       condiciones: 'Incluye dos rondas de cambios de diseño.\nEl dominio queda a nombre del cliente.\nEl hosting se abona por mes adelantado; el primer mes está incluido.\nLos textos y fotos que no estén listos al empezar pueden mover la fecha de publicación.',
       proximosPasos: 'Aceptar la propuesta desde este link.\nCompartir logo, fotos y accesos al dominio actual.\nAgendar la reunión de contenido.',
       tema: 'grafito-lima'
+    })
+  },
+
+  'traduccion-idiomas': {
+    nombre: 'Traducción e interpretación',
+    rubro: 'Traducción & Idiomas',
+    desc: 'Traducción pública y técnica, localización web e interpretación para reuniones.',
+    plan: 'pro',
+    datos: () => ({
+      emisor: {
+        nombre: 'Trad. Públ. Inés Molina',
+        rol: 'Traductora pública de inglés y portugués',
+        email: 'ines@molinatraducciones.com.ar',
+        telefono: '+54 9 11 4402-7719',
+        web: 'molinatraducciones.com.ar',
+        presentacion: 'Soy traductora pública matriculada y trabajo con un equipo de revisores nativos. Traduzco contratos, documentación técnica y sitios web para empresas que venden o se asocian afuera, con plazos claros y confidencialidad total.'
+      },
+      cliente: { nombre: 'Martín Acosta', empresa: 'AgroTec Sistemas S.A.', cargo: 'Gerente de Exportaciones' },
+      propuesta: { titulo: 'Traducción y localización para la expansión a Brasil y Estados Unidos', numero: 'T-2026-087', validez: 10 },
+      contexto: 'AgroTec vende sistemas de riego inteligente y cerró sus primeros distribuidores en Brasil y Estados Unidos. Necesitan el contrato de distribución traducido con validez legal, los manuales técnicos en portugués e inglés y el sitio web en los dos idiomas.\n\nAdemás, en diciembre reciben una delegación brasileña y quieren intérprete para las reuniones comerciales.',
+      objetivos: [
+        'Contratos con validez legal en los dos países.',
+        'Manuales y sitio web que suenen naturales para cada mercado, no traducidos palabra por palabra.',
+        'Reuniones comerciales fluidas con la delegación de Brasil.'
+      ],
+      servicios: [
+        srv('Traducción pública del contrato de distribución', 'unico', 2, 380000, 'Traducción pública al inglés y al portugués, con firma y legalización del Colegio de Traductores.', 'Traducción firmada y legalizada\nUna versión por idioma'),
+        srv('Traducción técnica de manuales', 'unico', 48000, 38, 'Manuales de instalación y uso, unas 24.000 palabras por idioma, con glosario técnico aprobado por el equipo.', 'Manuales traducidos y maquetados\nGlosario técnico bilingüe\nRevisión por traductor nativo'),
+        srv('Localización del sitio web', 'unico', 1, 950000, 'Adaptación del sitio a portugués e inglés: textos, llamados a la acción, monedas y palabras clave de cada mercado.', 'Sitio en dos idiomas\nTextos optimizados para buscadores locales'),
+        srv('Interpretación en reuniones comerciales', 'hora', 12, 55000, 'Intérprete de portugués en las reuniones con la delegación, en la planta y en las oficinas.', 'Hasta 12 horas en dos jornadas\nPreparación previa con el equipo'),
+        srv('Traducción urgente', 'unico', 1, 280000, 'Prioridad para entregar el contrato en 48 horas hábiles.', 'Entrega del contrato en 48 horas', true),
+        srv('Abono de traducciones mensual', 'mensual', 1, 420000, 'Hasta 8.000 palabras por mes para presentaciones, mails y novedades, con entrega en tres días hábiles.', 'Bolsa mensual de palabras\nPrioridad en los pedidos', true)
+      ],
+      etapas: [
+        etapa('Glosario y contrato', 'Semana 1', 'Glosario técnico con el equipo y traducción pública del contrato.'),
+        etapa('Manuales', 'Semanas 2 a 4', 'Traducción, revisión nativa y maquetación.'),
+        etapa('Sitio web', 'Semanas 4 y 5', 'Localización, carga y revisión final en el sitio.'),
+        etapa('Interpretación', 'Diciembre', 'Reuniones con la delegación de Brasil.')
+      ],
+      faqs: [
+        faq('¿Qué diferencia hay entre traducción pública y común?', 'La traducción pública la firma una traductora matriculada y la legaliza el Colegio: es la que piden organismos, tribunales y bancos. Para manuales y sitios web alcanza con la traducción técnica.'),
+        faq('¿La información es confidencial?', 'Sí. Firmamos un acuerdo de confidencialidad antes de recibir los documentos y todo el equipo trabaja bajo ese acuerdo.')
+      ],
+      inversion: { moneda: 'ARS', pagos: [['Al aceptar', 40], ['Con el contrato y los manuales', 40], ['Con el sitio publicado', 20]] },
+      condiciones: 'El precio de los manuales se calcula por palabra; si el texto final cambia, se ajusta al conteo real.\nLas tasas de legalización del Colegio de Traductores se abonan aparte.\nLas horas de interpretación que excedan las 12 previstas se cobran aparte.\nFirmamos un acuerdo de confidencialidad antes de empezar.',
+      proximosPasos: 'Aceptar la propuesta desde este link.\nEnviar el contrato y los manuales en formato editable.\nAgendar la reunión para armar el glosario técnico.',
+      tema: 'atlas'
     })
   }
 };

@@ -33,7 +33,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 | `src/controlador/` | Lógica de la interfaz por área: `iniciar.js` (dueño), `iniciar-cliente.js` (cliente), `contexto.js` (estado compartido), panel, editor, hoja en celular, plan, versiones, etc. |
 | `src/planes.js` | Reglas de los planes (límite de envíos, quién es Pro), compartidas por la app y el servidor |
 | `src/modelo.js` | Temas, valores por defecto, normalización y cálculo de totales |
-| `src/plantillas-catalogo.js` | Catálogo ampliado de plantillas de propuesta (rubros nuevos, 1 gratis y 12 PRO) con sus diseños (`TEMAS_CATALOGO`). `modelo.js` las suma a `PLANTILLAS` con `catalogo: true`: no van en los atajos del editor sino en «Explorar más plantillas» (pestaña Plantillas del panel) |
+| `src/plantillas-catalogo.js` | Catálogo ampliado de plantillas de propuesta (rubros nuevos, 1 gratis y 13 PRO) con sus diseños (`TEMAS_CATALOGO`). `modelo.js` las suma a `PLANTILLAS` con `catalogo: true`: no van en los atajos del editor sino en «Explorar más plantillas» (pestaña Plantillas del panel) |
 | `src/video.js` | Video de la propuesta y del portfolio: reconoce links de YouTube, Vimeo, Loom, Google Drive y archivos .mp4/.webm por https, y arma la URL de inserción oficial (nunca el link tal cual). En el documento va como portada con play (`videoSeccionHTML` en `lib/render.js`); el reproductor se carga al tocarla (`controlador/video.js`) |
 | `src/resultados.js` | Cálculo de la pantalla Resultados (`/resultados`): ganado, conversión, embudo, en juego y a quién seguir hoy; la pantalla está en `controlador/resultados.js` |
 | `src/aceptacion.js` | Reglas de aceptación, compartidas por la app y el servidor |

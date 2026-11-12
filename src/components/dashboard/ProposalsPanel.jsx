@@ -70,6 +70,14 @@ export function ProposalsPanel() {
 
         <section id="panel-plantillas" role="tabpanel" aria-labelledby="pestana-plantillas" hidden>
           <p className="panel__bajada galeria-plantillas__bajada">Elegí una plantilla para arrancar: trae textos, servicios y diseño pensados para tu rubro. Después cambiás todo lo que quieras.</p>
+          <div className="galeria-filtros">
+            <label className="galeria-buscar">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="4.75" /><path d="M10.5 10.5l3.25 3.25" /></svg>
+              <input className="galeria-buscar__campo" type="search" id="plantillas-buscar" placeholder="Buscá tu rubro: boda, abogado, obra, tienda…" aria-label="Buscar plantillas" autoComplete="off" />
+            </label>
+            <div className="galeria-chips" id="plantillas-categorias" role="toolbar" aria-label="Filtrar plantillas por categoría"></div>
+          </div>
+          <p className="galeria-vacio" id="plantillas-vacio" role="status" hidden></p>
           <ul className="galeria-plantillas" id="galeria-plantillas" aria-label="Plantillas de propuesta"></ul>
         </section>
       </div>
