@@ -80,9 +80,9 @@ export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, urlApp }) => {
 export const contenidoPush = ({ tipo, id, propuesta, aceptacion, urlApp, vistas }) => {
   const { titulo, cliente } = datosDe(propuesta);
   const url = `${urlApp}/propuesta/${encodeURIComponent(id)}`;
-  // Misma etiqueta para la primera visita y las siguientes: el aviso nuevo reemplaza al
-  // anterior de esa propuesta en vez de amontonarse.
-  const tag = `${tipo === 'revisita' ? 'vista' : tipo}-${id}`;
+  // Cada visita con su propia etiqueta: si reemplazara al aviso anterior de la propuesta,
+  // Android lo actualiza en silencio (sin sonido ni cartel) y parece que no llegó.
+  const tag = tipo === 'revisita' ? `vista-${id}-${Number(vistas) || Date.now()}` : `${tipo}-${id}`;
   if (tipo === 'aceptada') {
     const nombre = texto(aceptacion?.nombre).trim() || cliente || 'Tu cliente';
     const moneda = aceptacion?.moneda || 'USD';

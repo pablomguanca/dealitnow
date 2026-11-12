@@ -144,7 +144,7 @@ describe('cuándo se dispara', () => {
     const push = contenidoPush({ ...avisos[0], urlApp: URL_APP });
     expect(push.titulo).toContain('volvió a abrir');
     expect(push.cuerpo).toContain('3 veces');
-    expect(push.tag).toBe(`vista-${ID}`);
+    expect(push.tag).toBe(`vista-${ID}-3`);
   });
 
   it('una revisita no manda email', async () => {
