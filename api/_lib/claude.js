@@ -3,9 +3,10 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { ErrorHttp } from './http.js';
 
-// Se puede cambiar sin tocar código con la variable IA_MODELO (por ejemplo, un modelo más
-// económico para empezar). Por defecto, el más capaz de la línea Opus.
-export const MODELO_IA = process.env.IA_MODELO || 'claude-opus-5-5';
+// Por defecto Claude Haiku 5.5: arma bien una propuesta a partir de lo dictado y cuesta una
+// fracción de Opus. Se puede cambiar sin tocar código con la variable IA_MODELO
+// (por ejemplo, claude-opus-5-5 si hiciera falta más calidad).
+export const MODELO_IA = process.env.IA_MODELO || 'claude-haiku-5-5';
 // Modelos que aceptan el respaldo automático del servidor de Anthropic ante un rechazo.
 const CON_FALLBACK = ['claude-opus-5-5', 'claude-opus-5', 'claude-sonnet-5-5', 'claude-fable-5-1', 'claude-fable-5-2'];
 
