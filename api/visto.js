@@ -10,7 +10,7 @@ import { crearAvisador, urlAppDe } from './_lib/avisos.js';
 import { planesActivosPara } from './_lib/planes-activos.js';
 
 // Entre una visita y la siguiente, al menos esto para volver a avisar.
-export const PAUSA_REVISITA_MS = 3 * 60 * 1000;
+export const PAUSA_REVISITA_MS = 30 * 1000;
 const milisDe = v => (typeof v?.toMillis === 'function' ? v.toMillis() : v instanceof Date ? v.getTime() : null);
 
 export const crearHandler = ({ db, uidDe, avisar = async () => {}, ahora = () => Date.now() }) => async (req, res) => {
