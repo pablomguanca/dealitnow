@@ -76,7 +76,11 @@ const detenerDictado = () => {
 };
 
 const arrancarReloj = () => {
-  arrancarReloj();
+  escuchando = true;
+  inicioDictado = Date.now();
+  clearInterval(reloj);
+  reloj = setInterval(pintarVoz, 500);
+  pintarVoz();
 };
 
 const ERRORES_DICTADO_NATIVO = {
@@ -165,11 +169,7 @@ const empezarDictado = () => {
     avisarError('No pudimos usar el micrófono. Probá escribirlo.');
     return;
   }
-  escuchando = true;
-  inicioDictado = Date.now();
-  clearInterval(reloj);
-  reloj = setInterval(pintarVoz, 500);
-  pintarVoz();
+  arrancarReloj();
 };
 
 // Cupo del mes: en Gratis se muestra cuántas quedan.
