@@ -9,6 +9,7 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         // Complementos propios de Dealit (los de npm se registran solos).
         registerPlugin(ImprimirPlugin.class);
+        registerPlugin(DictadoPlugin.class);
         super.onCreate(savedInstanceState);
     }
 }

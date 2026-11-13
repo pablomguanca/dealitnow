@@ -1,5 +1,6 @@
 // «Contale tu propuesta» (dictado + IA). El dictado usa el reconocimiento de voz del
-// navegador (gratis, no sale audio de la compu); el texto va a /api/ia-propuesta, que arma
+// navegador (gratis, no sale audio de la compu) y, en la app de Android, el del sistema
+// (complemento Dictado de nativo.js, porque la ventana web de la app no trae el de Chrome); el texto va a /api/ia-propuesta, que arma
 // la propuesta con la IA (Gemini). Acá se abre el diálogo, se dicta y se crea la propuesta.
 
 import { $ } from '../lib/formato.js';
@@ -14,8 +15,17 @@ import { nuevaPropuesta } from './propuestas.js';
 import { emisorDeCuenta } from './cuenta.js';
 import { ofrecerPro, restriccionesActivas } from './plan.js';
 import { abrirRegistro } from './sesion.js';
+import { dictadoNativo, dictadoNativoDisponible, esAppNativa } from '../nativo.js';
 
 const Reconocimiento = typeof window !== 'undefined' ? (window.SpeechRecognition || window.webkitSpeechRecognition) : null;
+
+// Con qué se dicta: 'nativo' (app de Android con el complemento), 'web' (navegador) o null.
+// En la app sin el complemento (instalada antes) el de la ventana web no anda: se escribe.
+const motorDictado = () => {
+  if (dictadoNativoDisponible()) return 'nativo';
+  if (esAppNativa()) return null;
+  return Reconocimiento ? 'web' : null;
+};
 
 const EJEMPLO = 'Propuesta para Café Molino, una cafetería de Palermo que abre su segundo local. Quieren renovar la marca: logo nuevo, paleta y tipografías, menú impreso y plantillas para Instagram. El logo con tres propuestas y dos rondas de cambios, 450.000 pesos. Menú y plantillas 280.000. Todo en tres semanas. Mitad para arrancar y mitad al entregar. Ofreceles también la señalética del local nuevo y un mes de contenido para redes.';
 
@@ -27,6 +37,7 @@ let textoBase = '';
 let inicioDictado = 0;
 let reloj = null;
 let generando = false;
+let sesionNativa = null;
 
 const pintarVoz = () => {
   const boton = $('#ia-microfono');
@@ -34,7 +45,7 @@ const pintarVoz = () => {
   boton.setAttribute('aria-pressed', String(escuchando));
   boton.classList.toggle('dialogo-ia__microfono--activo', escuchando);
   $('#ia-microfono-texto').textContent = escuchando ? 'Terminar de dictar' : 'Empezar a dictar';
-  if (!Reconocimiento) {
+  if (!motorDictado()) {
     boton.hidden = true;
     $('#ia-voz-titulo').textContent = 'Escribí el trabajo con tus palabras';
     $('#ia-voz-detalle').textContent = 'Este navegador no permite dictar. En el celular, usá el micrófono del teclado.';
@@ -59,11 +70,62 @@ const detenerDictado = () => {
   escuchando = false;
   clearInterval(reloj);
   try { reconocimiento?.stop(); } catch { }
+  sesionNativa?.detener();
+  sesionNativa = null;
   pintarVoz();
 };
 
+const arrancarReloj = () => {
+  arrancarReloj();
+};
+
+const ERRORES_DICTADO_NATIVO = {
+  'sin-permiso': 'Para dictar, permití el micrófono para Dealit en los ajustes del celular. También podés escribirlo.',
+  'sin-conexion': 'Para dictar hace falta conexión a internet. También podés escribirlo.',
+  'no-disponible': 'Este celular no tiene reconocimiento de voz. Escribilo o usá el micrófono del teclado.'
+};
+
+// App de Android: cada frase que Android cierra se fija en el texto; lo que va diciendo se
+// muestra al final mientras habla.
+const empezarDictadoNativo = async () => {
+  const campo = $('#ia-texto');
+  textoBase = campo.value.trim() ? `${campo.value.trim()} ` : '';
+  const mostrar = provisorio => {
+    campo.value = `${textoBase}${provisorio}`.slice(0, 4000);
+    pintarContador();
+  };
+  arrancarReloj();
+  try {
+    const sesion = await dictadoNativo({
+      alParcial: mostrar,
+      alFinal: texto => {
+        mostrar(texto);
+        textoBase = campo.value.trim() ? `${campo.value.trim()} ` : '';
+      },
+      alError: codigo => avisarError(ERRORES_DICTADO_NATIVO[codigo] || 'No pudimos seguir escuchando. Probá de nuevo o escribilo.'),
+      alFin: () => {
+        sesionNativa = null;
+        if (escuchando) detenerDictado();
+      }
+    });
+    // Si tocó «Terminar» mientras arrancaba, se corta enseguida.
+    if (escuchando) sesionNativa = sesion;
+    else sesion.detener();
+  } catch (e) {
+    escuchando = false;
+    clearInterval(reloj);
+    pintarVoz();
+    avisarError(ERRORES_DICTADO_NATIVO[e?.code] || 'No pudimos usar el micrófono. Probá escribirlo.');
+  }
+};
+
 const empezarDictado = () => {
-  if (!Reconocimiento || generando) return;
+  const motor = motorDictado();
+  if (!motor || generando) return;
+  if (motor === 'nativo') {
+    empezarDictadoNativo();
+    return;
+  }
   reconocimiento = new Reconocimiento();
   reconocimiento.lang = 'es-AR';
   reconocimiento.continuous = true;
@@ -204,7 +266,7 @@ export const abrirIA = () => {
   pintarCupo();
   pintarContador();
   if (!dialogo.open) dialogo.showModal();
-  if (!Reconocimiento) $('#ia-texto').focus();
+  if (!motorDictado()) $('#ia-texto').focus();
 };
 
 export const instalarIA = () => {

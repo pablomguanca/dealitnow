@@ -11,6 +11,36 @@ const Imprimir = registerPlugin('Imprimir');
 
 export const esAppNativa = () => Capacitor.isNativePlatform();
 
+// Complemento propio (android/.../DictadoPlugin.java): dictado con el reconocimiento de voz de
+// Android, porque la ventana web de la app no trae el de Chrome. Las apps instaladas antes
+// de sumarlo no lo tienen: ahí se sigue usando el micrófono del teclado.
+const Dictado = registerPlugin('Dictado');
+export const dictadoNativoDisponible = () => esAppNativa() && Capacitor.isPluginAvailable('Dictado');
+
+// Empieza a escuchar y devuelve { detener }. alParcial recibe lo que va diciendo, alFinal
+// cada frase cerrada, alError un código ('sin-permiso', 'sin-conexion', …) y alFin avisa que
+// dejó de escuchar (después de detener, o porque la app pasó a segundo plano). Si no se puede
+// empezar (por ejemplo, se negó el permiso), la promesa se rechaza con ese código en e.code.
+export const dictadoNativo = async ({ alParcial, alFinal, alError, alFin }) => {
+  const oyentes = await Promise.all([
+    Dictado.addListener('parcial', e => alParcial?.(e?.texto || '')),
+    Dictado.addListener('final', e => alFinal?.(e?.texto || '')),
+    Dictado.addListener('error', e => alError?.(e?.codigo || 'error')),
+    Dictado.addListener('fin', () => {
+      quitar();
+      alFin?.();
+    })
+  ]);
+  function quitar() { oyentes.forEach(o => o.remove()); }
+  try {
+    await Dictado.empezar({ idioma: 'es-AR' });
+  } catch (e) {
+    quitar();
+    throw e;
+  }
+  return { detener: () => Dictado.detener().catch(() => {}) };
+};
+
 // Login con Google: la cuenta se elige con la ventana nativa de Android y el token que
 // devuelve se usa para entrar a Firebase como siempre. Si se cancela, se responde con el
 // mismo código que la ventana web cerrada, así la interfaz no muestra un error.
