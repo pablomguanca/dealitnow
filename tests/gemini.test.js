@@ -49,6 +49,23 @@ describe('generarJSON (Gemini)', () => {
     await expect(generarJSON(pedido)).rejects.toMatchObject({ estado: 503, codigo: 'ia-ocupada' });
   });
 
+  it('si se vence el tiempo no reintenta y avisa que está ocupada', async () => {
+    // fetch que nunca responde: solo termina cuando se corta por tiempo.
+    const fetch = vi.fn((url, { signal }) => new Promise((_, rechazar) => {
+      signal.addEventListener('abort', () => rechazar(signal.reason));
+    }));
+    vi.stubGlobal('fetch', fetch);
+    await expect(generarJSON({ ...pedido, tiempoTotalMs: 50 })).rejects.toMatchObject({ estado: 503, codigo: 'ia-ocupada' });
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('no reintenta si no queda tiempo suficiente', async () => {
+    const fetch = vi.fn().mockResolvedValue(respuestaError(429));
+    vi.stubGlobal('fetch', fetch);
+    await expect(generarJSON({ ...pedido, tiempoTotalMs: 5000 })).rejects.toMatchObject({ codigo: 'ia-ocupada' });
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
   it('error de la API → ia-error, sin reintentar', async () => {
     const fetch = vi.fn().mockResolvedValue(respuestaError(400));
     vi.stubGlobal('fetch', fetch);
