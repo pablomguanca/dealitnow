@@ -1,5 +1,5 @@
 // POST /api/ia-propuesta { texto } — «Contale tu propuesta»: el dueño dicta o escribe el
-// trabajo y Claude arma la propuesta (servicios, precios, opcionales, etapas, pagos y
+// trabajo y Gemini arma la propuesta (servicios, precios, opcionales, etapas, pagos y
 // condiciones). El servidor valida todo lo que vuelve (src/ia.js) y lleva la cuenta del
 // mes en planes/{uid}.ia: en Gratis, LIMITE_IA_GRATIS; en Pro, un tope alto anti abuso.
 // Para respetar el nivel de precios del dueño, se le pasan los que ya usó.
@@ -10,7 +10,7 @@ import {
 } from '../src/ia.js';
 import { firestore, sesionDeLaSolicitud } from './_lib/firebase-admin.js';
 import { planesActivosPara } from './_lib/planes-activos.js';
-import { generarJSON } from './_lib/claude.js';
+import { generarJSON } from './_lib/gemini.js';
 import { ErrorHttp, fallar, leerPost, responder } from './_lib/http.js';
 
 const historialDe = async (db, uid) => {

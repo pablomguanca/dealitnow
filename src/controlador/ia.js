@@ -1,6 +1,6 @@
 // «Contale tu propuesta» (dictado + IA). El dictado usa el reconocimiento de voz del
 // navegador (gratis, no sale audio de la compu); el texto va a /api/ia-propuesta, que arma
-// la propuesta con Claude. Acá se abre el diálogo, se dicta y se crea la propuesta.
+// la propuesta con la IA (Gemini). Acá se abre el diálogo, se dicta y se crea la propuesta.
 
 import { $ } from '../lib/formato.js';
 import { LIMITE_IA_GRATIS, TEXTO_MIN, usosIADelMes } from '../ia.js';

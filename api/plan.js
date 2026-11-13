@@ -1,6 +1,6 @@
 // POST /api/plan {} — le dice a la app si los planes están activos para esta cuenta
 // (ver api/_lib/planes-activos.js). Con los planes apagados no se muestra «Tu plan».
-// También si la IA está configurada (ANTHROPIC_API_KEY): si no, la app oculta sus botones.
+// También si la IA está configurada (GEMINI_API_KEY): si no, la app oculta sus botones.
 // Y la clave pública de las notificaciones push ('' si no están configuradas).
 // Y si la cuenta es Pro según el servidor (planes/{uid}): la app lo usa además del plan que
 // lee de Firestore, así una lectura que tarda o falla nunca trata a un Pro como Gratis.
@@ -15,7 +15,7 @@ const proDe = async (db, uid) => {
   return snap.exists ? esPro(snap.data()) : false;
 };
 
-export const crearHandler = ({ sesionDe, planesActivos, iaDisponible = () => !!process.env.ANTHROPIC_API_KEY, clavePush = () => clavePublicaPush(), db = firestore, esProDe = proDe }) => async (req, res) => {
+export const crearHandler = ({ sesionDe, planesActivos, iaDisponible = () => !!process.env.GEMINI_API_KEY, clavePush = () => clavePublicaPush(), db = firestore, esProDe = proDe }) => async (req, res) => {
   if (!leerPost(req, res)) return;
   try {
     const sesion = await sesionDe(req);
