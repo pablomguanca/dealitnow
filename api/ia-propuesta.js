@@ -1,8 +1,9 @@
 // POST /api/ia-propuesta { texto } — «Contale tu propuesta»: el dueño dicta o escribe el
 // trabajo y Gemini arma la propuesta (servicios, precios, opcionales, etapas, pagos y
-// condiciones). El servidor valida todo lo que vuelve (src/ia.js) y lleva la cuenta del
-// mes en planes/{uid}.ia: en Gratis, LIMITE_IA_GRATIS; en Pro, un tope alto anti abuso.
-// Para respetar el nivel de precios del dueño, se le pasan los que ya usó.
+// condiciones, preguntas frecuentes). El servidor valida todo lo que vuelve (src/ia.js) y
+// lleva la cuenta del mes en planes/{uid}.ia: en Gratis, LIMITE_IA_GRATIS; en Pro, un tope
+// alto anti abuso. Para respetar el nivel de precios del dueño, se le pasan los que ya usó, y
+// los datos de su negocio (users/{uid}.emisor: nombre, rol y ubicación) para ubicar el rubro.
 import { esPro, mesDe } from '../src/planes.js';
 import {
   LIMITE_IA_GRATIS, LIMITE_IA_PRO, TEXTO_MAX, TEXTO_MIN,
@@ -20,6 +21,17 @@ const historialDe = async (db, uid) => {
   } catch (e) {
     console.warn('No se pudo leer el historial de precios:', e.message);
     return [];
+  }
+};
+
+const emisorDe = async (db, uid) => {
+  try {
+    const snap = await db().collection('users').doc(uid).get();
+    const e = (snap.exists && snap.data()?.emisor) || {};
+    return { nombre: e.nombre, rol: e.rol, ubicacion: e.ubicacion };
+  } catch (e) {
+    console.warn('No se pudieron leer los datos del emisor:', e.message);
+    return {};
   }
 };
 
@@ -47,9 +59,10 @@ export const crearHandler = ({ db, sesionDe, planesActivos, generar, ahora = () 
 
     // En Gratis la IA elige solo diseños gratis: así la propuesta se puede enviar.
     const temas = temasPermitidos(pro || !conLimite);
+    const [emisor, historial] = await Promise.all([emisorDe(db, uid), historialDe(db, uid)]);
     const respuesta = await generar({
-      sistema: instruccionesIA(temas),
-      mensaje: mensajeIA(dictado, preciosDeReferencia(await historialDe(db, uid))),
+      sistema: instruccionesIA(temas, emisor),
+      mensaje: mensajeIA(dictado, preciosDeReferencia(historial)),
       esquema: esquemaIA(temas)
     });
     const { contenido, avisos } = propuestaDesdeIA(respuesta, { temas });
