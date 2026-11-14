@@ -1,4 +1,11 @@
-// Panel «Mis portfolios»: gestión de múltiples portfolios y páginas web por rubro.
+// Panel «Mis portfolios»: gestión de múltiples portfolios y páginas web por rubro, y las
+// plantillas de portfolio para arrancar uno nuevo.
+
+import { PLANTILLAS_PORTAFOLIO } from '../../modelo.js';
+
+const PLANTILLAS = Object.entries(PLANTILLAS_PORTAFOLIO)
+  .filter(([id]) => id !== 'en-blanco')
+  .sort(([, a], [, b]) => (a.plan === 'gratis' ? 0 : 1) - (b.plan === 'gratis' ? 0 : 1));
 
 export function PortfoliosPanel() {
   return (
@@ -42,6 +49,25 @@ export function PortfoliosPanel() {
         <button type="button" className="boton boton--primario" data-accion="nuevo-portafolio">Crear desde cero</button>
       </div>
     </div>
+
+    <section className="pf-plantillas" aria-labelledby="pf-plantillas-titulo">
+      <h2 className="pf-plantillas__titulo" id="pf-plantillas-titulo">Plantillas de portfolio</h2>
+      <p className="pf-plantillas__bajada">Arrancá con textos, secciones y diseño pensados para tu rubro. Después cambiás todo por tus trabajos.</p>
+      <ul className="pf-plantillas__lista">
+        {PLANTILLAS.map(([id, t]) => (
+          <li key={id} className="pf-plantilla">
+            <span className="pf-plantilla__rubro">
+              {t.rubro}
+              {t.plan === 'pro' ? <em className="insignia-pro">PRO</em> : <em className="pf-plantilla__gratis">Gratis</em>}
+              {t.catalogo && <em className="insignia-nueva">Nueva</em>}
+            </span>
+            <h3 className="pf-plantilla__nombre">{t.nombre}</h3>
+            <p className="pf-plantilla__desc">{t.desc}</p>
+            <button type="button" className="boton boton--secundario boton--chico" data-accion="crear-pf-rubro" data-rubro={id}>Usar plantilla</button>
+          </li>
+        ))}
+      </ul>
+    </section>
   </div>
 </main>
   );

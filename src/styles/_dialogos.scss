@@ -185,3 +185,136 @@
     white-space: nowrap;
   }
 }
+
+// Tarjetas de plan en el cartel de Pro (opciones con plan en elegir(), ver plan.js).
+.planes-opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12.5rem), 1fr));
+  gap: 0.75rem;
+  margin: 1.1rem 0 0.4rem;
+}
+
+.plan-opcion {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  min-width: 0;
+  padding: 1.05rem 1.1rem 0.95rem;
+  border: 1.5px solid var(--superficie-borde);
+  border-radius: var(--radio-m);
+  background: var(--superficie);
+  color: var(--marfil);
+  font-family: var(--fuente-texto);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transicion), box-shadow var(--transicion), transform var(--transicion);
+
+  &:hover {
+    border-color: var(--dorado);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--dorado);
+    outline-offset: 2px;
+  }
+
+  &__cinta {
+    position: absolute;
+    top: -0.62rem;
+    right: 0.9rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    background: linear-gradient(120deg, #00C896, #0EA5A4);
+    color: #FFF;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px -4px rgba(0, 200, 150, 0.6);
+  }
+
+  &__nombre {
+    color: var(--marfil-apagado);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__precio {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.3rem;
+    line-height: 1.1;
+
+    strong {
+      font-size: 1.55rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      white-space: nowrap;
+    }
+
+    small {
+      color: var(--marfil-apagado);
+      font-size: 0.82rem;
+    }
+  }
+
+  &__nota {
+    margin-bottom: 0.55rem;
+    color: var(--marfil-apagado);
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  &__accion {
+    display: inline-flex;
+    align-self: stretch;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    margin-top: auto;
+    padding: 0.62rem 0.9rem;
+    border: 1px solid var(--superficie-borde);
+    border-radius: var(--radio-s);
+    color: var(--marfil);
+    font-size: 0.86rem;
+    font-weight: 700;
+
+    svg {
+      width: 0.9rem;
+      height: 0.9rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform var(--transicion);
+    }
+  }
+
+  &:hover &__accion svg { transform: translateX(2px); }
+
+  // La anual: la recomendada, con el botón lleno.
+  &--destacada {
+    border-color: var(--dorado);
+    background: linear-gradient(180deg, var(--dorado-fondo, rgba(0, 200, 150, 0.08)), var(--superficie) 70%);
+    box-shadow: 0 12px 30px -18px rgba(0, 200, 150, 0.8);
+
+    .plan-opcion__accion {
+      border-color: transparent;
+      background: var(--dorado);
+      color: var(--negro);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plan-opcion, .plan-opcion__accion svg { transition: none; }
+  .plan-opcion:hover { transform: none; }
+}

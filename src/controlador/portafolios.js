@@ -18,6 +18,7 @@ import {
 import { llenarFormulario, actualizarSelectorPortafolio } from './formulario.js';
 import { renderDocumento } from './vista.js';
 import { emisorDeCuenta } from './cuenta.js';
+import { disenoProPermitido } from './plan.js';
 import { irRuta, mostrarVista, cerrarEdicion, cambiarPestana, clicComun } from './navegacion.js';
 
 let dejarDeEscucharPortafolios = null;
@@ -183,9 +184,12 @@ export const instalarPortafolios = () => {
   registrarAcciones({
     'nuevo-portafolio': () => nuevoPortafolio(),
     'nuevo-portafolio-ejemplo': () => nuevoPortafolio(ejemploPortafolio()),
-    'crear-pf-rubro': boton => {
+    'crear-pf-rubro': async boton => {
       const tpl = PLANTILLAS_PORTAFOLIO[boton.dataset.rubro];
-      if (tpl) nuevoPortafolio({ ...tpl.crear(), plantilla: boton.dataset.rubro });
+      if (!tpl) return;
+      // Como en las propuestas: en Gratis, una plantilla PRO ofrece Pro y no se aplica.
+      if (tpl.plan === 'pro' && !(await disenoProPermitido(tpl.nombre))) return;
+      nuevoPortafolio({ ...tpl.crear(), plantilla: boton.dataset.rubro });
     },
     'abrir-portafolio': (boton, ev) => {
       if (boton.tagName === 'A') {

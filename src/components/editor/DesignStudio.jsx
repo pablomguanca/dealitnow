@@ -2,6 +2,7 @@
 
 import { FUENTES_TITULOS, FUENTES_CUERPO, COMBINACIONES_FUENTES } from '../../modelo.js';
 import { TEMAS_CATALOGO, PLANTILLAS_CATALOGO } from '../../plantillas-catalogo.js';
+import { PLANTILLAS_PORTFOLIO_CATALOGO } from '../../portfolios-catalogo.js';
 
 const CANTIDAD_CATALOGO = Object.keys(PLANTILLAS_CATALOGO).length;
 
@@ -92,6 +93,12 @@ export function DesignStudio() {
                 <span className="plantilla-chip__rubro">Sin clientes previos</span>
                 <span className="plantilla-chip__nombre">Conceptos &amp; Expertise</span>
               </button>
+              {Object.entries(PLANTILLAS_PORTFOLIO_CATALOGO).map(([id, t]) => (
+                <button key={id} type="button" className="plantilla-chip" data-plantilla-portafolio={id}>
+                  <span className="plantilla-chip__rubro">{t.rubro} {t.plan === 'pro' && <em className="insignia-pro">PRO</em>}</span>
+                  <span className="plantilla-chip__nombre">{t.nombre}</span>
+                </button>
+              ))}
             </div>
           </div>
 

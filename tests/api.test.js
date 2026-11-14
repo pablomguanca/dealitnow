@@ -59,6 +59,13 @@ describe('POST /api/visto', () => {
     expect(Object.keys(escrituras[0].cambios).sort()).toEqual(['vistas', 'vistoPrimero', 'vistoUltimo']);
   });
 
+  it('congela la versión de los links de Gratis activados antes del cambio', async () => {
+    const { db, escrituras } = crearDb({ [ID]: propuesta({ marca: true }) });
+    await crearVisto({ db, uidDe: async () => null })(post({ id: ID }), res());
+    expect(escrituras[0].cambios.publicado.propuesta.titulo).toBe('Web');
+    expect(escrituras[0].cambios.clienteEnviado).toEqual({ nombre: '', empresa: '' });
+  });
+
   it('no cuenta las visitas del dueño', async () => {
     const { db, escrituras } = crearDb({ [ID]: propuesta() });
     const r = res();
@@ -114,6 +121,18 @@ describe('POST /api/aceptar', () => {
     await crearAceptar({ db, uidDe: async () => null, ahora })(post({ id: ID, nombre: 'Laura', acepto: true }), r);
     expect(r.estado).toBe(200);
     expect(r.cuerpo.aceptacion.cobro).toBeUndefined();
+  });
+
+  it('en Gratis acepta la versión que se mandó, no la que se está editando', async () => {
+    const p = propuesta({ marca: true });
+    p.publicado = structuredClone(p.payload);
+    p.payload.servicios[0].precio = 900;
+    p.payload.propuesta.titulo = 'Otra';
+    const { db, escrituras } = crearDb({ [ID]: p });
+    const r = res();
+    await crearAceptar({ db, uidDe: async () => null, ahora })(post({ id: ID, nombre: 'Laura', acepto: true }), r);
+    expect(r.cuerpo.aceptacion.inicial).toBe(500);
+    expect(escrituras[0].cambios.aceptacion.contenido.propuesta.titulo).toBe('Web');
   });
 
   it('no deja aceptar dos veces', async () => {

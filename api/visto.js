@@ -8,6 +8,7 @@ import { FieldValue, firestore, uidDeLaSolicitud } from './_lib/firebase-admin.j
 import { ErrorHttp, fallar, leerPost, responder } from './_lib/http.js';
 import { crearAvisador, urlAppDe } from './_lib/avisos.js';
 import { planesActivosPara } from './_lib/planes-activos.js';
+import { clienteDe } from '../src/planes.js';
 
 // Entre una visita y la siguiente, al menos esto para volver a avisar.
 export const PAUSA_REVISITA_MS = 30 * 1000;
@@ -24,14 +25,26 @@ export const crearHandler = ({ db, uidDe, avisar = async () => {}, ahora = () =>
     const aviso = await db().runTransaction(async tx => {
       const snap = await tx.get(ref);
       if (!snap.exists || snap.get('publico') !== true) throw new ErrorHttp(404, 'no-disponible');
-      if (uid && uid === snap.get('userId')) return null;
+      // Links de Gratis activados antes de congelar la versión enviada: se congela la de
+      // ahora (ver contenidoDelLink en src/planes.js).
+      const congelar = snap.get('marca') === true && !snap.get('publicado') && !snap.get('aceptacion') && snap.get('payload')
+        ? {
+            publicado: snap.get('payload'),
+            publicadoEn: FieldValue.serverTimestamp(),
+            ...(snap.get('clienteEnviado') ? {} : { clienteEnviado: clienteDe(snap.get('payload')) })
+          }
+        : null;
+      if (uid && uid === snap.get('userId')) {
+        if (congelar) tx.update(ref, congelar);
+        return null;
+      }
       // Todo lo de la visita anterior se lee antes de registrar esta.
       const esPrimera = !snap.get('vistoPrimero');
       const ultima = milisDe(snap.get('vistoUltimo'));
       const vistas = (Number(snap.get('vistas')) || 0) + 1;
       const aceptada = !!snap.get('aceptacion');
       const datos = { ...snap.data() };
-      const cambios = { vistas: FieldValue.increment(1), vistoUltimo: FieldValue.serverTimestamp() };
+      const cambios = { ...congelar, vistas: FieldValue.increment(1), vistoUltimo: FieldValue.serverTimestamp() };
       if (esPrimera) cambios.vistoPrimero = FieldValue.serverTimestamp();
       tx.update(ref, cambios);
       if (aceptada) return null;

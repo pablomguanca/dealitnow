@@ -1,14 +1,13 @@
 // Vista del cliente: abre la propuesta o el portfolio que le compartieron, por link
-// corto (/p/<id>, /portafolio/<id>, leído de la cuenta de quien lo mandó) o por link
-// largo (#p=…, #f=…, con el contenido comprimido dentro del link).
+// corto (/p/<id>, /portafolio/<id>), leído de la cuenta de quien lo mandó.
+// Los links largos de las primeras versiones (#p=…, #f=…, con el contenido comprimido
+// dentro del link) ya no se abren: cualquiera podía armar uno a mano, sin cuenta, sin el
+// límite del plan y sin la marca de Dealit.
 
 import { $, esc } from '../lib/formato.js';
-import { descomprimir } from '../link.js';
 import {
   ctx,
   AteneaDB,
-  PREFIJO,
-  PREFIJO_PORTAFOLIO,
   RUTA_LINK,
   RUTA_PORTAFOLIO,
   normalizar,
@@ -52,14 +51,12 @@ const mostrarClientePortafolio = datos => {
   renderPortafolio();
 };
 
-// Link largo (#p=…): la propuesta viaja comprimida dentro del propio link.
-const iniciarCliente = async () => {
-  entrarComoCliente('propuesta');
-  try {
-    mostrarCliente(JSON.parse(await descomprimir(location.hash.slice(PREFIJO.length))));
-  } catch {
-    errorCliente('No pudimos abrir esta propuesta', LINK_INCOMPLETO);
-  }
+const LINK_VIEJO = 'Este link es de una versión anterior de Dealit y ya no funciona. Pedile a quien te lo mandó que te comparta el link nuevo.';
+
+// Link largo (#p=…, #f=…): ya no se abre.
+const iniciarClienteLinkViejo = modo => {
+  entrarComoCliente(modo);
+  errorCliente(modo === 'portafolio' ? 'Este portfolio ya no está disponible' : 'Esta propuesta ya no está disponible', LINK_VIEJO);
 };
 
 // Link corto (/p/<id>): la propuesta se lee de la cuenta de quien la mandó,
@@ -90,15 +87,6 @@ const iniciarClienteCorto = async id => {
   }
 };
 
-const iniciarClientePortafolio = async () => {
-  entrarComoCliente('portafolio');
-  try {
-    mostrarClientePortafolio(JSON.parse(await descomprimir(location.hash.slice(PREFIJO_PORTAFOLIO.length))));
-  } catch {
-    errorCliente('No pudimos abrir este portfolio', 'El link llegó incompleto o se cortó al copiarlo.');
-  }
-};
-
 const iniciarClientePortafolioCorto = async id => {
   entrarComoCliente('portafolio');
   if (!id || !AteneaDB?.portfolios) {
@@ -108,6 +96,7 @@ const iniciarClientePortafolioCorto = async id => {
   try {
     const datos = await AteneaDB.portfolios.obtenerPublico(id);
     if (datos && datos.payload) {
+      ctx.marcaLink = datos.marca === true;
       mostrarClientePortafolio(datos.payload);
     } else {
       errorCliente('Este portfolio ya no está disponible', 'Puede que el link se haya desactivado.');
@@ -119,7 +108,7 @@ const iniciarClientePortafolioCorto = async id => {
 
 export const iniciarVistaCliente = tipo => {
   if (tipo === 'portafolio-corto') iniciarClientePortafolioCorto((location.pathname.match(RUTA_PORTAFOLIO) || [])[1]);
-  else if (tipo === 'portafolio-largo') iniciarClientePortafolio();
+  else if (tipo === 'portafolio-largo') iniciarClienteLinkViejo('portafolio');
   else if (tipo === 'propuesta-corto') iniciarClienteCorto((location.pathname.match(RUTA_LINK) || [])[1]);
-  else iniciarCliente();
+  else iniciarClienteLinkViejo('propuesta');
 };

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createHmac } from 'node:crypto';
-import { LIMITE_ENVIOS_GRATIS, enviosDelMes, esPro, finDePro, mesDe, planDesdeSuscripcion, proParaVerificar, puedeEnviar, usosPro } from '../src/planes.js';
+import { LIMITE_ENVIOS_GRATIS, clienteDe, contenidoDelLink, enviosDelMes, mismoCliente, esPro, finDePro, mesDe, planDesdeSuscripcion, proParaVerificar, puedeEnviar, usosPro } from '../src/planes.js';
 import { crearHandler as crearActivar } from '../api/activar.js';
 import { crearHandler as crearSuscripcion } from '../api/suscripcion.js';
 import { crearHandler as crearWebhook } from '../api/mercadopago.js';
@@ -126,8 +126,26 @@ describe('vencimiento y partes PRO', () => {
   });
 });
 
+describe('link congelado en Gratis', () => {
+  it('mismoCliente deja corregir el nombre o la empresa, no los dos', () => {
+    const enviado = clienteDe({ cliente: { nombre: 'Laura Gómez', empresa: 'Café Molino' } });
+    expect(mismoCliente(enviado, { cliente: { nombre: 'LAURA  GOMEZ', empresa: 'Cafe Molino S.A.' } })).toBe(true);
+    expect(mismoCliente(enviado, { cliente: { nombre: 'Laura Gomes', empresa: 'Café Molino' } })).toBe(true);
+    expect(mismoCliente(enviado, { cliente: { nombre: 'Pedro', empresa: 'Ferretería Sur' } })).toBe(false);
+    expect(mismoCliente(enviado, { cliente: { nombre: 'Laura Gómez', empresa: '' } })).toBe(false);
+    expect(mismoCliente(clienteDe({ cliente: { nombre: 'Laura' } }), { cliente: { nombre: 'Laura', empresa: 'Nueva' } })).toBe(true);
+  });
+
+  it('contenidoDelLink usa la versión enviada solo con la marca de Gratis', () => {
+    expect(contenidoDelLink({ marca: true, publicado: { a: 1 }, payload: { a: 2 } })).toEqual({ a: 1 });
+    expect(contenidoDelLink({ marca: false, publicado: { a: 1 }, payload: { a: 2 } })).toEqual({ a: 2 });
+    expect(contenidoDelLink({ marca: true, payload: { a: 2 } })).toEqual({ a: 2 });
+  });
+});
+
 describe('POST /api/activar', () => {
-  const propuesta = (cambios = {}) => ({ userId: 'duenio', status: 'draft', publico: false, ...cambios });
+  const CLIENTE = { nombre: 'Laura Gómez', empresa: 'Café Molino' };
+  const propuesta = (cambios = {}) => ({ userId: 'duenio', status: 'draft', publico: false, payload: { cliente: CLIENTE }, ...cambios });
   const activar = (db, uid = 'duenio', activos = true) => crearActivar({
     db,
     sesionDe: async () => (uid ? { uid, email: `${uid}@estudio.com` } : null),
@@ -147,8 +165,8 @@ describe('POST /api/activar', () => {
 
   it('en Gratis no envía diseños PRO y deja la marca de Dealit', async () => {
     const { db, datos } = crearDb({ proposals: {
-      [ID]: propuesta({ payload: { tema: { preset: 'aurora-tech' } } }),
-      [ID2]: propuesta({ userId: 'duenio', payload: { tema: { preset: 'lienzo-blanco' } } })
+      [ID]: propuesta({ payload: { cliente: CLIENTE, tema: { preset: 'aurora-tech' } } }),
+      [ID2]: propuesta({ userId: 'duenio', payload: { cliente: CLIENTE, tema: { preset: 'lienzo-blanco' } } })
     } });
     const r = res();
     await activar(db)(post({ id: ID }), r);
@@ -163,7 +181,7 @@ describe('POST /api/activar', () => {
 
   it('en Pro envía diseños PRO sin la marca', async () => {
     const { db, datos } = crearDb({
-      proposals: { [ID]: propuesta({ payload: { tema: { preset: 'aurora-tech' } } }) },
+      proposals: { [ID]: propuesta({ payload: { cliente: CLIENTE, tema: { preset: 'aurora-tech' } } }) },
       planes: { duenio: { tipo: 'pro', estado: 'activa', vence: '2026-12-15T00:00:00Z' } }
     });
     const r = res();
@@ -204,6 +222,74 @@ describe('POST /api/activar', () => {
     await activar(db)(post({ id: ID }), r);
     expect(r.estado).toBe(200);
     expect(r.cuerpo.limite).toBeNull();
+  });
+
+  it('en Gratis el link muestra la versión enviada y se actualiza al compartir de nuevo', async () => {
+    const { db, datos } = crearDb({ proposals: { [ID]: propuesta({ payload: { cliente: CLIENTE, propuesta: { titulo: 'Web' } } }) } });
+    await activar(db)(post({ id: ID }), res());
+    expect(datos.proposals[ID].publicado.propuesta.titulo).toBe('Web');
+    expect(datos.proposals[ID].clienteEnviado).toEqual({ nombre: 'laura gomez', empresa: 'cafe molino' });
+    expect(contenidoDelLink(datos.proposals[ID]).propuesta.titulo).toBe('Web');
+    // El dueño edita: el cliente sigue viendo lo que se mandó hasta que comparte de nuevo.
+    datos.proposals[ID].payload = { cliente: { ...CLIENTE, nombre: 'laura gomez' }, propuesta: { titulo: 'Web y tienda' } };
+    expect(contenidoDelLink(datos.proposals[ID]).propuesta.titulo).toBe('Web');
+    const r = res();
+    await activar(db)(post({ id: ID }), r);
+    expect(r.cuerpo).toMatchObject({ primeraVez: false, actualizada: true });
+    expect(contenidoDelLink(datos.proposals[ID]).propuesta.titulo).toBe('Web y tienda');
+    expect(datos.planes.duenio.envios[MES]).toBe(1);
+  });
+
+  it('en Gratis no deja mandar un link ya enviado a otro cliente', async () => {
+    const { db, datos } = crearDb({ proposals: { [ID]: propuesta() } });
+    await activar(db)(post({ id: ID }), res());
+    datos.proposals[ID].payload = { cliente: { nombre: 'Pedro Ruiz', empresa: 'Ferretería Sur' } };
+    const r = res();
+    await activar(db)(post({ id: ID }), r);
+    expect(r.estado).toBe(409);
+    expect(r.cuerpo.error).toBe('otro-cliente');
+    // Desactivar y volver a activar tampoco sirve.
+    datos.proposals[ID].publico = false;
+    const r2 = res();
+    await activar(db)(post({ id: ID }), r2);
+    expect(r2.cuerpo.error).toBe('otro-cliente');
+    expect(datos.proposals[ID].publico).toBe(false);
+  });
+
+  it('en Gratis pide el cliente antes de mandar', async () => {
+    const { db } = crearDb({ proposals: { [ID]: propuesta({ payload: { cliente: { nombre: ' ', empresa: '' } } }) } });
+    const r = res();
+    await activar(db)(post({ id: ID }), r);
+    expect(r.estado).toBe(400);
+    expect(r.cuerpo.error).toBe('sin-cliente');
+  });
+
+  it('en Pro el link muestra siempre la última versión', async () => {
+    const { db, datos } = crearDb({
+      proposals: { [ID]: propuesta({ payload: { propuesta: { titulo: 'Web' } } }) },
+      planes: { duenio: { tipo: 'pro', estado: 'activa', vence: '2026-12-15T00:00:00Z' } }
+    });
+    await activar(db)(post({ id: ID }), res());
+    datos.proposals[ID].payload = { cliente: { nombre: 'Otro' }, propuesta: { titulo: 'Otra' } };
+    expect(contenidoDelLink(datos.proposals[ID]).propuesta.titulo).toBe('Otra');
+  });
+
+  it('activa portfolios en el servidor y en Gratis frena los diseños PRO', async () => {
+    const { db, datos } = crearDb({ portfolios: {
+      [ID]: { userId: 'duenio', publico: false, payload: { tema: { preset: 'lienzo-blanco' } } },
+      [ID2]: { userId: 'duenio', publico: false, payload: { tema: { preset: 'aurora-tech' } } }
+    } });
+    const r = res();
+    await activar(db)(post({ id: ID, tipo: 'portafolio' }), r);
+    expect(r.estado).toBe(200);
+    expect(datos.portfolios[ID]).toMatchObject({ publico: true, marca: true });
+    expect(datos.portfolios[ID].publicado.tema.preset).toBe('lienzo-blanco');
+    const pro = res();
+    await activar(db)(post({ id: ID2, tipo: 'portafolio' }), pro);
+    expect(pro.cuerpo.error).toBe('diseno-pro');
+    const ajeno = res();
+    await activar(db, 'otro')(post({ id: ID, tipo: 'portafolio' }), ajeno);
+    expect(ajeno.estado).toBe(403);
   });
 
   it('pide sesión y no deja activar propuestas ajenas', async () => {

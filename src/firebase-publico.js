@@ -4,6 +4,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, getDoc } from 'firebase/firestore/lite';
 import { firebaseConfig, PREFIJO_URL_LOGO } from './firebase-config.js';
+import { contenidoDelLink } from './planes.js';
 
 const crearAteneaPublico = () => {
   const app = initializeApp(firebaseConfig);
@@ -21,12 +22,12 @@ const crearAteneaPublico = () => {
 
   const obtenerPublica = async id => {
     const datos = await leerPublico('proposals', id);
-    return datos ? { payload: datos.payload, aceptacion: datos.aceptacion || null, marca: datos.marca === true } : null;
+    return datos ? { payload: contenidoDelLink(datos), aceptacion: datos.aceptacion || null, marca: datos.marca === true } : null;
   };
 
   const obtenerPortafolioPublico = async id => {
     const datos = await leerPublico('portfolios', id);
-    return datos ? { payload: datos.payload } : null;
+    return datos ? { payload: contenidoDelLink(datos), marca: datos.marca === true } : null;
   };
 
   // Si quien abre el link es el dueño con su sesión iniciada, /api no cuenta su visita ni

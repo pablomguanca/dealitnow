@@ -6,7 +6,7 @@
 // Para empezar de cero: localStorage.removeItem('dealit-demo') y recargar.
 import { validarAceptacion } from '../../src/aceptacion.js';
 import { ejemplo, normalizarCobro, normalizarDatosCobro, usaTransferencia } from '../../src/modelo.js';
-import { LIMITE_ENVIOS_GRATIS, enviosDelMes, esPro, mesDe, usosPro } from '../../src/planes.js';
+import { LIMITE_ENVIOS_GRATIS, clienteDe, contenidoDelLink, enviosDelMes, esPro, mesDe, mismoCliente, tieneCliente, usosPro } from '../../src/planes.js';
 
 const CLAVE = 'dealit-demo';
 const ID_DEMO = 'DEMO0000000000000001';
@@ -141,7 +141,7 @@ export const AteneaDB = {
       const d = leer()[id];
       if (!d || d.publico !== true) return null;
       const doc = comoFirestore(id, d);
-      return { payload: doc.payload, aceptacion: doc.aceptacion || null, marca: d.marca === true };
+      return { payload: contenidoDelLink(doc), aceptacion: doc.aceptacion || null, marca: d.marca === true };
     },
     actualizar: async (id, cambios) => actualizarDoc(id, cambios),
     borrar: async id => { const docs = leer(); delete docs[id]; guardar(docs); localStorage.removeItem(`${CLAVE}:versiones:proposals:${id}`); },
@@ -181,7 +181,7 @@ window.fetch = async (url, opciones = {}) => {
     const { datos, error, estado } = validarAceptacion({ doc, cuerpo });
     if (error) return respuesta(estado, { error });
     // Como api/aceptar: con transferencia, los datos de cobro del dueño van con la aceptación.
-    if (usaTransferencia(normalizarCobro(doc.payload?.cobro).metodo)) {
+    if (usaTransferencia(normalizarCobro(contenidoDelLink(doc)?.cobro).metodo)) {
       const cobro = normalizarDatosCobro(JSON.parse(localStorage.getItem(`${CLAVE}:cobro`) || 'null') || {});
       if (cobro) datos.cobro = cobro;
     }
@@ -267,16 +267,26 @@ window.fetch = async (url, opciones = {}) => {
     const plan = leerPlan();
     const pro = esPro(plan);
     const usados = enviosDelMes(plan);
-    if (doc.publico === true) return respuesta(200, { primeraVez: false, usados, limite: pro ? null : LIMITE_ENVIOS_GRATIS });
     const primeraVez = !doc.enviadaEn;
-    if (!pro && usosPro(doc.payload).length) return respuesta(403, { error: 'diseno-pro' });
-    if (primeraVez && !pro && usados >= LIMITE_ENVIOS_GRATIS) return respuesta(403, { error: 'limite-envios' });
+    const limite = pro ? null : LIMITE_ENVIOS_GRATIS;
+    if (doc.aceptacion) return respuesta(200, { primeraVez: false, usados, limite });
+    // Como api/activar: en Gratis el link muestra la versión enviada y no cambia de cliente.
+    if (!pro) {
+      if (usosPro(doc.payload).length) return respuesta(403, { error: 'diseno-pro' });
+      if (!tieneCliente(doc.payload)) return respuesta(400, { error: 'sin-cliente' });
+      const enviado = doc.clienteEnviado || (primeraVez ? null : clienteDe(doc.publicado || doc.payload));
+      if (enviado && !mismoCliente(enviado, doc.payload)) return respuesta(409, { error: 'otro-cliente' });
+      if (primeraVez && usados >= LIMITE_ENVIOS_GRATIS) return respuesta(403, { error: 'limite-envios' });
+      doc.clienteEnviado ||= enviado || clienteDe(doc.payload);
+      doc.publicado = structuredClone(doc.payload);
+    } else delete doc.publicado;
+    const actualizada = doc.publico === true;
     Object.assign(doc, { publico: true, marca: !pro, updatedAt: new Date().toISOString() });
     if (!doc.status || doc.status === 'draft') doc.status = 'sent';
     if (primeraVez) doc.enviadaEn = new Date().toISOString();
     guardar(docs);
     if (primeraVez) guardarPlan({ ...plan, envios: { ...plan.envios, [mesDe()]: usados + 1 } });
-    return respuesta(200, { primeraVez, usados: primeraVez ? usados + 1 : usados, limite: pro ? null : LIMITE_ENVIOS_GRATIS });
+    return respuesta(200, { primeraVez, usados: primeraVez ? usados + 1 : usados, limite, actualizada });
   }
   // En la demo no hay Mercado Pago: la suscripción se activa en el momento.
   if (ruta === '/api/suscripcion') {

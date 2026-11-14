@@ -46,10 +46,40 @@ const precioTexto = periodo => {
   return `${dinero(p.monto, p.moneda)} por mes`;
 };
 
-const opcionesPro = () => (!ventaPermitida() ? [] : [
-  { valor: 'mensual', texto: `Pro mensual · ${precioTexto('mensual')}`, estilo: 'primario' },
-  { valor: 'anual', texto: `Pro anual · ${precioTexto('anual')}`, estilo: 'secundario' }
-]);
+// Las dos formas de pagar Pro, como tarjetas de plan en el cartel (ver DialogoConfirmacion):
+// la anual primero y destacada.
+const opcionesPro = () => {
+  if (!ventaPermitida()) return [];
+  const { mensual, anual } = PRECIOS_PRO;
+  return [
+    {
+      valor: 'anual',
+      texto: `Pro anual · ${precioTexto('anual')}`,
+      estilo: 'primario',
+      plan: {
+        nombre: 'Pro anual',
+        precio: dinero(anual.monto, anual.moneda),
+        periodo: 'por año',
+        cinta: `${mesesGratisAnual()} meses gratis`,
+        nota: `Equivale a ${dinero(Math.round(anual.monto / 12), anual.moneda)} por mes`,
+        destacado: true,
+        accion: 'Elegir anual'
+      }
+    },
+    {
+      valor: 'mensual',
+      texto: `Pro mensual · ${precioTexto('mensual')}`,
+      estilo: 'secundario',
+      plan: {
+        nombre: 'Pro mensual',
+        precio: dinero(mensual.monto, mensual.moneda),
+        periodo: 'por mes',
+        nota: 'Cancelás cuando quieras',
+        accion: 'Elegir mensual'
+      }
+    }
+  ];
+};
 
 export const usuarioEsPro = () => esPro(ctx.plan) || proServidor;
 

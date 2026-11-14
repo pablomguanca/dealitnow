@@ -1,23 +1,21 @@
-// Compartir: activa el link corto de la cuenta (o arma el link largo sin cuenta),
-// diálogo de compartir, desactivar el link y copiar al portapapeles.
+// Compartir: activa el link de la cuenta (siempre en el servidor, que aplica el plan),
+// diálogo de compartir, desactivar el link y copiar al portapapeles. En Gratis el link
+// muestra la versión que se mandó: compartir de nuevo la actualiza.
 
 import { $ } from '../lib/formato.js';
-import { comprimir } from '../link.js';
 import { copiar } from '../lib/portapapeles.js';
-import { LOGO_MAX_LINK, limpiarImgLink } from '../lib/imagenes.js';
 import { servicioConContenido, proyectoConContenido } from '../lib/render.js';
 import {
   ctx,
   AteneaDB,
-  PREFIJO,
-  PREFIJO_PORTAFOLIO,
   nube,
   digitosWhatsApp,
   tituloPortafolio
 } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
-import { avisar, avisarExito, avisarError, confirmar } from './avisos.js';
+import { avisar, avisarExito, avisarError, confirmar, elegir } from './avisos.js';
 import { hayCambiosSinEnviar, guardarAhora, registrarEscritura } from './guardado.js';
+import { duplicarParaOtroCliente } from './propuestas.js';
 import { abrirRegistro } from './sesion.js';
 import { guardarVersion } from './versiones.js';
 import { llamarApi } from './api.js';
@@ -30,47 +28,36 @@ let linkActual = '';
 export const linkCorto = id => `${location.origin}/p/${id}`;
 export const linkCortoPortafolio = id => `${location.origin}/portafolio/${id}`;
 
-const datosParaLink = () => {
-  const { estado } = ctx;
-  const sinId = arr => (arr || []).map(({ id, ...resto }) => resto);
-  const logoEntra = estado.emisor.logo.length <= LOGO_MAX_LINK;
-  return {
-    logoOmitido: !!estado.emisor.logo && !logoEntra,
-    datos: {
-      v: 1,
-      ...estado,
-      emisor: {
-        ...estado.emisor,
-        logo: limpiarImgLink(estado.emisor.logo),
-        foto: limpiarImgLink(estado.emisor.foto)
-      },
-      propuesta: {
-        ...estado.propuesta,
-        imagenPortada: limpiarImgLink(estado.propuesta.imagenPortada)
-      },
-      objetivos: sinId(estado.objetivos),
-      servicios: sinId(estado.servicios).map(s => ({ ...s, imagen: limpiarImgLink(s.imagen) })),
-      etapas: sinId(estado.etapas),
-      galeria: sinId(estado.galeria).map(g => ({ ...g, imagen: limpiarImgLink(g.imagen) })).filter(g => g.imagen),
-      testimonios: sinId(estado.testimonios).map(t => ({ ...t, avatar: limpiarImgLink(t.avatar) })),
-      faqs: sinId(estado.faqs),
-      inversion: { ...estado.inversion, pagos: sinId(estado.inversion.pagos) }
-    }
-  };
-};
-
 // Espera la confirmación del servidor hasta 4 segundos: true si la confirmó, false si
 // falló y null si todavía no hay respuesta (sin conexión).
 const conEspera = escritura => Promise.race([escritura, new Promise(res => setTimeout(() => res(null), 4000))]);
 
-// Activa el link corto: la propuesta pasa a ser legible por quien tenga el link
-// y, si era un borrador, queda como enviada.
-// El servidor (api/activar) aplica el límite del plan. Antes se espera a que la propuesta
-// y sus últimos cambios lleguen a la cuenta: el servidor lee lo guardado.
+// En Gratis, la propuesta ya enviada tiene otro cliente: se ofrece duplicarla.
+const ofrecerDuplicar = async () => {
+  const id = ctx.propuestaId;
+  const opcion = await elegir({
+    titulo: 'Esta propuesta ya la mandaste a otro cliente',
+    texto: 'Cambiaste el cliente de una propuesta que ya enviaste. Para mandársela a alguien más, duplicala: queda como una propuesta nueva (cuenta como un envío) y la original sigue igual para tu primer cliente.',
+    opciones: [
+      { valor: null, texto: 'Cancelar', estilo: 'texto' },
+      { valor: 'duplicar', texto: 'Duplicar para el cliente nuevo', estilo: 'primario' }
+    ]
+  });
+  if (opcion === 'duplicar') duplicarParaOtroCliente(id);
+};
+
+// Activa el link: la propuesta pasa a ser legible por quien tenga el link y, si era un
+// borrador, queda como enviada. Si ya estaba activo, en Gratis se actualiza la versión que
+// ve el cliente. El servidor (api/activar) aplica el plan. Antes se espera a que la
+// propuesta y sus últimos cambios lleguen a la cuenta: el servidor lee lo guardado.
 const activarLink = async () => {
   if (hayCambiosSinEnviar()) guardarAhora();
   const actual = ctx.propuestas.find(p => p.id === ctx.propuestaId);
-  if (actual?.publico) return true;
+  if (actual?.aceptacion) return true;
+  if (restriccionesActivas() && !actual?.publico && !ctx.estado.cliente.nombre.trim() && !ctx.estado.cliente.empresa.trim()) {
+    avisar('Antes de mandarla, completá el nombre de tu cliente o de su empresa (pestaña Cliente).');
+    return false;
+  }
   const usos = restriccionesActivas() ? usosPro(ctx.estado) : [];
   if (usos.length) {
     ofrecerPro('diseno', usos.map(u => u.nombre));
@@ -85,11 +72,13 @@ const activarLink = async () => {
   if (restantes === 1 && !await confirmarUltimoEnvio()) return false;
   await conEspera(ctx.ultimaEscritura);
   try {
-    const { primeraVez, usados, limite } = await llamarApi('/api/activar', { id: ctx.propuestaId });
+    const { primeraVez, usados, limite, actualizada } = await llamarApi('/api/activar', { id: ctx.propuestaId });
     if (primeraVez) guardarVersion('enviada');
-    return { primeraVez, quedan: primeraVez && limite ? Math.max(0, limite - usados) : null };
+    return { primeraVez, congelado: !!limite, actualizada: !!actualizada, quedan: primeraVez && limite ? Math.max(0, limite - usados) : null };
   } catch (e) {
     if (e.codigo === 'limite-envios') ofrecerPro('limite');
+    else if (e.codigo === 'otro-cliente') ofrecerDuplicar();
+    else if (e.codigo === 'sin-cliente') avisar('Antes de mandarla, completá el nombre de tu cliente o de su empresa (pestaña Cliente).');
     else if (e.codigo === 'diseno-pro') ofrecerPro('diseno', usosPro(ctx.estado).map(u => u.nombre));
     else avisarError(navigator.onLine
       ? 'No se pudo activar el link. Probá de nuevo en unos segundos.'
@@ -119,7 +108,7 @@ const abrirCompartirPortafolio = async () => {
     avisar('Cargá al menos el título y un proyecto antes de compartir tu portfolio.');
     return;
   }
-  // Los portfolios se activan desde el navegador: el control del diseño PRO es solo acá.
+  // Aviso rápido antes de ir al servidor, que es el que decide.
   const usos = restriccionesActivas() ? usosPro(estadoPortafolio, { esPortafolio: true }) : [];
   if (usos.length) {
     ofrecerPro('diseno', usos.map(u => u.nombre));
@@ -127,42 +116,32 @@ const abrirCompartirPortafolio = async () => {
   }
   if (hayCambiosSinEnviar()) guardarAhora();
   const conCuenta = !!(nube() && AteneaDB?.portfolios && portafolioId && /^[A-Za-z0-9]{20}$/.test(portafolioId));
-  const avisos = [];
-  if (conCuenta) {
-    const activado = await conEspera(registrarEscritura(
-      AteneaDB.portfolios.actualizar(portafolioId, { publico: true }),
-      'No se pudo activar el link del portfolio.'
-    ));
-    if (activado === false) return;
-    if (activado === null) avisos.push('Estás sin conexión: el link empieza a funcionar en cuanto vuelva.');
-    linkActual = linkCortoPortafolio(portafolioId);
-  } else {
-    const copia = JSON.parse(JSON.stringify(estadoPortafolio));
-    copia.emisor.logo = limpiarImgLink(copia.emisor.logo);
-    copia.emisor.foto = limpiarImgLink(copia.emisor.foto);
-    copia.portafolio.imagenPortada = limpiarImgLink(copia.portafolio.imagenPortada);
-    copia.proyectos.forEach(p => {
-      p.imagen = limpiarImgLink(p.imagen);
-      p.galeria = (p.galeria || []).map(limpiarImgLink).filter(Boolean);
-    });
-    copia.galeria = (copia.galeria || []).map(g => ({ ...g, imagen: limpiarImgLink(g.imagen) })).filter(g => g.imagen);
-    copia.serviciosWeb = (copia.serviciosWeb || []).map(sw => ({ ...sw, imagen: limpiarImgLink(sw.imagen) }));
-    copia.testimonios = (copia.testimonios || []).map(t => ({ ...t, avatar: limpiarImgLink(t.avatar) }));
-    try {
-      linkActual = `${location.origin}${location.pathname}${PREFIJO_PORTAFOLIO}${await comprimir(JSON.stringify(copia))}`;
-    } catch {
-      avisarError('No se pudo generar el link del portfolio.');
-      return;
-    }
+  if (!conCuenta) {
+    avisar('Para compartir tu portfolio necesitás tu cuenta de Dealit.');
+    return;
   }
+  // El link lo activa el servidor (api/activar), que controla el diseño según el plan.
+  await conEspera(ctx.ultimaEscritura);
+  let congelado;
+  try {
+    const { limite } = await llamarApi('/api/activar', { id: portafolioId, tipo: 'portafolio' });
+    congelado = !!limite;
+  } catch (e) {
+    if (e.codigo === 'diseno-pro') ofrecerPro('diseno', usosPro(estadoPortafolio, { esPortafolio: true }).map(u => u.nombre));
+    else avisarError(navigator.onLine
+      ? 'No se pudo activar el link del portfolio. Probá de nuevo en unos segundos.'
+      : 'Necesitás conexión a internet para activar el link.');
+    return;
+  }
+  linkActual = linkCortoPortafolio(portafolioId);
   mostrarDialogoCompartir({
     titulo: 'Tu portfolio está listo para compartir',
     mensaje: `Hola! Te comparto mi portfolio «${tituloPortafolio()}» con una selección de proyectos y casos: ${linkActual}`,
-    conCuenta,
-    nota: conCuenta
-      ? 'El link muestra siempre la última versión de este portfolio.'
-      : 'Este link incluye tu portfolio comprimido listo para abrir.',
-    avisos
+    conCuenta: true,
+    nota: congelado
+      ? 'Tu link muestra el portfolio tal como está ahora. Si después cambiás algo, tocá «Compartir» de nuevo para actualizarlo. Con Pro se actualiza solo.'
+      : 'El link muestra siempre la última versión de este portfolio.',
+    avisos: []
   });
 };
 
@@ -177,25 +156,21 @@ export const abrirCompartir = async () => {
   }
   const conCuenta = !!(nube() && ctx.propuestaId);
   const avisos = [];
+  let congelado;
   if (conCuenta) {
     const activado = await activarLink();
     if (!activado) return;
     linkActual = linkCorto(ctx.propuestaId);
+    congelado = !!activado.congelado;
+    if (congelado && activado.actualizada && !activado.primeraVez) avisos.push('Actualizamos el link con tus últimos cambios.');
     if (activado.quedan != null) {
       avisos.push(activado.quedan === 0
         ? 'Usaste tus envíos gratis de este mes. Las próximas propuestas nuevas se mandan con Pro o el mes que viene.'
         : `Te ${activado.quedan === 1 ? 'queda 1 envío gratis' : `quedan ${activado.quedan} envíos gratis`} este mes.`);
     }
   } else {
-    const { datos, logoOmitido } = datosParaLink();
-    try {
-      linkActual = `${location.origin}${location.pathname}${PREFIJO}${await comprimir(JSON.stringify(datos))}`;
-    } catch {
-      avisarError('No se pudo generar el link. Probá de nuevo.');
-      return;
-    }
-    if (location.protocol === 'file:') avisos.push('Estás usando el generador desde un archivo de tu compu, así que este link solo abre acá. Publicá el generador en una web (Vercel, Netlify, tu hosting) y el link le va a funcionar a cualquiera.');
-    if (logoOmitido) avisos.push('Tu logo es demasiado pesado para viajar en el link, así que no se incluye. Probá con un SVG o un PNG más simple.');
+    avisar('Para mandar la propuesta necesitás tu cuenta de Dealit.');
+    return;
   }
   const saludo = estado.cliente.nombre.trim() ? `Hola ${estado.cliente.nombre.trim().split(' ')[0]}!` : 'Hola!';
   if (!digitosWhatsApp() && !estado.emisor.email.trim()) avisos.push('No cargaste WhatsApp ni email: tu cliente va a poder aceptar, pero solo copiando el mensaje de confirmación.');
@@ -203,9 +178,9 @@ export const abrirCompartir = async () => {
     titulo: 'Tu propuesta está lista para mandar',
     mensaje: `${saludo} Te comparto la propuesta${estado.propuesta.titulo.trim() ? ` «${estado.propuesta.titulo.trim()}»` : ''}. Desde el link podés ver todo el detalle, sumar opcionales y aceptarla: ${linkActual}`,
     conCuenta,
-    nota: conCuenta
-      ? 'El link muestra siempre la última versión: si cambiás algo, tu cliente lo ve la próxima vez que lo abra.'
-      : 'Cada link guarda la propuesta tal como está ahora. Si después cambiás algo, generá uno nuevo y mandá ese.',
+    nota: congelado
+      ? 'Tu cliente ve la propuesta tal como está ahora. Si después corregís algo, tocá «Compartir» de nuevo para actualizar el link. Con Pro se actualiza solo.'
+      : 'El link muestra siempre la última versión: si cambiás algo, tu cliente lo ve la próxima vez que lo abra.',
     avisos
   });
 };

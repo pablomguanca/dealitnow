@@ -3,7 +3,6 @@
 export const LOGO_ANCHO_MAX = 400;
 export const LOGO_ALTO_MAX = 160;
 export const LOGO_MAX_BYTES = 18000;
-export const LOGO_MAX_LINK = 6000; // En el link (#p=) entra todavía más chico para que la URL no se corte
 export const LOGO_MAX_ARCHIVO = 25 * 1024 * 1024; // 25 MB para logos en crudo (se reducen en el navegador)
 export const FOTO_MAX_ARCHIVO = 50 * 1024 * 1024; // 50 MB para fotos de portada Hero y galerías (se optimizan en el navegador)
 export const LOGO_STORAGE_MAX_BYTES = 920 * 1024; // < 1 MB garantizado para cumplir las reglas de Firebase Storage
@@ -112,4 +111,3 @@ export const procesarImagenProyecto = async (archivo, paraSubir = false, { ancho
   return webp.startsWith('data:image/webp') ? webp : c.toDataURL('image/jpeg', Math.max(0.65, calLocal - 0.04));
 };
 
-export const limpiarImgLink = src => (src && src.startsWith('data:') && src.length > LOGO_MAX_LINK * 2 ? '' : (src || ''));

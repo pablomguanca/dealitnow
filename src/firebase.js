@@ -54,6 +54,7 @@ import {
 } from 'firebase/storage';
 import { firebaseConfig, PREFIJO_URL_LOGO } from './firebase-config.js';
 import { esAppNativa, tokenGoogleNativo, cerrarSesionGoogleNativa } from './nativo.js';
+import { contenidoDelLink } from './planes.js';
 
 const crearAteneaDB = () => {
   if (firebaseConfig.apiKey === 'TU_API_KEY') throw new Error('Firebase no está configurado: falta la API key.');
@@ -245,8 +246,8 @@ const crearAteneaDB = () => {
     try {
       const snap = await getDoc(doc(_colProposals(), id));
       if (!snap.exists() || !snap.data().payload) return null;
-      const { payload, aceptacion, marca } = snap.data();
-      return { payload, aceptacion: aceptacion || null, marca: marca === true };
+      const { aceptacion, marca } = snap.data();
+      return { payload: contenidoDelLink(snap.data()), aceptacion: aceptacion || null, marca: marca === true };
     } catch (e) {
       if (e.code === 'permission-denied') return null;
       throw e;
@@ -332,8 +333,7 @@ const crearAteneaDB = () => {
     try {
       const snap = await getDoc(doc(_colPortfolios(), id));
       if (!snap.exists() || !snap.data().payload) return null;
-      const { payload } = snap.data();
-      return { payload };
+      return { payload: contenidoDelLink(snap.data()), marca: snap.data().marca === true };
     } catch (e) {
       if (e.code === 'permission-denied') return null;
       throw e;

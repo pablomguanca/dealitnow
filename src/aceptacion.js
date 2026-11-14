@@ -2,6 +2,7 @@
 // para validar y registrar, y la app para mostrar el mismo resultado.
 import { desdeISO, numero } from './lib/formato.js';
 import { calcularTotales, normalizarPropuesta } from './modelo.js';
+import { contenidoDelLink } from './planes.js';
 
 export const ID_PROPUESTA = /^[A-Za-z0-9]{20}$/;
 export const NOMBRE_MIN = 2;
@@ -34,8 +35,10 @@ export const validarAceptacion = ({ doc, cuerpo, ahora = new Date() }) => {
   if (nombre.length < NOMBRE_MIN || nombre.length > NOMBRE_MAX) return error('nombre-invalido', 400);
   if (cuerpo?.acepto !== true) return error('falta-conformidad', 400);
 
-  // El logo ya se validó al guardar; acá no se descarta.
-  const contenido = normalizarPropuesta(doc.payload, { logoValido: () => true });
+  // Lo que ve el cliente (en Gratis, la versión que se mandó). El logo ya se validó al
+  // guardar; acá no se descarta.
+  const visto = contenidoDelLink(doc);
+  const contenido = normalizarPropuesta(visto, { logoValido: () => true });
   if (propuestaVencida(contenido, ahora)) return error('vencida', 410);
 
   const disponibles = new Map(contenido.servicios.filter(s => s.opcional).map(s => [s.id, s]));
@@ -54,7 +57,7 @@ export const validarAceptacion = ({ doc, cuerpo, ahora = new Date() }) => {
       mensual: totales.mensual.total,
       moneda: contenido.inversion.moneda,
       // Copia de lo que se aceptó: si después se edita la propuesta, queda constancia.
-      contenido: doc.payload
+      contenido: visto
     }
   };
 };

@@ -50,9 +50,10 @@ const terminarDocumento = (doc, web) => {
 };
 
 // En Gratis el pie lleva siempre «Propuesta creada con Dealit»: en el editor (ctx.marcaObligatoria,
-// lo pone plan.js) y en el link (marca, que escribe el servidor al activarlo).
+// lo pone plan.js) y en el link (marca, que escribe el servidor al activarlo; en los
+// portfolios, ctx.marcaLink).
 const conMarca = s => {
-  const forzar = ctx.compartida?.marca || ctx.marcaObligatoria;
+  const forzar = ctx.compartida?.marca || ctx.marcaLink || ctx.marcaObligatoria;
   document.querySelectorAll('[data-campo="opciones.credito"], [data-campo-pf="opciones.credito"]').forEach(c => {
     c.disabled = !!ctx.marcaObligatoria;
     if (ctx.marcaObligatoria) c.checked = true;

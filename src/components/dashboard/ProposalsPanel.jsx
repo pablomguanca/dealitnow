@@ -1,6 +1,8 @@
 // Dashboard del dueño con dos pestañas: «Plantillas» (catálogo con vista previa para
 // arrancar una propuesta) y «Mis propuestas» (métricas, filtros y grilla en tiempo real).
 
+import { IconoIA } from '../IconoIA.jsx';
+
 export function ProposalsPanel() {
   return (
     <main className="panel" id="panel" aria-labelledby="panel-titulo" hidden>
@@ -17,8 +19,8 @@ export function ProposalsPanel() {
               Propuesta en blanco
             </button>
             <button type="button" className="boton boton--primario boton--ia" data-accion="abrir-ia">
-              <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="2" width="4" height="7.5" rx="2" /><path d="M3.8 7.5a4.2 4.2 0 0 0 8.4 0M8 11.7V14" /></svg>
-              Contala y la armamos
+              <IconoIA />
+              Armá tu propuesta con IA
             </button>
           </div>
         </div>
@@ -61,7 +63,7 @@ export function ProposalsPanel() {
             <h2 className="panel__vacio-titulo">Todavía no tenés propuestas</h2>
             <p>Contanos el trabajo en un audio y armamos la propuesta por vos. También podés elegir una plantilla de tu rubro o empezar desde cero.</p>
             <div className="panel__acciones">
-              <button type="button" className="boton boton--primario boton--ia" data-accion="abrir-ia"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="6" y="2" width="4" height="7.5" rx="2" /><path d="M3.8 7.5a4.2 4.2 0 0 0 8.4 0M8 11.7V14" /></svg> Contala y la armamos</button>
+              <button type="button" className="boton boton--primario boton--ia" data-accion="abrir-ia"><IconoIA /> Armá tu propuesta con IA</button>
               <a className="boton boton--secundario" href="/plantillas" data-accion="panel-pestana" data-pestana="plantillas">Ver plantillas</a>
               <button type="button" className="boton boton--secundario" data-accion="nueva">Empezar en blanco</button>
             </div>

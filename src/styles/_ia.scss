@@ -191,3 +191,44 @@ body:not(.ia-disponible):not(.sin-cuenta) [data-accion="abrir-ia"] {
     text-align: center;
   }
 }
+
+// Ícono de la IA (components/IconoIA.jsx): va relleno, no con trazo como el resto.
+svg.icono-ia,
+.boton svg.icono-ia,
+.boton--ia svg.icono-ia {
+  width: 1.1rem;
+  height: 1.1rem;
+  fill: currentColor;
+  stroke: none;
+  flex-shrink: 0;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.boton:hover svg.icono-ia { transform: rotate(-8deg) scale(1.08); }
+
+// El botón principal de la IA: degradado de la marca, para que se distinga de lo demás.
+.boton--primario.boton--ia {
+  background: linear-gradient(120deg, #00C896 0%, #0EA5A4 48%, #2563EB 100%);
+  background-size: 160% 100%;
+  background-position: 0% 50%;
+  color: #FFF;
+  font-weight: 600;
+  box-shadow: 0 10px 26px -12px rgba(14, 165, 164, 0.75);
+  transition: background-position 0.5s ease, box-shadow var(--transicion), transform var(--transicion);
+
+  &:hover {
+    background: linear-gradient(120deg, #00C896 0%, #0EA5A4 48%, #2563EB 100%);
+    background-size: 160% 100%;
+    background-position: 100% 50%;
+    color: #FFF;
+    box-shadow: 0 14px 30px -12px rgba(37, 99, 235, 0.6);
+  }
+}
+
+// En el menú, el destello toma el color de la marca.
+.menu__opcion[data-accion="abrir-ia"] svg.icono-ia { color: var(--dorado); }
+
+@media (prefers-reduced-motion: reduce) {
+  svg.icono-ia, .boton--primario.boton--ia { transition: none; }
+  .boton:hover svg.icono-ia { transform: none; }
+}

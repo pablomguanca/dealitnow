@@ -72,6 +72,38 @@ export const usosPro = (documento, { esPortafolio = false } = {}) => {
   return usos;
 };
 
+// Link congelado en Gratis. El cliente ve la versión que se mandó (publicado, la escribe
+// el servidor al activar el link o al actualizarlo), no la que se está editando: así un
+// link no se reusa para mandarle otra propuesta a otro cliente sin gastar un envío.
+// Con Pro (marca false) el link muestra siempre la última versión.
+export const contenidoDelLink = doc =>
+  (doc?.marca === true && doc.publicado && typeof doc.publicado === 'object' ? doc.publicado : doc?.payload);
+
+const comparable = texto => String(texto ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+  .toLowerCase().replace(/[^a-z0-9ñ]+/g, ' ').trim();
+
+// Cliente de una propuesta, para compararlo sin importar mayúsculas, acentos ni signos.
+export const clienteDe = payload => ({
+  nombre: comparable(payload?.cliente?.nombre),
+  empresa: comparable(payload?.cliente?.empresa)
+});
+
+export const tieneCliente = payload => {
+  const { nombre, empresa } = clienteDe(payload);
+  return !!(nombre || empresa);
+};
+
+// En Gratis, un link ya enviado se puede actualizar (corregir precios, textos, sumar
+// servicios) pero no mandarlo a otro cliente. enviado: el cliente de la primera vez que se
+// mandó ({ nombre, empresa }, ya comparable). Se puede corregir uno de los dos (un error de
+// tipeo en el nombre, la razón social), no los dos a la vez.
+export const mismoCliente = (enviado, payload) => {
+  const actual = clienteDe(payload);
+  const campos = ['nombre', 'empresa'].filter(c => enviado?.[c]);
+  if (!campos.length) return true;
+  return campos.some(c => actual[c] === enviado[c]) && campos.every(c => actual[c]);
+};
+
 export const enviosDelMes = (plan, ahora = new Date()) => Math.max(0, Number(plan?.envios?.[mesDe(ahora)]) || 0);
 
 // ¿Puede activar el link de una propuesta que todavía no envió nunca?

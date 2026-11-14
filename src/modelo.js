@@ -6,6 +6,7 @@ import {
 } from './lib/formato.js';
 import { normalizarVideo, vacioVideo } from './video.js';
 import { TEMAS_CATALOGO, PLANTILLAS_CATALOGO } from './plantillas-catalogo.js';
+import { PLANTILLAS_PORTFOLIO_CATALOGO } from './portfolios-catalogo.js';
 
 export const MODALIDADES = {
   unico: { cantidad: 'Cantidad', precio: 'Precio' },
@@ -1653,6 +1654,39 @@ export const PLANTILLAS_PORTAFOLIO = {
     })
   }
 };
+
+// Plantillas de portfolio del catálogo ampliado (portfolios-catalogo.js): se completan IDs
+// y diseño, y se suman con catalogo: true.
+const desdeCatalogoPf = d => {
+  const base = vacioPortafolio();
+  const t = TEMAS[d.tema] || TEMAS['elegante-oscuro'];
+  const L = LISTAS_PORTAFOLIO;
+  return {
+    ...base,
+    emisor: { ...base.emisor, ...d.emisor },
+    portafolio: { ...base.portafolio, ...d.portafolio },
+    especialidades: (d.especialidades || []).map(texto => ({ id: uid(), texto })),
+    proyectos: (d.proyectos || []).map(x => ({ ...L.proyectos.nuevo(), ...x })),
+    serviciosWeb: (d.serviciosWeb || []).map(x => ({ ...L.serviciosWeb.nuevo(), ...x })),
+    testimonios: (d.testimonios || []).map(x => ({ ...L.testimonios.nuevo(), ...x })),
+    faqs: (d.faqs || []).map(x => ({ ...L.faqs.nuevo(), ...x })),
+    opciones: { ...base.opciones, ...d.opciones, credito: true },
+    tema: {
+      ...base.tema,
+      preset: TEMAS[d.tema] ? d.tema : 'elegante-oscuro',
+      acento: t.acento,
+      fuenteTitulos: t.fuenteTitulos,
+      fuenteCuerpo: t.fuenteCuerpo,
+      portada: t.portada,
+      decoracion: t.decoracion,
+      estilo: t.estilo
+    }
+  };
+};
+
+Object.entries(PLANTILLAS_PORTFOLIO_CATALOGO).forEach(([id, { datos, ...meta }]) => {
+  PLANTILLAS_PORTAFOLIO[id] = { ...meta, catalogo: true, crear: () => desdeCatalogoPf(datos()) };
+});
 
 export const normalizarResumenPortafolio = (datos, { logoValido = logo => /^data:image\//.test(logo) } = {}) => {
   if (!datos || typeof datos !== 'object') return null;

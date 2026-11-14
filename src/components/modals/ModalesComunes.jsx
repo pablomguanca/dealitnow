@@ -92,10 +92,13 @@ export function DialogoConfirmacion() {
     solicitud?.responder(null);
   };
 
-  const opciones = solicitud?.opciones || [];
+  const todas = solicitud?.opciones || [];
+  // Las opciones con plan (Pro anual / mensual) van como tarjetas; el resto, como botones.
+  const planes = todas.filter(o => o.plan);
+  const opciones = todas.filter(o => !o.plan);
   // Con una acción destructiva el foco arranca en la opción segura.
   const hayPeligro = opciones.some(o => o.estilo === 'peligro');
-  const enfocada = Math.max(0, opciones.findIndex(o => (hayPeligro ? o.estilo !== 'peligro' : o.estilo === 'primario')));
+  const enfocada = planes.length ? -1 : Math.max(0, opciones.findIndex(o => (hayPeligro ? o.estilo !== 'peligro' : o.estilo === 'primario')));
 
   return (
     <dialog className="dialogo dialogo--confirmacion" ref={ref} onCancel={alCancelar} aria-labelledby="confirmacion-titulo">
@@ -103,6 +106,33 @@ export function DialogoConfirmacion() {
         <div className="dialogo__cuerpo">
           <h2 className="dialogo__titulo" id="confirmacion-titulo">{solicitud.titulo}</h2>
           {solicitud.texto && <p className="dialogo__texto">{solicitud.texto}</p>}
+          {planes.length > 0 && (
+            <div className="planes-opciones" role="group" aria-label="Elegí cómo pagar Pro">
+              {planes.map((opcion, i) => {
+                const { nombre, precio, periodo, cinta, nota, destacado, accion } = opcion.plan;
+                return (
+                  <button
+                    key={opcion.valor}
+                    type="button"
+                    className={`plan-opcion${destacado ? ' plan-opcion--destacada' : ''}`}
+                    data-enfocar={i === 0 ? '' : undefined}
+                    onClick={() => solicitud.responder(opcion.valor)}
+                  >
+                    {cinta && <span className="plan-opcion__cinta">{cinta}</span>}
+                    <span className="plan-opcion__nombre">{nombre}</span>
+                    <span className="plan-opcion__precio">
+                      <strong>{precio}</strong> <small>{periodo}</small>
+                    </span>
+                    {nota && <span className="plan-opcion__nota">{nota}</span>}
+                    <span className="plan-opcion__accion">
+                      {accion}
+                      <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" /></svg>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <div className={`dialogo__acciones${opciones.length > 2 ? ' dialogo__acciones--apiladas' : ''}`}>
             {opciones.map((opcion, i) => (
               <button

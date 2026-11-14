@@ -15,7 +15,7 @@ import {
 import { ctx, AteneaDB, nube, normalizar } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { avisar, avisarError, avisarExito, celebrar, confirmar } from './avisos.js';
-import { crearEnCuenta, registrarEscritura, mostrarEstadoGuardado } from './guardado.js';
+import { crearEnCuenta, datosParaGuardar, registrarEscritura, mostrarEstadoGuardado } from './guardado.js';
 import { llenarFormulario, actualizarAvisoPagos } from './formulario.js';
 import { renderDocumento } from './vista.js';
 import { irRuta, mostrarVista, cerrarEdicion, cambiarPestana, clicComun } from './navegacion.js';
@@ -215,6 +215,24 @@ const duplicarPropuesta = id => {
   const copia = normalizar(original.payload);
   copia.propuesta.titulo = `${copia.propuesta.titulo.trim() || 'Sin título'} (copia)`;
   if (crearEnCuenta(copia)) avisarExito('Propuesta duplicada.');
+};
+
+// En Gratis, un link enviado no se manda a otro cliente (ver mismoCliente en planes.js):
+// la versión con el cliente nuevo pasa a ser una propuesta nueva (gasta un envío) y la
+// original vuelve a la versión que se mandó, para que sigan coincidiendo.
+export const duplicarParaOtroCliente = id => {
+  const original = ctx.propuestas.find(p => p.id === id);
+  if (!original) return;
+  const copia = normalizar(ctx.propuestaId === id ? ctx.estado : original.payload);
+  const creada = crearEnCuenta(copia);
+  if (!creada) return;
+  // Primero se cambia de editor (guarda lo pendiente de la original) y después se restaura.
+  mostrarEditor(creada.id, copia);
+  if (original.publicado && !original.aceptacion) {
+    const restaurada = datosParaGuardar(normalizar(original.publicado));
+    if (restaurada) registrarEscritura(AteneaDB.proposals.actualizar(id, restaurada), 'No se pudo restaurar la propuesta original.');
+  }
+  avisarExito('Listo: es una propuesta nueva para tu otro cliente. La original quedó como la mandaste.');
 };
 
 const borrarPropuesta = async id => {

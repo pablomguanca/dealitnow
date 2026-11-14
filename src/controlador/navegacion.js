@@ -156,7 +156,7 @@ const abrirAccionesEditor = async () => {
       { valor: 'guardar-version', texto: 'Guardar versión' },
       ...(conCuenta ? [{ valor: 'ver-versiones', texto: 'Versiones anteriores' }] : []),
       ...(esPf ? [] : [{ valor: 'pdf', texto: 'Descargar PDF' }]),
-      ...(conIA ? [{ valor: 'abrir-ia', texto: 'Contala y la armamos (IA)' }] : []),
+      ...(conIA ? [{ valor: 'abrir-ia', texto: 'Armá tu propuesta con IA' }] : []),
       { valor: 'nueva', texto: 'Nueva propuesta' },
       { valor: 'nuevo-portafolio', texto: 'Nuevo portfolio' },
       { valor: 'alternar-modo', texto: esModoOscuro() ? 'Pasar a modo claro' : 'Pasar a modo oscuro' },
@@ -239,7 +239,7 @@ export const instalarNavegacion = () => {
       const accion = await elegir({
         titulo: '¿Qué querés crear?',
         opciones: [
-          ...(conIA ? [{ valor: 'abrir-ia', texto: 'Contala y la armamos (IA)', estilo: 'primario' }] : []),
+          ...(conIA ? [{ valor: 'abrir-ia', texto: 'Armá tu propuesta con IA', estilo: 'primario' }] : []),
           { valor: 'nueva', texto: 'Nueva propuesta', estilo: conIA ? 'secundario' : 'primario' },
           { valor: 'nuevo-portafolio', texto: 'Nuevo portfolio', estilo: 'secundario' },
           { valor: null, texto: 'Cancelar', estilo: 'texto' }
