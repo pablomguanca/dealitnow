@@ -1,6 +1,12 @@
 // Plan del usuario en la app: muestra el estado (Gratis / Pro y envíos del mes), ofrece
 // pasarse a Pro en los momentos justos y lleva al pago en Mercado Pago. Quién es Pro lo
 // decide el servidor (api/mercadopago); acá solo se lee planes/{uid}.
+//
+// En la app de Android no se vende Pro: Google Play exige su propio cobro para las
+// suscripciones digitales y no deja mandar a pagar afuera (Argentina no está en sus
+// programas de cobro alternativo). Ahí los carteles solo informan qué es de Pro, sin precios
+// ni botones de pago, y el CSS oculta las ofertas (.app-nativa en _paneles.scss). Quien pagó
+// Pro en la web lo tiene igual en la app. Más adelante: Google Play Billing.
 
 import { $, $$, dinero } from '../lib/formato.js';
 import { LIMITE_ENVIOS_GRATIS, PRECIOS_PRO, enviosDelMes, esPro, finDePro, proParaVerificar } from '../planes.js';
@@ -12,6 +18,10 @@ import { llamarApi } from './api.js';
 import { irRuta } from './navegacion.js';
 import { irADiseno } from './hoja.js';
 import { configurarPush } from './push.js';
+import { esAppNativa } from '../nativo.js';
+
+// ¿Se puede comprar Pro desde acá? En la web sí; en la app de Android, no (ver arriba).
+const ventaPermitida = () => !esAppNativa();
 
 let dejarDeEscuchar = null;
 let verificado = false;
@@ -36,10 +46,10 @@ const precioTexto = periodo => {
   return `${dinero(p.monto, p.moneda)} por mes`;
 };
 
-const opcionesPro = () => [
+const opcionesPro = () => (!ventaPermitida() ? [] : [
   { valor: 'mensual', texto: `Pro mensual · ${precioTexto('mensual')}`, estilo: 'primario' },
   { valor: 'anual', texto: `Pro anual · ${precioTexto('anual')}`, estilo: 'secundario' }
-];
+]);
 
 export const usuarioEsPro = () => esPro(ctx.plan) || proServidor;
 
@@ -71,7 +81,9 @@ export const disenoProPermitido = async nombre => {
   if (!restriccionesActivas()) return true;
   const eleccion = await elegir({
     titulo: `«${nombre}» es un diseño PRO`,
-    texto: 'Para usarlo en tus propuestas necesitás Dealit Pro: todos los diseños y plantillas PRO, envíos sin tope, sin la marca de Dealit y un aviso cada vez que tu cliente la abre. Si preferís seguir gratis, elegí un diseño sin la etiqueta PRO.',
+    texto: !ventaPermitida()
+      ? 'Este diseño es parte de Dealit Pro. Para tus propuestas, elegí un diseño sin la etiqueta PRO.'
+      : 'Para usarlo en tus propuestas necesitás Dealit Pro: todos los diseños y plantillas PRO, envíos sin tope, sin la marca de Dealit y un aviso cada vez que tu cliente la abre. Si preferís seguir gratis, elegí un diseño sin la etiqueta PRO.',
     opciones: [...opcionesPro(), { valor: null, texto: 'Elegir un diseño gratis', estilo: 'texto' }]
   });
   if (eleccion) suscribir(eleccion);
@@ -115,6 +127,7 @@ const pintarAvisoPro = fin => {
 
 // «Seguir con Pro» desde el aviso: los dos precios y, si todavía tiene días, que no paga dos veces.
 const reactivarPro = async () => {
+  if (!ventaPermitida()) return;
   const fin = finPro();
   const porTerminar = fin && !fin.terminado;
   const eleccion = await elegir({
@@ -245,6 +258,7 @@ export const reiniciarPlan = () => {
 let periodoElegido = 'mensual';
 const CLAVE_EMAIL_PAGO = 'dealit-email-pago';
 const suscribir = periodo => {
+  if (!ventaPermitida()) return;
   periodoElegido = PRECIOS_PRO[periodo] ? periodo : 'mensual';
   const dialogo = $('#dialogo-pago');
   if (!dialogo) return;
@@ -334,13 +348,42 @@ const MOTIVOS = {
   })
 };
 
+// Los mismos carteles en la app de Android: qué es de Pro y la salida gratis, sin vender.
+const MOTIVOS_APP = {
+  limite: () => ({
+    titulo: `Ya enviaste tus ${LIMITE_ENVIOS_GRATIS} propuestas de este mes`,
+    texto: 'Tu propuesta queda guardada. Tu cupo de envíos del plan Gratis se renueva el mes que viene.'
+  }),
+  diseno: (nombres = []) => ({
+    titulo: 'Este diseño es de Dealit Pro',
+    texto: `Tu propuesta usa ${nombres.length ? lista(nombres) : 'un diseño PRO'}. Para enviarla, elegí un diseño sin la etiqueta PRO.`
+  }),
+  'link-activo': (nombres = []) => ({
+    titulo: 'Tu cliente ya tiene el link',
+    texto: `${nombres.length ? lista(nombres) : 'Este diseño'} es de Dealit Pro y tu cliente lo vería al abrir la propuesta. Probalo en una copia de la propuesta.`
+  }),
+  ia: () => ({
+    titulo: 'Usaste tus propuestas con IA de este mes',
+    texto: `En el plan Gratis armás ${LIMITE_IA_GRATIS} propuestas con IA por mes. Tu cupo se renueva el mes que viene.`
+  }),
+  seguimiento: () => ({
+    titulo: 'El seguimiento es de Dealit Pro',
+    texto: 'Cuántas veces y cuándo tu cliente abre la propuesta, y los avisos en el momento, son parte de Dealit Pro.'
+  }),
+  general: () => ({
+    titulo: 'Esto es parte de Dealit Pro',
+    texto: 'Esta función es parte de Dealit Pro.'
+  })
+};
+
 export const ofrecerPro = async (motivo = 'general', nombres = []) => {
   if (planesActivos && usuarioEsPro()) return;
-  const { titulo, texto } = (MOTIVOS[motivo] || MOTIVOS.general)(nombres);
+  const motivos = ventaPermitida() ? MOTIVOS : MOTIVOS_APP;
+  const { titulo, texto } = (motivos[motivo] || motivos.general)(nombres);
   // Con un diseño PRO, la salida gratis es cambiar de diseño (no abandonar el envío).
   const salida = motivo === 'diseno' || motivo === 'link-activo'
     ? { valor: 'gratis', texto: 'Elegir un diseño gratis', estilo: 'texto' }
-    : { valor: null, texto: 'Ahora no', estilo: 'texto' };
+    : { valor: null, texto: ventaPermitida() ? 'Ahora no' : 'Entendido', estilo: ventaPermitida() ? 'texto' : 'primario' };
   const eleccion = await elegir({ titulo, texto, opciones: [...opcionesPro(), salida] });
   if (eleccion === 'gratis') irADiseno();
   else if (eleccion) suscribir(eleccion);
@@ -350,10 +393,12 @@ export const ofrecerPro = async (motivo = 'general', nombres = []) => {
 export const confirmarUltimoEnvio = async () => {
   const eleccion = await elegir({
     titulo: 'Es tu último envío gratis de este mes',
-    texto: `Vas a usar el envío ${LIMITE_ENVIOS_GRATIS} de ${LIMITE_ENVIOS_GRATIS}. Después, las propuestas nuevas se mandan con Pro o cuando se renueve tu cupo, el mes que viene.`,
+    texto: ventaPermitida()
+      ? `Vas a usar el envío ${LIMITE_ENVIOS_GRATIS} de ${LIMITE_ENVIOS_GRATIS}. Después, las propuestas nuevas se mandan con Pro o cuando se renueve tu cupo, el mes que viene.`
+      : `Vas a usar el envío ${LIMITE_ENVIOS_GRATIS} de ${LIMITE_ENVIOS_GRATIS}. Tu cupo se renueva el mes que viene.`,
     opciones: [
       { valor: 'enviar', texto: 'Enviar igual', estilo: 'primario' },
-      { valor: 'pro', texto: 'Ver Dealit Pro', estilo: 'secundario' },
+      ...(ventaPermitida() ? [{ valor: 'pro', texto: 'Ver Dealit Pro', estilo: 'secundario' }] : []),
       { valor: null, texto: 'Cancelar', estilo: 'texto' }
     ]
   });

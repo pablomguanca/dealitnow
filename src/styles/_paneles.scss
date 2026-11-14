@@ -1329,6 +1329,20 @@ body.invitado .editor__invitado {
   margin-bottom: 0.8rem;
 }
 
+// App de Android: Google Play no deja vender Pro con otro medio de pago ni mandar a pagar
+// afuera (ver controlador/plan.js). Se ocultan los botones de pago, los precios y los
+// links a Mercado Pago; quien ya es Pro lo sigue viendo y usando igual.
+.app-nativa {
+  #plan-ofertas,
+  #plan-sincronizar,
+  #plan-administrar,
+  #aviso-pro,
+  .plan-renovar .plan-botones,
+  .plan-renovar__nota {
+    display: none !important;
+  }
+}
+
 .plan-email {
   max-width: 26rem;
   margin-bottom: 0.9rem;
