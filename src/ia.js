@@ -154,18 +154,18 @@ export const mensajeIA = (dictado, referencias = []) => [
 ].filter(Boolean).join('\n');
 
 // --- Respuesta de la IA → contenido de la propuesta (lo valida el servidor) ---
-const corto = (v, max) => String(v ?? '').trim().slice(0, max);
-const numero = (v, min, max, def = 0) => {
+export const corto = (v, max) => String(v ?? '').trim().slice(0, max);
+export const numero = (v, min, max, def = 0) => {
   const n = Number(v);
   return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : def;
 };
-const plata = v => Math.round(numero(v, 0, 1e10) * 100) / 100;
+export const plata = v => Math.round(numero(v, 0, 1e10) * 100) / 100;
 // La vista ya dibuja las listas: se sacan viñetas o números que el modelo haya puesto igual.
 const sinVineta = v => String(v ?? '').trim().replace(/^(?:[•\-*–·]|\d{1,2}[.)])\s*/, '');
-const lineasDe = (v, maxLinea, maxLineas) => (Array.isArray(v) ? v : String(v ?? '').split('\n'))
+export const lineasDe = (v, maxLinea, maxLineas) => (Array.isArray(v) ? v : String(v ?? '').split('\n'))
   .map(l => corto(sinVineta(l), maxLinea)).filter(Boolean).slice(0, maxLineas).join('\n');
 let secuencia = 0;
-const nuevoId = () => `ia${Date.now().toString(36)}${(secuencia++).toString(36)}`;
+export const nuevoId = () => `ia${Date.now().toString(36)}${(secuencia++).toString(36)}`;
 
 export const propuestaDesdeIA = (r, { temas = temasPermitidos(false) } = {}) => {
   const servicios = (r?.servicios || []).slice(0, 20).map(s => ({

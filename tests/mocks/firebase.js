@@ -226,6 +226,37 @@ window.fetch = async (url, opciones = {}) => {
   if (ruta === '/api/sincronizar') return respuesta(uid ? 200 : 401, uid ? { encontrada: leerPlan().tipo === 'pro', plan: leerPlan() } : { error: 'sin-sesion' });
   if (ruta === '/api/ia-propuesta') {
     if (!uid) return respuesta(401, { error: 'sin-sesion' });
+    // Editar con IA (demo): baja los precios el % que se pida (10 por defecto) y suma una
+    // pregunta frecuente, como haría la IA con un pedido así.
+    if (cuerpo?.accion === 'editar') {
+      const pedido = String(cuerpo?.pedido || '').trim();
+      if (pedido.length < 8) return respuesta(400, { error: 'pedido-corto' });
+      const plan = leerPlan();
+      const mes = mesDe();
+      const usados = Number(plan.iaEdicion?.[mes]) || 0;
+      if (!esPro(plan) && usados >= 5) return respuesta(403, { error: 'limite-edicion' });
+      await new Promise(listo => setTimeout(listo, 1200));
+      guardarPlan({ ...plan, iaEdicion: { ...plan.iaEdicion, [mes]: usados + 1 } });
+      const { cambiosDesdeIA, contenidoParaEditar } = await import('../../src/ia-editar.js');
+      const actual = contenidoParaEditar(cuerpo.propuesta);
+      const porcentaje = Number(pedido.match(/(\d+)\s*%/)?.[1]) || 10;
+      return respuesta(200, {
+        ...cambiosDesdeIA({
+          respuesta: `Modo demo: bajamos los precios un ${porcentaje} % y sumamos una pregunta frecuente.`,
+          resumen: [
+            { seccion: 'servicios', texto: `Bajamos ${porcentaje} % el precio de cada servicio.` },
+            { seccion: 'faqs', texto: 'Sumamos una pregunta sobre los cambios incluidos.' }
+          ],
+          cambios: {
+            servicios: actual.servicios.map(sv => ({ ...sv, precio: Math.round(sv.precio * (1 - porcentaje / 100) / 100) * 100 })),
+            faqs: [...actual.faqs, { pregunta: '¿Cuántas rondas de cambios incluye?', respuesta: 'Dos rondas por entrega; las adicionales se cotizan aparte.' }]
+          },
+          avisos: ['Modo demo: los cambios son un ejemplo fijo.']
+        }, actual),
+        usados: usados + 1,
+        limite: esPro(plan) ? null : 5
+      });
+    }
     const texto = String(cuerpo?.texto || '').trim();
     if (texto.length < 15) return respuesta(400, { error: 'texto-corto' });
     const plan = leerPlan();

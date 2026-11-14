@@ -25,7 +25,8 @@ import { abrirRegistro } from './sesion.js';
 const MOTIVOS = {
   manual: 'Guardada por vos',
   enviada: 'Versión enviada al cliente',
-  'antes-de-restaurar': 'Antes de restaurar otra versión'
+  'antes-de-restaurar': 'Antes de restaurar otra versión',
+  'antes-de-ia': 'Antes de los cambios con IA'
 };
 
 let versiones = [];

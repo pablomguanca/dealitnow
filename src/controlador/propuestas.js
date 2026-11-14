@@ -178,6 +178,8 @@ export const mostrarEditor = (id, contenido, { historial = true } = {}) => {
   ctx.editando = true;
   mostrarEstadoGuardado();
   actualizarAvisoAceptada();
+  $('#editor-ia').hidden = false;
+  $('#menu-editar-ia').hidden = false;
   migrarLogo();
 };
 

@@ -1,15 +1,17 @@
 // «Contale tu propuesta»: dictado por voz (o texto) y la IA arma la propuesta.
-// Lo maneja controlador/ia.js.
+// El mismo diálogo sirve para «Editar con IA» (pedir un cambio sobre la propuesta abierta), y
+// la vista previa de esos cambios va en #dialogo-ia-cambios. Lo maneja controlador/ia.js.
 
 export function DialogoIA() {
   return (
+    <>
     <dialog className="dialogo dialogo--ancho dialogo-ia" id="dialogo-ia" aria-labelledby="ia-titulo">
       <form method="dialog" id="ia-form">
         <p className="dialogo-ia__marca">
-          <span className="insignia-ia">IA</span> Nuevo en Dealit
+          <span className="insignia-ia">IA</span> <span id="ia-marca-texto">Nuevo en Dealit</span>
         </p>
         <h2 className="dialogo__titulo" id="ia-titulo">Contale tu propuesta</h2>
-        <p className="dialogo__texto">Hablá como si se lo contaras a un colega: qué trabajo es, para quién, qué incluye, cuánto cobrás y en qué plazo. Armamos la propuesta completa y vos la revisás antes de enviarla.</p>
+        <p className="dialogo__texto" id="ia-bajada">Hablá como si se lo contaras a un colega: qué trabajo es, para quién, qué incluye, cuánto cobrás y en qué plazo. Armamos la propuesta completa y vos la revisás antes de enviarla.</p>
 
         <div className="dialogo-ia__dictado">
           <button type="button" className="dialogo-ia__microfono" id="ia-microfono" data-accion="ia-dictar" aria-pressed="false">
@@ -23,7 +25,7 @@ export function DialogoIA() {
         </div>
 
         <label className="campo">
-          <span className="campo__etiqueta">Lo que contaste</span>
+          <span className="campo__etiqueta" id="ia-etiqueta">Lo que contaste</span>
           <textarea className="control dialogo-ia__texto" id="ia-texto" rows="6" maxLength="4000"
             placeholder="Ej.: Reforma del baño de Javier Ruiz en Palermo. Demolición, cerámica nueva en piso y paredes, sanitarios y grifería. Unos 15 días. Mano de obra 1.200.000 pesos, materiales aparte. 50 % de seña. Ofrecele también cambiar el termotanque."></textarea>
         </label>
@@ -44,5 +46,22 @@ export function DialogoIA() {
         </div>
       </form>
     </dialog>
+
+    <dialog className="dialogo dialogo--ancho dialogo-ia dialogo-ia-cambios" id="dialogo-ia-cambios" aria-labelledby="ia-cambios-titulo">
+      <form method="dialog">
+        <p className="dialogo-ia__marca"><span className="insignia-ia">IA</span> Editar con IA</p>
+        <h2 className="dialogo__titulo" id="ia-cambios-titulo">Revisá los cambios</h2>
+        <p className="dialogo__texto" id="ia-cambios-respuesta"></p>
+        <ul className="ia-cambios" id="ia-cambios-lista" aria-label="Cambios propuestos"></ul>
+        <ul className="ia-cambios__avisos" id="ia-cambios-avisos" aria-label="Para revisar" hidden></ul>
+        <p className="ia-cambios__nota" id="ia-cambios-nota">Antes de aplicar guardamos una versión de la propuesta, así podés volver atrás.</p>
+        <div className="dialogo__acciones">
+          <button type="button" className="boton boton--texto" data-accion="ia-cambios-otro">Pedir otro cambio</button>
+          <button type="button" className="boton boton--texto" data-accion="ia-cambios-descartar">Descartar</button>
+          <button type="button" className="boton boton--primario" id="ia-cambios-aplicar" data-accion="ia-cambios-aplicar">Aplicar cambios</button>
+        </div>
+      </form>
+    </dialog>
+    </>
   );
 }

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { LIMITE_IA_GRATIS, esquemaIA, instruccionesIA, preciosDeReferencia, propuestaDesdeIA, temasPermitidos } from '../src/ia.js';
+import { LIMITE_EDICION_GRATIS, SECCIONES_EDICION, aplicarCambios, cambiosDesdeIA, contenidoParaEditar, detalleCambio, esquemaEdicion } from '../src/ia-editar.js';
 import { crearHandler } from '../api/ia-propuesta.js';
-import { TEMAS } from '../src/modelo.js';
+import { TEMAS, vacio } from '../src/modelo.js';
 
 const AHORA = new Date('2026-11-15T15:00:00-03:00');
 const MES = '2026-11';
@@ -138,7 +139,7 @@ const crearDb = (planes = {}, users = {}) => {
         get: async () => ({ exists: !!datos.planes[id], data: () => datos.planes[id] }),
         set: async (valor) => {
           const actual = datos.planes[id] || {};
-          datos.planes[id] = { ...actual, ...valor, ia: { ...actual.ia, ...valor.ia } };
+          datos.planes[id] = { ...actual, ...valor, ia: { ...actual.ia, ...valor.ia }, iaEdicion: { ...actual.iaEdicion, ...valor.iaEdicion } };
         }
       })
     })
@@ -219,5 +220,130 @@ describe('POST /api/ia-propuesta', () => {
     await handler(db, { generar: async () => respuestaIA({ servicios: [] }) })(post({ texto: TEXTO }), vacia);
     expect([sinSesion.estado, corto.estado, vacia.estado]).toEqual([401, 400, 422]);
     expect(datos.planes.duenio).toBeUndefined();
+  });
+});
+
+// --- Editar con IA ---
+const PROPUESTA = {
+  ...vacio(),
+  propuesta: { ...vacio().propuesta, titulo: 'Web para Café Molino', validez: 15 },
+  cliente: { nombre: 'Ana', empresa: 'Café Molino', cargo: '' },
+  servicios: [
+    { id: 's1', nombre: 'Diseño web', descripcion: 'Sitio de 5 páginas', entregables: 'Diseño\nSitio publicado', modalidad: 'unico', cantidad: 1, precio: 500000, opcional: false, imagen: 'https://foto/1.jpg' },
+    { id: 's2', nombre: 'Fotos', descripcion: '', entregables: '', modalidad: 'unico', cantidad: 1, precio: 200000, opcional: true, imagen: '' }
+  ],
+  inversion: { ...vacio().inversion, moneda: 'ARS', pagos: [{ id: 'p1', concepto: 'Al aceptar', porcentaje: 50 }, { id: 'p2', concepto: 'Al entregar', porcentaje: 50 }] },
+  condiciones: 'Dos rondas de cambios\nHosting aparte',
+  emisor: { ...vacio().emisor, nombre: 'Estudio Sur', logo: 'data:image/png;base64,AAAA' }
+};
+
+describe('reglas de Editar con IA', () => {
+  it('lo que ve la IA no lleva fotos, logo ni datos del emisor', () => {
+    const c = contenidoParaEditar(PROPUESTA);
+    const json = JSON.stringify(c);
+    expect(json).not.toContain('foto/1.jpg');
+    expect(json).not.toContain('base64');
+    expect(json).not.toContain('Estudio Sur');
+    expect(c.servicios[0]).toMatchObject({ id: 's1', entregables: ['Diseño', 'Sitio publicado'] });
+    expect(c.pagos).toHaveLength(2);
+    expect(c.validezDias).toBe(15);
+    // Compactar dos veces da lo mismo (el servidor vuelve a compactar lo que manda la app).
+    expect(contenidoParaEditar(c)).toEqual(c);
+  });
+
+  it('el esquema de cambios es opcional por sección', () => {
+    const e = esquemaEdicion();
+    expect(e.required).toEqual(['respuesta', 'resumen', 'cambios', 'avisos']);
+    expect(e.properties.cambios.required).toBeUndefined();
+    expect(Object.keys(e.properties.cambios.properties)).toEqual(Object.keys(SECCIONES_EDICION));
+  });
+
+  it('descarta lo que quedó igual, los pagos que no suman 100 y los ids inventados', () => {
+    const actual = contenidoParaEditar(PROPUESTA);
+    const r = cambiosDesdeIA({
+      respuesta: 'Bajé los precios.',
+      resumen: [{ seccion: 'servicios', texto: 'Precios 10 % más bajos' }, { seccion: 'titulo', texto: 'igual' }],
+      cambios: {
+        titulo: 'Web para Café Molino',
+        servicios: [
+          { ...actual.servicios[0], precio: 450000 },
+          { ...actual.servicios[1], id: 'inventado', precio: 180000 }
+        ],
+        pagos: [{ concepto: 'Todo', porcentaje: 90 }]
+      },
+      avisos: []
+    }, actual);
+    expect(Object.keys(r.cambios)).toEqual(['servicios']);
+    expect(r.cambios.servicios.map(s => s.id)).toEqual(['s1', '']);
+    expect(r.resumen).toEqual([{ seccion: 'servicios', texto: 'Precios 10 % más bajos' }]);
+    expect(r.avisos.join(' ')).toContain('100');
+  });
+
+  it('el monto global no repite la suma de los ítems', () => {
+    const actual = contenidoParaEditar(PROPUESTA);
+    const r = cambiosDesdeIA({ cambios: { inversion: { ...actual.inversion, montoGlobal: 500000, descuento: 10 } } }, actual);
+    expect(r.cambios.inversion).toMatchObject({ montoGlobal: 0, descuento: 10 });
+  });
+
+  it('aplica solo lo elegido y conserva fotos e ids de los servicios', () => {
+    const actual = contenidoParaEditar(PROPUESTA);
+    const cambios = {
+      servicios: [{ ...actual.servicios[0], precio: 450000 }, { id: '', nombre: 'Mantenimiento', descripcion: '', entregables: [], modalidad: 'mensual', cantidad: 1, precio: 80000, opcional: true }],
+      condiciones: ['Una ronda de cambios']
+    };
+    const nuevo = aplicarCambios(PROPUESTA, cambios, ['servicios']);
+    expect(nuevo.servicios[0]).toMatchObject({ id: 's1', precio: 450000, imagen: 'https://foto/1.jpg', entregables: 'Diseño\nSitio publicado' });
+    expect(nuevo.servicios[1]).toMatchObject({ nombre: 'Mantenimiento', imagen: '' });
+    expect(nuevo.servicios[1].id).toBeTruthy();
+    expect(nuevo.condiciones).toBe(PROPUESTA.condiciones);
+    expect(PROPUESTA.servicios[0].precio).toBe(500000);
+    expect(detalleCambio('servicios', cambios.servicios, actual)).toEqual([
+      '«Diseño web»: $ 500.000 → $ 450.000',
+      'Nuevo opcional: «Mantenimiento» ($ 80.000/mes)',
+      'Se quita: «Fotos»'
+    ]);
+  });
+});
+
+describe('POST /api/ia-propuesta con accion editar', () => {
+  const handler = (db, { generar, activos = true } = {}) => crearHandler({
+    db,
+    sesionDe: async () => ({ uid: 'duenio', email: 'a@b.com' }),
+    planesActivos: () => activos,
+    generar,
+    ahora: () => AHORA
+  });
+  const editar = (extra = {}) => post({ accion: 'editar', pedido: 'Bajá 10 % los precios', propuesta: PROPUESTA, ...extra });
+
+  it('devuelve solo los cambios y cuenta aparte de las propuestas armadas', async () => {
+    const { db, datos } = crearDb({ duenio: { ia: { [MES]: 3 } } });
+    let pedido;
+    const r = res();
+    await handler(db, {
+      generar: async p => {
+        pedido = p;
+        return { respuesta: 'Listo', resumen: [{ seccion: 'validezDias', texto: '30 días' }], cambios: { validezDias: 30 }, avisos: [] };
+      }
+    })(editar(), r);
+    expect(r.estado).toBe(200);
+    expect(r.cuerpo).toMatchObject({ cambios: { validezDias: 30 }, usados: 1, limite: LIMITE_EDICION_GRATIS });
+    expect(datos.planes.duenio).toMatchObject({ ia: { [MES]: 3 }, iaEdicion: { [MES]: 1 } });
+    expect(pedido.mensaje).toContain('Bajá 10 % los precios');
+    expect(pedido.mensaje).not.toContain('base64');
+  });
+
+  it('en Gratis frena al llegar al límite y valida el pedido', async () => {
+    const { db } = crearDb({ duenio: { iaEdicion: { [MES]: LIMITE_EDICION_GRATIS } } });
+    let llamada = false;
+    const generar = async () => { llamada = true; return {}; };
+    const limite = res();
+    await handler(db, { generar })(editar(), limite);
+    const corto = res();
+    await handler(db, { generar })(editar({ pedido: 'hola' }), corto);
+    const sinPropuesta = res();
+    await handler(db, { generar })(editar({ propuesta: null }), sinPropuesta);
+    expect([limite.estado, corto.estado, sinPropuesta.estado]).toEqual([403, 400, 400]);
+    expect(limite.cuerpo.error).toBe('limite-edicion');
+    expect(llamada).toBe(false);
   });
 });

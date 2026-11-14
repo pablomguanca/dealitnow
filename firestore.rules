@@ -16,7 +16,7 @@ service cloud.firestore {
         && d.userId == request.auth.uid
         && d.payload is map
         && d.title is string && d.title.size() <= 200
-        && d.motivo in ['manual', 'enviada', 'antes-de-restaurar']
+        && d.motivo in ['manual', 'enviada', 'antes-de-restaurar', 'antes-de-ia']
         && d.createdAt == request.time;
     }
 

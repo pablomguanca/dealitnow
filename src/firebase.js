@@ -360,7 +360,7 @@ const crearAteneaDB = () => {
   // guarda el dueño a mano, al enviar la propuesta y antes de restaurar otra. Se conservan
   // las últimas VERSIONES_MAX.
   const COLECCIONES_CON_VERSIONES = ['proposals', 'portfolios'];
-  const MOTIVOS_VERSION = ['manual', 'enviada', 'antes-de-restaurar'];
+  const MOTIVOS_VERSION = ['manual', 'enviada', 'antes-de-restaurar', 'antes-de-ia'];
   const VERSIONES_MAX = 20;
 
   const _colVersiones = (coleccion, id) => {

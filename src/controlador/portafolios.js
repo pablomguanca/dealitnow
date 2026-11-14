@@ -119,6 +119,9 @@ const mostrarEditorPortafolio = (id, contenido, { historial = true } = {}) => {
   ctx.editando = true;
   mostrarEstadoGuardado();
   $('#editor-aceptada').hidden = true;
+  // «Editar con IA» es solo para propuestas.
+  $('#editor-ia').hidden = true;
+  $('#menu-editar-ia').hidden = true;
 };
 
 // conDatosDeCuenta: false solo al abrir un archivo o duplicar, que traen sus propios datos.

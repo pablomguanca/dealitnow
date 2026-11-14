@@ -85,6 +85,10 @@ export function TopBar() {
                 </div>
                 <div className="menu__grupo">
                   <span className="menu__grupo-titulo" id="menu-grupo-actual">Propuesta actual</span>
+                  <button type="button" className="boton boton--texto menu__opcion solo-editor solo-cuenta" id="menu-editar-ia" data-accion="editar-con-ia">
+                    <IconoIA />
+                    <span>Editar con IA</span>
+                  </button>
                   <button type="button" className="boton boton--texto menu__opcion solo-editor" data-accion="guardar-version">
                     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h7.2l2.3 2.3v8.2a1 1 0 0 1-1 1h-8.5a1 1 0 0 1-1-1v-9.5a1 1 0 0 1 1-1z" /><path d="M5.5 2.5v3.5h5V2.5M5.5 13.5v-4h5v4" /></svg>
                     <span>Guardar versión</span>

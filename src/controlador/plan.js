@@ -11,6 +11,7 @@
 import { $, $$, dinero } from '../lib/formato.js';
 import { LIMITE_ENVIOS_GRATIS, PRECIOS_PRO, enviosDelMes, esPro, finDePro, proParaVerificar } from '../planes.js';
 import { LIMITE_IA_GRATIS } from '../ia.js';
+import { LIMITE_EDICION_GRATIS } from '../ia-editar.js';
 import { ctx, AteneaDB } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { avisar, avisarError, avisarExito, elegir } from './avisos.js';
@@ -368,6 +369,10 @@ const MOTIVOS = {
     titulo: 'Usaste tus propuestas con IA de este mes',
     texto: `En Gratis armás ${LIMITE_IA_GRATIS} propuestas por mes contándolas en un audio. Con Pro son ilimitadas, y además las enviás sin tope y sin la marca de Dealit.`
   }),
+  'ia-edicion': () => ({
+    titulo: 'Usaste tus ediciones con IA de este mes',
+    texto: `En Gratis editás con IA ${LIMITE_EDICION_GRATIS} veces por mes. Con Pro son ilimitadas, y además enviás sin tope y sin la marca de Dealit.`
+  }),
   seguimiento: () => ({
     titulo: 'Sabé cuándo tu cliente abre tu propuesta',
     texto: 'Con Pro ves cuántas veces la abrió y cuándo, y te avisamos en el momento. Así llamás cuando está mirando, no cuando ya se olvidó.'
@@ -395,6 +400,10 @@ const MOTIVOS_APP = {
   ia: () => ({
     titulo: 'Usaste tus propuestas con IA de este mes',
     texto: `En el plan Gratis armás ${LIMITE_IA_GRATIS} propuestas con IA por mes. Tu cupo se renueva el mes que viene.`
+  }),
+  'ia-edicion': () => ({
+    titulo: 'Usaste tus ediciones con IA de este mes',
+    texto: `En el plan Gratis editás con IA ${LIMITE_EDICION_GRATIS} veces por mes. Tu cupo se renueva el mes que viene.`
   }),
   seguimiento: () => ({
     titulo: 'El seguimiento es de Dealit Pro',

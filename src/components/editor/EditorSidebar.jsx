@@ -6,6 +6,7 @@ import { DesignStudio } from './DesignStudio.jsx';
 import { SenderStep } from './SenderStep.jsx';
 import { ProposalSteps } from './ProposalSteps.jsx';
 import { PortfolioSteps } from './PortfolioSteps.jsx';
+import { IconoIA } from '../IconoIA.jsx';
 
 export function EditorSidebar() {
   return (
@@ -32,6 +33,9 @@ export function EditorSidebar() {
           </div>
           <p className="editor__aceptada" id="editor-aceptada" role="status" hidden></p>
           <p className="editor__bajada" id="editor-bajada">Elegí una plantilla, escribí tus datos y mandala como link interactivo: el diseño se arma solo.</p>
+          <button type="button" className="boton boton--secundario boton--chico boton--ia editor__ia solo-cuenta" id="editor-ia" data-accion="editar-con-ia">
+            <IconoIA /> Editar con IA
+          </button>
         </div>
         <form id="formulario" noValidate>
           <DesignStudio />
