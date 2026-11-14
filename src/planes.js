@@ -4,6 +4,7 @@
 import { TEMAS, PLANTILLAS, PLANTILLAS_PORTAFOLIO } from './modelo.js';
 
 export const LIMITE_ENVIOS_GRATIS = 2; // propuestas enviadas (links activados) por mes calendario
+export const LIMITE_PORTAFOLIOS_GRATIS = 1; // portfolios con el link activo a la vez
 
 // Días de margen después de la fecha de cobro: Mercado Pago reintenta el débito unos días
 // antes de pausar o cancelar. Pasado ese margen sin un cobro nuevo, vuelve a Gratis.

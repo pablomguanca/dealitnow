@@ -8,10 +8,13 @@
 //   reusa para otra propuesta. Con Pro el link muestra siempre la última versión.
 // - Gratis: no se envían diseños ni plantillas PRO, y el link lleva la marca de Dealit
 //   (campo marca, que lee la vista del cliente).
+// - Gratis: LIMITE_PORTAFOLIOS_GRATIS portfolio con el link activo a la vez. Con otro activo
+//   responde «limite-portafolios» (con su nombre en detalle); con reemplazar: true, desactiva
+//   ese link y activa este. Los que ya estaban activos antes de este límite siguen andando.
 // Con los planes apagados (ver _lib/planes-activos.js) los envíos se cuentan pero no se frenan.
 import { ID_PROPUESTA } from '../src/aceptacion.js';
 import {
-  LIMITE_ENVIOS_GRATIS, clienteDe, enviosDelMes, esPro, mesDe, mismoCliente, tieneCliente, usosPro
+  LIMITE_ENVIOS_GRATIS, LIMITE_PORTAFOLIOS_GRATIS, clienteDe, enviosDelMes, esPro, mesDe, mismoCliente, tieneCliente, usosPro
 } from '../src/planes.js';
 import { FieldValue, firestore, sesionDeLaSolicitud } from './_lib/firebase-admin.js';
 import { planesActivosPara } from './_lib/planes-activos.js';
@@ -22,14 +25,24 @@ const versionDelLink = (pro, payload) => (pro
   ? { marca: false, publicado: FieldValue.delete(), publicadoEn: FieldValue.delete() }
   : { marca: true, publicado: payload, publicadoEn: FieldValue.serverTimestamp() });
 
-const activarPortafolio = async ({ db, uid, id, pro }) => {
-  const ref = db().collection('portfolios').doc(id);
+const nombrePortafolio = d => String(d?.payload?.portafolio?.nombreInterno || d?.payload?.portafolio?.titulo || d?.title || '').trim().slice(0, 120) || 'otro portfolio';
+
+const activarPortafolio = async ({ db, uid, id, pro, reemplazar }) => {
+  const coleccion = db().collection('portfolios');
+  const ref = coleccion.doc(id);
+  // En Gratis: los otros portfolios del dueño que ya tienen el link activo.
+  const otrosActivos = pro ? [] : (await coleccion.where('userId', '==', uid).where('publico', '==', true).get())
+    .docs.filter(d => d.id !== id);
   await db().runTransaction(async tx => {
     const snap = await tx.get(ref);
     const doc = snap.exists ? snap.data() : null;
     if (!doc) throw new ErrorHttp(404, 'no-existe');
     if (doc.userId !== uid) throw new ErrorHttp(403, 'ajena');
     if (!pro && usosPro(doc.payload, { esPortafolio: true }).length) throw new ErrorHttp(403, 'diseno-pro');
+    if (!pro && doc.publico !== true && otrosActivos.length >= LIMITE_PORTAFOLIOS_GRATIS) {
+      if (!reemplazar) throw new ErrorHttp(403, 'limite-portafolios', nombrePortafolio(otrosActivos[0].data()));
+      for (const otro of otrosActivos) tx.update(otro.ref, { publico: false, updatedAt: FieldValue.serverTimestamp() });
+    }
     tx.update(ref, { publico: true, ...versionDelLink(pro, doc.payload || {}), updatedAt: FieldValue.serverTimestamp() });
   });
   return { primeraVez: false, usados: 0, pro };
@@ -52,7 +65,8 @@ export const crearHandler = ({ db, sesionDe, planesActivos, ahora = () => new Da
     if (esPortafolio) {
       const snapPlan = await refPlan.get();
       const pro = esPro(snapPlan.exists ? snapPlan.data() : {}, momento) || !conLimite;
-      return responder(res, 200, { ...await activarPortafolio({ db, uid, id: cuerpo.id, pro }), limite: null });
+      const resultado = await activarPortafolio({ db, uid, id: cuerpo.id, pro, reemplazar: cuerpo.reemplazar === true });
+      return responder(res, 200, { ...resultado, limite: pro ? null : LIMITE_PORTAFOLIOS_GRATIS });
     }
 
     const refPropuesta = db().collection('proposals').doc(cuerpo.id);

@@ -27,15 +27,17 @@ export const leerPost = (req, res) => {
 
 // Un error con estado HTTP para cortar una transacción y responder ese estado.
 export class ErrorHttp extends Error {
-  constructor(estado, codigo) {
+  // detalle (opcional): un dato para el mensaje de la app, por ejemplo qué portfolio está activo.
+  constructor(estado, codigo, detalle) {
     super(codigo);
     this.estado = estado;
     this.codigo = codigo;
+    this.detalle = detalle;
   }
 }
 
 export const fallar = (res, e) => {
-  if (e instanceof ErrorHttp) return responder(res, e.estado, { error: e.codigo });
+  if (e instanceof ErrorHttp) return responder(res, e.estado, { error: e.codigo, ...(e.detalle ? { detalle: e.detalle } : {}) });
   console.error(e);
   return responder(res, 500, { error: 'error-interno' });
 };

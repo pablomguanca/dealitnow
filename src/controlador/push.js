@@ -49,11 +49,10 @@ const suscripcionActual = async () => {
   return reg ? reg.pushManager.getSubscription() : null;
 };
 
-// Botón «Activar»: en Gratis ofrece Pro (los avisos son de Pro).
+// Botón «Activar»: también en Gratis, que recibe el aviso de aceptación (las visitas son de Pro).
 const prepararActivar = activar => {
-  activar.dataset.accion = ctx.restringido ? 'ofrecer-pro' : 'activar-push';
-  activar.dataset.motivo = 'seguimiento';
-  activar.textContent = ctx.restringido ? 'Activar con Pro' : 'Activar en este dispositivo';
+  activar.dataset.accion = 'activar-push';
+  activar.textContent = 'Activar en este dispositivo';
 };
 
 // App de Android: el permiso es el del sistema y el token se le pasa al servidor.
@@ -70,7 +69,7 @@ const pintarPushNativo = async mostrar => {
   if (permiso === 'denied') {
     return mostrar('Bloqueaste las notificaciones de Dealit. Activalas en Ajustes → Aplicaciones → Dealit → Notificaciones y volvé a esta pantalla.');
   }
-  if (permiso === 'granted' && !pushNativo.guardado() && !ctx.restringido && !apagadoAMano() && !reactivacionIntentada) {
+  if (permiso === 'granted' && !pushNativo.guardado() && !apagadoAMano() && !reactivacionIntentada) {
     reactivacionIntentada = true;
     try {
       await registrarTokenNativo('');
@@ -82,7 +81,7 @@ const pintarPushNativo = async mostrar => {
   const guardado = pushNativo.guardado();
   if (permiso === 'granted' && guardado) {
     mostrar(ctx.restringido
-      ? 'Activadas en este celular. Los avisos llegan con Dealit Pro.'
+      ? 'Activadas en este celular: te avisamos al instante cuando tu cliente acepta una propuesta. Con Dealit Pro, también cuando la abre.'
       : 'Activadas en este celular: te avisamos al instante cuando tu cliente abre o acepta una propuesta.', { activa: true });
     // Una vez por sesión se le recuerda al servidor (por si Google renovó el token).
     if (!sincronizada) {
@@ -93,7 +92,7 @@ const pintarPushNativo = async mostrar => {
   }
   prepararActivar($('#push-activar'));
   mostrar(ctx.restringido
-    ? 'Con Dealit Pro te avisamos al instante en el celular cuando tu cliente abre o acepta una propuesta.'
+    ? 'Te avisamos al instante en el celular cuando tu cliente acepta una propuesta. Con Dealit Pro, también cuando la abre.'
     : 'Te avisamos al instante en el celular cuando tu cliente abre o acepta una propuesta.', { conActivar: true });
 };
 
@@ -134,7 +133,7 @@ const pintarPush = async () => {
   const suscripcion = await suscripcionActual().catch(() => null);
   if (suscripcion && Notification.permission === 'granted') {
     mostrar(ctx.restringido
-      ? 'Activadas en este dispositivo. Los avisos llegan con Dealit Pro.'
+      ? 'Activadas en este dispositivo: te avisamos al instante cuando tu cliente acepta una propuesta. Con Dealit Pro, también cuando la abre.'
       : 'Activadas en este dispositivo: te avisamos al instante cuando tu cliente abre o acepta una propuesta.', { activa: true });
     // Una vez por sesión se le recuerda al servidor (por si la suscripción cambió).
     if (!sincronizada) {
@@ -145,7 +144,7 @@ const pintarPush = async () => {
   }
   prepararActivar(activar);
   mostrar(ctx.restringido
-    ? 'Con Dealit Pro te avisamos al instante, en el celular o la computadora, cuando tu cliente abre o acepta una propuesta.'
+    ? 'Te avisamos al instante, en el celular o la computadora, cuando tu cliente acepta una propuesta. Con Dealit Pro, también cuando la abre.'
     : `Te avisamos al instante cuando tu cliente abre o acepta una propuesta.${esIOS() || /Android/i.test(navigator.userAgent) ? ' Para que lleguen siempre, instalá Dealit en tu pantalla de inicio.' : ''}`, { conActivar: true });
 };
 

@@ -428,6 +428,24 @@ export const ofrecerPro = async (motivo = 'general', nombres = []) => {
   else if (eleccion) suscribir(eleccion);
 };
 
+// Gratis: ya hay otro portfolio con el link activo. Deja pasar el link a este (true), pasarse
+// a Pro o dejarlo como está.
+export const ofrecerCambioPortafolio = async (nombre = 'otro portfolio') => {
+  const venta = ventaPermitida();
+  const eleccion = await elegir({
+    titulo: 'En Gratis compartís un portfolio a la vez',
+    texto: `«${nombre}» ya tiene el link activo. Podés pasar el link a este portfolio: el de «${nombre}» deja de funcionar y lo podés volver a activar cuando quieras.${venta ? ' Con Pro compartís todos los que quieras.' : ''}`,
+    opciones: [
+      { valor: 'reemplazar', texto: 'Compartir este en su lugar', estilo: 'primario' },
+      ...opcionesPro(),
+      { valor: null, texto: 'Ahora no', estilo: 'texto' }
+    ]
+  });
+  if (eleccion === 'reemplazar') return true;
+  if (eleccion) suscribir(eleccion);
+  return false;
+};
+
 // Antes del último envío gratis del mes: avisa y deja elegir. true = enviar.
 export const confirmarUltimoEnvio = async () => {
   const eleccion = await elegir({

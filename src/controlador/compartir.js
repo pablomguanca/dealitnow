@@ -19,7 +19,7 @@ import { duplicarParaOtroCliente } from './propuestas.js';
 import { abrirRegistro } from './sesion.js';
 import { guardarVersion } from './versiones.js';
 import { llamarApi } from './api.js';
-import { ofrecerPro, restriccionesActivas, confirmarUltimoEnvio, enviosRestantes } from './plan.js';
+import { ofrecerPro, ofrecerCambioPortafolio, restriccionesActivas, confirmarUltimoEnvio, enviosRestantes } from './plan.js';
 import { usosPro } from '../planes.js';
 import { esAppNativa, compartirNativo } from '../nativo.js';
 
@@ -123,9 +123,19 @@ const abrirCompartirPortafolio = async () => {
   // El link lo activa el servidor (api/activar), que controla el diseño según el plan.
   await conEspera(ctx.ultimaEscritura);
   let congelado;
+  let reemplazado = '';
   try {
-    const { limite } = await llamarApi('/api/activar', { id: portafolioId, tipo: 'portafolio' });
-    congelado = !!limite;
+    let respuesta;
+    try {
+      respuesta = await llamarApi('/api/activar', { id: portafolioId, tipo: 'portafolio' });
+    } catch (e) {
+      // Gratis: ya hay otro portfolio con el link activo. Si elige pasarlo a este, se reintenta.
+      if (e.codigo !== 'limite-portafolios') throw e;
+      if (!await ofrecerCambioPortafolio(e.detalle || undefined)) return;
+      respuesta = await llamarApi('/api/activar', { id: portafolioId, tipo: 'portafolio', reemplazar: true });
+      reemplazado = e.detalle || 'el otro portfolio';
+    }
+    congelado = !!respuesta.limite;
   } catch (e) {
     if (e.codigo === 'diseno-pro') ofrecerPro('diseno', usosPro(estadoPortafolio, { esPortafolio: true }).map(u => u.nombre));
     else avisarError(navigator.onLine
@@ -141,7 +151,7 @@ const abrirCompartirPortafolio = async () => {
     nota: congelado
       ? 'Tu link muestra el portfolio tal como está ahora. Si después cambiás algo, tocá «Compartir» de nuevo para actualizarlo. Con Pro se actualiza solo.'
       : 'El link muestra siempre la última versión de este portfolio.',
-    avisos: []
+    avisos: reemplazado ? [`Desactivamos el link de «${reemplazado}».`] : []
   });
 };
 

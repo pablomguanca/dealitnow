@@ -100,13 +100,23 @@ describe('a quién se avisa', () => {
   };
   const aviso = { tipo: 'vista', id: ID, propuesta: propuesta(), urlApp: URL_APP };
 
-  it('a Pro sí, a Gratis no', async () => {
+  it('las visitas: a Pro sí, a Gratis no', async () => {
     const pro = avisador({ duenio: { tipo: 'pro', estado: 'activa', vence: '2099-01-01T00:00:00Z' } });
     expect(await pro.avisar(aviso)).toBe('enviado');
     expect(pro.enviados[0].para).toBe('duenio@estudio.com');
     const gratis = avisador({});
     expect(await gratis.avisar(aviso)).toBe('gratis');
     expect(gratis.enviados).toHaveLength(0);
+  });
+
+  it('la aceptación se avisa también en Gratis, con el pie de Gratis', async () => {
+    const gratis = avisador({});
+    expect(await gratis.avisar({ ...aviso, tipo: 'aceptada', aceptacion: { nombre: 'Ana', moneda: 'ARS', inicial: 1000 } })).toBe('enviado');
+    expect(gratis.enviados[0].asunto).toContain('Ana aceptó');
+    expect(gratis.enviados[0].html).toContain('Con Dealit Pro también te avisamos');
+    const pro = avisador({ duenio: { tipo: 'pro', estado: 'activa', vence: '2099-01-01T00:00:00Z' } });
+    await pro.avisar({ ...aviso, tipo: 'aceptada', aceptacion: { nombre: 'Ana' } });
+    expect(pro.enviados[0].html).toContain('porque tenés Dealit Pro');
   });
 
   it('con los planes apagados se avisa a todos', async () => {

@@ -1,6 +1,6 @@
 // POST /api/aceptar { id, nombre, acepto, opcionales } — el cliente acepta la propuesta.
 // Todo se valida acá (vigencia, opcionales, total): el navegador solo propone.
-// Después se avisa por email y por push al dueño, si es Pro (ver _lib/avisos.js).
+// Después se avisa por email y por push al dueño, también en Gratis (ver _lib/avisos.js).
 // Con cobro por transferencia, los datos bancarios del dueño (cobros/{uid}, que el cliente
 // no puede leer) se guardan con la aceptación y se le devuelven al cliente: recién ahí los ve.
 import { ID_PROPUESTA, validarAceptacion } from '../src/aceptacion.js';

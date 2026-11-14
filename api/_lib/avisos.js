@@ -1,5 +1,5 @@
-// Avisos al dueño (Pro): cuando su cliente abre la propuesta por primera vez y cuando la
-// acepta. Van por email con Resend (RESEND_API_KEY) y como notificación push a los
+// Avisos al dueño: cuando su cliente acepta la propuesta (a todos, también en Gratis: es el
+// momento «mi cliente aceptó») y, solo con Pro, cuando la abre. Van por email con Resend (RESEND_API_KEY) y como notificación push a los
 // dispositivos donde las activó (ver push.js). Sin las claves no se manda nada.
 // Un aviso que falla nunca rompe la visita ni la aceptación: solo queda en el log.
 import { esPro } from '../../src/planes.js';
@@ -16,7 +16,12 @@ const datosDe = propuesta => {
   };
 };
 
-const plantilla = ({ titular, parrafos, boton, url }) => `<!doctype html>
+const PIE = {
+  pro: 'Recibís este aviso porque tenés Dealit Pro.',
+  gratis: 'Recibís este aviso porque tu propuesta se aceptó en Dealit. Con Dealit Pro también te avisamos cada vez que tu cliente la abre.'
+};
+
+const plantilla = ({ titular, parrafos, boton, url, pie = PIE.pro }) => `<!doctype html>
 <html lang="es"><body style="margin:0;padding:24px;background:#F4F1EA;font-family:Arial,Helvetica,sans-serif;color:#1F1D1A">
   <div style="max-width:520px;margin:0 auto;background:#FFFFFF;border-radius:14px;padding:28px">
     <p style="margin:0 0 18px;font-size:13px;font-weight:700;letter-spacing:.08em;color:#B45309">DEALIT</p>
@@ -24,11 +29,11 @@ const plantilla = ({ titular, parrafos, boton, url }) => `<!doctype html>
     ${parrafos.map(p => `<p style="margin:0 0 12px;font-size:15px;line-height:1.55">${p}</p>`).join('')}
     <p style="margin:22px 0 0"><a href="${escapar(url)}" style="display:inline-block;padding:12px 20px;border-radius:999px;background:#1F1D1A;color:#FFFFFF;text-decoration:none;font-weight:700;font-size:14px">${boton}</a></p>
   </div>
-  <p style="max-width:520px;margin:14px auto 0;font-size:12px;color:#77716A;text-align:center">Recibís este aviso porque tenés Dealit Pro.</p>
+  <p style="max-width:520px;margin:14px auto 0;font-size:12px;color:#77716A;text-align:center">${pie}</p>
 </body></html>`;
 
 // Asunto, HTML y texto plano de cada aviso. Puro: se testea sin red.
-export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, urlApp }) => {
+export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, urlApp, pro = true }) => {
   const { titulo, cliente } = datosDe(propuesta);
   const url = `${urlApp}/propuesta/${encodeURIComponent(id)}`;
   if (tipo === 'aceptada') {
@@ -55,7 +60,8 @@ export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, urlApp }) => {
           'Escribile para arrancar mientras está entusiasmado.'
         ],
         boton: 'Ver la propuesta',
-        url
+        url,
+        pie: pro ? PIE.pro : PIE.gratis
       }),
       texto: `${lineas.join('\n')}\n\n${url}`
     };
@@ -117,10 +123,11 @@ export const enviarEmail = async ({ para, asunto, html, texto: plano }, { entorn
   return true;
 };
 
-// Avisa al dueño de la propuesta si le corresponde (Pro, o los planes apagados para su cuenta):
-// por email y por push a la vez. Devuelve cómo le fue al email.
+// Avisa al dueño de la propuesta si le corresponde, por email y por push a la vez: la
+// aceptación, a todos; las visitas, solo con Pro (o con los planes apagados para su cuenta). Devuelve cómo le fue al email.
 // Las revisitas van solo por push: un email cada vez que el cliente abre el link sería demasiado.
 const SOLO_PUSH = new Set(['revisita']);
+const PARA_TODOS = new Set(['aceptada']);
 
 export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarPush = enviarPushReal }) => async ({ tipo, id, propuesta, aceptacion, urlApp, vistas }) => {
   try {
@@ -132,8 +139,9 @@ export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarP
     ]);
     const email = snapUsuario.exists ? texto(snapUsuario.data()?.email).trim() : '';
     const plan = snapPlan.exists ? snapPlan.data() : {};
-    if (!esPro(plan) && planesActivos(email)) return 'gratis';
-    const datos = { tipo, id, propuesta, aceptacion, urlApp, vistas };
+    const pro = esPro(plan) || !planesActivos(email);
+    if (!pro && !PARA_TODOS.has(tipo)) return 'gratis';
+    const datos = { tipo, id, propuesta, aceptacion, urlApp, vistas, pro };
     const conEmail = email && !SOLO_PUSH.has(tipo);
     const [porEmail, porPush] = await Promise.allSettled([
       conEmail ? enviar({ para: email, ...contenidoAviso(datos) }) : Promise.resolve(null),

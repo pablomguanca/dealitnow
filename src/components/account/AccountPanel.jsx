@@ -36,6 +36,7 @@ export function AccountPanel() {
             <li>Solo {LIMITE_ENVIOS_GRATIS} propuestas enviadas por mes</li>
             <li>Tus propuestas vuelven a llevar la marca de Dealit</li>
             <li>Ya no te avisamos cuando tu cliente abre tu propuesta</li>
+            <li>Solo un portfolio con el link activo</li>
             <li>Los diseños y plantillas PRO no se pueden enviar</li>
           </ul>
           <div className="plan-botones">

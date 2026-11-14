@@ -34,7 +34,18 @@ const crearDb = (inicial = {}) => {
     datos[r.col][r.id] = merge || datos[r.col][r.id] ? unir(datos[r.col][r.id] || {}, cambios) : cambios;
   };
   const db = {
-    collection: col => ({ doc: id => ({ ...ref(col, id), get: async () => snap(ref(col, id)) }) }),
+    collection: col => {
+      // Consultas por igualdad (where encadenados), como las de api/activar.
+      const consulta = (filtros = []) => ({
+        where: (campo, op, valor) => consulta([...filtros, [campo, valor]]),
+        get: async () => ({
+          docs: Object.entries(datos[col] || {})
+            .filter(([, d]) => filtros.every(([campo, valor]) => d[campo] === valor))
+            .map(([id, d]) => ({ id, ref: ref(col, id), data: () => d }))
+        })
+      });
+      return { doc: id => ({ ...ref(col, id), get: async () => snap(ref(col, id)) }), where: (c, o, v) => consulta().where(c, o, v) };
+    },
     runTransaction: async fn => fn({
       get: async r => snap(r),
       update: (r, c) => escribir(r, c, true),
@@ -290,6 +301,47 @@ describe('POST /api/activar', () => {
     const ajeno = res();
     await activar(db, 'otro')(post({ id: ID, tipo: 'portafolio' }), ajeno);
     expect(ajeno.estado).toBe(403);
+  });
+
+  it('en Gratis, un portfolio con link activo a la vez: avisa cuál y deja pasarle el link', async () => {
+    const ID3 = 'AAAAAAAAAAAAAAAAAAA3';
+    const pf = (extra = {}) => ({ userId: 'duenio', publico: false, payload: { tema: { preset: 'lienzo-blanco' }, portafolio: { nombreInterno: 'Fotos', titulo: '' } }, ...extra });
+    const { db, datos } = crearDb({ portfolios: {
+      [ID]: pf({ publico: true }),
+      [ID2]: pf({ payload: { tema: { preset: 'lienzo-blanco' }, portafolio: { titulo: 'Web' } } }),
+      [ID3]: pf({ userId: 'otro', publico: true })
+    } });
+    const frenado = res();
+    await activar(db)(post({ id: ID2, tipo: 'portafolio' }), frenado);
+    expect(frenado.estado).toBe(403);
+    expect(frenado.cuerpo).toEqual({ error: 'limite-portafolios', detalle: 'Fotos' });
+    expect(datos.portfolios[ID2].publico).toBe(false);
+    // El que ya está activo se puede volver a compartir (actualizar).
+    const mismo = res();
+    await activar(db)(post({ id: ID, tipo: 'portafolio' }), mismo);
+    expect(mismo.estado).toBe(200);
+    expect(mismo.cuerpo.limite).toBe(1);
+    const cambio = res();
+    await activar(db)(post({ id: ID2, tipo: 'portafolio', reemplazar: true }), cambio);
+    expect(cambio.estado).toBe(200);
+    expect(datos.portfolios[ID].publico).toBe(false);
+    expect(datos.portfolios[ID2].publico).toBe(true);
+    expect(datos.portfolios[ID3].publico).toBe(true); // el de otra cuenta no se toca
+  });
+
+  it('con Pro, portfolios activos sin límite', async () => {
+    const { db, datos } = crearDb({
+      planes: { duenio: { tipo: 'pro', estado: 'activa', vence: '2099-01-01T00:00:00Z' } },
+      portfolios: {
+        [ID]: { userId: 'duenio', publico: true, payload: { tema: { preset: 'lienzo-blanco' } } },
+        [ID2]: { userId: 'duenio', publico: false, payload: { tema: { preset: 'lienzo-blanco' } } }
+      }
+    });
+    const r = res();
+    await activar(db)(post({ id: ID2, tipo: 'portafolio' }), r);
+    expect(r.estado).toBe(200);
+    expect(r.cuerpo.limite).toBeNull();
+    expect(datos.portfolios[ID].publico).toBe(true);
   });
 
   it('pide sesión y no deja activar propuestas ajenas', async () => {
