@@ -69,7 +69,7 @@ const armar = async ({ cuerpo, sesion, db, planesActivos, generar, momento }, re
     mensaje: mensajeIA(dictado, preciosDeReferencia(historial)),
     esquema: esquemaIA(temas)
   });
-  const { contenido, avisos } = propuestaDesdeIA(respuesta, { temas });
+  const { contenido, avisos } = propuestaDesdeIA(respuesta, { temas, dictado });
   if (!contenido.servicios.length) throw new ErrorHttp(422, 'ia-sin-servicios');
 
   await refPlan.set({ ia: { [mes]: usados + 1 } }, { merge: true });
@@ -102,7 +102,7 @@ const editar = async ({ cuerpo, sesion, db, planesActivos, generar, momento }, r
     mensaje: mensajeEdicion(pedido, actual),
     esquema: esquemaEdicion()
   });
-  const resultado = cambiosDesdeIA(respuesta, actual);
+  const resultado = cambiosDesdeIA(respuesta, actual, { pedido });
 
   // La IA ya trabajó (y costó): cuenta aunque no haya encontrado qué cambiar.
   await refPlan.set({ iaEdicion: { [mes]: usados + 1 } }, { merge: true });

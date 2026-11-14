@@ -5,7 +5,7 @@
 // el servidor y la app. Ver «Planes» en CLAUDE.md.
 
 import { MODALIDADES } from './modelo.js';
-import { MONEDAS_IA, corto, lineasDe, nuevoId, numero, plata } from './ia.js';
+import { MONEDAS_IA, corto, lineasDe, monedaDictada, nuevoId, numero, plata } from './ia.js';
 
 export const LIMITE_EDICION_GRATIS = 5; // ediciones con IA por mes en Gratis
 export const LIMITE_EDICION_PRO = 300; // tope de uso razonable en Pro (evita abusos)
@@ -166,7 +166,7 @@ ${datos.length ? `\n# EMISOR\n${datos.join('\n')}\n` : ''}
 - Si pide un porcentaje sobre los precios, aplicalo a cada precio y redondeá a un número prolijo (sin centavos).
 - Monto total: si los precios van por ítem, «montoGlobal» queda en 0 (la app suma los ítems). No repitas ahí la suma.
 - Pagos: siempre suman 100.
-- Moneda: si pide cambiarla, no conviertas los precios salvo que dé el tipo de cambio; agregá un aviso para que los revise.
+- Moneda: dejala como está salvo que el pedido la nombre. Si pide cambiarla, no conviertas los precios salvo que dé el tipo de cambio; agregá un aviso para que los revise.
 - No inventes datos del cliente, fechas ni datos concretos que no se dijeron.
 - Escribí en español rioplatense con voseo, cálido y profesional, como el resto de la propuesta. Si pide mejorar o acortar un texto, mantené lo que dice y mejorá cómo lo dice.
 - El diseño, los colores, el logo, las fotos, el video y los datos del emisor no se cambian desde acá. Si el pedido es sobre eso, o no se entiende, no mandes cambios y explicá en «respuesta» qué puede hacer desde el editor.
@@ -190,7 +190,7 @@ const sumaDe = (servicios, mensual) => servicios
   .filter(s => !s.opcional && s.modalidad !== 'incluido' && (s.modalidad === 'mensual') === mensual)
   .reduce((t, s) => t + s.cantidad * s.precio, 0);
 
-export const cambiosDesdeIA = (r, actual) => {
+export const cambiosDesdeIA = (r, actual, { pedido = null } = {}) => {
   const cambios = {};
   const avisos = (Array.isArray(r?.avisos) ? r.avisos : []).map(a => corto(a, 200)).filter(Boolean).slice(0, 3);
   const pedidos = r?.cambios && typeof r.cambios === 'object' ? r.cambios : {};
@@ -217,7 +217,11 @@ export const cambiosDesdeIA = (r, actual) => {
       avisos.push('Los pagos que propuso la IA no sumaban 100 %: los dejamos como estaban.');
       continue;
     }
-    if (seccion === 'inversion' && !MONEDAS_IA.includes(valor.moneda)) valor.moneda = actual.inversion.moneda;
+    if (seccion === 'inversion') {
+      // La moneda solo cambia si el pedido la nombra (pesos, dólares o euros).
+      const pideMoneda = pedido === null || monedaDictada(pedido) || /\bpesos?\b|\bars\b/i.test(pedido);
+      if (!MONEDAS_IA.includes(valor.moneda) || !pideMoneda) valor.moneda = actual.inversion.moneda;
+    }
     if (!igual(valor, actual[seccion])) cambios[seccion] = valor;
   }
 

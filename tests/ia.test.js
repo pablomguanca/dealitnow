@@ -347,3 +347,21 @@ describe('POST /api/ia-propuesta con accion editar', () => {
     expect(llamada).toBe(false);
   });
 });
+
+describe('moneda de la IA', () => {
+  it('sin nombrar otra moneda, la propuesta va en pesos aunque el modelo elija dólares', () => {
+    const enPesos = propuestaDesdeIA(respuestaIA({ moneda: 'USD' }), { dictado: 'Web para un café, 450 mil' });
+    expect(enPesos.contenido.inversion.moneda).toBe('ARS');
+    const enDolares = propuestaDesdeIA(respuestaIA({ moneda: 'USD' }), { dictado: 'Web para un café, 800 dólares' });
+    expect(enDolares.contenido.inversion.moneda).toBe('USD');
+    const nombroEuros = propuestaDesdeIA(respuestaIA({ moneda: 'ARS' }), { dictado: 'Son 500 euros' });
+    expect(nombroEuros.contenido.inversion.moneda).toBe('EUR');
+  });
+
+  it('al editar, la moneda solo cambia si el pedido la nombra', () => {
+    const actual = contenidoParaEditar(PROPUESTA);
+    const r = { cambios: { inversion: { ...actual.inversion, moneda: 'USD', descuento: 5 } } };
+    expect(cambiosDesdeIA(r, actual, { pedido: 'Hacé un 5 % de descuento' }).cambios.inversion).toMatchObject({ moneda: 'ARS', descuento: 5 });
+    expect(cambiosDesdeIA(r, actual, { pedido: 'Pasala a dólares con 5 % de descuento' }).cambios.inversion.moneda).toBe('USD');
+  });
+});

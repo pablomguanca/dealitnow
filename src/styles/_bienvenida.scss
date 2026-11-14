@@ -17,7 +17,7 @@ body.bienvenida-activa {
     radial-gradient(40rem 22rem at 50% -8%, rgba(138, 219, 171, 0.16), transparent 60%),
     linear-gradient(180deg, #232328 0%, #1B1B20 55%, #141418 100%);
   color: #E7EEEC;
-  animation: aparecerSuave 0.3s ease both;
+  // Sin fundido del fondo (se vería un instante la app de abajo); el contenido sí se anima.
 
   &[hidden] {
     display: none;

@@ -10,6 +10,15 @@ export const TEXTO_MIN = 15;
 export const TEXTO_MAX = 4000;
 export const MONEDAS_IA = ['ARS', 'USD', 'EUR'];
 
+// La moneda que se nombró en lo dictado, o null. Sin una mención clara, la propuesta va en
+// pesos argentinos (ARS, con el símbolo $): el servidor lo asegura aunque el modelo elija otra.
+export const monedaDictada = (texto = '') => {
+  const t = String(texto).toLowerCase();
+  if (/\beuros?\b|€|\beur\b/.test(t)) return 'EUR';
+  if (/d[oó]lar|\busd\b|u\$s|us\$|\bverdes\b/.test(t)) return 'USD';
+  return null;
+};
+
 const MESES_IA = v => Math.max(0, Number(v) || 0);
 export const usosIADelMes = (plan, mes) => MESES_IA(plan?.ia?.[mes]);
 
@@ -89,7 +98,7 @@ Sos el motor comercial de Dealit, una app argentina para armar propuestas comerc
 
 # CONTEXTO DEL EMISOR
 ${datosEmisor.length ? datosEmisor.join('\n') : '- Sin datos cargados: deducí el rubro de lo que cuenta.'}
-- Moneda predeterminada: ARS (pesos argentinos), salvo que mencione dólares (USD) o euros (EUR), o que el emisor esté claramente fuera de Argentina (entonces USD).
+- Moneda: SIEMPRE ARS (pesos argentinos, se muestran con el símbolo $), aunque el emisor esté fuera de Argentina o sus precios anteriores estén en otra moneda. Solo si en el dictado dice explícitamente dólares (USD) o euros (EUR), usá esa moneda.
 
 # CÓMO ESCRIBIR
 - Español rioplatense con voseo («vas a recibir», «aceptá»), cálido y profesional, sin exagerar ni prometer lo que no se dijo.
@@ -167,7 +176,11 @@ export const lineasDe = (v, maxLinea, maxLineas) => (Array.isArray(v) ? v : Stri
 let secuencia = 0;
 export const nuevoId = () => `ia${Date.now().toString(36)}${(secuencia++).toString(36)}`;
 
-export const propuestaDesdeIA = (r, { temas = temasPermitidos(false) } = {}) => {
+export const propuestaDesdeIA = (r, { temas = temasPermitidos(false), dictado = null } = {}) => {
+  // Con el dictado a mano, otra moneda solo si se nombró; si no, pesos.
+  const nombrada = dictado === null ? null : monedaDictada(dictado);
+  const monedaIA = MONEDAS_IA.includes(r?.moneda) ? r.moneda : 'ARS';
+  const moneda = dictado === null || monedaIA === nombrada ? monedaIA : (nombrada || 'ARS');
   const servicios = (r?.servicios || []).slice(0, 20).map(s => ({
     id: nuevoId(),
     nombre: corto(s.nombre, 200),
@@ -218,7 +231,7 @@ export const propuestaDesdeIA = (r, { temas = temasPermitidos(false) } = {}) => 
         .map(f => ({ id: nuevoId(), pregunta: corto(f?.pregunta, 300), respuesta: corto(f?.respuesta, 1000) }))
         .filter(f => f.pregunta && f.respuesta),
       inversion: {
-        moneda: MONEDAS_IA.includes(r?.moneda) ? r.moneda : 'ARS',
+        moneda,
         montoGlobal,
         abonoMensual,
         descuento: numero(r?.descuento, 0, 100),

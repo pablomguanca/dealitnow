@@ -4,6 +4,7 @@
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { suscribirDialogo, dialogoActual } from '../../controlador/avisos.js';
+import { IconoIA } from '../IconoIA.jsx';
 
 export function DialogoAceptar() {
   return (
@@ -138,11 +139,12 @@ export function DialogoConfirmacion() {
               <button
                 key={`${opcion.valor}-${i}`}
                 type="button"
-                className={CLASES_OPCION[opcion.estilo] || CLASES_OPCION.secundario}
+                className={`${CLASES_OPCION[opcion.estilo] || CLASES_OPCION.secundario}${opcion.icono === 'ia' ? ' boton--ia' : ''}`}
                 data-enfocar={i === enfocada ? '' : undefined}
                 onClick={() => solicitud.responder(opcion.valor)}
               >
                 {opcion.texto}
+                {opcion.icono === 'ia' && <IconoIA />}
               </button>
             ))}
           </div>

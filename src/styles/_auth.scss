@@ -10,7 +10,8 @@
   padding: 1rem;
   padding-top: calc(1rem + env(safe-area-inset-top, 0px));
   padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-  animation: authEntrar 0.4s var(--ease-out-expo);
+  // Sin fundido del fondo: si entrara transparente, se vería un instante la app de abajo.
+  // Solo la tarjeta entra animada (authCard).
 
   &[hidden] {
     display: none;

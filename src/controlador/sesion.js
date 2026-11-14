@@ -36,6 +36,16 @@ let guardadoParaRegistro = false;
 let authModo = 'login';
 let entrar = () => { };
 
+// Si recarga con el login abierto, vuelve al login (y no a la bienvenida o al editor).
+const CLAVE_LOGIN = 'dealit-login-abierto';
+const recordarLogin = abierto => {
+  try {
+    if (abierto) sessionStorage.setItem(CLAVE_LOGIN, '1');
+    else sessionStorage.removeItem(CLAVE_LOGIN);
+  } catch { }
+};
+const loginRecordado = () => { try { return sessionStorage.getItem(CLAVE_LOGIN) === '1'; } catch { return false; } };
+
 const MOTIVOS_REGISTRO = {
   compartir: 'Creá tu cuenta gratis para compartir tu propuesta. Lo que armaste se guarda en tu cuenta.',
   pdf: 'Creá tu cuenta gratis para descargar tu propuesta en PDF. Lo que armaste se guarda en tu cuenta.',
@@ -58,12 +68,14 @@ export const abrirRegistro = motivo => {
   elMotivo.hidden = !MOTIVOS_REGISTRO[motivo];
   $('#auth-cerrar').hidden = !ctx.invitado;
   $('#auth-pantalla').hidden = false;
+  recordarLogin(true);
   $('#auth-google').focus();
 };
 
 const cerrarRegistro = () => {
   if (!ctx.invitado) return;
   $('#auth-pantalla').hidden = true;
+  recordarLogin(false);
   try {
     sessionStorage.removeItem(`${CLAVE}:continuar`);
     // Si solo se guardó para el registro y al final no se registró, no queda nada guardado.
@@ -250,11 +262,14 @@ const instalarPantallaAuth = () => {
 const iniciarInvitado = () => {
   ctx.invitado = true;
   document.body.classList.add('invitado');
-  document.body.classList.remove('auth-cargando', 'auth-activo');
-  $('#auth-pantalla').hidden = true;
-  if (invitadoIniciado) return;
+  document.body.classList.remove('auth-activo');
+  const pideIngresar = new URLSearchParams(location.search).has('ingresar') || loginRecordado();
+  if (!pideIngresar) $('#auth-pantalla').hidden = true;
+  if (invitadoIniciado) {
+    document.body.classList.remove('auth-cargando');
+    return;
+  }
   invitadoIniciado = true;
-  const pideIngresar = new URLSearchParams(location.search).has('ingresar');
   if (location.search) irRuta('/', { reemplazar: true });
   ctx.portafolios = cargarPortafoliosLocales();
   const guardada = cargarGuardado();
@@ -269,6 +284,9 @@ const iniciarInvitado = () => {
   // Primera vez y sin nada armado: bienvenida para elegir su rubro.
   if (!guardada && !pideIngresar) mostrarBienvenida();
   if (pideIngresar) abrirRegistro('ingresar');
+  // Recién con el login o la bienvenida ya puestos se saca la pantalla de carga: así no se
+  // ve un instante el editor de abajo.
+  document.body.classList.remove('auth-cargando');
 };
 
 // Con la sesión ya iniciada, guardarAhora apuntaría a la cuenta: lo pendiente del
@@ -342,7 +360,8 @@ export const cerrarSesion = async () => {
   limpiarEstadoMemoria();
   limpiarAlmacenamientoLocal();
   await AteneaDB.auth.signOut();
-  location.replace('/');
+  // Vuelve directo al login (sin pasar por la bienvenida de quien entra por primera vez).
+  location.replace('/?ingresar');
 };
 
 // Sin Firebase: un solo editor que guarda en el navegador, como antes de las cuentas.
@@ -434,6 +453,7 @@ export const arrancarSesion = () => {
 
   entrar = async user => {
     ctx.cerrandoSesion = false;
+    recordarLogin(false);
     ocultarBienvenida();
     $('#auth-verificar').hidden = true;
     $('#auth-ingreso').hidden = false;

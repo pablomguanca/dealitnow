@@ -178,7 +178,7 @@ export const metricasHTML = (propuestas = [], { conSeguimiento = true } = {}) =>
     conSeguimiento
       ? metricaHTML(abiertasSemana, 'Abiertas esta semana', 'Propuestas que tus clientes miraron')
       : metricaBloqueadaHTML('Abiertas esta semana', 'Mirá quién abrió cada propuesta y cuándo'),
-    metricaHTML(delMes.length, 'Aceptadas este mes', tasa === null ? 'Todavía no enviaste ninguna' : `${tasa} % de las que enviaste`),
+    metricaHTML(delMes.length, 'Aceptadas este mes', tasa === null ? 'Todavía no enviaste ninguna' : `${tasa} % de todas las que enviaste`),
     metricaHTML(montoPrincipal || '—', 'Aceptado este mes', otrosMontos.length ? `y ${otrosMontos.join(' · ')}` : 'Total inicial aceptado', true)
   ].join('');
 };

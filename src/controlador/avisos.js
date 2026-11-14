@@ -20,7 +20,7 @@ export const suscribirDialogo = fn => {
 };
 export const dialogoActual = () => solicitud;
 
-// opciones: [{ valor, texto, estilo: 'primario' | 'secundario' | 'texto' | 'peligro' }].
+// opciones: [{ valor, texto, estilo: 'primario' | 'secundario' | 'texto' | 'peligro', icono?: 'ia' }].
 // Resuelve con el valor elegido, o null si se cierra sin elegir (Esc o «Cancelar»).
 export const elegir = ({ titulo, texto, opciones }) => new Promise(resolver => {
   solicitud?.responder(null);
