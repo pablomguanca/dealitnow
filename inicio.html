@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dealit | Dictá tu propuesta, mandala como link y cobrala desde el celular</title>
+<meta name="description" content="Dictale la propuesta a la IA desde el celular, mandala como link, enterate cuando tu cliente la abre y cerrá con aceptación online y cobro con Mercado Pago. Gratis para empezar.">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dealit: de la reunión a la propuesta aceptada, desde el celular">
+<meta property="og:description" content="Dictá, compartí como link y cobrá. Sin adjuntos pesados, sin «visto», sin «después te transfiero».">
+<meta name="theme-color" content="#06060A">
+<link rel="icon" type="image/png" sizes="48x48" href="/iconos/favicon-48.png">
+<link rel="apple-touch-icon" href="/iconos/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="module" src="/src/landing/inicio.js"></script>
+</head>
+<body class="ld">
+
+<!-- Cabecera: solo la marca y el botón. Nada de menú que distraiga. -->
+<header class="ld-cabecera" id="cabecera">
+  <a class="ld-marca" href="/inicio" aria-label="Dealit, inicio">
+    <img src="/iconos/icono-192.png" alt="" width="32" height="32">
+    <span>Dealit</span>
+  </a>
+  <a class="ld-boton ld-boton--chico" href="/" data-cta="cabecera">Empezar gratis</a>
+</header>
+
+<main>
+
+  <!-- ============ 1. HERO ============ -->
+  <section class="ld-hero" aria-labelledby="hero-titulo">
+    <div class="ld-hero__brillo" aria-hidden="true"></div>
+    <div class="ld-contenedor ld-hero__grilla">
+      <div class="ld-hero__texto">
+        <p class="ld-badge ld-aparece">
+          <span class="ld-badge__punto" aria-hidden="true"></span>
+          Freelancers, agencias y oficios: si pasás presupuestos, es para vos
+        </p>
+        <h1 class="ld-hero__titulo ld-aparece" id="hero-titulo">
+          Tu propuesta lista en segundos. Vos, en lo tuyo.
+          <span class="ld-acento">Dictala, mandala y cobrala desde el celular.</span>
+        </h1>
+        <p class="ld-hero__bajada ld-aparece">
+          Le hablás al micrófono y la IA arma una propuesta que da ganas de firmar. Te avisa cuando tu cliente la abre,
+          la acepta con un toque y te paga ahí mismo con Mercado Pago. Menos tiempo armando presupuestos, más tiempo trabajando.
+        </p>
+        <div class="ld-hero__accion ld-aparece">
+          <a class="ld-boton ld-boton--grande" href="/" data-cta="hero">
+            Crear mi primera propuesta gratis
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" /></svg>
+          </a>
+          <p class="ld-microcopy">Sin tarjeta de crédito · Sin descargar nada · Probala sin cuenta</p>
+        </div>
+        <ul class="ld-hero__pruebas ld-aparece" aria-label="Lo que incluye">
+          <li><strong>Voz → propuesta</strong> con IA</li>
+          <li><strong>Link</strong> (y PDF si lo piden)</li>
+          <li><strong>Aceptación</strong> online</li>
+        </ul>
+      </div>
+
+      <!-- Celular animado: dictado → propuesta → aviso de apertura → aceptada -->
+      <div class="ld-hero__visual ld-aparece" aria-hidden="true">
+        <div class="ld-celular" id="celular" data-paso="0">
+          <div class="ld-celular__isla"></div>
+
+          <div class="ld-pantalla ld-pantalla--dictado">
+            <p class="ld-pantalla__etiqueta">Armá tu propuesta con IA</p>
+            <div class="ld-mic">
+              <span class="ld-mic__aro"></span>
+              <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3" /><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" /></svg>
+            </div>
+            <div class="ld-onda">
+              <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+            </div>
+            <p class="ld-dictado" id="dictado"></p>
+          </div>
+
+          <div class="ld-pantalla ld-pantalla--propuesta">
+            <div class="ld-doc">
+              <div class="ld-doc__cabeza">
+                <span class="ld-doc__logo">EN</span>
+                <div>
+                  <p class="ld-doc__para">Propuesta para Juan Pérez</p>
+                  <p class="ld-doc__titulo">Rediseño de marca + web</p>
+                </div>
+              </div>
+              <ul class="ld-doc__items">
+                <li><span>Identidad visual</span><b>$ 420.000</b></li>
+                <li><span>Sitio web de 5 secciones</span><b>$ 680.000</b></li>
+                <li class="ld-doc__opcional"><span><em>+</em> Kit para redes</span><b>$ 150.000</b></li>
+              </ul>
+              <div class="ld-doc__total"><span>Total</span><b>$ 1.100.000</b></div>
+              <span class="ld-doc__aceptar">Aceptar propuesta</span>
+            </div>
+          </div>
+
+          <div class="ld-push ld-push--abrio">
+            <img src="/iconos/icono-192.png" alt="" width="28" height="28">
+            <div>
+              <p class="ld-push__app">Dealit · ahora</p>
+              <p class="ld-push__texto">🔥 <b>Juan Pérez</b> acaba de abrir tu propuesta</p>
+            </div>
+          </div>
+          <div class="ld-push ld-push--acepto">
+            <img src="/iconos/icono-192.png" alt="" width="28" height="28">
+            <div>
+              <p class="ld-push__app">Dealit · ahora</p>
+              <p class="ld-push__texto">✅ <b>Juan Pérez aceptó</b> · $ 1.250.000 con el kit para redes</p>
+            </div>
+          </div>
+        </div>
+        <ol class="ld-pasitos" id="pasitos">
+          <li class="activo">Dictás</li>
+          <li>La IA la arma</li>
+          <li>La abre</li>
+          <li>Acepta</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2. EL CEMENTERIO DE LOS PDFs ============ -->
+  <section class="ld-seccion ld-problema" aria-labelledby="problema-titulo">
+    <div class="ld-contenedor">
+      <p class="ld-sobretitulo ld-aparece">El cementerio de los PDFs</p>
+      <h2 class="ld-titulo ld-aparece" id="problema-titulo">Las ventas no se pierden en la reunión.<br>Se pierden <span class="ld-tachado">después</span>.</h2>
+      <p class="ld-bajada ld-aparece">Tres cosas se comen tu tiempo y tus cierres todos los meses. Ninguna tiene que ver con lo bien que hacés tu trabajo.</p>
+
+      <div class="ld-asesinos">
+        <article class="ld-asesino ld-aparece">
+          <span class="ld-asesino__num">01</span>
+          <h3>El enfriamiento</h3>
+          <p>Salís de la reunión con el cliente listo. Llegás a la compu cuatro horas después, armás el presupuesto a la noche… y para entonces ya habló con tu competencia.</p>
+          <p class="ld-asesino__ahora"><b>Con Dealit:</b> la dictás en el taxi y la mandás antes de llegar a la esquina.</p>
+        </article>
+        <article class="ld-asesino ld-aparece">
+          <span class="ld-asesino__num">02</span>
+          <h3>La ceguera total</h3>
+          <p>Mandás el PDF por WhatsApp y te clavan el visto. ¿Le pareció caro? ¿No lo entendió? ¿Ni lo abrió? No tenés idea, y no sabés si escribirle o esperar.</p>
+          <p class="ld-asesino__ahora"><b>Con Dealit:</b> te enterás cuándo la abre y cada vez que vuelve a mirarla.</p>
+        </article>
+        <article class="ld-asesino ld-aparece">
+          <span class="ld-asesino__num">03</span>
+          <h3>La fricción de pago</h3>
+          <p>«Pasame tu CBU y te transfiero después.» Ese «después» es exactamente donde se mueren los cierres que ya tenías ganados.</p>
+          <p class="ld-asesino__ahora"><b>Con Dealit:</b> acepta y paga en la misma pantalla: el anticipo, el total o lo que hayan acordado.</p>
+        </article>
+      </div>
+
+      <div class="ld-versus ld-aparece">
+        <div class="ld-versus__col ld-versus__col--viejo">
+          <h3>El método viejo</h3>
+          <ul>
+            <li>Word o Canva en la compu</li>
+            <li>PDF adjunto de 8 MB</li>
+            <li>«Visto» y silencio</li>
+            <li>«Lo charlo y te aviso»</li>
+            <li>Perseguir la transferencia</li>
+          </ul>
+        </div>
+        <div class="ld-versus__col ld-versus__col--nuevo">
+          <h3>El método Dealit</h3>
+          <ul>
+            <li>Dictada desde el celular</li>
+            <li>Un link que se ve impecable (y en PDF, si lo piden)</li>
+            <li>Aviso en vivo cuando la abre</li>
+            <li>Acepta con un toque y suma opcionales</li>
+            <li>Paga ahí mismo con Mercado Pago</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 3. CÓMO FUNCIONA ============ -->
+  <section class="ld-seccion ld-pasos" aria-labelledby="pasos-titulo">
+    <div class="ld-contenedor">
+      <p class="ld-sobretitulo ld-aparece">Cómo funciona</p>
+      <h2 class="ld-titulo ld-aparece" id="pasos-titulo">Tres pasos. Cero fricción.</h2>
+
+      <ol class="ld-pasos__lista">
+        <li class="ld-paso ld-aparece">
+          <div class="ld-paso__ui ld-paso__ui--voz" aria-hidden="true">
+            <div class="ld-onda ld-onda--chica"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            <p>«Rediseño de marca para una cafetería, logo y papelería, 420 lucas, entrega en 3 semanas…»</p>
+          </div>
+          <span class="ld-paso__num">Paso 1</span>
+          <h3>Dictala como si le hablaras a un socio</h3>
+          <p>Tocás el micrófono y contás qué vas a hacer y cuánto sale. La IA ordena el alcance, los entregables, los plazos y el tono. Después la retocás a mano o le pedís cambios: «Editar con IA» te muestra cada cambio antes de aplicarlo.</p>
+        </li>
+        <li class="ld-paso ld-aparece">
+          <div class="ld-paso__ui ld-paso__ui--link" aria-hidden="true">
+            <span class="ld-paso__burbuja">Te paso la propuesta 👇</span>
+            <span class="ld-paso__burbuja ld-paso__burbuja--link"><b>dealit.com.ar/p/…</b><small>Rediseño de marca · Estudio Norte</small></span>
+          </div>
+          <span class="ld-paso__num">Paso 2</span>
+          <h3>Mandá un link que impresiona</h3>
+          <p>Nada de adjuntos pesados. Tu cliente abre una propuesta web con tu logo y tus colores, pensada para el celular, y puede sumar opcionales él mismo. Si la quiere en papel, la descarga en PDF con un toque. Parecés una empresa grande aunque seas vos solo.</p>
+        </li>
+        <li class="ld-paso ld-aparece">
+          <div class="ld-paso__ui ld-paso__ui--cobro" aria-hidden="true">
+            <span class="ld-paso__ok">✓ Aceptada</span>
+            <span class="ld-paso__mp">Pagar con <img src="/marcas/mercadopago-horizontal.svg" alt="Mercado Pago" width="96" height="39" loading="lazy"></span>
+          </div>
+          <span class="ld-paso__num">Paso 3</span>
+          <h3>Enterate cuándo la mira y cobrá en el acto</h3>
+          <p>Te llega un aviso cuando la abre y cuando vuelve a mirarla. Acepta con un toque, queda la constancia para los dos y te paga con Mercado Pago (el anticipo, el total o lo que hayan acordado) o recibe tus datos para transferir.</p>
+        </li>
+      </ol>
+
+      <div class="ld-centro ld-aparece">
+        <a class="ld-boton" href="/" data-cta="pasos">Dictar mi primera propuesta</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 4. BENTO ============ -->
+  <section class="ld-seccion ld-bento-seccion" aria-labelledby="bento-titulo">
+    <div class="ld-contenedor">
+      <p class="ld-sobretitulo ld-aparece">Ventajas injustas</p>
+      <h2 class="ld-titulo ld-aparece" id="bento-titulo">Todo lo que tu PDF nunca te va a decir.</h2>
+
+      <div class="ld-bento">
+        <article class="ld-bento__celda ld-bento__celda--radar ld-aparece">
+          <div class="ld-radar" aria-hidden="true">
+            <span class="ld-radar__barrido"></span>
+            <span class="ld-radar__punto" style="--x: 64%; --y: 30%"></span>
+            <span class="ld-radar__punto" style="--x: 30%; --y: 62%"></span>
+          </div>
+          <div class="ld-bento__texto">
+            <span class="ld-etiqueta">Pro</span>
+            <h3>Radar de visitas en vivo</h3>
+            <p>Cuántas veces la abrió y cuándo volvió a mirarla, con un aviso en el celular cada vez. Si la está mirando por cuarta vez a las 23 h, está decidiendo: es el momento de llamar.</p>
+            <ul class="ld-visitas">
+              <li><span>Veces que la abrió</span><b>4</b></li>
+              <li><span>Última vez</span><b>Hace 3 min</b></li>
+              <li><span>Tus clientes abren más</span><b>De noche</b></li>
+            </ul>
+          </div>
+        </article>
+
+        <article class="ld-bento__celda ld-bento__celda--cobro ld-aparece">
+          <img class="ld-mp" src="/marcas/mercadopago-horizontal.svg" alt="Mercado Pago" width="140" height="36" loading="lazy">
+          <h3>Cobro integrado, sin excusas</h3>
+          <p>Vinculás tu Mercado Pago y el cliente paga apenas acepta (el anticipo, el total o lo que hayan acordado), con las ganas de arrancar al 100%. ¿Preferís transferencia? Tus datos le llegan recién cuando acepta, nunca antes.</p>
+        </article>
+
+        <article class="ld-bento__celda ld-bento__celda--movil ld-aparece">
+          <span class="ld-bento__icono" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5" /><path d="M10.5 18.5h3" /></svg>
+          </span>
+          <h3>Tu oficina es tu teléfono</h3>
+          <p>Armás, mandás y seguís todo desde el celular: en la web o en la app de Android. Cerrás tratos saliendo de un café o entre dos reuniones.</p>
+        </article>
+
+        <article class="ld-bento__celda ld-bento__celda--diseno ld-aparece">
+          <div class="ld-muestras" aria-hidden="true">
+            <span style="--c1: #0f172a; --c2: #00C896"></span>
+            <span style="--c1: #fef3c7; --c2: #b45309"></span>
+            <span style="--c1: #1e1b4b; --c2: #a78bfa"></span>
+            <span style="--c1: #fff1f2; --c2: #e11d48"></span>
+          </div>
+          <h3>Un diseño que justifica precios altos</h3>
+          <p>Si tu propuesta parece hecha en Word, te van a pedir descuento. Plantillas por rubro, tu logo y tus colores: cobrás lo que valés.</p>
+        </article>
+
+        <article class="ld-bento__celda ld-bento__celda--opcionales ld-aparece">
+          <span class="ld-bento__icono" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></svg>
+          </span>
+          <h3>Opcionales que suben el ticket</h3>
+          <p>Sumá extras y dejá que el cliente los agregue con un toque. El total se recalcula solo, y la venta crece sin que tengas que pedirlo.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 5. PRUEBA SOCIAL + ROI ============ -->
+  <section class="ld-seccion ld-social" aria-labelledby="social-titulo">
+    <div class="ld-contenedor">
+      <p class="ld-sobretitulo ld-aparece">Los que ya dejaron el PDF</p>
+      <h2 class="ld-titulo ld-aparece" id="social-titulo">Menos horas armando. Más «dale, arrancamos».</h2>
+
+      <!--
+        TESTIMONIOS DE EJEMPLO: no son reales. Reemplazarlos por testimonios de usuarios
+        (con su permiso) y sacar la etiqueta «Ejemplo» antes de publicar esta página.
+      -->
+      <div class="ld-testimonios">
+        <figure class="ld-testimonio ld-aparece" data-ejemplo>
+          <span class="ld-testimonio__ejemplo">Ejemplo</span>
+          <p class="ld-testimonio__dato"><b>−3 h</b> por propuesta</p>
+          <blockquote>«Antes me quedaba a la noche armando presupuestos. Ahora la dicto en el auto y cuando llego a casa el cliente ya la abrió dos veces.»</blockquote>
+          <figcaption><span class="ld-avatar">MR</span><span><b>Martina R.</b>Diseñadora de marca</span></figcaption>
+        </figure>
+        <figure class="ld-testimonio ld-aparece" data-ejemplo>
+          <span class="ld-testimonio__ejemplo">Ejemplo</span>
+          <p class="ld-testimonio__dato"><b>2 de cada 3</b> propuestas cerradas</p>
+          <blockquote>«El aviso de que la abrió me cambió el juego. Llamo justo ahí, con la propuesta fresca, y la mayoría me dice que sí en la misma llamada.»</blockquote>
+          <figcaption><span class="ld-avatar">DG</span><span><b>Diego G.</b>Dueño de agencia digital</span></figcaption>
+        </figure>
+        <figure class="ld-testimonio ld-aparece" data-ejemplo>
+          <span class="ld-testimonio__ejemplo">Ejemplo</span>
+          <p class="ld-testimonio__dato"><b>+18%</b> de ticket con opcionales</p>
+          <blockquote>«Pongo el enduido completo y la impermeabilización como opcionales, y la mitad de los clientes los suma solos. Plata que antes ni ofrecía.»</blockquote>
+          <figcaption><span class="ld-avatar">CM</span><span><b>Carlos M.</b>Pintura y reformas</span></figcaption>
+        </figure>
+      </div>
+
+      <!-- Calculadora de retorno -->
+      <div class="ld-roi ld-aparece" id="roi">
+        <div class="ld-roi__texto">
+          <h3>Se paga con un solo trabajo</h3>
+          <p>Poné cuánto cobrás por un trabajo. Si Dealit te ayuda a cerrar <b>uno solo más</b>, mirá cuántos meses de Pro te paga ese trabajo.</p>
+          <label class="ld-roi__campo">
+            <span>Lo que cobrás por un trabajo</span>
+            <span class="ld-roi__entrada">
+              <span aria-hidden="true">$</span>
+              <input type="text" inputmode="numeric" id="roi-ticket" value="550.000" autocomplete="off" aria-describedby="roi-nota">
+              <span aria-hidden="true">ARS</span>
+            </span>
+          </label>
+          <input type="range" id="roi-rango" min="50000" max="3000000" step="50000" value="550000" aria-label="Lo que cobrás por un trabajo">
+        </div>
+        <div class="ld-roi__resultado" aria-live="polite">
+          <p class="ld-roi__grande"><span id="roi-meses">39 meses</span></p>
+          <p class="ld-roi__chico">de Dealit Pro, pagados con <b>un solo</b> trabajo extra.<br><span id="roi-anios">Eso son 3 años y 3 meses.</span></p>
+          <p class="ld-roi__nota" id="roi-nota">Con Pro a ARS 13.900 por mes.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 6. PRECIOS + FAQ ============ -->
+  <section class="ld-seccion ld-precios" aria-labelledby="precios-titulo">
+    <div class="ld-contenedor">
+      <p class="ld-sobretitulo ld-aparece">Precios claros</p>
+      <h2 class="ld-titulo ld-aparece" id="precios-titulo">Probá la magia hoy. Pasate a Pro cuando choques el techo.</h2>
+
+      <div class="ld-periodo ld-aparece" role="group" aria-label="Forma de pago">
+        <button type="button" class="activo" data-periodo="mes" aria-pressed="true">Mensual</button>
+        <button type="button" data-periodo="anio" aria-pressed="false">Anual <span>2 meses gratis</span></button>
+      </div>
+
+      <div class="ld-planes">
+        <article class="ld-plan ld-aparece">
+          <h3>Gratis</h3>
+          <p class="ld-plan__precio"><b>$0</b><span>para siempre</span></p>
+          <p class="ld-plan__para">Para probarlo con tus próximos clientes.</p>
+          <ul>
+            <li>2 propuestas enviadas por mes</li>
+            <li>Hasta 100 borradores</li>
+            <li>3 propuestas armadas con IA por mes</li>
+            <li>Aceptación online y aviso cuando aceptan</li>
+            <li>Cobro con Mercado Pago o transferencia</li>
+            <li>Tu logo y tus colores</li>
+            <li class="ld-plan__menos">Lleva «Propuesta creada con Dealit»</li>
+          </ul>
+          <a class="ld-boton ld-boton--secundario" href="/" data-cta="plan-gratis">Empezar gratis</a>
+        </article>
+
+        <article class="ld-plan ld-plan--pro ld-aparece">
+          <span class="ld-plan__cinta">La opción obvia</span>
+          <h3>Pro</h3>
+          <p class="ld-plan__precio">
+            <b data-precio-mes="ARS 13.900" data-precio-anio="ARS 139.000">ARS 13.900</b>
+            <span data-sufijo-mes="por mes" data-sufijo-anio="por año">por mes</span>
+          </p>
+          <p class="ld-plan__para">Para quien vive de cerrar propuestas. <span class="ld-plan__usd" data-usd-mes="USD 9/mes fuera de Argentina" data-usd-anio="USD 90/año fuera de Argentina">USD 9/mes fuera de Argentina</span></p>
+          <ul>
+            <li><b>Propuestas y envíos ilimitados</b></li>
+            <li>Sin la marca de Dealit</li>
+            <li>Radar de visitas: cuántas veces y cuándo</li>
+            <li>Aviso en el celular cada vez que la abren</li>
+            <li>Todas las plantillas y diseños PRO</li>
+            <li>IA sin límite para armar y editar</li>
+            <li>Portfolios ilimitados</li>
+          </ul>
+          <a class="ld-boton" href="/" data-cta="plan-pro">Empezar gratis y pasarme a Pro</a>
+          <p class="ld-plan__garantia">Cancelás cuando quieras desde Mi cuenta.</p>
+        </article>
+
+        <article class="ld-plan ld-plan--estudio ld-aparece">
+          <h3>Estudio <span class="ld-etiqueta ld-etiqueta--gris">Próximamente</span></h3>
+          <p class="ld-plan__precio"><b>~ARS 38.900</b><span>por mes</span></p>
+          <p class="ld-plan__para">Para equipos de hasta 3 personas que venden juntos.</p>
+          <ul>
+            <li>Todo lo de Pro</li>
+            <li>Hasta 3 usuarios</li>
+          </ul>
+        </article>
+      </div>
+
+      <div class="ld-faq">
+        <h2 class="ld-titulo ld-titulo--chico ld-aparece">Preguntas que te estás haciendo</h2>
+        <details class="ld-aparece">
+          <summary>¿La IA no suena robótica?</summary>
+          <p>Arma la propuesta a partir de lo que vos dictás, con tus palabras, tus precios y tu rubro, no con frases de folleto. Y nada sale sin que lo veas: la retocás a mano o le pedís cambios («hacela más corta», «sumá un opcional de mantenimiento») y elegís cuáles aplicar.</p>
+        </details>
+        <details class="ld-aparece">
+          <summary>¿Y si mis servicios son muy a medida?</summary>
+          <p>Justamente para eso está el dictado: contás este trabajo, para este cliente. Cada propuesta tiene sus ítems, sus opcionales, sus plazos y su forma de pago. Sirve igual para una web, una reforma, un casamiento o una consultoría. Las plantillas por rubro son un punto de partida, no un molde.</p>
+        </details>
+        <details class="ld-aparece">
+          <summary>¿Mis clientes tienen que bajarse una app?</summary>
+          <p>No. Les llega un link y lo abren en el navegador del celular o de la compu. Sin cuenta, sin descargas, sin contraseñas. La ven, suman opcionales y la aceptan ahí mismo. Y si la quieren guardar o imprimir, la descargan en PDF con un toque.</p>
+        </details>
+        <details class="ld-aparece">
+          <summary>¿Cómo cobro?</summary>
+          <p>Vinculás tu cuenta de Mercado Pago y el cliente paga apenas acepta: el anticipo o el total, según la forma de pago que pusiste en la propuesta. La plata va directo a tu cuenta. También podés cobrar por transferencia: tu CBU y tu alias le llegan recién cuando acepta. Mercado Pago cobra en pesos; en propuestas en dólares se acuerda por transferencia.</p>
+        </details>
+        <details class="ld-aparece">
+          <summary>¿Necesito tarjeta para empezar?</summary>
+          <p>No. El plan Gratis es gratis de verdad, sin tarjeta y sin vencimiento. Podés armar tu primera propuesta incluso antes de crear la cuenta.</p>
+        </details>
+        <details class="ld-aparece">
+          <summary>¿Y si me arrepiento de Pro?</summary>
+          <p>Lo cancelás desde Mi cuenta en un toque, sin llamar a nadie. Seguís con Pro hasta el final del período que pagaste y después volvés a Gratis sin perder tus propuestas.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7. CIERRE ============ -->
+  <section class="ld-cierre" aria-labelledby="cierre-titulo">
+    <div class="ld-contenedor">
+      <h2 class="ld-cierre__titulo ld-aparece" id="cierre-titulo">Tu competencia sigue peleándose con los márgenes en Word.<br><span class="ld-acento">Vos podés estar cobrando.</span></h2>
+      <a class="ld-boton ld-boton--gigante ld-aparece" href="/" data-cta="cierre">
+        Crear mi primera propuesta gratis
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10h11M11 5l5 5-5 5" /></svg>
+      </a>
+      <p class="ld-microcopy ld-aparece">Sin tarjeta · Pro se cancela en un toque desde Mi cuenta</p>
+    </div>
+  </section>
+</main>
+
+<footer class="ld-pie">
+  <div class="ld-contenedor ld-pie__fila">
+    <a class="ld-marca ld-marca--pie" href="/inicio"><img src="/iconos/icono-192.png" alt="" width="24" height="24"><span>Dealit</span></a>
+    <nav aria-label="Legales">
+      <a href="/?ingresar">Ingresar</a>
+      <a href="/terminos">Términos</a>
+      <a href="/privacidad">Privacidad</a>
+    </nav>
+  </div>
+</footer>
+
+<!-- Botón fijo en el celular: aparece cuando el del hero salió de la pantalla -->
+<div class="ld-fijo" id="cta-fijo">
+  <a class="ld-boton" href="/" data-cta="fijo">Crear mi propuesta gratis</a>
+</div>
+
+</body>
+</html>

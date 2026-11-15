@@ -53,6 +53,7 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 | `public/` | App instalable (PWA): `manifest.webmanifest`, `sw.js` (muestra los push; no cachea nada) e `iconos/`. El manifest solo se carga en la app del dueño (`main.jsx`); el botón para activar las push está en Mi cuenta (`controlador/push.js`) |
 | `firestore.rules`, `storage.rules` | Reglas de seguridad (versionadas) |
 | `index.html`, `terminos.html`, `privacidad.html` | Páginas; `/p/:id` se reescribe a `/` (ver `vercel.json`) |
+| `inicio.html`, `src/landing/` | Landing de venta en `/inicio`: página estática (sin Firebase ni React), con sus estilos y su JS propios. Todos los botones llevan a `/` (la bienvenida del invitado). Los testimonios son de ejemplo (`data-ejemplo`) hasta tener reales |
 
 ## Modelo de datos (Firestore)
 
