@@ -226,6 +226,14 @@ svg.icono-ia,
   }
 }
 
+// En el menú, el destello va al final; adelante queda el lugar vacío del ícono, para que el texto
+// siga alineado con el de las otras opciones.
+.menu__panel .menu__opcion--ia::before {
+  content: '';
+  width: 1rem;
+  flex-shrink: 0;
+}
+
 // En el menú, el destello toma el color de la marca.
 .menu__opcion[data-accion="abrir-ia"] svg.icono-ia { color: var(--dorado); }
 

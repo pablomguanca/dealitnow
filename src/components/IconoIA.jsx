@@ -1,5 +1,5 @@
 // Ícono de la IA de Dealit: tres destellos (uno grande y dos chicos), relleno con el color
-// del texto. Va en todos los botones de «Armá tu propuesta con IA».
+// del texto. Va en todos los botones de la IA, siempre después del texto.
 
 export function IconoIA({ className = '' }) {
   return (

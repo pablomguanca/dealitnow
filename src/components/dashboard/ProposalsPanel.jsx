@@ -19,8 +19,8 @@ export function ProposalsPanel() {
               Propuesta en blanco
             </button>
             <button type="button" className="boton boton--primario boton--ia" data-accion="abrir-ia">
-              <IconoIA />
               Armá tu propuesta con IA
+              <IconoIA />
             </button>
           </div>
         </div>

@@ -18,8 +18,8 @@ export function TopBar() {
         </nav>
         <div className="barra__acciones">
           <button type="button" className="boton boton--secundario boton--ia solo-invitado" data-accion="abrir-ia" title="Armá tu propuesta con IA">
-            <IconoIA />
             <span className="boton__extra">Armá tu propuesta con IA</span>
+            <IconoIA />
           </button>
           <button type="button" className="boton boton--secundario solo-invitado" data-accion="ingresar">Iniciar sesión</button>
           <button type="button" className="boton boton--secundario barra__pdf solo-editor" data-accion="pdf" title="Descargar PDF">
@@ -70,9 +70,9 @@ export function TopBar() {
                 </div>
                 <div className="menu__grupo">
                   <span className="menu__grupo-titulo">Crear nuevo</span>
-                  <button type="button" className="boton boton--texto menu__opcion" data-accion="abrir-ia">
-                    <IconoIA />
+                  <button type="button" className="boton boton--texto menu__opcion menu__opcion--ia" data-accion="abrir-ia">
                     <span>Armá tu propuesta con IA</span>
+                    <IconoIA />
                   </button>
                   <button type="button" className="boton boton--texto menu__opcion" data-accion="nueva">
                     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" /></svg>
@@ -85,9 +85,9 @@ export function TopBar() {
                 </div>
                 <div className="menu__grupo">
                   <span className="menu__grupo-titulo" id="menu-grupo-actual">Propuesta actual</span>
-                  <button type="button" className="boton boton--texto menu__opcion solo-editor solo-cuenta" id="menu-editar-ia" data-accion="editar-con-ia">
-                    <IconoIA />
+                  <button type="button" className="boton boton--texto menu__opcion menu__opcion--ia solo-editor solo-cuenta" id="menu-editar-ia" data-accion="editar-con-ia">
                     <span>Editar con IA</span>
+                    <IconoIA />
                   </button>
                   <button type="button" className="boton boton--texto menu__opcion solo-editor" data-accion="guardar-version">
                     <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 2.5h7.2l2.3 2.3v8.2a1 1 0 0 1-1 1h-8.5a1 1 0 0 1-1-1v-9.5a1 1 0 0 1 1-1z" /><path d="M5.5 2.5v3.5h5V2.5M5.5 13.5v-4h5v4" /></svg>
