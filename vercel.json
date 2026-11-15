@@ -39,7 +39,7 @@
       "has": [
         {
           "type": "cookie",
-          "key": "dealit_app"
+          "key": "dealit_sesion"
         }
       ],
       "destination": "/app"

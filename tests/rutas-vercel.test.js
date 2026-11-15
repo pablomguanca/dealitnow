@@ -11,8 +11,12 @@ describe('rutas de vercel.json', () => {
     expect(ir('/')).toEqual({ destino: '/inicio' });
   });
 
-  it('la raíz muestra la app a quien ya la usa en este navegador', () => {
-    expect(ir('/', { cookie: 'otra=1; dealit_app=1' })).toEqual({ destino: '/app' });
+  it('la raíz muestra la app a quien tiene la sesión iniciada', () => {
+    expect(ir('/', { cookie: 'otra=1; dealit_sesion=1' })).toEqual({ destino: '/app' });
+  });
+
+  it('la cookie vieja (dealit_app, la tenía cualquiera que abrió la app) ya no cuenta', () => {
+    expect(ir('/', { cookie: 'dealit_app=1' })).toEqual({ destino: '/inicio' });
   });
 
   it('las vueltas a la raíz con parámetros de la app van a la app, sin cookie', () => {
@@ -28,7 +32,7 @@ describe('rutas de vercel.json', () => {
   });
 
   it('/inicio sigue mostrando la landing, también con la cookie (sin reescritura: es el archivo)', () => {
-    expect(ir('/inicio', { cookie: 'dealit_app=1' })).toBeNull();
+    expect(ir('/inicio', { cookie: 'dealit_sesion=1' })).toBeNull();
   });
 
   it('los lectores de vista previa de un link de cliente van a /api/vista-previa', () => {

@@ -21,6 +21,7 @@ import { renderDocumento } from './vista.js';
 import { descargarPDF } from './documento.js';
 import { irAResultados } from './resultados.js';
 import { abrirIA } from './ia.js';
+import { marcarSesion, quitarMarcaSesion } from '../lib/marca-sesion.js';
 import { irRuta, idEnUrl, idPortafolioEnUrl, seccionEnUrl, esRutaEntrada, pideIngresarEnUrl } from './navegacion.js';
 import { escucharPropuestas, reiniciarPanel, irAlPanel, abrirPropuesta, mostrarEditor } from './propuestas.js';
 import { escucharPortafoliosNube, reiniciarPortafolios, irAPortafolios, abrirPortafolio } from './portafolios.js';
@@ -360,6 +361,7 @@ export const cerrarSesion = async () => {
   limpiarEstadoMemoria();
   limpiarAlmacenamientoLocal();
   await AteneaDB.auth.signOut();
+  quitarMarcaSesion();
   // Vuelve directo al login (sin pasar por la bienvenida de quien entra por primera vez).
   location.replace('/ingresar');
 };
@@ -455,6 +457,8 @@ export const arrancarSesion = () => {
 
   entrar = async user => {
     ctx.cerrandoSesion = false;
+    // Con la sesión iniciada, dealit.com.ar/ abre el panel y no la landing (ver vercel.json).
+    marcarSesion();
     recordarLogin(false);
     ocultarBienvenida();
     $('#auth-verificar').hidden = true;
@@ -487,6 +491,8 @@ export const arrancarSesion = () => {
 
   AteneaDB.auth.onAuthChange(async user => {
     if (!user) {
+      // Sin sesión, dealit.com.ar/ vuelve a mostrar la landing.
+      quitarMarcaSesion();
       editorIniciado = false;
       ultimoUid = null;
       limpiarEstadoMemoria();

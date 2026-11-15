@@ -3,13 +3,21 @@
 // retorno y el selector mensual / anual de Pro.
 
 import './inicio.scss';
-import { recordarApp } from '../lib/cookie-app.js';
+import { haySesionGuardada, marcarSesion } from '../lib/marca-sesion.js';
 
-// En la app de Android (Capacitor abre dealit.com.ar) nunca va la landing: si llegó sin la
-// cookie (la primera vez que se abre), la deja y entra a la app.
+// En la app de Android (Capacitor abre dealit.com.ar) nunca va la landing: /empezar entra al
+// editor sin cuenta o, con la sesión iniciada, al panel.
 if (window.Capacitor?.isNativePlatform?.()) {
-  recordarApp();
-  location.replace('/');
+  location.replace('/empezar');
+} else if (location.pathname === '/') {
+  // Quien tiene la sesión iniciada pero todavía no la marca (por ejemplo, entró antes de que
+  // existiera, o borró las cookies) va al panel y desde ahí ya entra directo. En /inicio no:
+  // ahí la landing se ve siempre.
+  haySesionGuardada().then(hay => {
+    if (!hay) return;
+    marcarSesion();
+    location.replace('/');
+  });
 }
 
 const PRECIO_PRO_MES = 13900;
