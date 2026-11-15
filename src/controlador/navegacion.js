@@ -52,6 +52,11 @@ export const seccionEnUrl = () => {
   return new URLSearchParams(location.search).get('seccion');
 };
 
+// Puertas de entrada a la app desde la landing: /empezar (editor sin cuenta) e /ingresar (login).
+// Una vez adentro, la dirección vuelve a ser /.
+export const esRutaEntrada = () => /^\/(empezar|ingresar)\/?$/.test(location.pathname);
+export const pideIngresarEnUrl = () => /^\/ingresar\/?$/.test(location.pathname) || new URLSearchParams(location.search).has('ingresar');
+
 // Un clic común abre en esta pestaña; con Ctrl, Cmd o la rueda, el navegador abre una nueva.
 export const clicComun = ev => ev.button === 0 && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey && !ev.altKey;
 

@@ -144,7 +144,7 @@ const crearAteneaDB = () => {
   // vuelta lleva el email (?verificado=), por si el link pasa por la página de Firebase en
   // lugar de /accion: así igual se sabe qué cuenta se verificó (controlador/accion-email.js).
   const _ajustesEmail = email => ({
-    url: email ? `${location.origin}/?verificado=${encodeURIComponent(email)}` : `${location.origin}/`
+    url: email ? `${location.origin}/?verificado=${encodeURIComponent(email)}` : `${location.origin}/ingresar`
   });
 
   const enviarVerificacion = () => sendEmailVerification(auth.currentUser, _ajustesEmail(auth.currentUser.email));

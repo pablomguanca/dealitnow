@@ -46,6 +46,9 @@ export function App() {
       <Route path="/editar-portafolio/:id" element={<DealitWorkspace seccion="editor" modo="portafolio" />} />
       {/* Link de verificación del email (controlador/accion-email.js): se muestra el panel. */}
       <Route path="/accion" element={<DealitWorkspace seccion="panel" />} />
+      {/* Entradas desde la landing (controlador/sesion.js): editor sin cuenta o login; después la dirección vuelve a /. */}
+      <Route path="/empezar" element={<DealitWorkspace seccion="panel" />} />
+      <Route path="/ingresar" element={<DealitWorkspace seccion="panel" />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

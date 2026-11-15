@@ -7,12 +7,15 @@ import { createRoot } from 'react-dom/client';
 import './styles/styles.scss';
 import { tipoLinkCliente } from './lib/links-cliente.js';
 import { aplicarModoApp } from './lib/modo-app.js';
+import { recordarApp } from './lib/cookie-app.js';
 
 const contenedor = document.getElementById('root');
 if (contenedor) {
   const esCliente = !!tipoLinkCliente();
   // El modo oscuro es solo de la app del dueño; se aplica antes de dibujar para que no parpadee.
   if (!esCliente) aplicarModoApp();
+  // Quien abre la app del dueño (con o sin cuenta) vuelve a ella al entrar a dealit.com.ar/.
+  if (!esCliente) recordarApp();
   // Solo la app del dueño es instalable: el link del cliente no ofrece instalar Dealit.
   if (!esCliente) {
     const manifest = document.createElement('link');

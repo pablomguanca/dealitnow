@@ -13,40 +13,112 @@
       "destination": "https://dealit-7f735.firebaseapp.com/__/firebase/:path*"
     },
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "cookie",
+          "key": "dealit_app"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "verificado"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "ingresar"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "propuesta"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "portafolio"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "seccion"
+        }
+      ],
+      "destination": "/app.html"
+    },
+    {
+      "source": "/",
+      "destination": "/inicio.html"
+    },
+    {
+      "source": "/empezar",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/ingresar",
+      "destination": "/app.html"
+    },
+    {
       "source": "/accion",
-      "destination": "/"
+      "destination": "/app.html"
     },
     {
       "source": "/plantillas",
-      "destination": "/"
+      "destination": "/app.html"
     },
     {
       "source": "/portafolios",
-      "destination": "/"
+      "destination": "/app.html"
     },
     {
       "source": "/cuenta",
-      "destination": "/"
+      "destination": "/app.html"
     },
     {
       "source": "/resultados",
-      "destination": "/"
+      "destination": "/app.html"
     },
     {
       "source": "/propuesta/:id",
-      "destination": "/"
+      "destination": "/app.html"
     },
     {
       "source": "/editar-portafolio/:id",
-      "destination": "/"
+      "destination": "/app.html"
     },
     {
       "source": "/p/:id",
-      "destination": "/"
+      "destination": "/app.html"
     },
     {
       "source": "/portafolio/:id",
-      "destination": "/"
+      "destination": "/app.html"
     }
   ],
   "functions": {

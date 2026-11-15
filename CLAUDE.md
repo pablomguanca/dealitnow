@@ -23,7 +23,7 @@ firebase deploy --only firestore:rules,firestore:indexes,storage   # reglas e í
 npm run android  # sincroniza y abre el proyecto en Android Studio (compila con Java 21, no con el 25 que trae Android Studio)
 ```
 
-En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista del cliente. Los datos quedan en la clave `dealit-demo` del localStorage.
+En modo demo, `/empezar` entra al panel del dueño (después `/` también, por la cookie; sin ella, `/` es la landing) y `/p/DEMO0000000000000001` la vista del cliente. Los datos quedan en la clave `dealit-demo` del localStorage.
 
 ## Estructura
 
@@ -52,8 +52,9 @@ En modo demo, `/` es el panel del dueño y `/p/DEMO0000000000000001` la vista de
 | `api/_lib/` | Firebase Admin, verificación del token, utilidades HTTP, cliente de Mercado Pago y avisos al dueño (`avisos.js`: la aceptación a todos, también en Gratis; la primera visita y las siguientes, solo Pro; por email y por push con `push.js`) |
 | `public/` | App instalable (PWA): `manifest.webmanifest`, `sw.js` (muestra los push; no cachea nada) e `iconos/`. El manifest solo se carga en la app del dueño (`main.jsx`); el botón para activar las push está en Mi cuenta (`controlador/push.js`) |
 | `firestore.rules`, `storage.rules` | Reglas de seguridad (versionadas) |
-| `index.html`, `terminos.html`, `privacidad.html` | Páginas; `/p/:id` se reescribe a `/` (ver `vercel.json`) |
-| `inicio.html`, `src/landing/` | Landing de venta en `/inicio`: página estática (sin Firebase ni React), con sus estilos y su JS propios. Todos los botones llevan a `/` (la bienvenida del invitado). Los testimonios son de ejemplo (`data-ejemplo`) hasta tener reales |
+| `app.html`, `terminos.html`, `privacidad.html` | Páginas. `app.html` es la app (dueño y cliente); no hay `index.html` a propósito, para que la raíz la decida `vercel.json` |
+| `inicio.html`, `src/landing/` | Landing de venta: página estática (sin Firebase ni React), con sus estilos y su JS propios. Los botones llevan a `/empezar`; «Ingresar», a `/ingresar`. También se ve en `/inicio` (canonical a `/`), útil para verla con la cookie puesta. Los testimonios son de ejemplo (`data-ejemplo`) hasta tener reales |
+| `vercel.json`, `src/lib/rutas-vercel.js`, `src/lib/cookie-app.js` | **Qué se ve en `dealit.com.ar/`:** la app si el navegador tiene la cookie `dealit_app` (la deja `main.jsx` cada vez que se abre la app del dueño, con o sin cuenta) o si la URL trae `?verificado`, `?ingresar`, `?propuesta`, `?portafolio` o `?seccion`; si no, la landing. `/empezar` (editor sin cuenta) e `/ingresar` (login) entran siempre a la app y la dirección vuelve a `/`; con sesión abierta, al panel. Cerrar sesión vuelve a `/ingresar`. Todas las rutas de la app se reescriben a `/app.html`. `rutas-vercel.js` aplica esas mismas reglas en `npm run dev` y `preview` (tests en `tests/rutas-vercel.test.js`). En la app de Android, si la landing llega a abrirse, deja la cookie y entra a la app |
 
 ## Modelo de datos (Firestore)
 

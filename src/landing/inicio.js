@@ -3,6 +3,14 @@
 // retorno y el selector mensual / anual de Pro.
 
 import './inicio.scss';
+import { recordarApp } from '../lib/cookie-app.js';
+
+// En la app de Android (Capacitor abre dealit.com.ar) nunca va la landing: si llegó sin la
+// cookie (la primera vez que se abre), la deja y entra a la app.
+if (window.Capacitor?.isNativePlatform?.()) {
+  recordarApp();
+  location.replace('/');
+}
 
 const PRECIO_PRO_MES = 13900;
 const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)').matches;

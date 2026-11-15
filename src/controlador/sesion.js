@@ -21,7 +21,7 @@ import { renderDocumento } from './vista.js';
 import { descargarPDF } from './documento.js';
 import { irAResultados } from './resultados.js';
 import { abrirIA } from './ia.js';
-import { irRuta, idEnUrl, idPortafolioEnUrl, seccionEnUrl } from './navegacion.js';
+import { irRuta, idEnUrl, idPortafolioEnUrl, seccionEnUrl, esRutaEntrada, pideIngresarEnUrl } from './navegacion.js';
 import { escucharPropuestas, reiniciarPanel, irAlPanel, abrirPropuesta, mostrarEditor } from './propuestas.js';
 import { escucharPortafoliosNube, reiniciarPortafolios, irAPortafolios, abrirPortafolio } from './portafolios.js';
 import { cargarPerfil, reiniciarCuenta, irACuenta, pintarAvatar } from './cuenta.js';
@@ -263,14 +263,14 @@ const iniciarInvitado = () => {
   ctx.invitado = true;
   document.body.classList.add('invitado');
   document.body.classList.remove('auth-activo');
-  const pideIngresar = new URLSearchParams(location.search).has('ingresar') || loginRecordado();
+  const pideIngresar = pideIngresarEnUrl() || loginRecordado();
   if (!pideIngresar) $('#auth-pantalla').hidden = true;
   if (invitadoIniciado) {
     document.body.classList.remove('auth-cargando');
     return;
   }
   invitadoIniciado = true;
-  if (location.search) irRuta('/', { reemplazar: true });
+  if (location.search || esRutaEntrada()) irRuta('/', { reemplazar: true });
   ctx.portafolios = cargarPortafoliosLocales();
   const guardada = cargarGuardado();
   ctx.invitadoEdito = !!guardada;
@@ -361,7 +361,7 @@ export const cerrarSesion = async () => {
   limpiarAlmacenamientoLocal();
   await AteneaDB.auth.signOut();
   // Vuelve directo al login (sin pasar por la bienvenida de quien entra por primera vez).
-  location.replace('/?ingresar');
+  location.replace('/ingresar');
 };
 
 // Sin Firebase: un solo editor que guarda en el navegador, como antes de las cuentas.
@@ -378,6 +378,8 @@ const iniciarSinCuenta = () => {
 
 // Con cuenta: se entra al panel, o directo a la propuesta si la URL la indica.
 const iniciarConCuenta = async () => {
+  // Entró por /empezar o /ingresar con la sesión ya abierta: va al panel, en /.
+  if (esRutaEntrada()) irRuta('/', { reemplazar: true });
   const migrada = migrarLocal();
   escucharPropuestas();
   escucharPortafoliosNube();
