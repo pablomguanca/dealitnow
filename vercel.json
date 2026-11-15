@@ -13,6 +13,28 @@
       "destination": "https://dealit-7f735.firebaseapp.com/__/firebase/:path*"
     },
     {
+      "source": "/p/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp|Twitterbot|TelegramBot|Slackbot|LinkedInBot|Discordbot|Pinterest|SkypeUriPreview|Applebot|redditbot|vkShare|Viber|Embedly|Iframely|Google-InspectionTool).*"
+        }
+      ],
+      "destination": "/api/vista-previa?tipo=propuesta&id=:id"
+    },
+    {
+      "source": "/portafolio/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|WhatsApp|Twitterbot|TelegramBot|Slackbot|LinkedInBot|Discordbot|Pinterest|SkypeUriPreview|Applebot|redditbot|vkShare|Viber|Embedly|Iframely|Google-InspectionTool).*"
+        }
+      ],
+      "destination": "/api/vista-previa?tipo=portafolio&id=:id"
+    },
+    {
       "source": "/",
       "has": [
         {

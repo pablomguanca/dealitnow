@@ -31,6 +31,20 @@ describe('rutas de vercel.json', () => {
     expect(ir('/inicio', { cookie: 'dealit_app=1' })).toBeNull();
   });
 
+  it('los lectores de vista previa de un link de cliente van a /api/vista-previa', () => {
+    const whatsapp = { 'user-agent': 'WhatsApp/2.24.1.6 A' };
+    const facebook = { 'user-agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)' };
+    expect(resolverRuta(VERCEL, { ruta: '/p/AAAAAAAAAAAAAAAAAAA1', cabeceras: whatsapp }))
+      .toEqual({ destino: '/api/vista-previa?tipo=propuesta&id=AAAAAAAAAAAAAAAAAAA1' });
+    expect(resolverRuta(VERCEL, { ruta: '/portafolio/AAAAAAAAAAAAAAAAAAA1', cabeceras: facebook }))
+      .toEqual({ destino: '/api/vista-previa?tipo=portafolio&id=AAAAAAAAAAAAAAAAAAA1' });
+  });
+
+  it('una persona que abre el link va a la app, también desde el navegador del celular', () => {
+    const chrome = { 'user-agent': 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/131.0 Mobile Safari/537.36' };
+    expect(resolverRuta(VERCEL, { ruta: '/p/AAAAAAAAAAAAAAAAAAA1', cabeceras: chrome })).toEqual({ destino: '/app' });
+  });
+
   it('las páginas sueltas siguen como están', () => {
     expect(ir('/terminos')).toBeNull();
     expect(ir('/privacidad')).toBeNull();

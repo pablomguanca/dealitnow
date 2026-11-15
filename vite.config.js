@@ -24,14 +24,18 @@ const rutasVercel = () => {
     const url = new URL(req.url, 'http://local');
     // Los archivos (con extensión) y lo interno de Vite pasan derecho.
     if (/\.\w+$/.test(url.pathname) || url.pathname.startsWith('/@') || url.pathname.startsWith('/node_modules/')) return next();
-    const r = resolverRuta(VERCEL, { ruta: url.pathname, query: url.searchParams, cookies: leerCookies(req.headers.cookie) });
+    const pedido = { ruta: url.pathname, query: url.searchParams, cookies: leerCookies(req.headers.cookie), cabeceras: req.headers };
+    let r = resolverRuta(VERCEL, pedido);
+    // Las funciones de /api (la vista previa para WhatsApp y compañía) solo existen en Vercel:
+    // en local, esa ruta se resuelve como para una persona.
+    if (r?.destino?.startsWith('/api/')) r = resolverRuta(VERCEL, { ...pedido, cabeceras: {} });
     if (r?.redirigir) {
       res.statusCode = 302;
       res.setHeader('Location', r.redirigir);
       return res.end();
     }
     // Con cleanUrls, Vercel nombra los archivos sin .html (/app → app.html); Vite necesita el nombre real.
-    if (r?.destino) req.url = (/.w+$/.test(r.destino) ? r.destino : `${r.destino}.html`) + url.search;
+    if (r?.destino) req.url = (/\.\w+$/.test(r.destino) ? r.destino : `${r.destino}.html`) + url.search;
     next();
   };
   return {
