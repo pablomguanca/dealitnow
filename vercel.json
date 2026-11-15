@@ -20,7 +20,7 @@
           "key": "dealit_app"
         }
       ],
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/",
@@ -30,7 +30,7 @@
           "key": "verificado"
         }
       ],
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/",
@@ -40,7 +40,7 @@
           "key": "ingresar"
         }
       ],
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/",
@@ -50,7 +50,7 @@
           "key": "propuesta"
         }
       ],
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/",
@@ -60,7 +60,7 @@
           "key": "portafolio"
         }
       ],
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/",
@@ -70,55 +70,55 @@
           "key": "seccion"
         }
       ],
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/",
-      "destination": "/inicio.html"
+      "destination": "/inicio"
     },
     {
       "source": "/empezar",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/ingresar",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/accion",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/plantillas",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/portafolios",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/cuenta",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/resultados",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/propuesta/:id",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/editar-portafolio/:id",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/p/:id",
-      "destination": "/app.html"
+      "destination": "/app"
     },
     {
       "source": "/portafolio/:id",
-      "destination": "/app.html"
+      "destination": "/app"
     }
   ],
   "functions": {

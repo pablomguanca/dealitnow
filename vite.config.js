@@ -30,7 +30,8 @@ const rutasVercel = () => {
       res.setHeader('Location', r.redirigir);
       return res.end();
     }
-    if (r?.destino) req.url = r.destino + url.search;
+    // Con cleanUrls, Vercel nombra los archivos sin .html (/app → app.html); Vite necesita el nombre real.
+    if (r?.destino) req.url = (/.w+$/.test(r.destino) ? r.destino : `${r.destino}.html`) + url.search;
     next();
   };
   return {
