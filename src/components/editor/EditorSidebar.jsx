@@ -32,6 +32,8 @@ export function EditorSidebar() {
             <button type="button" className="boton boton--primario boton--chico" data-accion="registrarse">Crear cuenta gratis</button>
           </div>
           <p className="editor__aceptada" id="editor-aceptada" role="status" hidden></p>
+          {/* Lo que respondió el cliente sin aceptar: «No avanzo por ahora» y pedidos de cambio. */}
+          <div className="editor__aceptada editor__respuestas" id="editor-respuestas" role="status" hidden></div>
           <p className="editor__bajada" id="editor-bajada">Elegí una plantilla, escribí tus datos y mandala como link interactivo: el diseño se arma solo.</p>
           <button type="button" className="boton boton--secundario boton--chico boton--ia editor__ia solo-cuenta" id="editor-ia" data-accion="editar-con-ia">
             Editar con IA <IconoIA />

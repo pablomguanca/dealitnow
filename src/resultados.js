@@ -1,6 +1,7 @@
 // Resultados del dueño: cuánto ganó, cuánto convierte, qué está en juego y qué propuestas
 // conviene seguir ahora. Puro: recibe la lista de propuestas (como llega de Firestore) y
 // devuelve números; la pantalla está en controlador/resultados.js.
+import { cambioPendiente, contarMotivos } from './respuestas.js';
 
 const DIA = 86400000;
 
@@ -115,6 +116,16 @@ export const calcularResultados = (propuestas = [], { periodo = 'mes', ahora = n
     .filter(p => { const v = venceDe(p); return v && v - ahora <= 3 * DIA; })
     .sort((a, b) => venceDe(a) - venceDe(b));
 
+  // Le pidieron un cambio y todavía no lo atendió: lo primero para seguir hoy.
+  const conCambios = propuestas
+    .filter(p => cambioPendiente(p))
+    .sort((a, b) => cambioPendiente(b).fecha - cambioPendiente(a).fecha);
+
+  // Por qué no avanzan: «No avanzo por ahora» respondidos en el período (aunque después
+  // se haya vuelto a compartir).
+  const rechazos = propuestas.filter(p => p.rechazo && !p.aceptacion && enPeriodo(fechaDe(p.rechazo.fecha)));
+  const motivos = contarMotivos(rechazos);
+
   // Opcionales que más suman tus clientes al aceptar.
   const conteo = new Map();
   aceptadas.forEach(p => (p.aceptacion.opcionales || []).forEach(o => {
@@ -172,6 +183,9 @@ export const calcularResultados = (propuestas = [], { periodo = 'mes', ahora = n
     calientes,
     sinAbrir,
     porVencer,
+    conCambios,
+    noAvanzan: rechazos.length,
+    motivos,
     opcionales,
     ofrecieronOpcionales,
     sumaronOpcionales,

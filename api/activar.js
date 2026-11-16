@@ -100,7 +100,9 @@ export const crearHandler = ({ db, sesionDe, planesActivos, ahora = () => new Da
         if (primeraVez && usados >= LIMITE_ENVIOS_GRATIS) throw new ErrorHttp(403, 'limite-envios');
       }
 
-      if (!doc.status || doc.status === 'draft') cambios.status = 'sent';
+      // Volver a compartirla después de un «No avanzo por ahora» es una nueva oportunidad:
+      // vuelve a estar enviada (el motivo queda en `rechazo`, para Resultados).
+      if (!doc.status || doc.status === 'draft' || doc.status === 'rejected') cambios.status = 'sent';
       if (primeraVez) cambios.enviadaEn = FieldValue.serverTimestamp();
       tx.update(refPropuesta, cambios);
       if (primeraVez) tx.set(refPlan, { envios: { [mesDe(momento)]: usados + 1 } }, { merge: true });

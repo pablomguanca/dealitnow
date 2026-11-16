@@ -6,12 +6,13 @@ import {
 import { TEMAS } from '../modelo.js';
 import { fechaDeAceptacion } from './render.js';
 import { resolverColoresTema } from './tema.js';
+import { MOTIVOS_RECHAZO, cambioPendiente, porVencer, venceTexto } from '../respuestas.js';
 
 export const ESTADOS_PROPUESTA = {
   draft: 'Borrador',
   sent: 'Enviada',
   accepted: 'Aceptada',
-  rejected: 'Rechazada'
+  rejected: 'No avanza'
 };
 
 export const FILTROS_PANEL = [
@@ -19,7 +20,7 @@ export const FILTROS_PANEL = [
   ['draft', 'Borradores'],
   ['sent', 'Enviadas'],
   ['accepted', 'Aceptadas'],
-  ['rejected', 'Rechazadas']
+  ['rejected', 'No avanzan']
 ];
 
 export const fechaDe = ts => (ts && typeof ts.toDate === 'function' ? ts.toDate() : null);
@@ -53,6 +54,17 @@ export const seguimientoHTML = (p, { conSeguimiento = true } = {}) => {
     const fecha = fechaDeAceptacion(p.aceptacion);
     const nombre = texto(p.aceptacion.nombre).split(' ')[0];
     return `<strong class="propuesta__hito">${fecha ? tiempoHTML(fecha, `Aceptada por ${nombre} ${haceCuanto(fecha)}`) : `Aceptada por ${esc(nombre)}`}</strong>`;
+  }
+  // Lo que respondió el cliente sin aceptar va antes que las visitas.
+  if (p.status === 'rejected' && p.rechazo) {
+    const fecha = fechaDe(p.rechazo.fecha);
+    const motivo = MOTIVOS_RECHAZO[p.rechazo.motivo] || 'Otro motivo';
+    return `<span class="propuesta__hito propuesta__hito--rechazo">No avanza por ahora · ${esc(motivo)}${fecha ? ` · ${tiempoHTML(fecha, haceCuanto(fecha))}` : ''}</span>`;
+  }
+  const cambio = cambioPendiente(p);
+  if (cambio) {
+    const fecha = cambio.fecha;
+    return `<strong class="propuesta__hito propuesta__hito--cambio">${fecha ? tiempoHTML(fecha, `Pidió un cambio ${haceCuanto(fecha)}`) : 'Pidió un cambio'}</strong>`;
   }
   const vistas = Number(p.vistas) || 0;
   const vista = fechaDe(p.vistoUltimo);
@@ -97,8 +109,15 @@ export const propuestaHTML = (p, { conSeguimiento = true } = {}) => {
   const estadoP = estadoDe(p);
   const numero = texto(p.payload?.propuesta?.numero).trim();
   const editada = fechaDe(p.updatedAt);
-  const seguimiento = p.aceptacion || Number(p.vistas) > 0 || p.publico === true ? seguimientoHTML(p, { conSeguimiento }) : '';
+  const seguimiento = p.aceptacion || p.rechazo || p.cambios || Number(p.vistas) > 0 || p.publico === true ? seguimientoHTML(p, { conSeguimiento }) : '';
   const id = esc(p.id);
+  // En sus últimos días sin respuesta: un mensaje listo para recordarle al cliente.
+  const vence = porVencer(p);
+  const recordar = vence ? `
+        <div class="propuesta-card__vence">
+          <span>Vence ${esc(venceTexto(vence.vence, vence.quedan))}</span>
+          <button type="button" class="boton boton--secundario boton--chico" data-accion="recordar-propuesta" data-id="${id}">Recordarle</button>
+        </div>` : '';
   return `
     <li class="propuesta-card">
       <a class="propuesta-card__portada" href="/propuesta/${encodeURIComponent(p.id)}" data-accion="abrir-propuesta" data-id="${id}" style="${esc(estiloPortadaTarjeta(p.payload?.tema))}" aria-label="Editar «${esc(titulo)}»">
@@ -113,6 +132,7 @@ export const propuestaHTML = (p, { conSeguimiento = true } = {}) => {
         </div>
         <p class="propuesta-card__fecha">${editada ? tiempoHTML(editada, `Actualizada ${haceCuanto(editada)}`) : 'Sin cambios todavía'}</p>
         ${seguimiento ? `<p class="propuesta-card__seguimiento">${seguimiento}</p>` : ''}
+        ${recordar}
         <div class="propuesta-card__acciones">
           <a class="boton boton--secundario boton--chico" href="/propuesta/${encodeURIComponent(p.id)}" data-accion="abrir-propuesta" data-id="${id}">Editar</a>
           <button type="button" class="icono-boton" data-accion="previsualizar-propuesta" data-id="${id}" aria-label="Ver «${esc(titulo)}» como tu cliente" title="Vista previa">${ICONO_VER}</button>

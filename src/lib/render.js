@@ -496,24 +496,39 @@ export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '',
       </div>`;
   }
   if (vig.vencida) {
+    // Sin link para escribirle, se le pide la versión actualizada desde acá (pedido de cambio).
+    const pedir = consultaUrl
+      ? `<a class="boton boton--primario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a>`
+      : `<button type="button" class="boton boton--primario boton--grande" data-accion="pedir-cambio" data-vencida>Pedir una versión actualizada</button>`;
     return `
       <div class="cierre">
         <p class="cierre__titulo">${tipo === 'presupuesto' ? 'Este presupuesto venció' : 'Esta propuesta venció'}</p>
         <p class="cierre__texto">Los valores y plazos pueden haber cambiado. Pedile ${nombreEmisor ? `a ${esc(nombreEmisor)} ` : ''}una versión actualizada.</p>
-        ${consultaUrl ? `<div class="cierre__acciones"><a class="boton boton--primario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a></div>` : ''}
+        <div class="cierre__acciones">${pedir}</div>
       </div>`;
   }
-  const textoCierre = compartida || conFirma
-    ? `Al aceptar${conFirma ? ' y firmar con el dedo' : ''}, ${nombreEmisor ? esc(nombreEmisor) : 'quien te la mandó'} recibe tu confirmación con lo que elegiste.`
-    : `Al aceptar se abre un mensaje con el resumen de lo que elegiste${nombreEmisor ? `, listo para mandárselo a ${esc(nombreEmisor)}` : ''}.`;
+  // El cliente ya dijo «No avanzo por ahora»: igual la puede aceptar si cambia de idea.
+  const rechazada = !!compartida?.respuesta?.rechazo;
+  const quien = nombreEmisor ? esc(nombreEmisor) : 'quien te la mandó';
+  const textoCierre = rechazada
+    ? `Le avisaste a ${quien} que no avanzás por ahora. Si cambiás de idea, todavía la podés aceptar.`
+    : compartida || conFirma
+      ? `Al aceptar${conFirma ? ' y firmar con el dedo' : ''}, ${quien} recibe tu confirmación con lo que elegiste.`
+      : `Al aceptar se abre un mensaje con el resumen de lo que elegiste${nombreEmisor ? `, listo para mandárselo a ${esc(nombreEmisor)}` : ''}.`;
+  const cambios = Number(compartida?.respuesta?.cambios) || 0;
   return `
-    <div class="cierre">
-      <p class="cierre__titulo">¿Avanzamos?</p>
+    <div class="cierre${rechazada ? ' cierre--rechazada' : ''}">
+      <p class="cierre__titulo">${rechazada ? '¿Lo pensaste de nuevo?' : '¿Avanzamos?'}</p>
       <p class="cierre__texto">${textoCierre}</p>
       <div class="cierre__acciones">
         <button type="button" class="boton boton--primario boton--grande" data-accion="aceptar">Aceptar ${que}${conCobro || conMp ? ' y ver datos de pago' : ''}</button>
-        ${consultaUrl ? `<a class="boton boton--secundario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a></div>` : ''}
+        ${consultaUrl ? `<a class="boton boton--secundario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a>` : ''}
       </div>
+      <div class="cierre__otras">
+        <button type="button" class="cierre__otra" data-accion="pedir-cambio">${cambios ? 'Pedir otro cambio' : 'Pedir un cambio'}</button>
+        ${rechazada ? '' : `<button type="button" class="cierre__otra" data-accion="no-avanzo">No avanzo por ahora</button>`}
+      </div>
+      ${cambios ? `<p class="cierre__nota">Le ${cambios === 1 ? 'pediste un cambio' : `pediste ${cambios} cambios`} a ${quien}. Cuando la actualice, la vas a ver en este mismo link.</p>` : ''}
     </div>`;
 };
 

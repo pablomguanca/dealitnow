@@ -51,7 +51,9 @@ service cloud.firestore {
       // Visitas, aceptación, primer envío, marca de Dealit y la versión que ve el cliente en
       // Gratis (publicado, con su cliente): solo los escribe el servidor (api/visto,
       // api/aceptar, api/activar).
-      function camposDelServidor() { return ['vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion', 'enviadaEn', 'marca', 'publicado', 'publicadoEn', 'clienteEnviado']; }
+      // También lo que responde el cliente sin aceptar (rechazo, cambios) y el recordatorio de
+      // vencimiento (recordatorio): api/aceptar y la tarea diaria de api/visto.
+      function camposDelServidor() { return ['vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion', 'enviadaEn', 'marca', 'publicado', 'publicadoEn', 'clienteEnviado', 'rechazo', 'cambios', 'recordatorio']; }
 
       // Activar el link pasa por api/activar, que aplica el límite del plan. El navegador
       // solo puede desactivarlo.
@@ -65,7 +67,7 @@ service cloud.firestore {
         return d.keys().hasOnly(['userId', 'title', 'clientName', 'amount', 'status',
                                  'theme', 'payload', 'publico', 'createdAt', 'updatedAt',
                                  'vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion', 'enviadaEn', 'marca',
-                                 'publicado', 'publicadoEn', 'clienteEnviado'])
+                                 'publicado', 'publicadoEn', 'clienteEnviado', 'rechazo', 'cambios', 'recordatorio'])
           && d.title is string      && d.title.size() <= 200
           && d.clientName is string && d.clientName.size() <= 200
           && d.amount is number

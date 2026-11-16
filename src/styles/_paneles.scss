@@ -475,6 +475,95 @@ body.sin-cuenta .solo-cuenta {
   border-color: var(--d-acento);
 }
 
+// «Pedir un cambio» y «No avanzo por ahora»: discretos, debajo de los botones principales.
+.cierre__otras {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.2rem 1.4rem;
+  margin-top: 1rem;
+}
+
+.cierre__otra {
+  padding: 0.35rem 0.2rem;
+  border: 0;
+  background: none;
+  color: var(--d-suave, var(--d-texto));
+  font: inherit;
+  font-size: 0.88em;
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 0.25em;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--d-texto);
+    text-decoration-color: currentColor;
+  }
+}
+
+.cierre__nota {
+  margin: 0.8rem 0 0;
+  font-size: 0.85em;
+  text-align: center;
+  color: var(--d-suave, var(--d-texto));
+}
+
+@media print {
+  .cierre__otras,
+  .cierre__nota {
+    display: none;
+  }
+}
+
+// Diálogo para responder sin aceptar (controlador/responder.js).
+#responder-formulario {
+  display: grid;
+  gap: 0.9rem;
+
+  .dialogo__titulo,
+  .dialogo__texto {
+    margin-bottom: 0;
+  }
+}
+
+.responder__motivos {
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.responder__opciones {
+  display: grid;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.responder__opcion {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--superficie-borde);
+  border-radius: var(--radio-m);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  input {
+    accent-color: var(--dorado);
+  }
+
+  &:has(input:checked) {
+    border-color: var(--dorado);
+    background: var(--dorado-fondo);
+  }
+}
+
 // Firma del cliente en la propuesta aceptada (link).
 .cierre__firma {
   max-width: 17rem;
@@ -623,6 +712,68 @@ body.sin-cuenta .solo-cuenta {
 .propuesta__hito {
   color: var(--dorado-papel);
   font-weight: 600;
+
+  // El cliente dijo «No avanzo por ahora»: informativo, sin el color del éxito.
+  &--rechazo {
+    color: var(--marfil-apagado);
+  }
+}
+
+// Mensaje armado (por ejemplo, el recordatorio para el cliente): respeta los renglones.
+.dialogo--confirmacion .dialogo__texto {
+  white-space: pre-line;
+}
+
+// En el editor: lo que respondió el cliente sin aceptar.
+.editor__respuestas {
+  display: grid;
+  gap: 0.4rem;
+
+  &[hidden] {
+    display: none;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  blockquote {
+    margin: 0;
+    padding-left: 0.6rem;
+    border-left: 2px solid var(--superficie-borde);
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+
+    time {
+      display: block;
+      margin-top: 0.15rem;
+      font-size: 0.75rem;
+      color: var(--marfil-tenue);
+    }
+  }
+
+  p time {
+    font-size: 0.75rem;
+    color: var(--marfil-tenue);
+  }
+}
+
+.editor__respuestas-pie {
+  color: var(--marfil-apagado);
+}
+
+// Tarjeta por vencer sin respuesta: cuándo vence y «Recordarle».
+.propuesta-card__vence {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--radio-s);
+  background: var(--dorado-fondo);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--marfil);
 }
 
 @media (max-width: 720px) {

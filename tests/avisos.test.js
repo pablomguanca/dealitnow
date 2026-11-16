@@ -119,6 +119,23 @@ describe('a quién se avisa', () => {
     expect(pro.enviados[0].html).toContain('porque tenés Dealit Pro');
   });
 
+  it('«no avanza» y «pidió un cambio» llegan también en Gratis; «por vencer», solo a Pro', async () => {
+    const gratis = avisador({});
+    expect(await gratis.avisar({ ...aviso, tipo: 'rechazada', respuesta: { motivo: 'precio', comentario: 'Muy <caro>' } })).toBe('enviado');
+    expect(gratis.enviados[0].asunto).toBe('Laura no avanza por ahora con «Sitio <nuevo>»');
+    expect(gratis.enviados[0].html).toContain('El precio no me cierra');
+    expect(gratis.enviados[0].html).toContain('Muy &lt;caro&gt;');
+    expect(await gratis.avisar({ ...aviso, tipo: 'cambio', respuesta: { texto: 'Sacar la tienda' } })).toBe('enviado');
+    expect(gratis.enviados[1].texto).toContain('«Sacar la tienda»');
+    const vence = { ...aviso, tipo: 'por-vencer', recordatorio: { vence: '2026-11-17', quedan: 1, vistas: 2 } };
+    expect(await gratis.avisar(vence)).toBe('gratis');
+    const pro = avisador({ duenio: { tipo: 'pro', estado: 'activa', vence: '2099-01-01T00:00:00Z' } });
+    expect(await pro.avisar(vence)).toBe('enviado');
+    expect(pro.enviados[0].asunto).toBe('«Sitio <nuevo>» vence mañana');
+    expect(pro.enviados[0].texto).toContain('Laura la abrió 2 veces');
+    expect(contenidoPush({ ...vence, urlApp: URL_APP }).cuerpo).toBe('Laura la abrió y no respondió. Recordale.');
+  });
+
   it('con los planes apagados se avisa a todos', async () => {
     const { avisar } = avisador({}, false);
     expect(await avisar(aviso)).toBe('enviado');

@@ -23,6 +23,7 @@ import { renderDocumento } from './vista.js';
 import { copiar } from '../lib/portapapeles.js';
 import { llamarApi } from './api.js';
 import { crearPadFirma } from './firma.js';
+import { instalarResponder } from './responder.js';
 import { pideFirma } from '../firma.js';
 
 const mensajeAceptacion = (firma = ctx.estado.cliente.nombre.trim()) => {
@@ -202,6 +203,7 @@ export const instalarAceptar = () => {
   $('#aceptar-nombre').addEventListener('input', actualizarBotonAceptar);
   $('#aceptar-conformidad').addEventListener('change', actualizarBotonAceptar);
   $('#aceptar-confirmar').addEventListener('click', confirmarAceptacion);
+  instalarResponder();
   const lienzo = $('#aceptar-firma-lienzo');
   if (lienzo) {
     pad = crearPadFirma(lienzo, { alCambiar: actualizarBotonAceptar });

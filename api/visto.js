@@ -9,12 +9,47 @@ import { ErrorHttp, fallar, leerPost, responder } from './_lib/http.js';
 import { crearAvisador, urlAppDe } from './_lib/avisos.js';
 import { planesActivosPara } from './_lib/planes-activos.js';
 import { clienteDe } from '../src/planes.js';
+import { recordatorioPendiente } from '../src/respuestas.js';
 
 // Entre una visita y la siguiente, al menos esto para volver a avisar.
 export const PAUSA_REVISITA_MS = 30 * 1000;
 const milisDe = v => (typeof v?.toMillis === 'function' ? v.toMillis() : v instanceof Date ? v.getTime() : null);
 
-export const crearHandler = ({ db, uidDe, avisar = async () => {}, ahora = () => Date.now() }) => async (req, res) => {
+// GET /api/visto — tarea diaria (cron de Vercel, ver vercel.json): avisa al dueño de cada
+// propuesta enviada que vence en los próximos días sin respuesta (recordatorioPendiente en
+// src/respuestas.js; el aviso es solo para Pro, lo decide _lib/avisos.js). Va en esta
+// función porque el plan de Vercel limita la cantidad. Vercel manda
+// «Authorization: Bearer $CRON_SECRET»; sin esa variable no corre.
+export const crearTareaDiaria = ({ db, avisar = async () => {}, ahora = () => new Date(), entorno = process.env, marcaDeTiempo = FieldValue.serverTimestamp }) => async (req, res) => {
+  const secreto = entorno.CRON_SECRET;
+  if (!secreto) return responder(res, 503, { error: 'sin-configurar' });
+  if (req.headers?.authorization !== `Bearer ${secreto}`) return responder(res, 401, { error: 'no-autorizado' });
+  try {
+    const snap = await db().collection('proposals').where('publico', '==', true).where('status', '==', 'sent').get();
+    let avisadas = 0;
+    for (const d of snap.docs) {
+      const doc = d.data();
+      const pendiente = recordatorioPendiente(doc, ahora());
+      if (!pendiente) continue;
+      // Se marca antes de avisar: si el aviso falla, no se insiste todos los días.
+      await d.ref.update({ recordatorio: { vence: pendiente.vence, fecha: marcaDeTiempo() } });
+      await avisar({
+        tipo: 'por-vencer',
+        id: d.id,
+        propuesta: doc,
+        recordatorio: { ...pendiente, vistas: Number(doc.vistas) || 0 },
+        urlApp: entorno.APP_URL || 'https://dealit.com.ar'
+      });
+      avisadas += 1;
+    }
+    return responder(res, 200, { revisadas: snap.size, avisadas });
+  } catch (e) {
+    return fallar(res, e);
+  }
+};
+
+export const crearHandler = ({ db, uidDe, avisar = async () => {}, ahora = () => Date.now(), tareaDiaria = null }) => async (req, res) => {
+  if (req.method === 'GET' && tareaDiaria) return tareaDiaria(req, res);
   const cuerpo = leerPost(req, res);
   if (!cuerpo) return;
   if (typeof cuerpo.id !== 'string' || !ID_PROPUESTA.test(cuerpo.id)) return responder(res, 400, { error: 'id-invalido' });
@@ -60,8 +95,11 @@ export const crearHandler = ({ db, uidDe, avisar = async () => {}, ahora = () =>
   }
 };
 
+const avisador = crearAvisador({ db: firestore, planesActivos: planesActivosPara });
+
 export default crearHandler({
   db: firestore,
   uidDe: uidDeLaSolicitud,
-  avisar: crearAvisador({ db: firestore, planesActivos: planesActivosPara })
+  avisar: avisador,
+  tareaDiaria: crearTareaDiaria({ db: firestore, avisar: avisador })
 });

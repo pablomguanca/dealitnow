@@ -50,6 +50,31 @@ export function DialogoAceptar() {
   );
 }
 
+// «Pedir un cambio» y «No avanzo por ahora» desde el link (controlador/responder.js).
+export function DialogoResponder() {
+  return (
+    <dialog className="dialogo" id="dialogo-responder" aria-labelledby="responder-titulo">
+      <form method="dialog" id="responder-formulario">
+        <h2 className="dialogo__titulo" id="responder-titulo">Pedir un cambio</h2>
+        <p className="dialogo__texto" id="responder-texto"></p>
+        <fieldset className="responder__motivos" id="responder-motivos" hidden>
+          <legend className="campo__etiqueta">¿Por qué?</legend>
+          <div className="responder__opciones" id="responder-opciones"></div>
+        </fieldset>
+        <label className="campo" id="responder-campo">
+          <span className="campo__etiqueta" id="responder-etiqueta">¿Qué te gustaría cambiar?</span>
+          <textarea className="control" id="responder-comentario" rows="4" maxLength="1000"></textarea>
+        </label>
+        <p className="auth__error" id="responder-error" role="alert" hidden></p>
+        <div className="dialogo__acciones dialogo__acciones--apiladas">
+          <button type="button" className="boton boton--primario boton--grande" id="responder-enviar" disabled>Enviar pedido</button>
+          <button className="boton boton--texto" value="cancelar" id="responder-cerrar">Volver a la propuesta</button>
+        </div>
+      </form>
+    </dialog>
+  );
+}
+
 // Avisos flotantes: no bloquean la pantalla y se van solos. Los colores salen de las
 // variables de la app, así siguen al modo claro u oscuro.
 export function Aviso() {

@@ -2,7 +2,7 @@
 // secreta FIREBASE_SERVICE_ACCOUNT (el JSON de la cuenta de servicio, completo).
 // Admin no pasa por las reglas de Firestore: cada función valida todo por su cuenta.
 import { cert, getApps, initializeApp } from 'firebase-admin/app';
-import { FieldValue, getFirestore } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp, getFirestore } from 'firebase-admin/firestore';
 
 let cuenta;
 const cuentaDeServicio = () => {
@@ -16,7 +16,7 @@ const cuentaDeServicio = () => {
 const app = () => getApps()[0] || initializeApp({ credential: cert(cuentaDeServicio()) });
 
 export const firestore = () => getFirestore(app());
-export { FieldValue };
+export { FieldValue, Timestamp };
 
 // Firebase Cloud Messaging (push de la app de Android). Se carga solo cuando hay que mandar.
 export const mensajeria = async () => {

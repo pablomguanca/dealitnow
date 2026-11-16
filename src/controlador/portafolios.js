@@ -119,6 +119,7 @@ const mostrarEditorPortafolio = (id, contenido, { historial = true } = {}) => {
   ctx.editando = true;
   mostrarEstadoGuardado();
   $('#editor-aceptada').hidden = true;
+  if ($('#editor-respuestas')) $('#editor-respuestas').hidden = true;
   // «Editar con IA» es solo para propuestas.
   $('#editor-ia').hidden = true;
   $('#menu-editar-ia').hidden = true;

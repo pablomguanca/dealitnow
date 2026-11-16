@@ -83,6 +83,7 @@ const mensajeWhatsApp = (p, tipo) => {
   const nombre = String(p.payload?.cliente?.nombre || '').trim().split(' ')[0];
   const hola = nombre ? `Hola ${nombre}, ¿cómo estás?` : 'Hola, ¿cómo estás?';
   const link = linkCorto(p.id);
+  if (tipo === 'cambio') return `${hola} Gracias por contarme lo que querías ajustar en la propuesta. Ya lo estoy viendo y te la actualizo en este mismo link: ${link}`;
   if (tipo === 'caliente') return `${hola} Si te quedó alguna duda con la propuesta o querés ajustar algo, contame y lo vemos. ${link}`;
   if (tipo === 'vence') {
     const vence = calcularVigencia(p.payload?.propuesta || {}).vence;
@@ -107,7 +108,7 @@ const filaSeguimiento = (p, tipo, detalle) => {
 };
 
 const seguirHTML = (r, conSeguimiento) => {
-  const total = r.calientes.length + r.sinAbrir.length + r.porVencer.length;
+  const total = r.conCambios.length + r.calientes.length + r.sinAbrir.length + r.porVencer.length;
   if (!conSeguimiento) {
     const gancho = r.calientes.length
       ? `${plural(r.calientes.length, 'propuesta se está mirando ahora y no tiene respuesta', 'propuestas se están mirando ahora y no tienen respuesta')}. Con Pro sabés cuáles son y le escribís en el momento justo.`
@@ -118,7 +119,8 @@ const seguirHTML = (r, conSeguimiento) => {
     return tarjeta('Para seguir hoy', '<p class="res-vacio">Nada urgente. Cuando un cliente mire una propuesta y no responda, aparece acá.</p>', { clase: 'res-tarjeta--ancha' });
   }
   const filas = [
-    ...r.calientes.map(p => filaSeguimiento(p, 'caliente', `La abrió ${plural(Number(p.vistas), 'vez', 'veces')}, la última ${haceCuanto(fechaDe(p.vistoUltimo))}`)),
+    ...r.conCambios.map(p => filaSeguimiento(p, 'cambio', 'Te pidió un cambio')),
+    ...r.calientes.filter(p => !r.conCambios.includes(p)).map(p => filaSeguimiento(p, 'caliente', `La abrió ${plural(Number(p.vistas), 'vez', 'veces')}, la última ${haceCuanto(fechaDe(p.vistoUltimo))}`)),
     ...r.porVencer.filter(p => !r.calientes.includes(p)).map(p => filaSeguimiento(p, 'vence', 'Vence pronto')),
     ...r.sinAbrir.filter(p => !r.porVencer.includes(p)).map(p => filaSeguimiento(p, 'sin-abrir', 'Todavía no la abrió'))
   ].slice(0, 8);
@@ -201,6 +203,23 @@ const opcionalesHTML = r => {
     ${lista}`);
 };
 
+// --- Por qué no avanzan («No avanzo por ahora» del link) ---
+const motivosHTML = r => {
+  if (!r.noAvanzan) {
+    return tarjeta('Por qué no avanzan', '<p class="res-vacio">Cuando un cliente no avance, acá ves el motivo que eligió: precio, tiempos, otra opción… Así sabés qué ajustar.</p>');
+  }
+  const max = r.motivos[0].veces;
+  const filas = r.motivos.map(m => `
+    <div class="res-embudo__fila">
+      <span class="res-embudo__etiqueta">${esc(m.nombre)}</span>
+      <span class="res-embudo__pista"><span class="res-embudo__barra" style="--valor:${m.veces / max}"></span></span>
+      <span class="res-embudo__valor">${m.veces}</span>
+    </div>`).join('');
+  return tarjeta('Por qué no avanzan', `<div class="res-embudo res-motivos">${filas}</div>`, {
+    ayuda: `${plural(r.noAvanzan, 'cliente respondió', 'clientes respondieron')} «No avanzo por ahora» en este período.`
+  });
+};
+
 // --- Mejores clientes ---
 const clientesHTML = r => (r.clientes.length
   ? tarjeta('Mejores clientes', `<ol class="res-lista">${r.clientes.map(c => `<li><span>${esc(c.nombre)} <small>${plural(c.aceptadas, 'aceptada', 'aceptadas')}</small></span><strong>${esc(dinero(c.total, r.monedaPrincipal))}</strong></li>`).join('')}</ol>`)
@@ -248,6 +267,7 @@ export const renderResultados = () => {
       ${embudoHTML(r, conSeguimiento)}
       ${mesesHTML(r)}
       ${opcionalesHTML(r)}
+      ${motivosHTML(r)}
       ${clientesHTML(r)}
       ${franjasHTML(r, conSeguimiento)}
     </div>

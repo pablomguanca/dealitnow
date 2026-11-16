@@ -74,7 +74,7 @@ const iniciarClienteCorto = async id => {
   try {
     const datos = await AteneaDB.proposals.obtenerPublica(id);
     if (datos) {
-      ctx.compartida = { id, aceptacion: datos.aceptacion, marca: datos.marca === true };
+      ctx.compartida = { id, aceptacion: datos.aceptacion, marca: datos.marca === true, respuesta: datos.respuesta || null };
       // Aceptada: se muestra la versión que se aceptó, con los opcionales elegidos.
       if (datos.aceptacion) ctx.seleccion = new Set((datos.aceptacion.opcionales || []).map(o => o.id));
       mostrarCliente(datos.aceptacion?.contenido || datos.payload);

@@ -143,6 +143,12 @@
       "destination": "/app"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/visto",
+      "schedule": "0 12 * * *"
+    }
+  ],
   "functions": {
     "api/ia-propuesta.js": {
       "maxDuration": 60

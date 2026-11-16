@@ -1,7 +1,8 @@
 // Panel «Mis propuestas» (lista en tiempo real, métricas, filtros y avisos de visitas
 // o aceptaciones) y apertura, creación, duplicado y borrado de propuestas.
 
-import { $, texto, fechaLarga } from '../lib/formato.js';
+import { $, esc, texto, fechaLarga } from '../lib/formato.js';
+import { MOTIVOS_RECHAZO } from '../respuestas.js';
 import { vacio, ejemplo } from '../modelo.js';
 import { fechaDeAceptacion } from '../lib/render.js';
 import {
@@ -96,13 +97,21 @@ document.addEventListener('dealit:plan', () => renderPanel());
 // Avisa en el momento cuando un cliente abre o acepta una propuesta. La primera
 // carga solo registra cómo estaba todo, sin avisar.
 const avisarNovedades = docs => {
-  const actual = new Map(docs.map(p => [p.id, { aceptada: !!p.aceptacion, vistas: Number(p.vistas) || 0 }]));
+  const actual = new Map(docs.map(p => [p.id, {
+    aceptada: !!p.aceptacion,
+    vistas: Number(p.vistas) || 0,
+    rechazada: p.status === 'rejected' && !!p.rechazo,
+    cambios: Array.isArray(p.cambios) ? p.cambios.length : 0
+  }]));
   if (seguimientoAnterior) {
     for (const p of docs) {
       const antes = seguimientoAnterior.get(p.id);
       if (!antes) continue;
       const titulo = texto(p.title).trim() || 'tu propuesta';
+      const ahora = actual.get(p.id);
       if (p.aceptacion && !antes.aceptada) celebrar(`${texto(p.aceptacion.nombre)} aceptó «${titulo}».`);
+      else if (ahora.cambios > antes.cambios) avisar(`Tu cliente te pidió un cambio en «${titulo}».`, 9000);
+      else if (ahora.rechazada && !antes.rechazada) avisar(`Tu cliente no avanza por ahora con «${titulo}»: ${(MOTIVOS_RECHAZO[p.rechazo.motivo] || 'otro motivo').toLowerCase()}.`, 9000);
       else if ((Number(p.vistas) || 0) > antes.vistas && !restriccionesActivas()) avisar(`Tu cliente está viendo «${titulo}».`, 6000);
     }
   }
@@ -119,6 +128,29 @@ const actualizarAvisoAceptada = () => {
   elAvisoAceptada.textContent = `${texto(a.nombre)} aceptó esta propuesta${fecha ? ` el ${fechaLarga(fecha)}` : ''}. Tu cliente sigue viendo la versión que aceptó: los cambios que hagas acá no le llegan.`;
 };
 
+// En el editor: lo que respondió el cliente sin aceptar (no avanza, pedidos de cambio).
+const actualizarAvisoRespuestas = () => {
+  const el = $('#editor-respuestas');
+  if (!el) return;
+  const p = ctx.propuestaId ? ctx.propuestas.find(x => x.id === ctx.propuestaId) : null;
+  const rechazo = p && !p.aceptacion && p.status === 'rejected' ? p.rechazo : null;
+  const cambios = p && !p.aceptacion && Array.isArray(p.cambios) ? p.cambios.slice(-3).reverse() : [];
+  el.hidden = !rechazo && !cambios.length;
+  if (el.hidden) return;
+  const cuando = f => { const d = fechaDe(f); return d ? ` <time>${esc(fechaLarga(d))}</time>` : ''; };
+  const partes = [];
+  if (rechazo) {
+    partes.push(`<p><strong>Tu cliente no avanza por ahora:</strong> ${esc(MOTIVOS_RECHAZO[rechazo.motivo] || 'Otro motivo')}.${cuando(rechazo.fecha)}</p>`);
+    if (texto(rechazo.comentario).trim()) partes.push(`<blockquote>«${esc(texto(rechazo.comentario).trim())}»</blockquote>`);
+  }
+  if (cambios.length) {
+    partes.push(`<p><strong>${cambios.length === 1 ? 'Te pidió un cambio' : 'Cambios que te pidió'}:</strong></p>`);
+    cambios.forEach(c => partes.push(`<blockquote>«${esc(texto(c.texto).trim())}»${cuando(c.fecha)}</blockquote>`));
+  }
+  partes.push(`<p class="editor__respuestas-pie">${rechazo ? 'Si la ajustás y la volvés a compartir, vuelve a quedar como enviada y la puede aceptar.' : 'Ajustala y volvé a compartirle el link.'}</p>`);
+  el.innerHTML = partes.join('');
+};
+
 export const escucharPropuestas = () => {
   if (dejarDeEscuchar) dejarDeEscuchar();
   panelCargando = true;
@@ -133,6 +165,7 @@ export const escucharPropuestas = () => {
     avisarNovedades(docs);
     renderPanel();
     actualizarAvisoAceptada();
+    actualizarAvisoRespuestas();
   }, () => {
     panelCargando = false;
     panelError = true;
@@ -178,6 +211,7 @@ export const mostrarEditor = (id, contenido, { historial = true } = {}) => {
   ctx.editando = true;
   mostrarEstadoGuardado();
   actualizarAvisoAceptada();
+  actualizarAvisoRespuestas();
   $('#editor-ia').hidden = false;
   $('#menu-editar-ia').hidden = false;
   migrarLogo();

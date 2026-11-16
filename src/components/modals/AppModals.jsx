@@ -1,6 +1,6 @@
 // Diálogos modales (confirmación, compartir, aceptar propuesta, eliminar cuenta, visor Lightbox), notificaciones y plantillas de listas dinámicas.
 
-import { DialogoAceptar, DialogoConfirmacion, Aviso, VisorLightbox } from './ModalesComunes.jsx';
+import { DialogoAceptar, DialogoResponder, DialogoConfirmacion, Aviso, VisorLightbox } from './ModalesComunes.jsx';
 import { DialogoIA } from './DialogoIA.jsx';
 
 const TPL_CONTROLES = `<button type="button" class="icono-boton" data-accion="subir"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 10l4-4 4 4"/></svg></button>
@@ -372,6 +372,7 @@ export function AppModals() {
 </dialog>
 
       <DialogoAceptar />
+      <DialogoResponder />
 
 <dialog className="dialogo dialogo--vista" id="dialogo-plantilla-vista" aria-labelledby="plantilla-vista-titulo">
   <form method="dialog" className="dialogo--vista__marco">

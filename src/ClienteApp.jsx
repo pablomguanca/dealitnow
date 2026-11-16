@@ -2,7 +2,7 @@
 // No carga el editor, el panel ni React Router (ver src/main.jsx).
 
 import { useEffect } from 'react';
-import { DialogoAceptar, Aviso, VisorLightbox } from './components/modals/ModalesComunes.jsx';
+import { DialogoAceptar, DialogoResponder, Aviso, VisorLightbox } from './components/modals/ModalesComunes.jsx';
 import { inicializarVistaCliente } from './controlador/iniciar-cliente.js';
 
 export default function ClienteApp() {
@@ -20,6 +20,7 @@ export default function ClienteApp() {
         </section>
       </main>
       <DialogoAceptar />
+      <DialogoResponder />
       <Aviso />
       <VisorLightbox />
     </>

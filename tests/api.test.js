@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { crearHandler as crearAceptar } from '../api/aceptar.js';
-import { crearHandler as crearVisto } from '../api/visto.js';
+import { crearHandler as crearVisto, crearTareaDiaria } from '../api/visto.js';
 import { vacio } from '../src/modelo.js';
 
 const ID = 'AAAAAAAAAAAAAAAAAAA1';
@@ -88,6 +88,91 @@ describe('POST /api/visto', () => {
     const r2 = res(); await h({ method: 'POST', headers: { 'content-type': 'text/plain' }, body: 'x' }, r2);
     const r3 = res(); await h(post({ id: '../../users/x' }), r3);
     expect([r1.estado, r2.estado, r3.estado]).toEqual([405, 415, 400]);
+  });
+});
+
+describe('GET /api/visto (tarea diaria de recordatorios)', () => {
+  // Firestore mínimo con consultas por igualdad.
+  const crearDbConsulta = docs => {
+    const actualizados = [];
+    const consulta = (filtros = []) => ({
+      where: (campo, _op, valor) => consulta([...filtros, [campo, valor]]),
+      get: async () => {
+        const lista = Object.entries(docs).filter(([, d]) => filtros.every(([c, v]) => d[c] === v));
+        return {
+          size: lista.length,
+          docs: lista.map(([id, d]) => ({ id, data: () => d, ref: { update: async c => { actualizados.push({ id, c }); Object.assign(d, c); } } }))
+        };
+      }
+    });
+    return { db: () => ({ collection: () => consulta() }), actualizados };
+  };
+  const ahora = () => new Date('2026-11-16T12:00:00Z');
+  const entorno = { CRON_SECRET: 'secreto', APP_URL: 'https://dealit.com.ar' };
+  const cerca = (cambios = {}) => propuesta({ payload: { ...vacio(), propuesta: { titulo: 'Web', fecha: '2026-11-10', validez: 7 } }, ...cambios });
+
+  it('sin la clave del cron no corre', async () => {
+    const { db } = crearDbConsulta({});
+    const r1 = res(); await crearTareaDiaria({ db, entorno: {} })({ method: 'GET', headers: {} }, r1);
+    const r2 = res(); await crearTareaDiaria({ db, entorno })({ method: 'GET', headers: { authorization: 'Bearer otro' } }, r2);
+    expect([r1.estado, r2.estado]).toEqual([503, 401]);
+  });
+
+  it('avisa una sola vez por las propuestas que vencen pronto', async () => {
+    const { db, actualizados } = crearDbConsulta({ A: cerca({ vistas: 2 }), B: propuesta(), C: cerca({ aceptacion: { nombre: 'X' }, status: 'accepted' }) });
+    const avisos = [];
+    const tarea = crearTareaDiaria({ db, entorno, ahora, avisar: async a => avisos.push(a), marcaDeTiempo: () => 'ahora' });
+    const r = res();
+    await tarea({ method: 'GET', headers: { authorization: 'Bearer secreto' } }, r);
+    expect(r.cuerpo).toEqual({ revisadas: 2, avisadas: 1 });
+    expect(avisos[0]).toMatchObject({ tipo: 'por-vencer', id: 'A', recordatorio: { vence: '2026-11-17', quedan: 1, vistas: 2 } });
+    expect(actualizados[0].c.recordatorio.vence).toBe('2026-11-17');
+    const r2 = res();
+    await tarea({ method: 'GET', headers: { authorization: 'Bearer secreto' } }, r2);
+    expect(r2.cuerpo.avisadas).toBe(0);
+  });
+});
+
+describe('POST /api/aceptar: no avanzo y pedir un cambio', () => {
+  const ahora = () => new Date('2026-10-06T12:00:00Z');
+
+  it('«No avanzo por ahora» la deja rechazada y avisa una sola vez', async () => {
+    const { db, escrituras } = crearDb({ [ID]: propuesta() });
+    const avisos = [];
+    const h = crearAceptar({ db, uidDe: async () => null, ahora, avisar: async a => avisos.push(a) });
+    const r = res();
+    await h(post({ id: ID, accion: 'no-avanzo', motivo: 'precio', comentario: 'Muy caro' }), r);
+    expect(r.estado).toBe(200);
+    expect(escrituras[0].cambios.status).toBe('rejected');
+    expect(escrituras[0].cambios.rechazo).toMatchObject({ motivo: 'precio', comentario: 'Muy caro' });
+    await h(post({ id: ID, accion: 'no-avanzo', motivo: 'tiempos' }), res());
+    expect(avisos.map(a => a.tipo)).toEqual(['rechazada']);
+  });
+
+  it('después de «No avanzo» la puede aceptar igual', async () => {
+    const { db } = crearDb({ [ID]: propuesta({ status: 'rejected', rechazo: { motivo: 'precio' } }) });
+    const r = res();
+    await crearAceptar({ db, uidDe: async () => null, ahora })(post({ id: ID, nombre: 'Laura', acepto: true }), r);
+    expect(r.estado).toBe(200);
+  });
+
+  it('«Pedir un cambio» guarda el pedido con su fecha y avisa', async () => {
+    const { db, escrituras } = crearDb({ [ID]: propuesta() });
+    const avisos = [];
+    const r = res();
+    await crearAceptar({ db, uidDe: async () => null, ahora, avisar: async a => avisos.push(a), marcaDeTiempo: f => f.toISOString() })(post({ id: ID, accion: 'cambio', texto: 'Sacar la tienda online' }), r);
+    expect(r.estado).toBe(200);
+    expect(r.cuerpo.cambio.texto).toBe('Sacar la tienda online');
+    expect(Object.keys(escrituras[0].cambios)).toEqual(['cambios']);
+    expect(avisos[0]).toMatchObject({ tipo: 'cambio', respuesta: { texto: 'Sacar la tienda online' } });
+  });
+
+  it('el dueño no puede responderse a sí mismo', async () => {
+    const { db, escrituras } = crearDb({ [ID]: propuesta() });
+    const r = res();
+    await crearAceptar({ db, uidDe: async () => 'duenio', ahora })(post({ id: ID, accion: 'cambio', texto: 'Un cambio' }), r);
+    expect(r.estado).toBe(403);
+    expect(escrituras).toHaveLength(0);
   });
 });
 

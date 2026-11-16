@@ -5,6 +5,7 @@
 //   /p/DEMO0000000000000001 → el cliente, sin sesión (abrilo en otra pestaña)
 // Para empezar de cero: localStorage.removeItem('dealit-demo') y recargar.
 import { validarAceptacion } from '../../src/aceptacion.js';
+import { respuestaPublica, validarPedidoCambio, validarRechazo } from '../../src/respuestas.js';
 import { ejemplo, normalizarCobro, normalizarDatosCobro, usaTransferencia } from '../../src/modelo.js';
 import { LIMITE_ENVIOS_GRATIS, clienteDe, contenidoDelLink, enviosDelMes, esPro, mesDe, mismoCliente, tieneCliente, usosPro } from '../../src/planes.js';
 
@@ -44,6 +45,8 @@ const comoFirestore = (id, d) => {
   const doc = { id, ...structuredClone(d) };
   for (const k of FECHAS) if (doc[k]) doc[k] = { toDate: () => new Date(d[k]) };
   if (doc.aceptacion?.fecha) doc.aceptacion.fecha = { toDate: () => new Date(d.aceptacion.fecha) };
+  if (doc.rechazo?.fecha) doc.rechazo.fecha = { toDate: () => new Date(d.rechazo.fecha) };
+  (doc.cambios || []).forEach((c, i) => { if (c.fecha) c.fecha = { toDate: () => new Date(d.cambios[i].fecha), toMillis: () => Date.parse(d.cambios[i].fecha) }; });
   return doc;
 };
 
@@ -141,7 +144,7 @@ export const AteneaDB = {
       const d = leer()[id];
       if (!d || d.publico !== true) return null;
       const doc = comoFirestore(id, d);
-      return { payload: contenidoDelLink(doc), aceptacion: doc.aceptacion || null, marca: d.marca === true };
+      return { payload: contenidoDelLink(doc), aceptacion: doc.aceptacion || null, marca: d.marca === true, respuesta: respuestaPublica(doc) };
     },
     actualizar: async (id, cambios) => actualizarDoc(id, cambios),
     borrar: async id => { const docs = leer(); delete docs[id]; guardar(docs); localStorage.removeItem(`${CLAVE}:versiones:proposals:${id}`); },
@@ -178,6 +181,23 @@ window.fetch = async (url, opciones = {}) => {
   }
   if (ruta === '/api/aceptar') {
     if (doc && uid === doc.userId) return respuesta(403, { error: 'propia' });
+    // «No avanzo por ahora» y «Pedir un cambio», como api/aceptar.
+    if (cuerpo.accion === 'no-avanzo') {
+      const r = validarRechazo({ doc, cuerpo });
+      if (r.error) return respuesta(r.estado, { error: r.error });
+      const fecha = new Date().toISOString();
+      Object.assign(doc, { status: 'rejected', rechazo: { ...r.datos, fecha }, updatedAt: fecha });
+      guardar(docs);
+      return respuesta(200, { rechazo: { ...r.datos, fecha } });
+    }
+    if (cuerpo.accion === 'cambio') {
+      const r = validarPedidoCambio({ doc, cuerpo });
+      if (r.error) return respuesta(r.estado, { error: r.error });
+      const fecha = new Date().toISOString();
+      doc.cambios = [...(doc.cambios || []), { ...r.datos, fecha }];
+      guardar(docs);
+      return respuesta(200, { cambio: { ...r.datos, fecha } });
+    }
     const { datos, error, estado } = validarAceptacion({ doc, cuerpo });
     if (error) return respuesta(estado, { error });
     // Como api/aceptar: con transferencia, los datos de cobro del dueño van con la aceptación.

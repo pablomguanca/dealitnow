@@ -217,6 +217,8 @@
     &--caliente { background: #C2410C; }
     &--vence { border-radius: 2px; background: #B45309; }
     &--sin-abrir { border: 2px solid var(--marfil-apagado); }
+    // Pidió un cambio: rombo.
+    &--cambio { border-radius: 1px; background: var(--dorado-papel); transform: rotate(45deg) scale(0.85); }
   }
 
   &__texto {
@@ -294,6 +296,11 @@
   &__fila--bloqueada .res-embudo__pista {
     background: repeating-linear-gradient(135deg, var(--res-pista) 0 6px, transparent 6px 10px);
   }
+}
+
+// Motivos de «No avanzo»: etiquetas más largas, valor corto.
+.res-motivos .res-embudo__fila {
+  grid-template-columns: minmax(7rem, 11rem) minmax(0, 1fr) 2rem;
 }
 
 // Columnas por mes

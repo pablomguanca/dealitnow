@@ -20,7 +20,8 @@ import { abrirRegistro } from './sesion.js';
 import { guardarVersion } from './versiones.js';
 import { llamarApi } from './api.js';
 import { ofrecerPro, ofrecerCambioPortafolio, restriccionesActivas, confirmarUltimoEnvio, enviosRestantes } from './plan.js';
-import { usosPro } from '../planes.js';
+import { usosPro, contenidoDelLink } from '../planes.js';
+import { mensajeRecordatorio, porVencer } from '../respuestas.js';
 import { esAppNativa, compartirNativo } from '../nativo.js';
 
 let linkActual = '';
@@ -232,6 +233,34 @@ export const instalarCompartir = () => {
     'copiar-link-propuesta': async boton => {
       if (await copiar(linkCorto(boton.dataset.id))) avisarExito('Link copiado.');
       else avisarError('No se pudo copiar el link. Abrí la propuesta y copialo desde «Compartir».');
+    },
+    // Propuesta por vencer sin respuesta: un mensaje listo para recordarle al cliente.
+    'recordar-propuesta': async boton => {
+      const p = ctx.propuestas.find(x => x.id === boton.dataset.id);
+      const vence = p && porVencer(p);
+      if (!p) return;
+      const contenido = contenidoDelLink(p) || {};
+      const mensaje = mensajeRecordatorio({
+        cliente: contenido.cliente?.nombre || p.clientName,
+        titulo: contenido.propuesta?.titulo || p.title,
+        vence: vence?.vence,
+        quedan: vence?.quedan,
+        link: linkCorto(p.id)
+      });
+      const opcion = await elegir({
+        titulo: 'Recordale a tu cliente',
+        texto: mensaje,
+        opciones: [
+          { valor: null, texto: 'Cancelar', estilo: 'texto' },
+          { valor: 'copiar', texto: 'Copiar mensaje', estilo: 'secundario' },
+          { valor: 'whatsapp', texto: 'Mandar por WhatsApp', estilo: 'primario' }
+        ]
+      });
+      if (opcion === 'whatsapp') window.open(`https://wa.me/?text=${encodeURIComponent(mensaje)}`, '_blank', 'noopener');
+      else if (opcion === 'copiar') {
+        if (await copiar(mensaje)) avisarExito('Mensaje copiado. Pegalo en tu chat con el cliente.');
+        else avisarError('No se pudo copiar. Probá de nuevo.');
+      }
     },
     'copiar-link-portafolio': async boton => {
       if (await copiar(linkCortoPortafolio(boton.dataset.id))) avisarExito('Link del portfolio copiado.');

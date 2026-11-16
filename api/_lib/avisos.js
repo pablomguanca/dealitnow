@@ -1,9 +1,11 @@
-// Avisos al dueño: cuando su cliente acepta la propuesta (a todos, también en Gratis: es el
-// momento «mi cliente aceptó») y, solo con Pro, cuando la abre. Van por email con Resend (RESEND_API_KEY) y como notificación push a los
+// Avisos al dueño: cuando su cliente acepta la propuesta, no avanza o pide un cambio (a todos,
+// también en Gratis: es su cliente respondiendo) y, solo con Pro, cuando la abre y cuando
+// está por vencer sin respuesta (tarea diaria en api/visto). Van por email con Resend (RESEND_API_KEY) y como notificación push a los
 // dispositivos donde las activó (ver push.js). Sin las claves no se manda nada.
 // Un aviso que falla nunca rompe la visita ni la aceptación: solo queda en el log.
 import { esPro } from '../../src/planes.js';
 import { dinero, texto } from '../../src/lib/formato.js';
+import { MOTIVOS_RECHAZO, venceTexto } from '../../src/respuestas.js';
 import { enviarPush as enviarPushReal } from './push.js';
 
 const escapar = s => texto(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -18,8 +20,17 @@ const datosDe = propuesta => {
 
 const PIE = {
   pro: 'Recibís este aviso porque tenés Dealit Pro.',
-  gratis: 'Recibís este aviso porque tu propuesta se aceptó en Dealit. Con Dealit Pro también te avisamos cada vez que tu cliente la abre.'
+  gratis: 'Recibís este aviso porque tu propuesta se aceptó en Dealit. Con Dealit Pro también te avisamos cada vez que tu cliente la abre.',
+  respuesta: 'Recibís este aviso porque tu cliente respondió tu propuesta en Dealit.'
 };
+
+// Lo que escribió el cliente, recortado para el aviso.
+const citar = (t, max = 280) => {
+  const limpio = texto(t).trim();
+  return limpio.length > max ? `${limpio.slice(0, max - 1).trimEnd()}…` : limpio;
+};
+
+const quienResponde = (respuesta, cliente) => texto(respuesta?.nombre).trim() || cliente || 'Tu cliente';
 
 const plantilla = ({ titular, parrafos, boton, url, pie = PIE.pro }) => `<!doctype html>
 <html lang="es"><body style="margin:0;padding:24px;background:#F4F1EA;font-family:Arial,Helvetica,sans-serif;color:#1F1D1A">
@@ -33,9 +44,72 @@ const plantilla = ({ titular, parrafos, boton, url, pie = PIE.pro }) => `<!docty
 </body></html>`;
 
 // Asunto, HTML y texto plano de cada aviso. Puro: se testea sin red.
-export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, urlApp, pro = true }) => {
+export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, respuesta, recordatorio, urlApp, pro = true }) => {
   const { titulo, cliente } = datosDe(propuesta);
   const url = `${urlApp}/propuesta/${encodeURIComponent(id)}`;
+  if (tipo === 'rechazada') {
+    const quien = quienResponde(respuesta, cliente);
+    const motivo = MOTIVOS_RECHAZO[respuesta?.motivo] || 'Otro motivo';
+    const comentario = citar(respuesta?.comentario);
+    const cierre = 'Si le podés ofrecer otra opción, todavía la puede aceptar desde el mismo link.';
+    return {
+      asunto: `${quien} no avanza por ahora con «${titulo}»`,
+      html: plantilla({
+        titular: `${escapar(quien)} no avanza por ahora`,
+        parrafos: [
+          `Respondió <strong>«${escapar(titulo)}»</strong>.`,
+          `Motivo: <strong>${escapar(motivo)}</strong>.`,
+          ...(comentario ? [`«${escapar(comentario)}»`] : []),
+          cierre
+        ],
+        boton: 'Ver la propuesta',
+        url,
+        pie: PIE.respuesta
+      }),
+      texto: `${quien} no avanza por ahora con «${titulo}».\nMotivo: ${motivo}.${comentario ? `\n«${comentario}»` : ''}\n${cierre}\n\n${url}`
+    };
+  }
+  if (tipo === 'cambio') {
+    const quien = quienResponde(respuesta, cliente);
+    const pedido = citar(respuesta?.texto, 600);
+    return {
+      asunto: `${quien} te pidió un cambio en «${titulo}»`,
+      html: plantilla({
+        titular: `${escapar(quien)} te pidió un cambio`,
+        parrafos: [
+          `En <strong>«${escapar(titulo)}»</strong>:`,
+          `«${escapar(pedido).replace(/\n/g, '<br>')}»`,
+          'Ajustala y volvé a compartirle el link: que pida cambios es señal de que le interesa.'
+        ],
+        boton: 'Abrir la propuesta',
+        url,
+        pie: PIE.respuesta
+      }),
+      texto: `${quien} te pidió un cambio en «${titulo}»:\n«${pedido}»\n\n${url}`
+    };
+  }
+  if (tipo === 'por-vencer') {
+    const quien = cliente || 'Tu cliente';
+    const cuando = venceTexto(recordatorio?.vence, recordatorio?.quedan);
+    const vistas = Number(recordatorio?.vistas) || 0;
+    const estado = vistas > 0
+      ? `${quien} la abrió ${vistas === 1 ? 'una vez' : `${vistas} veces`} y todavía no respondió.`
+      : `${quien} todavía no la abrió.`;
+    return {
+      asunto: `«${titulo}» vence ${cuando}`,
+      html: plantilla({
+        titular: `«${escapar(titulo)}» vence ${escapar(cuando)}`,
+        parrafos: [
+          escapar(estado),
+          'Es un buen momento para escribirle: en la propuesta tenés un mensaje listo para mandarle.'
+        ],
+        boton: 'Recordarle',
+        url,
+        pie: PIE.pro
+      }),
+      texto: `«${titulo}» vence ${cuando}. ${estado}\nEs un buen momento para escribirle.\n\n${url}`
+    };
+  }
   if (tipo === 'aceptada') {
     const nombre = texto(aceptacion?.nombre).trim() || cliente || 'Tu cliente';
     const moneda = aceptacion?.moneda || 'USD';
@@ -84,7 +158,7 @@ export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, urlApp, pro = 
 };
 
 // Notificación push del mismo aviso: corta, para la pantalla bloqueada. Pura.
-export const contenidoPush = ({ tipo, id, propuesta, aceptacion, urlApp, vistas }) => {
+export const contenidoPush = ({ tipo, id, propuesta, aceptacion, respuesta, recordatorio, urlApp, vistas }) => {
   const { titulo, cliente } = datosDe(propuesta);
   const url = `${urlApp}/propuesta/${encodeURIComponent(id)}`;
   // Cada visita con su propia etiqueta: si reemplazara al aviso anterior de la propuesta,
@@ -97,6 +171,21 @@ export const contenidoPush = ({ tipo, id, propuesta, aceptacion, urlApp, vistas 
     const mensual = Number(aceptacion?.mensual) || 0;
     const total = `${dinero(inicial, moneda)}${mensual > 0 ? ` + ${dinero(mensual, moneda)} por mes` : ''}`;
     return { titulo: `🎉 ${nombre} aceptó «${titulo}»`, cuerpo: `Total aceptado: ${total}. Escribile para arrancar.`, url, tag };
+  }
+  if (tipo === 'rechazada') {
+    return { titulo: `${quienResponde(respuesta, cliente)} no avanza por ahora con «${titulo}»`, cuerpo: `Motivo: ${MOTIVOS_RECHAZO[respuesta?.motivo] || 'Otro motivo'}.`, url, tag };
+  }
+  if (tipo === 'cambio') {
+    return { titulo: `${quienResponde(respuesta, cliente)} te pidió un cambio en «${titulo}»`, cuerpo: citar(respuesta?.texto, 140), url, tag: `cambio-${id}-${Date.now()}` };
+  }
+  if (tipo === 'por-vencer') {
+    const vistas = Number(recordatorio?.vistas) || 0;
+    return {
+      titulo: `«${titulo}» vence ${venceTexto(recordatorio?.vence, recordatorio?.quedan)}`,
+      cuerpo: `${cliente || 'Tu cliente'} ${vistas > 0 ? 'la abrió y no respondió' : 'todavía no la abrió'}. Recordale.`,
+      url,
+      tag
+    };
   }
   const quien = cliente || 'Tu cliente';
   if (tipo === 'revisita') {
@@ -128,9 +217,9 @@ export const enviarEmail = async ({ para, asunto, html, texto: plano }, { entorn
 // aceptación, a todos; las visitas, solo con Pro (o con los planes apagados para su cuenta). Devuelve cómo le fue al email.
 // Las revisitas van solo por push: un email cada vez que el cliente abre el link sería demasiado.
 const SOLO_PUSH = new Set(['revisita']);
-const PARA_TODOS = new Set(['aceptada']);
+const PARA_TODOS = new Set(['aceptada', 'rechazada', 'cambio']);
 
-export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarPush = enviarPushReal }) => async ({ tipo, id, propuesta, aceptacion, urlApp, vistas }) => {
+export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarPush = enviarPushReal }) => async ({ tipo, id, propuesta, aceptacion, respuesta, recordatorio, urlApp, vistas }) => {
   try {
     const uid = propuesta?.userId;
     if (!uid) return 'sin-duenio';
@@ -142,7 +231,7 @@ export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarP
     const plan = snapPlan.exists ? snapPlan.data() : {};
     const pro = esPro(plan) || !planesActivos(email);
     if (!pro && !PARA_TODOS.has(tipo)) return 'gratis';
-    const datos = { tipo, id, propuesta, aceptacion, urlApp, vistas, pro };
+    const datos = { tipo, id, propuesta, aceptacion, respuesta, recordatorio, urlApp, vistas, pro };
     const conEmail = email && !SOLO_PUSH.has(tipo);
     const [porEmail, porPush] = await Promise.allSettled([
       conEmail ? enviar({ para: email, ...contenidoAviso(datos) }) : Promise.resolve(null),
