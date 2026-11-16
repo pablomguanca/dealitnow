@@ -1178,7 +1178,285 @@ a { color: inherit; }
   68%, 100% { opacity: 0; transform: translate(-2rem, 1rem); }
 }
 
-/* ---------- 6. Precios + FAQ (claro) ---------- */
+/* ---------- 6. Firma al aceptar (oscuro) ---------- */
+.ld-firma { background: var(--ld-noche-2); border-top: 1px solid var(--ld-borde-noche); }
+
+.ld-firma__grilla {
+  display: grid;
+  gap: 3rem;
+  margin-top: 3rem;
+  @media (min-width: 900px) { grid-template-columns: auto 1fr; align-items: center; gap: 4rem; }
+}
+.ld-firma__tel { display: grid; justify-items: center; }
+
+.ld-firma__puntos {
+  display: grid;
+  gap: 1.5rem;
+  li { display: flex; gap: 1rem; align-items: flex-start; }
+  h3 { margin-bottom: 0.3rem; font: 400 1.55rem/1 var(--ld-display); letter-spacing: 0.02em; }
+  p { color: var(--ld-suave-noche); }
+}
+.ld-firma__icono {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.8rem;
+  height: 2.8rem;
+  border-radius: 0.85rem;
+  background: var(--ld-verde-tenue);
+  svg { width: 1.4rem; fill: none; stroke: var(--ld-verde); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+}
+
+// El PDF de la propuesta aceptada, con la firma sobre la línea
+.ld-firma__pdf {
+  display: grid;
+  gap: 0.55rem;
+  max-width: 30rem;
+  margin-top: 2.25rem;
+  padding: 1.4rem 1.5rem 1.6rem;
+  border-radius: 0.6rem;
+  background: #fff;
+  color: var(--ld-tinta);
+  box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.8);
+  transform: rotate(-1.2deg);
+  > i { display: block; height: 6px; border-radius: 3px; background: #e2e6ec; }
+}
+.ld-firma__pdf-cabeza {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--ld-borde-dia);
+  color: var(--ld-tinta-suave);
+  font-size: 0.72rem;
+  span:first-child { color: var(--ld-tinta); font: 400 1.05rem/1 var(--ld-display); letter-spacing: 0.03em; }
+}
+.ld-firma__lineas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 4.2rem;
+}
+.ld-firma__linea {
+  position: relative;
+  padding-top: 0.45rem;
+  border-top: 1.5px solid #4a5568;
+  font-size: 0.72rem;
+  color: var(--ld-tinta-suave);
+  b { display: block; color: var(--ld-tinta); font-size: 0.8rem; }
+  svg { position: absolute; left: 0; bottom: calc(100% - 0.6rem); width: 100%; height: auto; }
+}
+
+/* El teléfono: el cliente confirma, escribe su nombre, firma con el dedo y acepta.
+   Todo en em sobre el ancho del teléfono (cqi). Los estados de base son los finales (nombre
+   escrito, firma hecha): así se ve completo si el navegador pide no animar. */
+.ld-fd {
+  container-type: inline-size;
+  background: #0d0c0a;
+  color: #f3efe6;
+}
+.ld-fd__fondo {
+  padding: 3.3em 1.2em 1em;
+  font-size: 4.3cqi;
+  background:
+    linear-gradient(180deg, rgba(13, 12, 10, 0.3), #0d0c0a 90%),
+    radial-gradient(60% 50% at 78% 20%, rgba(214, 158, 88, 0.85), transparent 70%),
+    radial-gradient(45% 40% at 18% 40%, rgba(120, 72, 40, 0.9), transparent 70%),
+    linear-gradient(160deg, #3a2516, #140d08);
+  min-height: 40%;
+}
+.ld-fd__marca { color: #c9a24a; font-size: 0.68em; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+.ld-fd__titulo { margin-top: 0.3em; font: 400 2em/0.95 var(--ld-display); text-transform: uppercase; }
+
+.ld-fd__hoja {
+  position: absolute;
+  inset: auto 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45em;
+  padding: 1.2em 1.1em 1.3em;
+  border-radius: 1.2em 1.2em 0 0;
+  background: #fff;
+  color: var(--ld-tinta);
+  font-size: 4.1cqi;
+  box-shadow: 0 -12px 30px rgba(0, 0, 0, 0.45);
+  animation: ld-fd-hoja 11s ease-in-out infinite;
+}
+.ld-fd__h { font-size: 1.15em; font-weight: 700; }
+.ld-fd__resumen {
+  display: grid;
+  margin: 0 0 0.3em;
+  div { display: flex; justify-content: space-between; gap: 0.5em; padding: 0.3em 0; border-bottom: 1px solid var(--ld-borde-dia); font-size: 0.82em; }
+  dt { color: var(--ld-tinta-suave); }
+  dd { margin: 0; font-weight: 700; }
+}
+.ld-fd__etiqueta { margin-top: 0.2em; color: var(--ld-tinta-suave); font-size: 0.75em; font-weight: 600; }
+.ld-fd__campo {
+  padding: 0.5em 0.7em;
+  border: 1px solid #d5d9e0;
+  border-radius: 0.5em;
+  font-size: 0.9em;
+}
+.ld-fd__nombre {
+  display: inline-block;
+  clip-path: inset(0 0 0 0);
+  animation: ld-fd-escribe 11s infinite;
+}
+.ld-fd__pad {
+  position: relative;
+  height: 5.6em;
+  border: 1.5px dashed #c3cad4;
+  border-radius: 0.6em;
+  background: #fbfcfd;
+}
+.ld-fd__guia {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #a0a9b6;
+  font-size: 0.85em;
+  opacity: 0;
+  animation: ld-fd-guia 11s infinite;
+}
+.ld-fd__svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.ld-trazo {
+  fill: none;
+  stroke: #1f1d1a;
+  stroke-width: 7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  &--tel { animation: ld-fd-traza 11s linear infinite; }
+  &--pdf { stroke: #1d3a7a; animation: ld-fd-traza-pdf 11s ease-in-out infinite; }
+}
+.ld-fd__dedo {
+  fill: rgba(26, 32, 44, 0.16);
+  stroke: rgba(26, 32, 44, 0.5);
+  stroke-width: 3;
+  opacity: 0;
+  animation: ld-fd-dedo 11s infinite;
+}
+.ld-fd__casilla {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  margin-top: 0.2em;
+  font-size: 0.74em;
+}
+.ld-fd__check {
+  position: relative;
+  flex: none;
+  width: 1.25em;
+  height: 1.25em;
+  border: 1.5px solid #9aa3b0;
+  border-radius: 0.3em;
+  &::after {
+    content: '✓';
+    position: absolute;
+    inset: -1.5px;
+    display: grid;
+    place-items: center;
+    border-radius: 0.3em;
+    background: #c9a24a;
+    color: #1a1408;
+    font-weight: 800;
+    animation: ld-fd-check 11s infinite;
+  }
+}
+.ld-fd__boton {
+  display: block;
+  margin-top: 0.5em;
+  padding: 0.85em;
+  border-radius: 999px;
+  background: #c9a24a;
+  color: #1a1408;
+  font-weight: 800;
+  text-align: center;
+  animation: ld-fd-boton 11s infinite;
+}
+
+.ld-fd__listo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.7em;
+  padding: 1.5em;
+  background: radial-gradient(70% 50% at 50% 40%, rgba(201, 162, 74, 0.18), transparent 70%), #0d0c0a;
+  font-size: 4.3cqi;
+  text-align: center;
+  opacity: 0;
+  animation: ld-fd-listo 11s infinite;
+}
+.ld-fd__ok {
+  display: grid;
+  place-items: center;
+  width: 2.8em;
+  height: 2.8em;
+  border-radius: 50%;
+  background: #c9a24a;
+  color: #1a1408;
+  font-size: 1.2em;
+  font-weight: 800;
+}
+.ld-fd__listo-h { font: 400 2em/0.95 var(--ld-display); text-transform: uppercase; }
+.ld-fd__firmada {
+  width: 85%;
+  path { fill: none; stroke: #f3efe6; stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; }
+}
+.ld-fd__quien { padding-top: 0.5em; border-top: 1px solid rgba(243, 239, 230, 0.25); color: #a59e90; font-size: 0.8em; }
+
+@keyframes ld-fd-hoja {
+  0% { transform: translateY(105%); }
+  6%, 94% { transform: translateY(0); }
+  95%, 100% { transform: translateY(105%); }
+}
+@keyframes ld-fd-escribe {
+  0%, 8% { clip-path: inset(0 100% 0 0); animation-timing-function: steps(11, end); }
+  19%, 95% { clip-path: inset(0 0 0 0); }
+  96%, 100% { clip-path: inset(0 100% 0 0); }
+}
+@keyframes ld-fd-guia {
+  0%, 22% { opacity: 1; }
+  25%, 95% { opacity: 0; }
+  96%, 100% { opacity: 1; }
+}
+@keyframes ld-fd-traza {
+  0%, 24% { stroke-dashoffset: 1; }
+  50%, 95% { stroke-dashoffset: 0; }
+  96%, 100% { stroke-dashoffset: 1; }
+}
+@keyframes ld-fd-dedo {
+  0%, 22% { opacity: 0; }
+  24%, 50% { opacity: 1; }
+  52%, 100% { opacity: 0; }
+}
+@keyframes ld-fd-check {
+  0%, 54% { opacity: 0; transform: scale(0.5); }
+  57%, 95% { opacity: 1; transform: scale(1); }
+  96%, 100% { opacity: 0; transform: scale(0.5); }
+}
+@keyframes ld-fd-boton {
+  0%, 60% { transform: none; filter: none; }
+  63% { transform: scale(0.95); filter: brightness(0.9); }
+  66%, 100% { transform: none; filter: none; }
+}
+@keyframes ld-fd-listo {
+  0%, 67% { opacity: 0; }
+  71%, 94% { opacity: 1; }
+  99%, 100% { opacity: 0; }
+}
+@keyframes ld-fd-traza-pdf {
+  0%, 72% { stroke-dashoffset: 1; }
+  86%, 96% { stroke-dashoffset: 0; }
+  99%, 100% { stroke-dashoffset: 1; }
+}
+
+/* ---------- 7. Precios + FAQ (claro) ---------- */
 .ld-precios {
   background: var(--ld-dia);
   color: var(--ld-tinta);
@@ -1186,8 +1464,9 @@ a { color: inherit; }
 }
 
 .ld-periodo {
-  display: inline-flex;
-  margin-top: 2rem;
+  display: flex;
+  width: fit-content;
+  margin: 2.5rem auto 0;
   padding: 0.3rem;
   border-radius: 999px;
   background: #fff;
@@ -1210,7 +1489,9 @@ a { color: inherit; }
   display: grid;
   gap: 1rem;
   margin-top: 1.5rem;
-  @media (min-width: 900px) { grid-template-columns: 1fr 1.12fr 0.9fr; align-items: center; }
+  max-width: 52rem;
+  margin-inline: auto;
+  @media (min-width: 760px) { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: 1.5rem; }
 }
 
 .ld-plan {
@@ -1237,7 +1518,6 @@ a { color: inherit; }
     li::before { color: var(--ld-verde); }
     .ld-plan__para { color: var(--ld-suave-noche); }
   }
-  &--estudio { opacity: 0.8; ul { flex: none; margin-bottom: 0; } }
 }
 .ld-plan__cinta {
   position: absolute;
@@ -1310,7 +1590,7 @@ a { color: inherit; }
   p { padding: 0 0 1.3rem; color: var(--ld-tinta-suave); }
 }
 
-/* ---------- 7. Cierre ---------- */
+/* ---------- 8. Cierre ---------- */
 .ld-cierre {
   position: relative;
   overflow: hidden;

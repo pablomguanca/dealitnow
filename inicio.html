@@ -170,6 +170,14 @@
         },
         {
           "@type": "Question",
+          "name": "¿Mi cliente puede firmar la propuesta?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Sí. En el cierre de la propuesta prendés «Pedir la firma del cliente» y, al aceptar, firma con el dedo en el celular o con el mouse en la compu. La firma queda guardada con su nombre y la fecha, se ve en el link de la propuesta aceptada y aparece sobre la línea de firma del PDF. Está en todos los planes, también en Gratis."
+          }
+        },
+        {
+          "@type": "Question",
           "name": "¿Cómo le cobro a mi cliente cuando acepta el presupuesto?",
           "acceptedAnswer": {
             "@type": "Answer",
@@ -238,7 +246,7 @@
         <ul class="ld-hero__pruebas ld-aparece" aria-label="Lo que incluye">
           <li><strong>Voz → propuesta</strong> con IA</li>
           <li><strong>Link</strong> (y PDF si lo piden)</li>
-          <li><strong>Aceptación</strong> online</li>
+          <li><strong>Aceptación y firma</strong> online</li>
         </ul>
       </div>
 
@@ -383,7 +391,7 @@
             <li>Dictada desde el celular</li>
             <li>Un link que se ve impecable (y en PDF, si lo piden)</li>
             <li>Aviso en vivo cuando la abre</li>
-            <li>Acepta con un toque y suma opcionales</li>
+            <li>Acepta y firma con el dedo, y suma opcionales</li>
             <li>Paga ahí mismo con Mercado Pago</li>
           </ul>
         </div>
@@ -423,7 +431,7 @@
           </div>
           <span class="ld-paso__num">Paso 3</span>
           <h3>Enterate cuándo la mira y cobrá en el acto</h3>
-          <p>Te llega un aviso cuando la abre y cuando vuelve a mirarla. Acepta con un toque, queda la constancia para los dos y te paga con Mercado Pago (el anticipo, el total o lo que hayan acordado) o recibe tus datos para transferir.</p>
+          <p>Te llega un aviso cuando la abre y cuando vuelve a mirarla. Acepta con un toque (y firma con el dedo, si se lo pedís), queda la constancia para los dos y te paga con Mercado Pago (el anticipo, el total o lo que hayan acordado) o recibe tus datos para transferir.</p>
         </li>
       </ol>
 
@@ -538,6 +546,7 @@
               <li>Letra chiquita: zoom con los dedos y arrastrar para encontrar el precio</li>
               <li>No sabés si lo abrió ni cuándo</li>
               <li>Para aceptar: «después te confirmo por WhatsApp»</li>
+              <li>Para firmarlo: imprimir, firmar, escanear y reenviar</li>
             </ul>
           </figcaption>
         </figure>
@@ -609,7 +618,7 @@
               <li>Se abre en el link, sin descargar nada</li>
               <li>Hecha para el celular: se lee sin hacer zoom</li>
               <li>Suma opcionales y ve el total al instante</li>
-              <li>Acepta con un toque, y a vos te llega el aviso</li>
+              <li>Acepta y firma con el dedo, y a vos te llega el aviso</li>
             </ul>
           </figcaption>
         </figure>
@@ -618,7 +627,90 @@
     </div>
   </section>
 
-  <!-- ============ 6. PRECIOS + FAQ ============ -->
+  <!-- ============ 6. FIRMA AL ACEPTAR ============ -->
+  <section class="ld-seccion ld-firma" id="firma" aria-labelledby="firma-titulo">
+    <div class="ld-contenedor">
+      <p class="ld-sobretitulo ld-aparece">Firma al aceptar</p>
+      <h2 class="ld-titulo ld-aparece" id="firma-titulo">Que acepte y firme. Ahí mismo, con el dedo.</h2>
+      <p class="ld-bajada ld-aparece">Pedile la firma y, al aceptar, tu cliente firma en la pantalla del celular (o con el mouse en la compu). Queda guardada con la aceptación, en el link y en el PDF. Sin imprimir, escanear ni mandar fotos por WhatsApp.</p>
+
+      <div class="ld-firma__grilla">
+        <!-- El cliente confirma: escribe su nombre, firma con el dedo, acepta -->
+        <div class="ld-firma__tel ld-aparece" aria-hidden="true">
+          <div class="ld-tel ld-tel--dealit">
+            <div class="ld-tel__isla"></div>
+            <div class="ld-tel__pantalla ld-fd">
+              <div class="ld-fd__fondo">
+                <p class="ld-fd__marca">Estudio Norte</p>
+                <p class="ld-fd__titulo">Rediseño de marca y web</p>
+              </div>
+              <div class="ld-fd__hoja">
+                <p class="ld-fd__h">Confirmar la propuesta</p>
+                <dl class="ld-fd__resumen">
+                  <div><dt>Total</dt><dd>$ 1.250.000</dd></div>
+                  <div><dt>Opcionales</dt><dd>Kit para redes</dd></div>
+                </dl>
+                <p class="ld-fd__etiqueta">Tu nombre completo</p>
+                <p class="ld-fd__campo"><span class="ld-fd__nombre">Vero García</span></p>
+                <p class="ld-fd__etiqueta">Tu firma</p>
+                <div class="ld-fd__pad">
+                  <span class="ld-fd__guia">Firmá acá</span>
+                  <svg viewBox="0 0 600 200" class="ld-fd__svg">
+                    <path class="ld-trazo ld-trazo--tel" d="M50 135C70 70 95 45 105 70C115 95 85 150 70 150C55 150 95 95 125 100C150 104 140 135 160 130C180 125 185 95 200 100C215 105 205 135 225 132C245 129 250 98 268 102C286 106 270 140 292 136C318 131 330 70 345 80C360 90 335 150 360 145C385 140 395 100 412 108C428 116 415 140 435 138C460 135 470 110 488 112C505 114 500 135 520 130C540 125 552 112 565 104M90 172C220 160 380 162 545 152" pathLength="1" />
+                    <circle class="ld-fd__dedo" r="22">
+                      <animateMotion dur="11s" repeatCount="indefinite" calcMode="linear" keyTimes="0;0.24;0.5;1" keyPoints="0;0;1;1" path="M50 135C70 70 95 45 105 70C115 95 85 150 70 150C55 150 95 95 125 100C150 104 140 135 160 130C180 125 185 95 200 100C215 105 205 135 225 132C245 129 250 98 268 102C286 106 270 140 292 136C318 131 330 70 345 80C360 90 335 150 360 145C385 140 395 100 412 108C428 116 415 140 435 138C460 135 470 110 488 112C505 114 500 135 520 130C540 125 552 112 565 104M90 172C220 160 380 162 545 152" />
+                    </circle>
+                  </svg>
+                </div>
+                <p class="ld-fd__casilla"><span class="ld-fd__check"></span>Acepto los términos y el alcance de esta propuesta.</p>
+                <span class="ld-fd__boton">Aceptar propuesta</span>
+              </div>
+              <div class="ld-fd__listo">
+                <span class="ld-fd__ok">✓</span>
+                <p class="ld-fd__listo-h">Propuesta aceptada y firmada</p>
+                <svg viewBox="0 0 600 200" class="ld-fd__firmada"><path d="M50 135C70 70 95 45 105 70C115 95 85 150 70 150C55 150 95 95 125 100C150 104 140 135 160 130C180 125 185 95 200 100C215 105 205 135 225 132C245 129 250 98 268 102C286 106 270 140 292 136C318 131 330 70 345 80C360 90 335 150 360 145C385 140 395 100 412 108C428 116 415 140 435 138C460 135 470 110 488 112C505 114 500 135 520 130C540 125 552 112 565 104M90 172C220 160 380 162 545 152" /></svg>
+                <p class="ld-fd__quien">Vero García · 16 de noviembre</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ld-firma__texto">
+          <ul class="ld-firma__puntos">
+            <li class="ld-aparece">
+              <span class="ld-firma__icono" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 17c3-6 5-9 6.5-9S11 15 13 15s2.5-4 4-4 1.5 3 3 3" /><path d="M4 21h16" /></svg></span>
+              <div><h3>Firma con el dedo, sin apps</h3><p>En el celular firma con el dedo; en la compu, con el mouse. Sin cuentas, sin descargas, sin imprimir nada.</p></div>
+            </li>
+            <li class="ld-aparece">
+              <span class="ld-firma__icono" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z" /><path d="M14 3v4h4M10 13h5M10 17h5" /></svg></span>
+              <div><h3>Queda en el link y en el PDF</h3><p>La firma aparece en la propuesta aceptada y sobre la línea de firma del PDF, con el nombre y la fecha. Los dos tienen la misma constancia.</p></div>
+            </li>
+            <li class="ld-aparece">
+              <span class="ld-firma__icono" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="3" /><path d="M8.5 12l2.5 2.5 4.5-5" /></svg></span>
+              <div><h3>Vos decidís cuándo pedirla</h3><p>Es una casilla en el cierre de cada propuesta: la prendés cuando el trabajo lo amerita. Está en todos los planes, también en Gratis.</p></div>
+            </li>
+          </ul>
+
+          <!-- El PDF de la propuesta aceptada: la firma aparece sobre la línea -->
+          <figure class="ld-firma__pdf ld-aparece" aria-hidden="true">
+            <div class="ld-firma__pdf-cabeza"><span>Rediseño de marca y web</span><span>PDF · pág. 4</span></div>
+            <i style="width: 90%"></i><i style="width: 75%"></i><i style="width: 82%"></i>
+            <div class="ld-firma__lineas">
+              <div class="ld-firma__linea">
+                <svg viewBox="0 0 600 200"><path class="ld-trazo ld-trazo--pdf" d="M50 135C70 70 95 45 105 70C115 95 85 150 70 150C55 150 95 95 125 100C150 104 140 135 160 130C180 125 185 95 200 100C215 105 205 135 225 132C245 129 250 98 268 102C286 106 270 140 292 136C318 131 330 70 345 80C360 90 335 150 360 145C385 140 395 100 412 108C428 116 415 140 435 138C460 135 470 110 488 112C505 114 500 135 520 130C540 125 552 112 565 104M90 172C220 160 380 162 545 152" pathLength="1" /></svg>
+                <p><b>Vero García</b>Aceptada y firmada online · 16/11/2026</p>
+              </div>
+              <div class="ld-firma__linea ld-firma__linea--emisor">
+                <p><b>Estudio Norte</b>Quien presupuesta</p>
+              </div>
+            </div>
+          </figure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 7. PRECIOS + FAQ ============ -->
   <section class="ld-seccion ld-precios" id="precios" aria-labelledby="precios-titulo">
     <div class="ld-contenedor">
       <p class="ld-sobretitulo ld-aparece">Precios claros</p>
@@ -639,6 +731,7 @@
             <li>Hasta 100 borradores</li>
             <li>3 propuestas armadas con IA por mes</li>
             <li>Aceptación online y aviso cuando aceptan</li>
+            <li>Firma del cliente con el dedo al aceptar</li>
             <li>Cobro con Mercado Pago o transferencia</li>
             <li>Tu logo y tus colores</li>
             <li class="ld-plan__menos">Lleva «Propuesta creada con Dealit»</li>
@@ -667,15 +760,6 @@
           <p class="ld-plan__garantia">Cancelás cuando quieras desde Mi cuenta.</p>
         </article>
 
-        <article class="ld-plan ld-plan--estudio ld-aparece">
-          <h3>Estudio <span class="ld-etiqueta ld-etiqueta--gris">Próximamente</span></h3>
-          <p class="ld-plan__precio"><b>~ARS 38.900</b><span>por mes</span></p>
-          <p class="ld-plan__para">Para equipos de hasta 3 personas que venden juntos.</p>
-          <ul>
-            <li>Todo lo de Pro</li>
-            <li>Hasta 3 usuarios</li>
-          </ul>
-        </article>
       </div>
 
       <section class="ld-faq" id="preguntas" aria-labelledby="faq-titulo">
@@ -705,6 +789,10 @@
           <p>No. Les llega un link y lo abren en el navegador del celular o de la compu. Sin cuenta, sin descargas, sin contraseñas. La ven, suman opcionales y la aceptan ahí mismo. Y si la quieren guardar o imprimir, la descargan en PDF con un toque.</p>
         </details>
         <details class="ld-aparece">
+          <summary><h3>¿Mi cliente puede firmar la propuesta?</h3></summary>
+          <p>Sí. En el cierre de la propuesta prendés «Pedir la firma del cliente» y, al aceptar, firma con el dedo en el celular o con el mouse en la compu. La firma queda guardada con su nombre y la fecha, se ve en el link de la propuesta aceptada y aparece sobre la línea de firma del PDF. Está en todos los planes, también en Gratis.</p>
+        </details>
+        <details class="ld-aparece">
           <summary><h3>¿Cómo le cobro a mi cliente cuando acepta el presupuesto?</h3></summary>
           <p>Vinculás tu cuenta de Mercado Pago y el cliente paga apenas acepta: el anticipo o el total, según la forma de pago que pusiste en la propuesta. La plata va directo a tu cuenta. También podés cobrar por transferencia: tu CBU y tu alias le llegan recién cuando acepta. Mercado Pago cobra en pesos; en propuestas en dólares se acuerda por transferencia.</p>
         </details>
@@ -720,7 +808,7 @@
     </div>
   </section>
 
-  <!-- ============ 7. CIERRE ============ -->
+  <!-- ============ 8. CIERRE ============ -->
   <section class="ld-cierre" aria-labelledby="cierre-titulo">
     <div class="ld-contenedor">
       <h2 class="ld-cierre__titulo ld-aparece" id="cierre-titulo">Tu competencia sigue peleándose con los márgenes en Word.<br><span class="ld-acento">Vos podés estar cobrando.</span></h2>
