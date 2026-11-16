@@ -103,6 +103,11 @@ const instalarRecorridos = () => {
     pg.style.setProperty('--pg-servicios', hasta(servicios.offsetTop));
     pg.style.setProperty('--pg-opcional', hasta(opcional.offsetTop - alto * 0.3));
     pg.style.setProperty('--pg-fin', hasta(fin));
+    // Las animaciones arrancan (o vuelven a arrancar) con las medidas ya puestas: Chrome toma
+    // los valores de las variables al crear la animación y no los actualiza después.
+    pg.classList.remove('medido');
+    void pg.offsetWidth;
+    pg.classList.add('medido');
   });
   medir();
   document.fonts?.ready.then(medir);

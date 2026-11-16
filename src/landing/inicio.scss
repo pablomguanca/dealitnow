@@ -416,7 +416,9 @@ a { color: inherit; }
   font-size: 4.3cqi;
   line-height: 1.4;
 }
-.ld-pg--duelo .ld-pg__contenido { animation: ld-recorrido 9s ease-in-out infinite; }
+// El recorrido de la comparativa arranca recién con .medido (lo pone inicio.js después de medir):
+// si arranca antes, Chrome se queda con los --pg-… vacíos y la página no baja.
+.ld-pg--duelo.medido .ld-pg__contenido { animation: ld-recorrido 9s ease-in-out infinite; }
 
 .ld-pg__portada {
   position: relative;
@@ -604,7 +606,7 @@ a { color: inherit; }
 
 // Opcional apagado → agregado (los dos teléfonos usan los mismos tiempos, cada uno con su duración)
 .ld-pg__con { opacity: 0; }
-.ld-pg--duelo, .ld-celular:not([data-paso='0']) .ld-pg {
+.ld-pg--duelo.medido, .ld-celular:not([data-paso='0']) .ld-pg {
   --pg-dur: 9s;
   .ld-pg__sin { animation: ld-pg-sale var(--pg-dur) ease-in-out infinite; }
   .ld-pg__con { animation: ld-pg-entra var(--pg-dur) ease-in-out infinite; }
