@@ -1,15 +1,23 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-AR">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Dealit | Dictá tu propuesta, mandala como link y cobrala desde el celular</title>
-<meta name="description" content="Dictale la propuesta a la IA desde el celular, mandala como link, enterate cuando tu cliente la abre y cerrá con aceptación online y cobro con Mercado Pago. Gratis para empezar.">
-<meta name="robots" content="index, follow">
+<title>Propuestas y presupuestos online desde el celular | Dealit</title>
+<meta name="description" content="Armá presupuestos y propuestas comerciales con IA, mandalos como link, sabé cuándo tu cliente los abre y cobrá con Mercado Pago. Gratis para empezar.">
+<meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="canonical" href="https://dealit.com.ar/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Dealit: de la reunión a la propuesta aceptada, desde el celular">
-<meta property="og:description" content="Dictá, compartí como link y cobrá. Sin adjuntos pesados, sin «visto», sin «después te transfiero».">
+<meta property="og:site_name" content="Dealit">
+<meta property="og:locale" content="es_AR">
+<meta property="og:url" content="https://dealit.com.ar/">
+<meta property="og:title" content="Propuestas y presupuestos que tu cliente acepta desde el celular">
+<meta property="og:description" content="Dictá tu presupuesto, mandalo como link y cobralo con Mercado Pago. Sin PDF pesados, sin «visto», sin «después te transfiero».">
+<meta property="og:image" content="https://dealit.com.ar/iconos/icono-512.png">
+<meta property="og:image:width" content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:image:alt" content="Logo de Dealit, propuestas y presupuestos online">
+<meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#06060A">
 <link rel="icon" type="image/png" sizes="48x48" href="/iconos/favicon-48.png">
 <link rel="apple-touch-icon" href="/iconos/apple-touch-icon.png">
@@ -17,6 +25,178 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script type="module" src="/src/landing/inicio.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://dealit.com.ar/#organizacion",
+      "name": "Dealit",
+      "url": "https://dealit.com.ar/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://dealit.com.ar/iconos/icono-512.png",
+        "width": 512,
+        "height": 512
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://dealit.com.ar/#sitio",
+      "url": "https://dealit.com.ar/",
+      "name": "Dealit",
+      "inLanguage": "es-AR",
+      "publisher": {
+        "@id": "https://dealit.com.ar/#organizacion"
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://dealit.com.ar/#pagina",
+      "url": "https://dealit.com.ar/",
+      "name": "Propuestas y presupuestos online desde el celular",
+      "inLanguage": "es-AR",
+      "isPartOf": {
+        "@id": "https://dealit.com.ar/#sitio"
+      },
+      "about": {
+        "@id": "https://dealit.com.ar/#app"
+      },
+      "mainEntity": {
+        "@id": "https://dealit.com.ar/#preguntas"
+      }
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://dealit.com.ar/#app",
+      "name": "Dealit",
+      "url": "https://dealit.com.ar/",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web, Android",
+      "inLanguage": "es-AR",
+      "description": "App para armar presupuestos y propuestas comerciales con IA, compartirlos como link, saber cuándo el cliente los abre y cobrar con Mercado Pago cuando los acepta.",
+      "publisher": {
+        "@id": "https://dealit.com.ar/#organizacion"
+      },
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Gratis",
+          "price": "0",
+          "priceCurrency": "ARS",
+          "url": "https://dealit.com.ar/empezar"
+        },
+        {
+          "@type": "Offer",
+          "name": "Pro mensual",
+          "price": "13900",
+          "priceCurrency": "ARS",
+          "url": "https://dealit.com.ar/empezar",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "13900",
+            "priceCurrency": "ARS",
+            "billingDuration": "P1M"
+          }
+        },
+        {
+          "@type": "Offer",
+          "name": "Pro anual",
+          "price": "139000",
+          "priceCurrency": "ARS",
+          "url": "https://dealit.com.ar/empezar",
+          "priceSpecification": {
+            "@type": "UnitPriceSpecification",
+            "price": "139000",
+            "priceCurrency": "ARS",
+            "billingDuration": "P1Y"
+          }
+        }
+      ]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://dealit.com.ar/#preguntas",
+      "inLanguage": "es-AR",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "¿Qué diferencia hay entre un presupuesto y una propuesta comercial?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "El presupuesto detalla qué vas a hacer y cuánto sale: los ítems, los precios y el total. La propuesta comercial suma el contexto que ayuda a decir que sí: el punto de partida del cliente, el alcance, los plazos, la forma de pago y la validez. Con Dealit armás cualquiera de los dos, y tu cliente lo acepta online desde el mismo link."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Qué tiene que incluir un presupuesto profesional?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Tus datos y los del cliente, una descripción clara del trabajo, cada servicio con su precio, los opcionales, el total, la forma de pago (por ejemplo, 50 % de anticipo), los plazos de entrega y hasta cuándo vale. Las plantillas por rubro de Dealit ya traen esas secciones, así que solo completás lo de este trabajo."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo hago un presupuesto desde el celular?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Entrás a Dealit, tocás el micrófono y contás el trabajo y el precio, o partís de una plantilla de tu rubro. La IA lo ordena, vos lo revisás y lo mandás como link por WhatsApp o por email. Podés armar tu primer presupuesto gratis incluso antes de crear la cuenta; para mandarlo, te registrás en un minuto."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿La IA no suena robótica?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Arma la propuesta a partir de lo que vos dictás, con tus palabras, tus precios y tu rubro, no con frases de folleto. Y nada sale sin que lo veas: la retocás a mano o le pedís cambios («hacela más corta», «sumá un opcional de mantenimiento») y elegís cuáles aplicar."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Y si mis servicios son muy a medida?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Justamente para eso está el dictado: contás este trabajo, para este cliente. Cada propuesta tiene sus ítems, sus opcionales, sus plazos y su forma de pago. Sirve igual para una web, una reforma, un casamiento o una consultoría. Las plantillas por rubro son un punto de partida, no un molde."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Mis clientes tienen que bajarse una app?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Les llega un link y lo abren en el navegador del celular o de la compu. Sin cuenta, sin descargas, sin contraseñas. La ven, suman opcionales y la aceptan ahí mismo. Y si la quieren guardar o imprimir, la descargan en PDF con un toque."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Cómo le cobro a mi cliente cuando acepta el presupuesto?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Vinculás tu cuenta de Mercado Pago y el cliente paga apenas acepta: el anticipo o el total, según la forma de pago que pusiste en la propuesta. La plata va directo a tu cuenta. También podés cobrar por transferencia: tu CBU y tu alias le llegan recién cuando acepta. Mercado Pago cobra en pesos; en propuestas en dólares se acuerda por transferencia."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Necesito tarjeta para empezar?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. El plan Gratis es gratis de verdad, sin tarjeta y sin vencimiento. Podés armar tu primera propuesta incluso antes de crear la cuenta."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "¿Y si me arrepiento de Pro?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Lo cancelás desde Mi cuenta en un toque, sin llamar a nadie. Seguís con Pro hasta el final del período que pagaste y después volvés a Gratis sin perder tus propuestas."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
 </head>
 <body class="ld">
 
@@ -41,11 +221,11 @@
           Freelancers, agencias y oficios: si pasás presupuestos, es para vos
         </p>
         <h1 class="ld-hero__titulo ld-aparece" id="hero-titulo">
-          Tu propuesta lista en segundos. Vos, en lo tuyo.
-          <span class="ld-acento">Dictala, mandala y cobrala desde el celular.</span>
+          Propuestas y presupuestos listos en segundos.
+          <span class="ld-acento">Dictalos, mandalos y cobralos desde el celular.</span>
         </h1>
         <p class="ld-hero__bajada ld-aparece">
-          Le hablás al micrófono y la IA arma una propuesta que da ganas de firmar. Te avisa cuando tu cliente la abre,
+          Le hablás al micrófono y la IA arma una propuesta comercial que da ganas de firmar. Te avisa cuando tu cliente la abre,
           la acepta con un toque y te paga ahí mismo con Mercado Pago. Menos tiempo armando presupuestos, más tiempo enfocado en tu trabajo.
         </p>
         <div class="ld-hero__accion ld-aparece">
@@ -162,7 +342,7 @@
   <section class="ld-seccion ld-problema" aria-labelledby="problema-titulo">
     <div class="ld-contenedor">
       <p class="ld-sobretitulo ld-aparece">El cementerio de los PDFs</p>
-      <h2 class="ld-titulo ld-aparece" id="problema-titulo">Enviar un PDF por Whatsapp es <span class="ld-tachado">cotizar</span> dejar la venta al azar.</h2>
+      <h2 class="ld-titulo ld-aparece" id="problema-titulo">Mandar el presupuesto en PDF por WhatsApp es <span class="ld-tachado">cotizar</span> dejar la venta al azar.</h2>
       <p class="ld-bajada ld-aparece">Cuando mandás un archivo estático sin seguimiento, perdés el control de lo que pasa del otro lado. Estas tres cosas te están frenando los cierres todos los meses:</p>
 
       <div class="ld-asesinos">
@@ -212,10 +392,10 @@
   </section>
 
   <!-- ============ 3. CÓMO FUNCIONA ============ -->
-  <section class="ld-seccion ld-pasos" aria-labelledby="pasos-titulo">
+  <section class="ld-seccion ld-pasos" id="como-funciona" aria-labelledby="pasos-titulo">
     <div class="ld-contenedor">
       <p class="ld-sobretitulo ld-aparece">Cómo funciona</p>
-      <h2 class="ld-titulo ld-aparece" id="pasos-titulo">Tres pasos. Cero fricción.</h2>
+      <h2 class="ld-titulo ld-aparece" id="pasos-titulo">Tu presupuesto online en tres pasos. Cero fricción.</h2>
 
       <ol class="ld-pasos__lista">
         <li class="ld-paso ld-aparece">
@@ -257,7 +437,7 @@
   <section class="ld-seccion ld-bento-seccion" aria-labelledby="bento-titulo">
     <div class="ld-contenedor">
       <p class="ld-sobretitulo ld-aparece">Ventajas injustas</p>
-      <h2 class="ld-titulo ld-aparece" id="bento-titulo">Todo lo que tu PDF nunca te va a decir.</h2>
+      <h2 class="ld-titulo ld-aparece" id="bento-titulo">Todo lo que tu presupuesto en PDF nunca te va a decir.</h2>
 
       <div class="ld-bento">
         <article class="ld-bento__celda ld-bento__celda--radar ld-aparece">
@@ -300,7 +480,7 @@
             <span style="--c1: #fff1f2; --c2: #e11d48"></span>
           </div>
           <h3>Un diseño que convierte más</h3>
-          <p>Un propuesta hecha en Word y pasada a PDF no es lo mismo que una diseñada para la web. Tu cliente recibe una propuesta profesional que cuenta mejor tu trabajo. Plantillas por rubro, tu logo y tus colores sin perder tiempo diseñando.</p>
+          <p>Una propuesta hecha en Word y pasada a PDF no es lo mismo que una diseñada para la web. Tu cliente recibe una propuesta profesional que cuenta mejor tu trabajo. Plantillas por rubro, tu logo y tus colores sin perder tiempo diseñando.</p>
         </article>
 
         <article class="ld-bento__celda ld-bento__celda--opcionales ld-aparece">
@@ -318,7 +498,7 @@
   <section class="ld-seccion ld-versus-pdf" aria-labelledby="pdf-titulo">
     <div class="ld-contenedor">
       <p class="ld-sobretitulo ld-aparece">PDF vs. link</p>
-      <h2 class="ld-titulo ld-aparece" id="pdf-titulo">Cómo se ve tu propuesta</h2>
+      <h2 class="ld-titulo ld-aparece" id="pdf-titulo">Cómo ve tu cliente la propuesta: PDF o link</h2>
       <p class="ld-bajada ld-aparece">Un PDF en el celular es una hoja A4 achicada: hay que descargarla, abrirla y agrandarla para leer algo. Una propuesta de Dealit se abre en el link y se lee de una, porque está hecha para la pantalla del celular.</p>
 
       <div class="ld-duelo">
@@ -439,7 +619,7 @@
   </section>
 
   <!-- ============ 6. PRECIOS + FAQ ============ -->
-  <section class="ld-seccion ld-precios" aria-labelledby="precios-titulo">
+  <section class="ld-seccion ld-precios" id="precios" aria-labelledby="precios-titulo">
     <div class="ld-contenedor">
       <p class="ld-sobretitulo ld-aparece">Precios claros</p>
       <h2 class="ld-titulo ld-aparece" id="precios-titulo">Probá la magia hoy. Pasate a Pro cuando choques el techo.</h2>
@@ -498,33 +678,45 @@
         </article>
       </div>
 
-      <div class="ld-faq">
-        <h2 class="ld-titulo ld-titulo--chico ld-aparece">Preguntas que te estás haciendo</h2>
+      <section class="ld-faq" id="preguntas" aria-labelledby="faq-titulo">
+        <h2 class="ld-titulo ld-titulo--chico ld-aparece" id="faq-titulo">Preguntas frecuentes sobre propuestas y presupuestos</h2>
         <details class="ld-aparece">
-          <summary>¿La IA no suena robótica?</summary>
+          <summary><h3>¿Qué diferencia hay entre un presupuesto y una propuesta comercial?</h3></summary>
+          <p>El presupuesto detalla qué vas a hacer y cuánto sale: los ítems, los precios y el total. La propuesta comercial suma el contexto que ayuda a decir que sí: el punto de partida del cliente, el alcance, los plazos, la forma de pago y la validez. Con Dealit armás cualquiera de los dos, y tu cliente lo acepta online desde el mismo link.</p>
+        </details>
+        <details class="ld-aparece">
+          <summary><h3>¿Qué tiene que incluir un presupuesto profesional?</h3></summary>
+          <p>Tus datos y los del cliente, una descripción clara del trabajo, cada servicio con su precio, los opcionales, el total, la forma de pago (por ejemplo, 50 % de anticipo), los plazos de entrega y hasta cuándo vale. Las plantillas por rubro de Dealit ya traen esas secciones, así que solo completás lo de este trabajo.</p>
+        </details>
+        <details class="ld-aparece">
+          <summary><h3>¿Cómo hago un presupuesto desde el celular?</h3></summary>
+          <p>Entrás a Dealit, tocás el micrófono y contás el trabajo y el precio, o partís de una plantilla de tu rubro. La IA lo ordena, vos lo revisás y lo mandás como link por WhatsApp o por email. Podés <a href="/empezar" data-cta="faq">armar tu primer presupuesto gratis</a> incluso antes de crear la cuenta; para mandarlo, te registrás en un minuto.</p>
+        </details>
+        <details class="ld-aparece">
+          <summary><h3>¿La IA no suena robótica?</h3></summary>
           <p>Arma la propuesta a partir de lo que vos dictás, con tus palabras, tus precios y tu rubro, no con frases de folleto. Y nada sale sin que lo veas: la retocás a mano o le pedís cambios («hacela más corta», «sumá un opcional de mantenimiento») y elegís cuáles aplicar.</p>
         </details>
         <details class="ld-aparece">
-          <summary>¿Y si mis servicios son muy a medida?</summary>
+          <summary><h3>¿Y si mis servicios son muy a medida?</h3></summary>
           <p>Justamente para eso está el dictado: contás este trabajo, para este cliente. Cada propuesta tiene sus ítems, sus opcionales, sus plazos y su forma de pago. Sirve igual para una web, una reforma, un casamiento o una consultoría. Las plantillas por rubro son un punto de partida, no un molde.</p>
         </details>
         <details class="ld-aparece">
-          <summary>¿Mis clientes tienen que bajarse una app?</summary>
+          <summary><h3>¿Mis clientes tienen que bajarse una app?</h3></summary>
           <p>No. Les llega un link y lo abren en el navegador del celular o de la compu. Sin cuenta, sin descargas, sin contraseñas. La ven, suman opcionales y la aceptan ahí mismo. Y si la quieren guardar o imprimir, la descargan en PDF con un toque.</p>
         </details>
         <details class="ld-aparece">
-          <summary>¿Cómo cobro?</summary>
+          <summary><h3>¿Cómo le cobro a mi cliente cuando acepta el presupuesto?</h3></summary>
           <p>Vinculás tu cuenta de Mercado Pago y el cliente paga apenas acepta: el anticipo o el total, según la forma de pago que pusiste en la propuesta. La plata va directo a tu cuenta. También podés cobrar por transferencia: tu CBU y tu alias le llegan recién cuando acepta. Mercado Pago cobra en pesos; en propuestas en dólares se acuerda por transferencia.</p>
         </details>
         <details class="ld-aparece">
-          <summary>¿Necesito tarjeta para empezar?</summary>
+          <summary><h3>¿Necesito tarjeta para empezar?</h3></summary>
           <p>No. El plan Gratis es gratis de verdad, sin tarjeta y sin vencimiento. Podés armar tu primera propuesta incluso antes de crear la cuenta.</p>
         </details>
         <details class="ld-aparece">
-          <summary>¿Y si me arrepiento de Pro?</summary>
+          <summary><h3>¿Y si me arrepiento de Pro?</h3></summary>
           <p>Lo cancelás desde Mi cuenta en un toque, sin llamar a nadie. Seguís con Pro hasta el final del período que pagaste y después volvés a Gratis sin perder tus propuestas.</p>
         </details>
-      </div>
+      </section>
     </div>
   </section>
 
@@ -543,7 +735,12 @@
 
 <footer class="ld-pie">
   <div class="ld-contenedor ld-pie__fila">
-    <a class="ld-marca ld-marca--pie" href="/"><img src="/iconos/icono-192.png" alt="" width="24" height="24"><span>Dealit</span></a>
+    <a class="ld-marca ld-marca--pie" href="/"><img src="/iconos/icono-192.png" alt="" width="24" height="24" loading="lazy" decoding="async"><span>Dealit</span></a>
+    <nav aria-label="En esta página">
+      <a href="#como-funciona">Cómo hacer un presupuesto</a>
+      <a href="#precios">Precios</a>
+      <a href="#preguntas">Preguntas frecuentes</a>
+    </nav>
     <nav aria-label="Legales">
       <a href="/ingresar">Ingresar</a>
       <a href="/terminos">Términos</a>
