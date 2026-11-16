@@ -1,6 +1,6 @@
-// Landing de Dealit (inicio.html, servida en /inicio). Página estática: no carga Firebase ni
-// la app. Acá van solo las animaciones de entrada, el celular del hero, la calculadora de
-// retorno y el selector mensual / anual de Pro.
+// Landing de Dealit (inicio.html, servida en / sin sesión y en /inicio). Página estática: no
+// carga Firebase ni la app. Acá van solo las animaciones de entrada, el celular del hero y el
+// selector mensual / anual de Pro. La comparativa PDF vs. link se anima solo con CSS.
 
 import './inicio.scss';
 import { haySesionGuardada, marcarSesion } from '../lib/marca-sesion.js';
@@ -20,10 +20,8 @@ if (window.Capacitor?.isNativePlatform?.()) {
   });
 }
 
-const PRECIO_PRO_MES = 13900;
 const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = sel => document.querySelector(sel);
-const numero = n => Math.round(n).toLocaleString('es-AR');
 
 // Entrada al hacer scroll: cada bloque aparece una vez, con un pequeño escalonado entre hermanos.
 const instalarApariciones = () => {
@@ -46,7 +44,7 @@ const instalarApariciones = () => {
 };
 
 // Celular del hero: dictado (con el texto que se escribe solo) → propuesta → «la abrió» → «aceptó».
-const DICTADO = '«Rediseño de marca y web para Juan Pérez: identidad visual 420 mil, sitio de cinco secciones 680 mil, y de opcional el kit para redes…»';
+const DICTADO = '«Rediseño de marca y web para Vero García: identidad visual 420 mil, sitio de cinco secciones 680 mil, y de opcional el kit para redes…»';
 const DURACIONES = [3600, 2600, 2600, 3000];
 
 const instalarCelular = () => {
@@ -90,33 +88,25 @@ const instalarCelular = () => {
   avanzar();
 };
 
-// Calculadora: cuántos meses de Pro paga un solo cliente más.
-const instalarRoi = () => {
-  const entrada = $('#roi-ticket');
-  const rango = $('#roi-rango');
-  if (!entrada || !rango) return;
-
-  const mostrar = valor => {
-    const meses = Math.floor(valor / PRECIO_PRO_MES);
-    $('#roi-meses').textContent = `${numero(meses)} ${meses === 1 ? 'mes' : 'meses'}`;
-    const anios = Math.floor(meses / 12);
-    $('#roi-anios').textContent = anios >= 1
-      ? `Eso son ${anios === 1 ? 'un año' : `${numero(anios)} años`}${meses % 12 ? ` y ${meses % 12} ${meses % 12 === 1 ? 'mes' : 'meses'}` : ''}.`
-      : meses >= 1 ? 'Y sigue sumando con cada cliente.' : 'Un cliente más ya casi lo paga.';
-  };
-
-  entrada.addEventListener('input', () => {
-    const valor = Number(entrada.value.replace(/\D/g, '')) || 0;
-    entrada.value = valor ? numero(valor) : '';
-    rango.value = Math.min(Math.max(valor, Number(rango.min)), Number(rango.max));
-    mostrar(valor);
+// La propuesta dentro de los teléfonos (.ld-pg) se recorre sola con CSS (ld-recorrido): acá se
+// mide hasta dónde bajar en cada parada (los servicios, el opcional y el final) según el tamaño
+// real de cada teléfono.
+const instalarRecorridos = () => {
+  const medir = () => document.querySelectorAll('.ld-pg').forEach(pg => {
+    const contenido = pg.querySelector('.ld-pg__contenido');
+    const servicios = pg.querySelectorAll('.ld-pg__seccion')[1];
+    const opcional = pg.querySelector('.ld-pg__servicio--opcional');
+    if (!contenido || !servicios || !opcional) return;
+    const alto = pg.clientHeight;
+    const fin = Math.max(0, contenido.scrollHeight - alto);
+    const hasta = y => `${-Math.round(Math.min(Math.max(y, 0), fin))}px`;
+    pg.style.setProperty('--pg-servicios', hasta(servicios.offsetTop));
+    pg.style.setProperty('--pg-opcional', hasta(opcional.offsetTop - alto * 0.3));
+    pg.style.setProperty('--pg-fin', hasta(fin));
   });
-  rango.addEventListener('input', () => {
-    const valor = Number(rango.value);
-    entrada.value = numero(valor);
-    mostrar(valor);
-  });
-  mostrar(Number(rango.value));
+  medir();
+  document.fonts?.ready.then(medir);
+  addEventListener('resize', medir, { passive: true });
 };
 
 // Selector mensual / anual del plan Pro.
@@ -161,6 +151,6 @@ const instalarCabeceraYFijo = () => {
 
 instalarApariciones();
 instalarCelular();
-instalarRoi();
+instalarRecorridos();
 instalarPeriodo();
 instalarCabeceraYFijo();
