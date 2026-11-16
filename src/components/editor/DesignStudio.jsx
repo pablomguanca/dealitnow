@@ -12,7 +12,7 @@ export function DesignStudio() {
         <summary className="paso__resumen">
           <span className="paso__num icono-pincel"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M11.5 1.5l3 3-8.5 8.5H3v-3l8.5-8.5z"/></svg></span>
           <span className="paso__titulo">Diseño y plantillas</span>
-          <span className="paso__desc">Rubros, temas, decoración tipo Canva y disposición</span>
+          <span className="paso__desc">Rubros, temas, detalles visuales y disposición</span>
         </summary>
         <div className="paso__contenido">
           <div id="plantillas-propuesta-wrap">
@@ -366,7 +366,7 @@ export function DesignStudio() {
             </label>
             <label data-solo-propuesta className="campo">
               <span className="campo__etiqueta campo__etiqueta--fila">
-                <span>Intensidad del SVG</span>
+                <span>Intensidad del elemento</span>
                 <output className="campo__valor" id="tema-opacidad-valor" htmlFor="tema-opacidad-svg">100%</output>
               </span>
               <input className="rango-input" type="range" id="tema-opacidad-svg" min="0" max="200" step="5" defaultValue="100" />
