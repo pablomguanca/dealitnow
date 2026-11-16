@@ -268,6 +268,8 @@ export const vacio = () => ({
     // 'propuesta' (el documento completo) o 'presupuesto' (una hoja con la tabla de trabajos).
     formato: 'propuesta',
     firmas: true,
+    // El cliente firma con el dedo al aceptar (ver src/firma.js). Lo elige el dueño.
+    firmaCliente: false,
     credito: true,
     barraNav: false,
     lightbox: true,
@@ -1037,6 +1039,7 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
       ...(d.opciones || {}),
       formato: FORMATOS_DOCUMENTO[d.opciones?.formato] ? d.opciones.formato : 'propuesta',
       firmas: d.opciones?.firmas !== undefined ? !!d.opciones.firmas : true,
+      firmaCliente: d.opciones?.firmaCliente === true,
       credito: d.opciones?.credito !== undefined ? !!d.opciones.credito : true,
       barraNav: d.opciones?.barraNav !== undefined ? !!d.opciones.barraNav : false,
       lightbox: d.opciones?.lightbox !== undefined ? !!d.opciones.lightbox : true,

@@ -43,8 +43,9 @@ export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, urlApp, pro = 
     const mensual = Number(aceptacion?.mensual) || 0;
     const total = `${dinero(inicial, moneda)}${mensual > 0 ? ` + ${dinero(mensual, moneda)} por mes` : ''}`;
     const opcionales = (aceptacion?.opcionales || []).map(o => texto(o.nombre)).filter(Boolean);
+    const firmo = !!aceptacion?.firma;
     const lineas = [
-      `${nombre} aceptó «${titulo}».`,
+      `${nombre} aceptó «${titulo}»${firmo ? ' y la firmó' : ''}.`,
       `Total aceptado: ${total}.`,
       ...(opcionales.length ? [`Sumó: ${opcionales.join(', ')}.`] : []),
       'Escribile para arrancar mientras está entusiasmado.'
@@ -54,7 +55,7 @@ export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, urlApp, pro = 
       html: plantilla({
         titular: `¡${escapar(nombre)} aceptó tu propuesta!`,
         parrafos: [
-          `Aceptó <strong>«${escapar(titulo)}»</strong>.`,
+          `Aceptó <strong>«${escapar(titulo)}»</strong>${firmo ? ' y la firmó online' : ''}.`,
           `Total aceptado: <strong>${escapar(total)}</strong>.`,
           ...(opcionales.length ? [`Sumó: ${escapar(opcionales.join(', '))}.`] : []),
           'Escribile para arrancar mientras está entusiasmado.'

@@ -475,6 +475,25 @@ body.sin-cuenta .solo-cuenta {
   border-color: var(--d-acento);
 }
 
+// Firma del cliente en la propuesta aceptada (link).
+.cierre__firma {
+  max-width: 17rem;
+  margin: 1.2em auto 0.4em;
+  text-align: center;
+
+  .firma-trazo {
+    margin-bottom: -0.4em;
+  }
+
+  figcaption {
+    padding-top: 0.45em;
+    border-top: 1px solid var(--d-texto);
+    font-size: 0.82em;
+    font-weight: 600;
+    color: var(--d-suave, var(--d-texto));
+  }
+}
+
 .aceptar__formulario {
   display: grid;
   gap: 0.9rem;
@@ -482,6 +501,98 @@ body.sin-cuenta .solo-cuenta {
 
   &[hidden] {
     display: none;
+  }
+}
+
+// Recuadro para firmar con el dedo al aceptar (controlador/firma.js).
+.firma-pad {
+  display: grid;
+  gap: 0.4rem;
+
+  &[hidden] {
+    display: none;
+  }
+
+  &__cabecera {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 1.6rem;
+  }
+
+  &__borrar {
+    padding: 0.2rem 0.5rem;
+    border: 0;
+    background: none;
+    color: var(--dorado-papel);
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &[hidden] {
+      display: none;
+    }
+  }
+
+  &__marco {
+    position: relative;
+    border: 1.5px dashed var(--superficie-borde);
+    border-radius: var(--radio-m);
+    background: var(--negro-2);
+    transition: border-color 0.2s;
+
+    &:focus-within,
+    &:hover {
+      border-color: var(--dorado);
+    }
+
+    // La línea donde se firma.
+    &::after {
+      content: '';
+      position: absolute;
+      right: 8%;
+      bottom: 24%;
+      left: 8%;
+      border-bottom: 1px solid var(--superficie-borde);
+      pointer-events: none;
+    }
+  }
+
+  &__lienzo {
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 1;
+    color: var(--marfil);
+    cursor: crosshair;
+    // Sin esto, en el celular el dedo desplaza la página en lugar de firmar.
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  &__guia {
+    position: absolute;
+    left: 8%;
+    bottom: calc(24% + 0.35rem);
+    font-size: 0.85rem;
+    color: var(--marfil-tenue);
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  &--firmada &__guia {
+    opacity: 0;
+  }
+
+  &--firmada &__marco {
+    border-style: solid;
+  }
+
+  &__ayuda {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--marfil-apagado);
   }
 }
 

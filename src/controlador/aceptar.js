@@ -22,6 +22,8 @@ import { avisar, avisarExito, avisarError } from './avisos.js';
 import { renderDocumento } from './vista.js';
 import { copiar } from '../lib/portapapeles.js';
 import { llamarApi } from './api.js';
+import { crearPadFirma } from './firma.js';
+import { pideFirma } from '../firma.js';
 
 const mensajeAceptacion = (firma = ctx.estado.cliente.nombre.trim()) => {
   const { estado, seleccion } = ctx;
@@ -98,8 +100,15 @@ const modoAceptar = modo => {
   $('#aceptar-cerrar').textContent = modo === 'listo' ? 'Cerrar' : `Volver ${esPresupuesto() ? 'al presupuesto' : 'a la propuesta'}`;
 };
 
+// Firma con el dedo: solo si el dueño la pidió (opciones.firmaCliente).
+let pad = null;
+const conFirma = () => pideFirma(ctx.estado) && !!ctx.compartida;
+
 const actualizarBotonAceptar = () => {
-  $('#aceptar-confirmar').disabled = limpiarNombre($('#aceptar-nombre').value).length < NOMBRE_MIN || !$('#aceptar-conformidad').checked;
+  const faltaFirma = conFirma() && !pad?.firma();
+  $('#aceptar-firma-borrar').hidden = !pad || pad.vacia();
+  $('#aceptar-firma').classList.toggle('firma-pad--firmada', !!pad && !pad.vacia());
+  $('#aceptar-confirmar').disabled = limpiarNombre($('#aceptar-nombre').value).length < NOMBRE_MIN || !$('#aceptar-conformidad').checked || faltaFirma;
 };
 
 const abrirAceptar = () => {
@@ -116,8 +125,9 @@ const abrirAceptar = () => {
     const campoNombre = $('#aceptar-nombre');
     if (!campoNombre.value) campoNombre.value = ctx.estado.cliente.nombre.trim();
     $('#aceptar-conformidad').checked = false;
+    $('#aceptar-firma').hidden = !conFirma();
     actualizarBotonAceptar();
-    $('#aceptar-texto').textContent = `${emisor || 'Quien te mandó la propuesta'} va a ver tu aceptación al instante. Queda registrado tu nombre, la fecha y lo que elegiste.`;
+    $('#aceptar-texto').textContent = `${emisor || 'Quien te mandó la propuesta'} va a ver tu aceptación al instante. Queda registrado tu nombre${conFirma() ? ', tu firma' : ''}, la fecha y lo que elegiste.`;
   } else {
     modoAceptar('mensaje');
     const hay = prepararMensajeria(mensajeAceptacion().texto, { whatsapp: 'Confirmar por WhatsApp', email: 'Confirmar por email' });
@@ -127,6 +137,8 @@ const abrirAceptar = () => {
       : `Copiá el mensaje y mandáselo${emisor ? ` a ${emisor}` : ''} por donde suelan hablar.`;
   }
   $('#dialogo-aceptar').showModal();
+  // El recuadro se mide ya abierto el diálogo (antes no tiene ancho).
+  if (conFirma()) pad?.ajustar();
 };
 
 const confirmarAceptacion = async () => {
@@ -137,10 +149,12 @@ const confirmarAceptacion = async () => {
   boton.textContent = 'Aceptando…';
   errorAceptacion.hidden = true;
   try {
-    const { aceptacion } = await llamarApi('/api/aceptar', { id: ctx.compartida.id, nombre, acepto: true, opcionales: [...ctx.seleccion] });
+    const firma = conFirma() ? pad.firma() : undefined;
+    const { aceptacion } = await llamarApi('/api/aceptar', { id: ctx.compartida.id, nombre, acepto: true, opcionales: [...ctx.seleccion], ...(firma ? { firma } : {}) });
     ctx.compartida.aceptacion = aceptacion;
     renderDocumento();
     modoAceptar('listo');
+    $('#aceptar-firma').hidden = true;
     const emisor = nombreEmisor();
     const hay = prepararMensajeria(mensajeAceptacion(nombre).texto, { whatsapp: 'Avisar por WhatsApp', email: 'Avisar por email' });
     // Con transferencia: los datos para pagar, que recién ahora entrega el servidor. Con
@@ -188,6 +202,11 @@ export const instalarAceptar = () => {
   $('#aceptar-nombre').addEventListener('input', actualizarBotonAceptar);
   $('#aceptar-conformidad').addEventListener('change', actualizarBotonAceptar);
   $('#aceptar-confirmar').addEventListener('click', confirmarAceptacion);
+  const lienzo = $('#aceptar-firma-lienzo');
+  if (lienzo) {
+    pad = crearPadFirma(lienzo, { alCambiar: actualizarBotonAceptar });
+    $('#aceptar-firma-borrar').addEventListener('click', () => pad.limpiar());
+  }
 
   registrarAcciones({
     'aceptar': () => abrirAceptar(),

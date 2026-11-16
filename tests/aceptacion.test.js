@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { propuestaVencida, validarAceptacion } from '../src/aceptacion.js';
 import { vacio } from '../src/modelo.js';
+import { trazosAFirma } from '../src/firma.js';
+
+const FIRMA = trazosAFirma([Array.from({ length: 12 }, (_, i) => ({ x: 20 + i * 30, y: 100 + (i % 2) * 20 }))]);
 
 const payload = (cambios = {}) => ({
   ...vacio(),
@@ -50,6 +53,15 @@ describe('validarAceptacion', () => {
     expect(validarAceptacion({ doc: doc(), cuerpo: cuerpo({ opcionales: ['base'] }), ahora }).error).toBe('opcionales-invalidos');
     expect(validarAceptacion({ doc: doc(), cuerpo: cuerpo({ opcionales: ['inventado'] }), ahora }).error).toBe('opcionales-invalidos');
     expect(validarAceptacion({ doc: doc(), cuerpo: cuerpo({ opcionales: [{}] }), ahora }).error).toBe('opcionales-invalidos');
+  });
+
+  it('con firma pedida, la exige y la guarda; si no la pidió, la ignora', () => {
+    const conFirma = doc({ payload: payload({ opciones: { ...vacio().opciones, firmaCliente: true } }) });
+    expect(validarAceptacion({ doc: conFirma, cuerpo: cuerpo(), ahora }).error).toBe('falta-firma');
+    expect(validarAceptacion({ doc: conFirma, cuerpo: cuerpo({ firma: '<script>' }), ahora }).error).toBe('falta-firma');
+    const { datos } = validarAceptacion({ doc: conFirma, cuerpo: cuerpo({ firma: FIRMA }), ahora });
+    expect(datos.firma).toBe(FIRMA);
+    expect(validarAceptacion({ doc: doc(), cuerpo: cuerpo({ firma: FIRMA }), ahora }).datos.firma).toBeUndefined();
   });
 
   it('rechaza propuestas vencidas', () => {

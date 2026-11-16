@@ -9,6 +9,7 @@ import {
   desdeISO,
   fechaLarga
 } from './formato.js';
+import { firmaSVG, pideFirma } from '../firma.js';
 import {
   PROPORCIONES_IMAGEN,
   LAYOUTS_GALERIA,
@@ -462,18 +463,33 @@ export const primerPagoTexto = (s, c) => {
   };
 };
 
+// Firma del cliente en el PDF de una propuesta aceptada y firmada online: el trazo sobre
+// la línea, con el nombre y la fecha. '' si no hay firma.
+export const firmaAceptadaHTML = (aceptacion, { presupuesto = false } = {}) => {
+  const firma = firmaSVG(aceptacion?.firma, { titulo: `Firma de ${aceptacion?.nombre || 'el cliente'}` });
+  if (!firma) return '';
+  const fecha = fechaDeAceptacion(aceptacion);
+  const cuando = `Firmó online${fecha ? ` el ${esc(fechaLarga(fecha))}` : ''}`;
+  if (presupuesto) {
+    return `<div class="presu__firma-online">${firma}<p>${esc(aceptacion.nombre)} · ${cuando}</p></div>`;
+  }
+  return `<div class="firma__linea firma__linea--online">${firma}<p class="firma__quien">${esc(aceptacion.nombre)}</p><p class="firma__datos">${cuando}</p></div>`;
+};
+
 // conCobro: el botón avisa que al aceptar se ven los datos de pago. Los datos (para la
 // tarjeta de la propuesta ya aceptada) los entrega el servidor con la aceptación.
-export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '', consultaUrl = '', tipo = 'propuesta', conCobro = false, conMp = false, pago = null } = {}) => {
+export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '', consultaUrl = '', tipo = 'propuesta', conCobro = false, conMp = false, pago = null, conFirma = false } = {}) => {
   const esAceptada = !!compartida?.aceptacion;
   const que = tipo === 'presupuesto' ? 'presupuesto' : 'propuesta';
   if (esAceptada) {
     const a = compartida.aceptacion;
     const fecha = fechaDeAceptacion(a);
+    const firma = firmaSVG(a.firma, { titulo: `Firma de ${a.nombre || 'el cliente'}` });
     return `
       <div class="cierre cierre--aceptada">
         <p class="cierre__titulo">${que === 'presupuesto' ? 'Presupuesto aceptado' : 'Propuesta aceptada'}</p>
-        <p class="cierre__texto">Aceptada por ${esc(a.nombre)}${fecha ? ` el ${esc(fechaLarga(fecha))}` : ''}. Esta es la versión que se aceptó.</p>
+        <p class="cierre__texto">${firma ? 'Aceptada y firmada' : 'Aceptada'} por ${esc(a.nombre)}${fecha ? ` el ${esc(fechaLarga(fecha))}` : ''}. Esta es la versión que se aceptó.</p>
+        ${firma ? `<figure class="cierre__firma">${firma}<figcaption>${esc(a.nombre)}</figcaption></figure>` : ''}
         ${conMp ? pagoMpHTML(pago, { conTransferencia: !!a.cobro }) : ''}
         ${tarjetaCobroHTML(a.cobro || null, { pago: conMp ? null : pago })}
         ${consultaUrl ? `<div class="cierre__acciones"><a class="boton boton--secundario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a></div>` : ''}
@@ -487,8 +503,8 @@ export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '',
         ${consultaUrl ? `<div class="cierre__acciones"><a class="boton boton--primario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a></div>` : ''}
       </div>`;
   }
-  const textoCierre = compartida
-    ? `Al aceptar, ${nombreEmisor ? esc(nombreEmisor) : 'quien te la mandó'} recibe tu confirmación con lo que elegiste.`
+  const textoCierre = compartida || conFirma
+    ? `Al aceptar${conFirma ? ' y firmar con el dedo' : ''}, ${nombreEmisor ? esc(nombreEmisor) : 'quien te la mandó'} recibe tu confirmación con lo que elegiste.`
     : `Al aceptar se abre un mensaje con el resumen de lo que elegiste${nombreEmisor ? `, listo para mandárselo a ${esc(nombreEmisor)}` : ''}.`;
   return `
     <div class="cierre">
@@ -861,10 +877,11 @@ const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
       <ul class="presu__condiciones">${condiciones.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
     </div>` : '';
 
-  const firmas = !web && s.opciones.firmas ? `
+  const firmaOnline = !web ? firmaAceptadaHTML(compartida?.aceptacion, { presupuesto: true }) : '';
+  const firmas = !web && (s.opciones.firmas || firmaOnline) ? `
     <div class="presu__firmas">
-      <p>Firma del cliente</p>
-      <p>Firma de ${esc(nombreEm || 'quien presupuesta')}</p>
+      ${firmaOnline || '<p>Firma del cliente</p>'}
+      ${s.opciones.firmas ? `<p>Firma de ${esc(nombreEm || 'quien presupuesta')}</p>` : ''}
     </div>` : '';
 
   const pie = `
@@ -875,7 +892,7 @@ const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
     </footer>`;
 
   const aviso = web && vig.vencida ? `<p class="doc-aviso">Este presupuesto venció el ${esc(fechaLarga(vig.vence))}. Los valores pueden haber cambiado.</p>` : '';
-  const cierre = web ? `<div class="presu__cierre">${cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, tipo: 'presupuesto', conCobro: cobraPorTransferencia(s), conMp: pagaConMp(s), pago: primerPagoTexto(s, c) })}</div>` : '';
+  const cierre = web ? `<div class="presu__cierre">${cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, tipo: 'presupuesto', conCobro: cobraPorTransferencia(s), conMp: pagaConMp(s), pago: primerPagoTexto(s, c), conFirma: pideFirma(s) })}</div>` : '';
 
   const hoja = `
     <section class="presu" id="sec-prop-inicio" aria-label="Presupuesto">
@@ -1128,17 +1145,22 @@ export const generarPropuestaHTML = (
   }
 
   const pasos = lineas(s.proximosPasos);
-  const firmas = !web && s.opciones.firmas;
+  // En el PDF de una propuesta firmada online, la firma del cliente va siempre (aunque no
+  // estén las líneas de firma); la del emisor, solo con las líneas.
+  const firmaOnline = !web ? firmaAceptadaHTML(compartida?.aceptacion) : '';
+  const firmas = !web && (s.opciones.firmas || !!firmaOnline);
   if (pasos.length || firmas || web) {
     let html = pasos.length ? `<ol class="pasos">${pasos.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : '';
-    if (web) html += cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, conCobro: cobraPorTransferencia(s), conMp: pagaConMp(s), pago: primerPagoTexto(s, c) });
+    if (web) html += cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, conCobro: cobraPorTransferencia(s), conMp: pagaConMp(s), pago: primerPagoTexto(s, c), conFirma: pideFirma(s) });
     if (firmas) {
       const quienCliente = cl.nombre.trim() || cl.empresa.trim() || 'Cliente';
       const quienEmisor = e.nombre.trim() || 'Responsable de la propuesta';
+      const cliente = firmaOnline || `<div class="firma__linea"><p class="firma__quien">${esc(quienCliente)}</p><p class="firma__datos">Firma, aclaración y fecha</p></div>`;
+      const emisor = s.opciones.firmas ? `<div class="firma__linea"><p class="firma__quien">${esc(quienEmisor)}</p><p class="firma__datos">Firma, aclaración y fecha</p></div>` : '';
       html += `
         <div class="firmas">
-          <div class="firma__linea"><p class="firma__quien">${esc(quienCliente)}</p><p class="firma__datos">Firma, aclaración y fecha</p></div>
-          <div class="firma__linea"><p class="firma__quien">${esc(quienEmisor)}</p><p class="firma__datos">Firma, aclaración y fecha</p></div>
+          ${cliente}
+          ${emisor}
         </div>`;
     }
     bloques.push({ titulo: pasos.length ? 'Próximos pasos' : (web ? 'Siguiente paso' : 'Aceptación'), html });

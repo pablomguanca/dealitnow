@@ -329,7 +329,13 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 2.5rem;
+    align-items: end;
     margin-top: 3.5rem;
+
+    .firma-trazo {
+      max-width: 13rem;
+      margin: 0 auto -0.4rem;
+    }
 
     p {
       margin: 0;

@@ -533,13 +533,38 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 3em;
+  align-items: end;
   margin-top: calc(4.2em * var(--escala-espaciado, 1));
+}
+
+// Trazo de la firma del cliente (src/firma.js): toma el color del texto del documento.
+.firma-trazo {
+  display: block;
+  width: 100%;
+  height: auto;
+  color: var(--d-texto);
 }
 
 .firma {
   &__linea {
     padding-top: 0.6em;
     border-top: 1px solid var(--d-texto);
+  }
+
+  // Firmada online: el trazo va arriba de la línea.
+  &__linea--online {
+    padding-top: 0;
+    border-top: 0;
+
+    .firma-trazo {
+      max-width: 15em;
+      margin-bottom: -0.5em;
+    }
+
+    .firma__quien {
+      padding-top: 0.6em;
+      border-top: 1px solid var(--d-texto);
+    }
   }
 
   &__quien {

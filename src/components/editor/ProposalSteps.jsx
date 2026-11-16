@@ -325,6 +325,10 @@ export function ProposalSteps() {
             <span>Agregar espacio para firmas en el PDF</span>
           </label>
           <label className="casilla campo--ancho">
+            <input type="checkbox" data-campo="opciones.firmaCliente" />
+            <span>Pedir la firma del cliente al aceptar: firma con el dedo en el celular (o con el mouse) y queda en el link y en el PDF</span>
+          </label>
+          <label className="casilla campo--ancho">
             <input type="checkbox" data-campo="opciones.credito" />
             <span>Mostrar «Propuesta creada con Dealit» al pie</span>
           </label>

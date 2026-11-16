@@ -20,6 +20,18 @@ export function DialogoAceptar() {
             <span className="campo__etiqueta">Tu nombre completo</span>
             <input className="control" id="aceptar-nombre" type="text" autoComplete="name" maxLength="120" />
           </label>
+          {/* Solo si el dueño pidió la firma (opciones.firmaCliente). Ver controlador/firma.js. */}
+          <div className="firma-pad" id="aceptar-firma" hidden>
+            <div className="firma-pad__cabecera">
+              <span className="campo__etiqueta">Tu firma</span>
+              <button type="button" className="firma-pad__borrar" id="aceptar-firma-borrar" hidden>Borrar</button>
+            </div>
+            <div className="firma-pad__marco">
+              <canvas className="firma-pad__lienzo" id="aceptar-firma-lienzo" role="img" aria-label="Recuadro para firmar con el dedo o el mouse"></canvas>
+              <span className="firma-pad__guia" aria-hidden="true">Firmá acá</span>
+            </div>
+            <p className="firma-pad__ayuda">Firmá con el dedo (o con el mouse). Queda guardada con tu aceptación y en el PDF.</p>
+          </div>
           <label className="casilla">
             <input type="checkbox" id="aceptar-conformidad" />
             <span id="aceptar-conformidad-texto">Acepto los términos, condiciones y el alcance detallado en esta propuesta.</span>

@@ -3,6 +3,7 @@
 import { desdeISO, numero } from './lib/formato.js';
 import { calcularTotales, normalizarPropuesta } from './modelo.js';
 import { contenidoDelLink } from './planes.js';
+import { pideFirma, validarFirma } from './firma.js';
 
 export const ID_PROPUESTA = /^[A-Za-z0-9]{20}$/;
 export const NOMBRE_MIN = 2;
@@ -46,12 +47,17 @@ export const validarAceptacion = ({ doc, cuerpo, ahora = new Date() }) => {
   if (pedidos.length > OPCIONALES_MAX || pedidos.some(id => typeof id !== 'string' || !disponibles.has(id))) {
     return error('opcionales-invalidos', 400);
   }
+  // Si el dueño pidió la firma, sin firma no se acepta. Si no la pidió, no se guarda.
+  const firma = pideFirma(contenido) ? validarFirma(cuerpo?.firma) : '';
+  if (pideFirma(contenido) && !firma) return error('falta-firma', 400);
+
   const sumados = new Set(pedidos);
   const totales = calcularTotales(contenido, sumados);
 
   return {
     datos: {
       nombre,
+      ...(firma ? { firma } : {}),
       opcionales: [...sumados].map(id => ({ id, nombre: disponibles.get(id).nombre })),
       inicial: totales.inicial.total,
       mensual: totales.mensual.total,
@@ -67,6 +73,7 @@ export const MENSAJES_ACEPTACION = {
   'ya-aceptada': 'Esta propuesta ya fue aceptada.',
   'nombre-invalido': 'Escribí tu nombre completo.',
   'falta-conformidad': 'Marcá la casilla para confirmar que aceptás la propuesta.',
+  'falta-firma': 'Firmá en el recuadro para aceptar.',
   vencida: 'Esta propuesta venció. Pedile a quien te la mandó una versión actualizada.',
   'opcionales-invalidos': 'La propuesta cambió mientras la mirabas. Recargá la página y volvé a intentar.',
   'propia': 'Es tu propia propuesta: para probar la aceptación, abrí el link en una ventana de incógnito.'
