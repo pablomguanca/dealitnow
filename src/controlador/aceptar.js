@@ -2,7 +2,7 @@
 // (visitas y aceptación). El servidor valida todo; acá solo se propone.
 
 import { $, esc, dinero } from '../lib/formato.js';
-import { servicioConContenido, tarjetaCobroHTML, primerPagoTexto, pagoMpHTML, pagaConMp } from '../lib/render.js';
+import { servicioConContenido, tarjetaCobroHTML, primerPagoTexto, pagoMpHTML, pagaConMp, textoBotonConfirmar } from '../lib/render.js';
 import { cobraPorTransferencia, calcularTotales } from '../modelo.js';
 import { montarMarcasMp } from '../lib/mp-marca.js';
 import { MENSAJES_ACEPTACION, NOMBRE_MIN, limpiarNombre } from '../aceptacion.js';
@@ -85,7 +85,12 @@ const esPresupuesto = () => ctx.estado?.opciones?.formato === 'presupuesto';
 const queEs = () => (esPresupuesto() ? 'presupuesto' : 'propuesta');
 
 // Texto del botón principal: con transferencia, el cliente sabe que al aceptar ve cómo pagar.
-const textoBotonAceptar = () => `Aceptar ${queEs()}${cobraPorTransferencia(ctx.estado) || pagaConMp(ctx.estado) ? ' y ver datos de pago' : ''}`;
+const textoBotonAceptar = () => textoBotonConfirmar({
+  conFirma: conFirma(),
+  conCobro: cobraPorTransferencia(ctx.estado),
+  conMp: pagaConMp(ctx.estado),
+  que: queEs()
+});
 
 const modoAceptar = modo => {
   $('#aceptar-formulario').hidden = modo !== 'formulario';

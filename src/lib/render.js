@@ -357,7 +357,7 @@ export const filasResumenHTML = (b, c, inversion = {}, sufijo = '') => {
     </dl>`;
 };
 
-export const barraClienteHTML = (c, vig, { moneda = 'USD', esAceptada = false, consultaUrl = '' } = {}) => {
+export const barraClienteHTML = (c, vig, { moneda = 'USD', esAceptada = false, consultaUrl = '', que = 'propuesta', conFirma = false } = {}) => {
   if (c.inicial.base <= 0 && c.mensual.base <= 0) return '';
   let etiqueta;
   let monto;
@@ -375,7 +375,7 @@ export const barraClienteHTML = (c, vig, { moneda = 'USD', esAceptada = false, c
     ? '<span class="barra-cliente__aceptada">Propuesta aceptada</span>'
     : vig.vencida
     ? (consultaUrl ? `<a class="boton boton--primario" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Pedir una actualización</a>` : '')
-    : '<button type="button" class="boton boton--primario" data-accion="aceptar">Aceptar propuesta</button>';
+    : `<button type="button" class="boton boton--primario" data-accion="aceptar">${conFirma ? 'Aceptar y firmar' : `Aceptar ${que}`}</button>`;
   return `
     <div class="barra-cliente">
       <div>
@@ -476,9 +476,9 @@ export const firmaAceptadaHTML = (aceptacion, { presupuesto = false } = {}) => {
   return `<div class="firma__linea firma__linea--online">${firma}<p class="firma__quien">${esc(aceptacion.nombre)}</p><p class="firma__datos">${cuando}</p></div>`;
 };
 
-// conCobro: el botón avisa que al aceptar se ven los datos de pago. Los datos (para la
-// tarjeta de la propuesta ya aceptada) los entrega el servidor con la aceptación.
-export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '', consultaUrl = '', tipo = 'propuesta', conCobro = false, conMp = false, pago = null, conFirma = false } = {}) => {
+// Cierre del link: aceptada (con la firma y los datos de pago que entregó el servidor),
+// vencida o la invitación a aceptar. Los textos del diálogo, en textoBotonConfirmar.
+export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '', consultaUrl = '', tipo = 'propuesta', conMp = false, pago = null, conFirma = false } = {}) => {
   const esAceptada = !!compartida?.aceptacion;
   const que = tipo === 'presupuesto' ? 'presupuesto' : 'propuesta';
   if (esAceptada) {
@@ -507,29 +507,35 @@ export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '',
         <div class="cierre__acciones">${pedir}</div>
       </div>`;
   }
-  // El cliente ya dijo «No avanzo por ahora»: igual la puede aceptar si cambia de idea.
-  const rechazada = !!compartida?.respuesta?.rechazo;
-  const quien = nombreEmisor ? esc(nombreEmisor) : 'quien te la mandó';
-  const textoCierre = rechazada
-    ? `Le avisaste a ${quien} que no avanzás por ahora. Si cambiás de idea, todavía la podés aceptar.`
-    : compartida || conFirma
-      ? `Al aceptar${conFirma ? ' y firmar con el dedo' : ''}, ${quien} recibe tu confirmación con lo que elegiste.`
-      : `Al aceptar se abre un mensaje con el resumen de lo que elegiste${nombreEmisor ? `, listo para mandárselo a ${esc(nombreEmisor)}` : ''}.`;
+  // Un solo botón protagónico (con firma, abre el recuadro para firmar) y, debajo, un único
+  // link discreto para escribirle al dueño: su WhatsApp o email o, si no cargó ninguno, el
+  // pedido de cambio (le llega con aviso).
+  const quien = nombreEmisor ? esc(nombreEmisor) : 'Quien te la mandó';
   const cambios = Number(compartida?.respuesta?.cambios) || 0;
+  const escribinos = consultaUrl
+    ? `<a class="cierre__otra" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>¿Tenés alguna duda o querés ajustar algo? Escribinos</a>`
+    : `<button type="button" class="cierre__otra" data-accion="pedir-cambio">¿Tenés alguna duda o querés ajustar algo? Escribinos</button>`;
   return `
-    <div class="cierre${rechazada ? ' cierre--rechazada' : ''}">
-      <p class="cierre__titulo">${rechazada ? '¿Lo pensaste de nuevo?' : '¿Avanzamos?'}</p>
-      <p class="cierre__texto">${textoCierre}</p>
+    <div class="cierre">
+      <p class="cierre__titulo">¿Avanzamos?</p>
+      <p class="cierre__texto">Revisá los ítems elegidos y confirmá tu aceptación en pantalla. ${quien} recibe tu constancia al instante.</p>
       <div class="cierre__acciones">
-        <button type="button" class="boton boton--primario boton--grande" data-accion="aceptar">Aceptar ${que}${conCobro || conMp ? ' y ver datos de pago' : ''}</button>
-        ${consultaUrl ? `<a class="boton boton--secundario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a>` : ''}
+        <button type="button" class="boton boton--primario boton--grande" data-accion="aceptar">${textoBotonAceptar(que, conFirma)}</button>
       </div>
-      <div class="cierre__otras">
-        <button type="button" class="cierre__otra" data-accion="pedir-cambio">${cambios ? 'Pedir otro cambio' : 'Pedir un cambio'}</button>
-        ${rechazada ? '' : `<button type="button" class="cierre__otra" data-accion="no-avanzo">No avanzo por ahora</button>`}
-      </div>
-      ${cambios ? `<p class="cierre__nota">Le ${cambios === 1 ? 'pediste un cambio' : `pediste ${cambios} cambios`} a ${quien}. Cuando la actualice, la vas a ver en este mismo link.</p>` : ''}
+      <div class="cierre__otras">${escribinos}</div>
+      ${cambios ? `<p class="cierre__nota">Ya le escribiste a ${quien}. Cuando actualice ${que === 'presupuesto' ? 'el presupuesto' : 'la propuesta'}, la vas a ver en este mismo link.</p>` : ''}
     </div>`;
+};
+
+// El botón principal del cierre: «firmar» solo si el dueño pidió la firma del cliente.
+export const textoBotonAceptar = (que = 'propuesta', conFirma = false) => `${conFirma ? 'Aceptar y firmar' : 'Aceptar'} ${que}`;
+
+// El botón final del diálogo de aceptar: dice qué viene después (los datos para transferir o
+// el pago con Mercado Pago).
+export const textoBotonConfirmar = ({ conFirma = false, conCobro = false, conMp = false, que = 'propuesta' } = {}) => {
+  if (conMp) return 'Confirmar y continuar al pago';
+  if (conCobro) return conFirma ? 'Confirmar firma y ver datos de pago' : 'Confirmar y ver datos de pago';
+  return conFirma ? 'Confirmar firma' : `Confirmar ${que === 'presupuesto' ? 'el presupuesto' : 'la propuesta'}`;
 };
 
 let observador;
@@ -937,7 +943,7 @@ const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
       ${pie}
     </section>`;
 
-  return hoja + (web ? barraClienteHTML(c, vig, { moneda: m, esAceptada, consultaUrl }) : '');
+  return hoja + (web ? barraClienteHTML(c, vig, { moneda: m, esAceptada, consultaUrl, que: 'presupuesto', conFirma: pideFirma(s) }) : '');
 };
 
 export const generarPropuestaHTML = (
@@ -1221,5 +1227,5 @@ export const generarPropuestaHTML = (
       ${pie}
     </div>`;
 
-  return portada + navLandingProp + cuerpo + (web ? barraClienteHTML(c, vig, { moneda: m, esAceptada, consultaUrl }) : '');
+  return portada + navLandingProp + cuerpo + (web ? barraClienteHTML(c, vig, { moneda: m, esAceptada, consultaUrl, conFirma: pideFirma(s) }) : '');
 };

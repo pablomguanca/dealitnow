@@ -210,7 +210,7 @@ describe('normalizarPortafolio', () => {
 
 import { decoracionPortadaSVG } from '../src/lib/decoraciones.js';
 import { resolverColoresTema } from '../src/lib/tema.js';
-import { generarPropuestaHTML, generarPortafolioHTML } from '../src/lib/render.js';
+import { generarPropuestaHTML, generarPortafolioHTML, textoBotonConfirmar } from '../src/lib/render.js';
 import { filtrosHTML, metricasHTML } from '../src/lib/paneles.js';
 
 describe('módulos de render, tema, imágenes y decoraciones', () => {
@@ -313,7 +313,27 @@ describe('método de cobro', () => {
     expect(cobraPorTransferencia(con)).toBe(true);
     expect(cobraPorTransferencia(normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'acordar', conDatos: true } }))).toBe(false);
     expect(cobraPorTransferencia(normalizarPropuesta(ejemplo()))).toBe(false);
-    expect(generarPropuestaHTML(con, { web: true })).toContain('Aceptar propuesta y ver datos de pago');
+    expect(textoBotonConfirmar({ conFirma: true, conCobro: true })).toBe('Confirmar firma y ver datos de pago');
+    expect(textoBotonConfirmar({ conCobro: true })).toBe('Confirmar y ver datos de pago');
+    expect(textoBotonConfirmar({ conFirma: true, conCobro: true, conMp: true })).toBe('Confirmar y continuar al pago');
+    expect(textoBotonConfirmar({ que: 'presupuesto' })).toBe('Confirmar el presupuesto');
+  });
+
+  it('el cierre del link tiene un solo botón y un solo link para escribir', () => {
+    const p = normalizarPropuesta(ejemplo());
+    p.emisor.telefono = '+54 9 11 5555-0142';
+    const html = generarPropuestaHTML(p, { web: true, compartida: { id: 'X' } });
+    expect(html).toContain('>Aceptar propuesta</button>');
+    expect(html).toContain('¿Tenés alguna duda o querés ajustar algo? Escribinos');
+    expect(html).not.toContain('No avanzo por ahora');
+    expect(html).not.toContain('Hacer una consulta');
+    const conFirma = normalizarPropuesta({ ...ejemplo(), opciones: { ...ejemplo().opciones, firmaCliente: true } });
+    expect(generarPropuestaHTML(conFirma, { web: true })).toContain('>Aceptar y firmar propuesta</button>');
+    // Sin WhatsApp ni email del dueño, «Escribinos» abre el pedido de cambio.
+    const sinContacto = normalizarPropuesta(ejemplo());
+    sinContacto.emisor.telefono = '';
+    sinContacto.emisor.email = '';
+    expect(generarPropuestaHTML(sinContacto, { web: true })).toContain('data-accion="pedir-cambio">¿Tenés alguna duda');
   });
 
   it('el link no lleva los datos bancarios; aceptada, muestra los que entregó el servidor', () => {
@@ -333,7 +353,7 @@ describe('cobro con Mercado Pago', () => {
     const base = normalizarPropuesta({ ...ejemplo(), cobro: { metodo: 'mercadopago', conMp: true } });
     base.inversion.moneda = 'ARS';
     const aceptada = { aceptacion: { nombre: 'Laura', fecha: '2026-11-10T12:00:00Z' } };
-    expect(generarPropuestaHTML(base, { web: true })).toContain('Aceptar propuesta y ver datos de pago');
+    expect(generarPropuestaHTML(base, { web: true })).toContain('>Aceptar propuesta</button>');
     expect(generarPropuestaHTML(base, { web: true, compartida: aceptada })).toContain('data-accion="pagar-mp"');
     const enDolares = normalizarPropuesta({ ...base, inversion: { ...base.inversion, moneda: 'USD' } });
     expect(generarPropuestaHTML(enDolares, { web: true, compartida: aceptada })).not.toContain('pagar-mp');
