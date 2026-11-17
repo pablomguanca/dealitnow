@@ -203,23 +203,6 @@ const opcionalesHTML = r => {
     ${lista}`);
 };
 
-// --- Por qué no avanzan («No avanzo por ahora» del link) ---
-const motivosHTML = r => {
-  if (!r.noAvanzan) {
-    return tarjeta('Por qué no avanzan', '<p class="res-vacio">Cuando un cliente no avance, acá ves el motivo que eligió: precio, tiempos, otra opción… Así sabés qué ajustar.</p>');
-  }
-  const max = r.motivos[0].veces;
-  const filas = r.motivos.map(m => `
-    <div class="res-embudo__fila">
-      <span class="res-embudo__etiqueta">${esc(m.nombre)}</span>
-      <span class="res-embudo__pista"><span class="res-embudo__barra" style="--valor:${m.veces / max}"></span></span>
-      <span class="res-embudo__valor">${m.veces}</span>
-    </div>`).join('');
-  return tarjeta('Por qué no avanzan', `<div class="res-embudo res-motivos">${filas}</div>`, {
-    ayuda: `${plural(r.noAvanzan, 'cliente respondió', 'clientes respondieron')} «No avanzo por ahora» en este período.`
-  });
-};
-
 // --- Mejores clientes ---
 const clientesHTML = r => (r.clientes.length
   ? tarjeta('Mejores clientes', `<ol class="res-lista">${r.clientes.map(c => `<li><span>${esc(c.nombre)} <small>${plural(c.aceptadas, 'aceptada', 'aceptadas')}</small></span><strong>${esc(dinero(c.total, r.monedaPrincipal))}</strong></li>`).join('')}</ol>`)
@@ -267,7 +250,6 @@ export const renderResultados = () => {
       ${embudoHTML(r, conSeguimiento)}
       ${mesesHTML(r)}
       ${opcionalesHTML(r)}
-      ${motivosHTML(r)}
       ${clientesHTML(r)}
       ${franjasHTML(r, conSeguimiento)}
     </div>

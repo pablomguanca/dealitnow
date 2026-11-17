@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  CAMBIOS_MAX, cambioPendiente, contarMotivos, hoyArgentina, mensajeRecordatorio, porVencer,
+  CAMBIOS_MAX, cambioPendiente, hoyArgentina, mensajeRecordatorio, porVencer,
   recordatorioPendiente, respuestaPublica, ultimoDia, validarPedidoCambio, validarRechazo, venceTexto
 } from '../src/respuestas.js';
 
@@ -57,17 +57,12 @@ describe('respuestaPublica', () => {
   });
 });
 
-describe('cambioPendiente y contarMotivos', () => {
+describe('cambioPendiente', () => {
   it('marca el cambio hasta que el dueño edita la propuesta', () => {
     const p = doc({ cambios: [{ texto: 'x', fecha: '2026-11-15T10:00:00Z' }], updatedAt: '2026-11-14T10:00:00Z' });
     expect(cambioPendiente(p).texto).toBe('x');
     expect(cambioPendiente({ ...p, updatedAt: '2026-11-15T12:00:00Z' })).toBeNull();
     expect(cambioPendiente({ ...p, aceptacion: {} })).toBeNull();
-  });
-
-  it('cuenta los motivos de más a menos frecuente', () => {
-    const lista = [{ rechazo: { motivo: 'precio' } }, { rechazo: { motivo: 'tiempos' } }, { rechazo: { motivo: 'precio' } }];
-    expect(contarMotivos(lista).map(m => [m.motivo, m.veces])).toEqual([['precio', 2], ['tiempos', 1]]);
   });
 });
 

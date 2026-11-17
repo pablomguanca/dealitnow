@@ -108,16 +108,6 @@ export const cambioPendiente = p => {
   return !pedido || !editada || pedido > editada ? { ...ultimo, fecha: pedido } : null;
 };
 
-// Motivos de «No avanzo por ahora» de una lista de propuestas, de más a menos frecuente.
-export const contarMotivos = propuestas => {
-  const conteo = new Map();
-  propuestas.forEach(p => {
-    const m = MOTIVOS_RECHAZO[p.rechazo?.motivo] ? p.rechazo.motivo : 'otro';
-    conteo.set(m, (conteo.get(m) || 0) + 1);
-  });
-  return [...conteo].map(([motivo, veces]) => ({ motivo, nombre: MOTIVOS_RECHAZO[motivo], veces })).sort((a, b) => b.veces - a.veces);
-};
-
 // ---------- Recordatorio antes del vencimiento ----------
 
 export const DIAS_AVISO_VENCE = 3;
