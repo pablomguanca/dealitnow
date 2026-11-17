@@ -22,6 +22,7 @@ import { llenarTemaEditor } from './diseno.js';
 import { actualizarSeccionesHoja } from './hoja.js';
 import { pintarCobroEditor } from './cobro.js';
 import { pintarEstadosVideo } from './video.js';
+import { cerrarExplorador } from './explorador-plantillas.js';
 
 export const actualizarImagenGenericaItem = (nodo, urlImg, prefijo, textoSubir = 'Subir foto', textoCambiar = 'Cambiar foto') => {
   const img = $(`[${prefijo}-vista]`, nodo);
@@ -218,6 +219,7 @@ const sincronizarModoEditorUI = () => {
   if (pasosProp) pasosProp.hidden = esPf;
   if (pasosPf) pasosPf.hidden = !esPf;
   if (wrapTplProp) wrapTplProp.hidden = esPf;
+  if (esPf) cerrarExplorador();
   if (wrapTplPf) wrapTplPf.hidden = !esPf;
   const wrapFormato = $('#formato-propuesta-wrap');
   if (wrapFormato) wrapFormato.hidden = esPf;

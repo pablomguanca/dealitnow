@@ -17,6 +17,7 @@ import { instalarGuardado } from './guardado.js';
 import { instalarFormulario } from './formulario.js';
 import { instalarHistorial } from './historial.js';
 import { instalarDiseno } from './diseno.js';
+import { instalarExplorador } from './explorador-plantillas.js';
 import { instalarSubidas } from './subidas.js';
 import { instalarVersiones } from './versiones.js';
 import { instalarDocumento } from './documento.js';
@@ -46,6 +47,7 @@ export const inicializarControladorDealit = () => {
   // menú antes de que se despache la acción del clic.
   instalarGuardado();
   instalarDiseno();
+  instalarExplorador();
   instalarFormulario();
   instalarHistorial();
   instalarSubidas();

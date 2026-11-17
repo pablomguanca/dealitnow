@@ -7,6 +7,7 @@ import { SenderStep } from './SenderStep.jsx';
 import { ProposalSteps } from './ProposalSteps.jsx';
 import { PortfolioSteps } from './PortfolioSteps.jsx';
 import { IconoIA } from '../IconoIA.jsx';
+import { ExploradorPlantillas } from './ExploradorPlantillas.jsx';
 
 export function EditorSidebar() {
   return (
@@ -50,6 +51,7 @@ export function EditorSidebar() {
           <p>Tu cliente abre la propuesta desde el link, sin crear una cuenta.</p>
         </div>
       </div>
+      <ExploradorPlantillas />
     </section>
   );
 }

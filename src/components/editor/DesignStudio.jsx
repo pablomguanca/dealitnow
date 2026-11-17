@@ -1,10 +1,11 @@
 // Estudio de diseño visual: plantillas por rubro, temas cromáticos, decoraciones SVG, portadas, estilos de bloques, tipografías y escalas.
 
-import { FUENTES_TITULOS, FUENTES_CUERPO, COMBINACIONES_FUENTES } from '../../modelo.js';
-import { TEMAS_CATALOGO, PLANTILLAS_CATALOGO } from '../../plantillas-catalogo.js';
+import { FUENTES_TITULOS, FUENTES_CUERPO, COMBINACIONES_FUENTES, PLANTILLAS } from '../../modelo.js';
+import { TEMAS_CATALOGO } from '../../plantillas-catalogo.js';
 import { PLANTILLAS_PORTFOLIO_CATALOGO } from '../../portfolios-catalogo.js';
 
-const CANTIDAD_CATALOGO = Object.keys(PLANTILLAS_CATALOGO).length;
+// Todas las plantillas de propuesta (atajos y catálogo ampliado), para el botón del explorador.
+const CANTIDAD = Object.keys(PLANTILLAS).length;
 
 export function DesignStudio() {
   return (
@@ -58,11 +59,11 @@ export function DesignStudio() {
               <span className="plantilla-chip__nombre">Coaching y Capacitación</span>
             </button>
           </div>
-          {/* El catálogo completo (con las plantillas nuevas) está en la pestaña Plantillas del panel. */}
-          <button type="button" className="plantillas-explorar" data-accion="explorar-plantillas">
+          {/* Abre el explorador de plantillas en esta misma columna (ExploradorPlantillas.jsx). */}
+          <button type="button" className="plantillas-explorar" data-accion="explorar-plantillas" aria-controls="explorador-plantillas">
             <span className="plantillas-explorar__texto">
               <span className="plantillas-explorar__titulo">Explorar más plantillas</span>
-              <span className="plantillas-explorar__sub">{CANTIDAD_CATALOGO} rubros más: oficios, legal, contable, bodas, UX, e-commerce y más</span>
+              <span className="plantillas-explorar__sub">Las {CANTIDAD} con vista previa: oficios, legal, bodas, UX y más</span>
             </span>
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" /></svg>
           </button>

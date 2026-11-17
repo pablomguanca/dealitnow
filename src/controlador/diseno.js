@@ -18,9 +18,7 @@ import { avisar, avisarExito, elegir } from './avisos.js';
 import { guardarLuego } from './guardado.js';
 import { llenarFormulario, reemplazarEstado } from './formulario.js';
 import { actualizar, actualizarTemaEnVivo, congelarAnimaciones } from './documento.js';
-import { nuevaPropuesta, irAlPanel } from './propuestas.js';
-import { abrirRegistro } from './sesion.js';
-import { registrarAcciones } from './acciones.js';
+import { nuevaPropuesta } from './propuestas.js';
 import { disenoProPermitido } from './plan.js';
 
 // Escalas y espaciados ajustables: [id del control, id del valor mostrado, propiedad del tema].
@@ -179,7 +177,13 @@ const aplicarPlantillaRubro = (id, soloDiseno = false) => {
       avisarExito(`Plantilla «${tpl.nombre}» cargada. Editá lo que quieras.`);
     }
   }
+  marcarPlantillaActiva(id);
+};
+
+// La plantilla elegida se marca en los atajos y en el explorador.
+export const marcarPlantillaActiva = id => {
   $$('.plantilla-chip').forEach(c => c.classList.toggle('plantilla-chip--activa', c.dataset.plantilla === id));
+  $$('#explorador-grilla > .explorador-card').forEach(c => c.classList.toggle('explorador-card--activa', c.dataset.id === id));
 };
 
 const aplicarPlantillaPortafolio = (id, soloDiseno = false) => {
@@ -202,15 +206,32 @@ const aplicarPlantillaPortafolio = (id, soloDiseno = false) => {
   $$('[data-plantilla-portafolio]').forEach(c => c.classList.toggle('plantilla-chip--activa', c.dataset.plantillaPortafolio === id));
 };
 
-// «Explorar más plantillas»: el catálogo completo está en la pestaña Plantillas del panel.
-// Sin cuenta, se invita a crearla (el panel es de las cuentas).
-const explorarPlantillas = () => {
-  if (nube()) irAlPanel({ pestana: 'plantillas' });
-  else abrirRegistro('plantillas');
+// Plantilla elegida en los atajos o en el explorador de plantillas. Si ya escribió su
+// propuesta, se pregunta si quiere la plantilla completa o solo su diseño. Todo pasa por
+// guardarLuego, así que se puede deshacer.
+export const elegirPlantillaPropuesta = async id => {
+  const tpl = PLANTILLAS[id];
+  if (!tpl) return;
+  if (tpl.plan === 'pro' && !(await disenoProPermitido(tpl.nombre))) return;
+  const { estado } = ctx;
+  const tieneTextoPropio = estado.propuesta.titulo.trim() || estado.servicios.some(servicioConContenido);
+  if (!tieneTextoPropio) {
+    aplicarPlantillaRubro(id, false);
+    return;
+  }
+  const eleccion = await elegir({
+    titulo: `Plantilla: ${tpl.nombre}`,
+    texto: `¿Querés cargar los textos y servicios de ejemplo de «${tpl.nombre}» o aplicar solo su diseño (tema, decoración y disposición) y conservar lo que ya escribiste?`,
+    opciones: [
+      { valor: 'diseno', texto: 'Solo aplicar el diseño', estilo: 'primario' },
+      { valor: 'completa', texto: 'Cargar texto y diseño', estilo: 'secundario' },
+      { valor: null, texto: 'Cancelar', estilo: 'texto' }
+    ]
+  });
+  if (eleccion) aplicarPlantillaRubro(id, eleccion === 'diseno');
 };
 
 export const instalarDiseno = () => {
-  registrarAcciones({ 'explorar-plantillas': () => explorarPlantillas() });
   $('#temas-grid')?.addEventListener('click', async ev => {
     const card = ev.target.closest('.tema-card');
     if (!card) return;
@@ -240,30 +261,9 @@ export const instalarDiseno = () => {
   vincularGrilla('#portadas-grid', 'portada', PORTADAS, 'portada');
   vincularGrilla('#estilos-grid', 'estilo', ESTILOS_BLOQUES, 'estilo');
 
-  // Si ya escribió su propuesta, se pregunta si quiere la plantilla completa o solo su diseño.
-  $('#plantillas-grid')?.addEventListener('click', async ev => {
+  $('#plantillas-grid')?.addEventListener('click', ev => {
     const chip = ev.target.closest('[data-plantilla]');
-    if (!chip) return;
-    const id = chip.dataset.plantilla;
-    const tpl = PLANTILLAS[id];
-    if (!tpl) return;
-    if (tpl.plan === 'pro' && !(await disenoProPermitido(tpl.nombre))) return;
-    const { estado } = ctx;
-    const tieneTextoPropio = estado.propuesta.titulo.trim() || estado.servicios.some(servicioConContenido);
-    if (!tieneTextoPropio) {
-      aplicarPlantillaRubro(id, false);
-      return;
-    }
-    const eleccion = await elegir({
-      titulo: `Plantilla: ${tpl.nombre}`,
-      texto: `¿Querés cargar los textos y servicios de ejemplo de «${tpl.nombre}» o aplicar solo su diseño (tema, decoración y disposición) y conservar lo que ya escribiste?`,
-      opciones: [
-        { valor: 'diseno', texto: 'Solo aplicar el diseño', estilo: 'primario' },
-        { valor: 'completa', texto: 'Cargar texto y diseño', estilo: 'secundario' },
-        { valor: null, texto: 'Cancelar', estilo: 'texto' }
-      ]
-    });
-    if (eleccion) aplicarPlantillaRubro(id, eleccion === 'diseno');
+    if (chip) elegirPlantillaPropuesta(chip.dataset.plantilla);
   });
 
   $('#plantillas-portafolio-grid')?.addEventListener('click', async ev => {

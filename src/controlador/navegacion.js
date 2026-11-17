@@ -10,6 +10,7 @@ import { hayCambiosSinEnviar, guardarAhora } from './guardado.js';
 import { irAlPanel, abrirPropuesta, volverAEditorPropuestaInvitado } from './propuestas.js';
 import { irAPortafolios, abrirPortafolio } from './portafolios.js';
 import { irACuenta } from './cuenta.js';
+import { cerrarExplorador } from './explorador-plantillas.js';
 import { irAResultados } from './resultados.js';
 
 let navegarReactRouter = null;
@@ -118,6 +119,7 @@ export const mostrarVista = vista => {
   if (elPortafolios) elPortafolios.hidden = vista !== 'portafolios';
   $('#cuenta').hidden = vista !== 'cuenta';
   $('#app').hidden = inicio;
+  if (inicio) cerrarExplorador();
   $$('.barra__nav-link, .menu__opcion[data-seccion], .tabbar__item').forEach(a => {
     if (a.dataset.seccion === vista) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');

@@ -1,0 +1,279 @@
+// Explorador de plantillas del editor (ExploradorPlantillas.jsx): ocupa la columna del
+// editor en lugar de los pasos, con miniaturas reales en dos columnas.
+
+.editor__cuerpo[hidden] {
+  display: none;
+}
+
+.explorador {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--negro);
+  animation: explorador-entra 0.24s var(--ease-out-expo);
+
+  &[hidden] {
+    display: none;
+  }
+
+  &__cabecera {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 1rem 0.7rem;
+  }
+
+  &__volver {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 2.1rem;
+    height: 2.1rem;
+    border: 1px solid var(--superficie-borde);
+    border-radius: 999px;
+    background: var(--superficie);
+    color: var(--marfil);
+    cursor: pointer;
+    transition: border-color var(--transicion);
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: var(--icono-trazo);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--dorado);
+    }
+  }
+
+  &__titulo {
+    margin: 0;
+    font-family: var(--fuente-display);
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  &__cuenta {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--marfil-tenue);
+  }
+
+  &__filtros {
+    display: grid;
+    gap: 0.6rem;
+    padding: 0 1rem 0.75rem;
+    border-bottom: 1px solid var(--superficie-borde);
+  }
+
+  &__buscar {
+    max-width: none;
+
+    .galeria-buscar__campo {
+      padding-block: 0.6rem;
+      font-size: 0.88rem;
+    }
+  }
+
+  // Una sola fila que se desliza: la columna es angosta.
+  &__chips {
+    display: flex;
+    gap: 0.4rem;
+    margin-inline: -1rem;
+    padding: 0.1rem 1rem 0.2rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .galeria-chip {
+      padding: 0.35rem 0.7rem;
+      font-size: 0.78rem;
+    }
+  }
+
+  &__cuerpo {
+    flex: 1;
+    min-height: 0;
+    padding: 0.75rem 1rem 1.5rem;
+    overflow-y: auto;
+    scrollbar-color: var(--superficie-borde) transparent;
+  }
+
+  &__ayuda {
+    margin: 0 0 0.75rem;
+    font-size: 0.78rem;
+    color: var(--marfil-apagado);
+  }
+
+  &__grilla {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem 0.65rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__vacio {
+    margin: 0.5rem 0 0;
+    padding: 1rem;
+    border: 1px dashed var(--superficie-borde);
+    border-radius: var(--radio-m);
+    font-size: 0.85rem;
+    color: var(--marfil-apagado);
+    text-align: center;
+  }
+}
+
+.explorador-card {
+  position: relative;
+  display: grid;
+  gap: 0.15rem;
+
+  &[hidden] {
+    display: none;
+  }
+
+  // Cubre toda la tarjeta: la miniatura trae botones y links del documento, que no
+  // pueden ir adentro de un botón.
+  &__boton {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radio-m);
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  // La miniatura es el documento real, reducido al ancho de la tarjeta (escalarMiniatura).
+  &__lienzo {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 5;
+    margin-bottom: 0.35rem;
+    overflow: hidden;
+    border: 1px solid var(--superficie-borde);
+    border-radius: var(--radio-m);
+    background: var(--superficie);
+    pointer-events: none;
+    transition: border-color var(--transicion), box-shadow var(--transicion), transform 0.2s ease;
+
+    .doc--miniatura {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  }
+
+  &__pro {
+    position: absolute;
+    top: 0.45rem;
+    right: 0.45rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  }
+
+  &__nombre {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.25;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  &__rubro {
+    overflow: hidden;
+    font-size: 0.68rem;
+    color: var(--marfil-tenue);
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &:hover &__lienzo,
+  &:has(:focus-visible) &__lienzo {
+    border-color: var(--dorado);
+    transform: translateY(-2px);
+  }
+
+  &__boton:focus-visible {
+    outline: none;
+  }
+
+  // La que tiene la propuesta ahora.
+  &--activa &__lienzo {
+    border-color: var(--dorado);
+    box-shadow: 0 0 0 2px var(--dorado);
+  }
+}
+
+// En celular va en la hoja (a media altura casi siempre): todo más bajo y más tarjetas por fila.
+@media (max-width: 900px) {
+  .explorador {
+    &__cabecera {
+      padding: 0.6rem 1rem 0.45rem;
+    }
+
+    &__volver {
+      width: 1.9rem;
+      height: 1.9rem;
+    }
+
+    &__titulo {
+      font-size: 1.15rem;
+    }
+
+    &__filtros {
+      gap: 0.45rem;
+      padding-bottom: 0.55rem;
+    }
+
+    &__ayuda {
+      display: none;
+    }
+
+    &__cuerpo {
+      padding-top: 0.65rem;
+    }
+
+    &__grilla {
+      grid-template-columns: repeat(auto-fill, minmax(6.4rem, 1fr));
+      gap: 0.75rem 0.55rem;
+    }
+  }
+
+  .explorador-card__nombre {
+    font-size: 0.74rem;
+  }
+}
+
+@keyframes explorador-entra {
+  from {
+    opacity: 0;
+    transform: translateX(-0.8rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .explorador {
+    animation: none;
+  }
+
+  .explorador-card:hover .explorador-card__lienzo {
+    transform: none;
+  }
+}

@@ -1,7 +1,7 @@
 // Catálogo ampliado de plantillas de propuesta: rubros nuevos, cada uno con su diseño propio
 // (TEMAS_CATALOGO) y textos de ejemplo escritos para ese oficio. modelo.js las suma a
 // TEMAS y PLANTILLAS (con catalogo: true): no aparecen entre los atajos del editor, sino en
-// «Explorar más plantillas» (pestaña Plantillas del panel).
+// «Explorar más plantillas» (explorador del editor) y en la pestaña Plantillas del panel.
 //
 // Los datos van sin IDs ni fecha: modelo.js los completa al crear la propuesta
 // (desdeCatalogo). Objetivos y pagos se escriben cortos: ['texto'] y [concepto, %].

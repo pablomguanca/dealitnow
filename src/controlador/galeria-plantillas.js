@@ -15,7 +15,7 @@ import { emisorDeCuenta } from './cuenta.js';
 let galeriaLista = false;
 
 // Categorías del catálogo (cada plantilla en una). «Gratis» y «PRO» filtran por plan.
-const CATEGORIAS = [
+export const CATEGORIAS = [
   { id: 'todas', nombre: 'Todas' },
   { id: 'diseno-tech', nombre: 'Diseño & Tech', ids: ['diseno-web', 'software-saas', 'ux-ui-producto', 'web-pymes', 'ecommerce-performance'] },
   { id: 'marketing', nombre: 'Marketing & Contenido', ids: ['marketing-redes', 'redaccion-contenidos', 'audiovisual-eventos'] },
@@ -56,11 +56,11 @@ const CLAVES = {
 };
 
 // Sin tildes ni mayúsculas, para que «abogacía» y «abogacia» den lo mismo.
-const normalizarBusqueda = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+export const normalizarBusqueda = t => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
 const categoriaDe = id => CATEGORIAS.find(c => c.ids?.includes(id))?.id || '';
 
-const coincide = (id, tpl, categoria, busqueda) => {
+export const coincide = (id, tpl, categoria, busqueda) => {
   if (categoria === 'gratis' && tpl.plan !== 'gratis') return false;
   if (categoria === 'pro' && tpl.plan !== 'pro') return false;
   if (!['todas', 'gratis', 'pro'].includes(categoria) && categoriaDe(id) !== categoria) return false;
@@ -99,18 +99,18 @@ const chipsHTML = () => CATEGORIAS.map(c => {
 
 // La miniatura es el documento real a ANCHO_MINIATURA px, reducido al ancho de su tarjeta.
 const ANCHO_MINIATURA = 1100;
-const escalarMiniatura = lienzo => {
+export const escalarMiniatura = lienzo => {
   const article = lienzo.querySelector('.doc--miniatura');
   if (article) article.style.transform = `scale(${lienzo.clientWidth / ANCHO_MINIATURA})`;
 };
-const observadorTamano = typeof ResizeObserver === 'function'
+export const observadorTamano = typeof ResizeObserver === 'function'
   ? new ResizeObserver(entradas => entradas.forEach(e => escalarMiniatura(e.target)))
   : null;
 
 // Los IDs del documento ya existen en el editor: en las copias se sacan para no repetirlos.
 const sinIds = html => html.replace(/\sid="[^"]*"/g, '');
 
-const dibujarPlantilla = (article, id) => {
+export const dibujarPlantilla = (article, id) => {
   const datos = normalizar(PLANTILLAS[id].crear());
   aplicarTema(article, datos.tema);
   article.innerHTML = sinIds(generarPropuestaHTML(datos, {
