@@ -121,15 +121,38 @@ describe('GET /api/visto (tarea diaria de recordatorios)', () => {
   it('avisa una sola vez por las propuestas que vencen pronto', async () => {
     const { db, actualizados } = crearDbConsulta({ A: cerca({ vistas: 2 }), B: propuesta(), C: cerca({ aceptacion: { nombre: 'X' }, status: 'accepted' }) });
     const avisos = [];
-    const tarea = crearTareaDiaria({ db, entorno, ahora, avisar: async a => avisos.push(a), marcaDeTiempo: () => 'ahora' });
+    const tarea = crearTareaDiaria({ db, entorno, ahora, avisar: async a => { avisos.push(a); return 'enviado'; }, marcaDeTiempo: () => 'ahora' });
     const r = res();
     await tarea({ method: 'GET', headers: { authorization: 'Bearer secreto' } }, r);
-    expect(r.cuerpo).toEqual({ revisadas: 2, avisadas: 1 });
+    expect(r.cuerpo).toMatchObject({ revisadas: 2, avisadas: 1 });
+    // Por qué sí o por qué no, propuesta por propuesta.
+    expect(r.cuerpo.detalle).toEqual([
+      { id: 'A', titulo: '', vence: '2026-11-17', quedan: 1, resultado: 'enviado' },
+      { id: 'B', titulo: '', resultado: 'vencida-el-2026-10-31' }
+    ]);
     expect(avisos[0]).toMatchObject({ tipo: 'por-vencer', id: 'A', recordatorio: { vence: '2026-11-17', quedan: 1, vistas: 2 } });
     expect(actualizados[0].c.recordatorio.vence).toBe('2026-11-17');
     const r2 = res();
     await tarea({ method: 'GET', headers: { authorization: 'Bearer secreto' } }, r2);
     expect(r2.cuerpo.avisadas).toBe(0);
+    expect(r2.cuerpo.detalle[0].resultado).toBe('ya-avisada-para-el-2026-11-17');
+  });
+
+  it('en Gratis no avisa ni la marca, así le llega si se pasa a Pro', async () => {
+    const { db, actualizados } = crearDbConsulta({ A: cerca() });
+    const tarea = crearTareaDiaria({ db, entorno, ahora, avisar: async () => 'gratis', marcaDeTiempo: () => 'ahora' });
+    const r = res();
+    await tarea({ method: 'GET', headers: { authorization: 'Bearer secreto' } }, r);
+    expect(r.cuerpo).toMatchObject({ avisadas: 0, detalle: [{ id: 'A', resultado: 'gratis' }] });
+    expect(actualizados).toHaveLength(0);
+  });
+
+  it('dice cuántos días faltan cuando todavía no toca', async () => {
+    const lejos = propuesta({ payload: { ...vacio(), propuesta: { titulo: 'Web', fecha: '2026-11-16', validez: 15 } } });
+    const { db } = crearDbConsulta({ A: lejos });
+    const r = res();
+    await crearTareaDiaria({ db, entorno, ahora })({ method: 'GET', headers: { authorization: 'Bearer secreto' } }, r);
+    expect(r.cuerpo.detalle[0].resultado).toBe('faltan-15-dias');
   });
 });
 

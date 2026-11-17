@@ -8,8 +8,9 @@ import { FieldValue, firestore, uidDeLaSolicitud } from './_lib/firebase-admin.j
 import { ErrorHttp, fallar, leerPost, responder } from './_lib/http.js';
 import { crearAvisador, urlAppDe } from './_lib/avisos.js';
 import { planesActivosPara } from './_lib/planes-activos.js';
-import { clienteDe } from '../src/planes.js';
-import { recordatorioPendiente } from '../src/respuestas.js';
+import { clienteDe, contenidoDelLink } from '../src/planes.js';
+import { DIAS_AVISO_VENCE, hoyArgentina, recordatorioPendiente, ultimoDia } from '../src/respuestas.js';
+import { desdeISO } from '../src/lib/formato.js';
 
 // Entre una visita y la siguiente, al menos esto para volver a avisar.
 export const PAUSA_REVISITA_MS = 30 * 1000;
@@ -27,25 +28,48 @@ export const crearTareaDiaria = ({ db, avisar = async () => {}, ahora = () => ne
   try {
     const snap = await db().collection('proposals').where('publico', '==', true).where('status', '==', 'sent').get();
     let avisadas = 0;
+    // Qué pasó con cada propuesta, para entender una corrida desde Vercel («Run» o los logs).
+    const detalle = [];
     for (const d of snap.docs) {
       const doc = d.data();
+      const titulo = String(doc.title || '').slice(0, 80);
+      const motivo = motivoSinRecordatorio(doc, ahora());
+      if (motivo) {
+        detalle.push({ id: d.id, titulo, resultado: motivo });
+        continue;
+      }
       const pendiente = recordatorioPendiente(doc, ahora());
-      if (!pendiente) continue;
-      // Se marca antes de avisar: si el aviso falla, no se insiste todos los días.
-      await d.ref.update({ recordatorio: { vence: pendiente.vence, fecha: marcaDeTiempo() } });
-      await avisar({
+      const resultado = await avisar({
         tipo: 'por-vencer',
         id: d.id,
         propuesta: doc,
         recordatorio: { ...pendiente, vistas: Number(doc.vistas) || 0 },
         urlApp: entorno.APP_URL || 'https://dealit.com.ar'
       });
+      detalle.push({ id: d.id, titulo, vence: pendiente.vence, quedan: pendiente.quedan, resultado: resultado || 'enviado' });
+      // En Gratis no se manda: no se marca, así si se pasa a Pro todavía le llega. Si se
+      // mandó (o falló al mandar), una vez por vencimiento: no se insiste todos los días.
+      if (resultado === 'gratis') continue;
+      await d.ref.update({ recordatorio: { vence: pendiente.vence, fecha: marcaDeTiempo() } });
       avisadas += 1;
     }
-    return responder(res, 200, { revisadas: snap.size, avisadas });
+    console.log('Tarea diaria de recordatorios:', JSON.stringify({ revisadas: snap.size, avisadas, detalle }));
+    return responder(res, 200, { revisadas: snap.size, avisadas, detalle: detalle.slice(0, 100) });
   } catch (e) {
     return fallar(res, e);
   }
+};
+
+// Por qué una propuesta enviada no lleva recordatorio hoy ('' si lo lleva).
+const motivoSinRecordatorio = (doc, ahora) => {
+  if (recordatorioPendiente(doc, ahora)) return '';
+  if (doc.aceptacion) return 'aceptada';
+  const vence = ultimoDia(contenidoDelLink(doc));
+  if (!vence) return 'sin-vencimiento';
+  const quedan = Math.round((desdeISO(vence) - desdeISO(hoyArgentina(ahora))) / 86400000);
+  if (quedan < 0) return `vencida-el-${vence}`;
+  if (quedan > DIAS_AVISO_VENCE) return `faltan-${quedan}-dias`;
+  return `ya-avisada-para-el-${vence}`;
 };
 
 export const crearHandler = ({ db, uidDe, avisar = async () => {}, ahora = () => Date.now(), tareaDiaria = null }) => async (req, res) => {
