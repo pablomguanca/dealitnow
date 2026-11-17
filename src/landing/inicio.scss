@@ -390,7 +390,7 @@ a { color: inherit; }
   &::after { content: '▍'; color: var(--ld-verde); animation: ld-cursor 0.8s steps(1) infinite; }
 }
 
-.ld-pantalla--propuesta { background: #0d0c0a; }
+.ld-pantalla--propuesta { background: #faf6ef; }
 
 /* La propuesta de Dealit dentro de los teléfonos (hero y comparativa): una página web como las
    de verdad, con portada, secciones numeradas y servicios. Se recorre sola, el cliente suma el
@@ -403,6 +403,26 @@ a { color: inherit; }
   --pg-texto: #f3efe6;
   --pg-suave: #a59e90;
   --pg-borde: rgba(201, 162, 74, 0.22);
+  // Líneas, contornos y superficies (en el oscuro, del color del texto con transparencia).
+  --pg-linea: rgba(243, 239, 230, 0.12);
+  --pg-linea-suave: rgba(243, 239, 230, 0.08);
+  --pg-contorno: rgba(243, 239, 230, 0.3);
+  --pg-pildora: rgba(243, 239, 230, 0.25);
+  --pg-pista: rgba(243, 239, 230, 0.18);
+  --pg-tarjeta: rgba(255, 255, 255, 0.03);
+  --pg-sobre-oro: #1a1408;
+  --pg-toque: rgba(255, 255, 255, 0.3);
+  --pg-toque-borde: rgba(255, 255, 255, 0.7);
+  --pg-boton-brillo: rgba(201, 162, 74, 0.3);
+  --pg-portada:
+    linear-gradient(180deg, rgba(13, 12, 10, 0.35) 0%, rgba(13, 12, 10, 0.75) 55%, var(--pg-fondo) 100%),
+    radial-gradient(60% 45% at 78% 22%, rgba(214, 158, 88, 0.85), transparent 70%),
+    radial-gradient(45% 40% at 18% 38%, rgba(120, 72, 40, 0.9), transparent 70%),
+    radial-gradient(70% 50% at 50% 0%, rgba(255, 214, 150, 0.35), transparent 70%),
+    linear-gradient(160deg, #3a2516, #140d08);
+  --pg-foto-1: radial-gradient(50% 40% at 60% 35%, rgba(240, 200, 140, 0.7), transparent 70%), linear-gradient(160deg, #6b4428, #24170e);
+  --pg-foto-2: radial-gradient(45% 35% at 40% 60%, rgba(201, 162, 74, 0.8), transparent 70%), linear-gradient(200deg, #2c2a26, #0f0e0c);
+  --pg-foto-3: radial-gradient(50% 40% at 50% 40%, rgba(235, 225, 205, 0.8), transparent 70%), linear-gradient(160deg, #8a6a4a, #3a2a1c);
   position: relative;
   container-type: inline-size;
   overflow: hidden;
@@ -423,12 +443,7 @@ a { color: inherit; }
 .ld-pg__portada {
   position: relative;
   padding: 3.6em 1.3em 1.5em;
-  background:
-    linear-gradient(180deg, rgba(13, 12, 10, 0.35) 0%, rgba(13, 12, 10, 0.75) 55%, var(--pg-fondo) 100%),
-    radial-gradient(60% 45% at 78% 22%, rgba(214, 158, 88, 0.85), transparent 70%),
-    radial-gradient(45% 40% at 18% 38%, rgba(120, 72, 40, 0.9), transparent 70%),
-    radial-gradient(70% 50% at 50% 0%, rgba(255, 214, 150, 0.35), transparent 70%),
-    linear-gradient(160deg, #3a2516, #140d08);
+  background: var(--pg-portada);
 }
 .ld-pg--duelo .ld-pg__portada { padding-top: 1.2em; }
 .ld-pg__nav {
@@ -440,7 +455,7 @@ a { color: inherit; }
   b { font: 400 1.25em/1 var(--ld-display); letter-spacing: 0.06em; text-transform: uppercase; }
   span {
     padding: 0.25em 0.6em;
-    border: 1px solid rgba(243, 239, 230, 0.25);
+    border: 1px solid var(--pg-pildora);
     border-radius: 999px;
     color: var(--pg-suave);
     font-size: 0.62em;
@@ -479,7 +494,7 @@ a { color: inherit; }
   grid-template-columns: 1fr 1fr;
   gap: 0.8em;
   padding-top: 1em;
-  border-top: 1px solid rgba(243, 239, 230, 0.12);
+  border-top: 1px solid var(--pg-linea);
   font-size: 0.85em;
   span { display: grid; gap: 0.15em; }
   small { color: var(--pg-suave); font-size: 0.82em; }
@@ -488,7 +503,7 @@ a { color: inherit; }
 
 .ld-pg__seccion {
   padding: 1.5em 1.3em;
-  border-top: 1px solid rgba(243, 239, 230, 0.08);
+  border-top: 1px solid var(--pg-linea-suave);
 }
 .ld-pg__num { color: var(--pg-oro); font: 400 1.15em/1 var(--ld-display); }
 .ld-pg__h {
@@ -507,12 +522,10 @@ a { color: inherit; }
     display: block;
     aspect-ratio: 3 / 4;
     border-radius: 0.5em;
-    background:
-      radial-gradient(50% 40% at 60% 35%, rgba(240, 200, 140, 0.7), transparent 70%),
-      linear-gradient(160deg, #6b4428, #24170e);
+    background: var(--pg-foto-1);
   }
-  i:nth-child(2) { background: radial-gradient(45% 35% at 40% 60%, rgba(201, 162, 74, 0.8), transparent 70%), linear-gradient(200deg, #2c2a26, #0f0e0c); }
-  i:nth-child(3) { background: radial-gradient(50% 40% at 50% 40%, rgba(235, 225, 205, 0.8), transparent 70%), linear-gradient(160deg, #8a6a4a, #3a2a1c); }
+  i:nth-child(2) { background: var(--pg-foto-2); }
+  i:nth-child(3) { background: var(--pg-foto-3); }
 }
 
 .ld-pg__servicio {
@@ -521,7 +534,7 @@ a { color: inherit; }
   padding: 1em;
   border: 1px solid var(--pg-borde);
   border-radius: 0.8em;
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--pg-tarjeta);
   ul { display: grid; gap: 0.2em; margin: 0.5em 0 0.6em; }
   li { display: flex; gap: 0.45em; color: var(--pg-suave); font-size: 0.85em; }
   li::before { content: '✓'; color: var(--pg-oro); font-weight: 800; }
@@ -539,7 +552,7 @@ a { color: inherit; }
   letter-spacing: 0.08em;
   text-transform: uppercase;
   > span { grid-area: 1 / 1; }
-  &--opcional { border-color: rgba(243, 239, 230, 0.3); background: transparent; color: var(--pg-suave); }
+  &--opcional { border-color: var(--pg-contorno); background: transparent; color: var(--pg-suave); }
 }
 .ld-pg__sh { margin-top: 0.5em; font-size: 1.05em; font-weight: 700; }
 .ld-pg__precio { font: 400 1.35em/1 var(--ld-display); letter-spacing: 0.03em; }
@@ -550,7 +563,7 @@ a { color: inherit; }
   width: 2.3em;
   height: 1.3em;
   border-radius: 999px;
-  background: rgba(243, 239, 230, 0.18);
+  background: var(--pg-pista);
   &::after {
     content: '';
     position: absolute;
@@ -570,8 +583,8 @@ a { color: inherit; }
   height: 2em;
   margin: -1em -1em 0 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+  background: var(--pg-toque);
+  box-shadow: 0 0 0 2px var(--pg-toque-borde);
   opacity: 0;
 }
 
@@ -598,11 +611,42 @@ a { color: inherit; }
   padding: 0.85em;
   border-radius: 999px;
   background: var(--pg-oro);
-  color: #1a1408;
+  color: var(--pg-sobre-oro);
   font-weight: 800;
   text-align: center;
 }
 .ld-pg__inversion { padding-bottom: 2.2em; }
+
+// El celular del hero, en claro (marfil y terracota): así se lee la notificación gris que
+// baja encima. Los teléfonos de más abajo siguen en negro y dorado.
+.ld-pg--hero {
+  --pg-fondo: #faf6ef;
+  --pg-oro: #c2603a;
+  --pg-oro-tenue: rgba(194, 96, 58, 0.1);
+  --pg-texto: #241c16;
+  --pg-suave: #786b5f;
+  --pg-borde: rgba(194, 96, 58, 0.25);
+  --pg-linea: rgba(36, 28, 22, 0.1);
+  --pg-linea-suave: rgba(36, 28, 22, 0.07);
+  --pg-contorno: rgba(36, 28, 22, 0.22);
+  --pg-pildora: rgba(36, 28, 22, 0.18);
+  --pg-pista: rgba(36, 28, 22, 0.16);
+  --pg-tarjeta: #fff;
+  --pg-sobre-oro: #fff;
+  --pg-toque: rgba(194, 96, 58, 0.18);
+  --pg-toque-borde: rgba(194, 96, 58, 0.55);
+  --pg-boton-brillo: rgba(194, 96, 58, 0.25);
+  --pg-portada:
+    linear-gradient(180deg, rgba(250, 246, 239, 0) 35%, rgba(250, 246, 239, 0.7) 75%, var(--pg-fondo) 100%),
+    radial-gradient(55% 45% at 82% 18%, rgba(240, 178, 132, 0.75), transparent 70%),
+    radial-gradient(50% 40% at 12% 42%, rgba(232, 200, 168, 0.9), transparent 70%),
+    linear-gradient(165deg, #f6e3d1, #faf6ef 70%);
+  --pg-foto-1: radial-gradient(50% 40% at 60% 35%, rgba(255, 236, 214, 0.9), transparent 70%), linear-gradient(160deg, #e2a37f, #b8653f);
+  --pg-foto-2: radial-gradient(45% 35% at 40% 60%, rgba(255, 246, 232, 0.85), transparent 70%), linear-gradient(200deg, #d9c7b3, #a8927c);
+  --pg-foto-3: radial-gradient(50% 40% at 50% 40%, rgba(255, 250, 240, 0.9), transparent 70%), linear-gradient(160deg, #9fb5a6, #5f7a6b);
+  .ld-pg__servicio { box-shadow: 0 0.3em 1em -0.6em rgba(36, 28, 22, 0.25); }
+  .ld-pg__interruptor::after { box-shadow: 0 0.1em 0.3em rgba(36, 28, 22, 0.3); }
+}
 
 // Opcional apagado → agregado (los dos teléfonos usan los mismos tiempos, cada uno con su duración)
 .ld-pg__con { opacity: 0; }
@@ -653,19 +697,19 @@ a { color: inherit; }
   97%, 100% { opacity: 1; }
 }
 @keyframes ld-pg-opcional {
-  0%, 49% { border-style: dashed; border-color: var(--pg-borde); background: rgba(255, 255, 255, 0.03); }
+  0%, 49% { border-style: dashed; border-color: var(--pg-borde); background: var(--pg-tarjeta); }
   51%, 94% { border-style: solid; border-color: var(--pg-oro); background: var(--pg-oro-tenue); }
-  97%, 100% { border-style: dashed; border-color: var(--pg-borde); background: rgba(255, 255, 255, 0.03); }
+  97%, 100% { border-style: dashed; border-color: var(--pg-borde); background: var(--pg-tarjeta); }
 }
 @keyframes ld-pg-chip {
-  0%, 49% { border-color: rgba(243, 239, 230, 0.3); background: transparent; color: var(--pg-suave); }
+  0%, 49% { border-color: var(--pg-contorno); background: transparent; color: var(--pg-suave); }
   51%, 94% { border-color: var(--pg-oro); background: var(--pg-oro-tenue); color: var(--pg-oro); }
-  97%, 100% { border-color: rgba(243, 239, 230, 0.3); background: transparent; color: var(--pg-suave); }
+  97%, 100% { border-color: var(--pg-contorno); background: transparent; color: var(--pg-suave); }
 }
 @keyframes ld-pg-pista {
-  0%, 49% { background: rgba(243, 239, 230, 0.18); }
+  0%, 49% { background: var(--pg-pista); }
   51%, 94% { background: var(--pg-oro); }
-  97%, 100% { background: rgba(243, 239, 230, 0.18); }
+  97%, 100% { background: var(--pg-pista); }
 }
 @keyframes ld-pg-perilla {
   0%, 49% { transform: translateX(0); }
@@ -674,7 +718,7 @@ a { color: inherit; }
 }
 @keyframes ld-pg-boton {
   0%, 80% { transform: none; box-shadow: none; }
-  84% { transform: scale(1.04); box-shadow: 0 0 0 0.45em rgba(201, 162, 74, 0.3); }
+  84% { transform: scale(1.04); box-shadow: 0 0 0 0.45em var(--pg-boton-brillo); }
   88%, 100% { transform: none; box-shadow: none; }
 }
 
@@ -709,7 +753,7 @@ a { color: inherit; }
 .ld-celular[data-paso='3'] .ld-pantalla--propuesta { opacity: 1; transform: none; }
 .ld-celular[data-paso='2'] .ld-push--abrio,
 .ld-celular[data-paso='3'] .ld-push--acepto { opacity: 1; transform: none; }
-.ld-celular[data-paso='3'] .ld-pg__aceptar { padding: 3.65cqi; background: var(--pg-texto); color: #1a1408; font-size: 0; }
+.ld-celular[data-paso='3'] .ld-pg__aceptar { padding: 3.65cqi; background: var(--pg-texto); color: var(--pg-fondo); font-size: 0; }
 .ld-celular[data-paso='3'] .ld-pg__aceptar::before { content: '✓ Propuesta aceptada'; font-size: 4.3cqi; }
 
 .ld-pasitos {
