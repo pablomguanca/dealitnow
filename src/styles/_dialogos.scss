@@ -318,3 +318,27 @@
   .plan-opcion, .plan-opcion__accion svg { transition: none; }
   .plan-opcion:hover { transform: none; }
 }
+
+/* Aviso con un botón: «Quitaste el servicio · Deshacer». */
+.aviso__con-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.aviso__accion {
+  flex-shrink: 0;
+  margin: -0.35rem -0.4rem -0.35rem 0;
+  padding: 0.4rem 0.6rem;
+  border: 0;
+  border-radius: var(--radio-s);
+  background: none;
+  color: var(--dorado-claro);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    background: var(--dorado-fondo);
+  }
+}

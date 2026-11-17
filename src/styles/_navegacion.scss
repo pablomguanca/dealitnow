@@ -218,3 +218,87 @@
   justify-content: flex-start;
   text-align: left;
 }
+
+/* Deshacer y rehacer del editor: un par de íconos unidos, como en cualquier editor. */
+.barra__historial {
+  display: inline-flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  border: 1px solid var(--superficie-borde);
+  border-radius: var(--radio-s);
+  overflow: hidden;
+
+  &-boton {
+    display: grid;
+    place-items: center;
+    width: 2.35rem;
+    min-height: 2.3rem;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--marfil);
+    cursor: pointer;
+    transition: background-color var(--transicion), color var(--transicion), opacity var(--transicion);
+
+    & + & {
+      border-left: 1px solid var(--superficie-borde);
+    }
+
+    &:hover:not(:disabled) {
+      background: var(--dorado-fondo);
+      color: var(--dorado-claro);
+    }
+
+    &:active:not(:disabled) svg {
+      transform: scale(0.88);
+    }
+
+    &:focus-visible {
+      outline-offset: -2px;
+    }
+
+    &:disabled {
+      color: var(--marfil-apagado);
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    svg {
+      width: 1.05rem;
+      height: 1.05rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: var(--icono-trazo);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 120ms ease;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .barra__historial-boton {
+    width: 2.2rem;
+  }
+}
+
+/* Al deshacer o rehacer: el campo que cambió se ilumina un momento. */
+.historial-destello {
+  animation: historial-destello 1.3s ease-out;
+}
+
+@keyframes historial-destello {
+  0%, 25% {
+    box-shadow: 0 0 0 2px var(--dorado);
+    background-color: var(--dorado-fondo);
+  }
+  100% {
+    box-shadow: 0 0 0 2px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .historial-destello {
+    animation-duration: 0.01s;
+  }
+}

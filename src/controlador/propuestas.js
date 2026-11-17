@@ -14,6 +14,7 @@ import {
   esqueletoFilasHTML
 } from '../lib/paneles.js';
 import { ctx, AteneaDB, nube, normalizar } from './contexto.js';
+import { abrirHistorial } from './historial.js';
 import { registrarAcciones } from './acciones.js';
 import { avisar, avisarError, avisarExito, celebrar, confirmar } from './avisos.js';
 import { crearEnCuenta, datosParaGuardar, registrarEscritura, mostrarEstadoGuardado } from './guardado.js';
@@ -209,6 +210,7 @@ export const mostrarEditor = (id, contenido, { historial = true } = {}) => {
   document.title = `${ctx.estado.propuesta.titulo.trim() || 'Propuesta sin título'} | Dealit`;
   $('#editor-cuerpo').scrollTop = 0;
   ctx.editando = true;
+  abrirHistorial();
   mostrarEstadoGuardado();
   actualizarAvisoAceptada();
   actualizarAvisoRespuestas();
@@ -296,6 +298,7 @@ export const volverAEditorPropuestaInvitado = nuevaBase => {
   renderDocumento();
   actualizarAvisoPagos();
   ctx.editando = true;
+  abrirHistorial();
   mostrarEstadoGuardado();
 };
 

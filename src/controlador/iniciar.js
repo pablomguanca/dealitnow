@@ -15,6 +15,7 @@ import { instalarVista } from './vista.js';
 import { instalarVideos } from './video.js';
 import { instalarGuardado } from './guardado.js';
 import { instalarFormulario } from './formulario.js';
+import { instalarHistorial } from './historial.js';
 import { instalarDiseno } from './diseno.js';
 import { instalarSubidas } from './subidas.js';
 import { instalarVersiones } from './versiones.js';
@@ -46,6 +47,7 @@ export const inicializarControladorDealit = () => {
   instalarGuardado();
   instalarDiseno();
   instalarFormulario();
+  instalarHistorial();
   instalarSubidas();
   instalarVersiones();
   instalarDocumento();

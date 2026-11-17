@@ -22,6 +22,15 @@ export function TopBar() {
             <IconoIA />
           </button>
           <button type="button" className="boton boton--secundario solo-invitado" data-accion="ingresar">Iniciar sesión</button>
+          {/* Deshacer y rehacer del editor (controlador/historial.js pone el atajo en el title). */}
+          <div className="barra__historial solo-editor" role="group" aria-label="Historial de cambios">
+            <button type="button" className="barra__historial-boton" data-accion="deshacer" aria-label="Deshacer" aria-keyshortcuts="Control+Z Meta+Z" title="Deshacer" disabled>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5.75 3.5 2.5 6.75 5.75 10" /><path d="M2.75 6.75h6.5a3.75 3.75 0 0 1 0 7.5H7.5" /></svg>
+            </button>
+            <button type="button" className="barra__historial-boton" data-accion="rehacer" aria-label="Rehacer" aria-keyshortcuts="Control+Y Control+Shift+Z Meta+Shift+Z" title="Rehacer" disabled>
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.25 3.5 13.5 6.75 10.25 10" /><path d="M13.25 6.75h-6.5a3.75 3.75 0 0 0 0 7.5H8.5" /></svg>
+            </button>
+          </div>
           <button type="button" className="boton boton--secundario barra__pdf solo-editor" data-accion="pdf" title="Descargar PDF">
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5M5 7.5l3 3 3-3M3 12.5h10" /></svg>
             <span className="boton__extra">Descargar</span><span>PDF</span>

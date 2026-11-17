@@ -15,6 +15,7 @@ import {
 } from './contexto.js';
 import { avisarExito, avisarError } from './avisos.js';
 import { actualizarSelectorPortafolio } from './formulario.js';
+import { registrarCambio } from './historial.js';
 
 const GUARDADO_ESPERA = 800;
 const PAYLOAD_MAX = 900000; // Firestore admite hasta 1 MiB por documento
@@ -225,6 +226,7 @@ export const guardarAhora = () => {
 
 export const guardarLuego = () => {
   if (ctx.esCliente || !ctx.editando) return;
+  registrarCambio();
   clearTimeout(ctx.temporizadorGuardado);
   ctx.temporizadorGuardado = setTimeout(guardarAhora, nube() ? GUARDADO_ESPERA : 400);
   mostrarEstadoGuardado();

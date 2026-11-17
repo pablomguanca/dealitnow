@@ -1,12 +1,29 @@
 // Avisos flotantes (toasts) y diálogos de confirmación propios de la app. Nunca se
 // usan alert(), confirm() ni prompt() del navegador.
 
+import { createElement } from 'react';
 import toast from 'react-hot-toast';
 
 export const avisar = (mensaje, ms = 4200) => toast(mensaje, { duration: ms });
 export const avisarExito = (mensaje, ms = 4200) => toast.success(mensaje, { duration: ms });
 export const avisarError = (mensaje, ms = 6500) => toast.error(mensaje, { duration: ms });
-export const celebrar = (mensaje, ms = 9000) => toast(mensaje, { duration: ms, icon: '🎉', className: 'aviso aviso--celebracion' });
+// Aviso con un botón (ej. «Quitaste el servicio · Deshacer»). Con `id`, uno nuevo
+// reemplaza al anterior en vez de apilarse.
+export const avisarConAccion = (mensaje, { accion, alTocar, id, ms = 6000 }) => toast(t => createElement(
+  'span',
+  { className: 'aviso__con-accion' },
+  createElement('span', null, mensaje),
+  createElement('button', {
+    type: 'button',
+    className: 'aviso__accion',
+    onClick: () => {
+      toast.dismiss(t.id);
+      alTocar();
+    }
+  }, accion)
+), { id, duration: ms });
+export const cerrarAviso = id => toast.dismiss(id);
+export const celebrar =(mensaje, ms = 9000) => toast(mensaje, { duration: ms, icon: '🎉', className: 'aviso aviso--celebracion' });
 
 // Diálogo de elección: lo dibuja <DialogoConfirmacion /> (src/components/modals/).
 // Acá solo vive la solicitud abierta y quién la escucha.

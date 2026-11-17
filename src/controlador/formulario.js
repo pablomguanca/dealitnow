@@ -14,6 +14,7 @@ import {
 } from '../lib/formato.js';
 import { MODALIDADES, LISTAS, LISTAS_PORTAFOLIO, totalServicio } from '../modelo.js';
 import { ctx, docActivo } from './contexto.js';
+import { ofrecerDeshacer } from './historial.js';
 import { registrarAcciones } from './acciones.js';
 import { sincronizarPortafolioEnPropuesta } from './guardado.js';
 import { actualizar } from './documento.js';
@@ -351,6 +352,9 @@ const enfocarUltimo = nombre => {
   if (campo) campo.focus();
 };
 
+const FEMENINOS = new Set(['etapa', 'foto', 'pregunta']);
+const textoQuitado = nombre => `Quitaste ${FEMENINOS.has(nombre) ? 'la' : 'el'} ${nombre}.`;
+
 // Subir, bajar o quitar un ítem de cualquier lista del editor.
 const moverItem = (boton, accion) => {
   const nodoPf = boton.closest('[data-indice-pf]');
@@ -366,6 +370,7 @@ const moverItem = (boton, accion) => {
     }
     renderListaPortafolio(nombrePf);
     actualizar();
+    if (accion === 'quitar') ofrecerDeshacer(textoQuitado(LISTAS_PORTAFOLIO[nombrePf].nombre));
     return;
   }
   const nodo = boton.closest('[data-indice]');
@@ -384,6 +389,7 @@ const moverItem = (boton, accion) => {
     if (destino && !destino.disabled) destino.focus();
   }
   actualizar();
+  if (accion === 'quitar') ofrecerDeshacer(textoQuitado(LISTAS[nombre].nombre));
 };
 
 // Ítem de lista (propuesta o portfolio) al que pertenece un botón.

@@ -4,6 +4,7 @@
 import { $ } from '../lib/formato.js';
 import { vacio, vacioPortafolio, ejemplo } from '../modelo.js';
 import { ctx, AteneaDB, AteneaDBError, CLAVE, nube, normalizar } from './contexto.js';
+import { abrirHistorial } from './historial.js';
 import { registrarAcciones } from './acciones.js';
 import { avisarExito, confirmar } from './avisos.js';
 import {
@@ -281,6 +282,7 @@ const iniciarInvitado = () => {
   renderDocumento();
   actualizarAvisoPagos();
   ctx.editando = true;
+  abrirHistorial();
   mostrarEstadoGuardado();
   // Primera vez y sin nada armado: bienvenida para elegir su rubro.
   if (!guardada && !pideIngresar) mostrarBienvenida();
@@ -375,6 +377,7 @@ const iniciarSinCuenta = () => {
   renderDocumento();
   actualizarAvisoPagos();
   ctx.editando = true;
+  abrirHistorial();
   mostrarEstadoGuardado();
 };
 

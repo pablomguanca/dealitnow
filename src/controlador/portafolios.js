@@ -5,6 +5,7 @@ import { $, texto } from '../lib/formato.js';
 import { vacioPortafolio, ejemploPortafolio, PLANTILLAS_PORTAFOLIO } from '../modelo.js';
 import { fechaDe, sinAcentos, portafolioItemHTML, esqueletoFilasHTML } from '../lib/paneles.js';
 import { ctx, AteneaDB, nube, normalizarPf } from './contexto.js';
+import { abrirHistorial } from './historial.js';
 import { registrarAcciones } from './acciones.js';
 import { avisarExito, avisarError, confirmar } from './avisos.js';
 import {
@@ -117,6 +118,7 @@ const mostrarEditorPortafolio = (id, contenido, { historial = true } = {}) => {
   document.title = `${portafolio.nombreInterno.trim() || portafolio.titulo.trim() || 'Portfolio'} | Dealit`;
   $('#editor-cuerpo').scrollTop = 0;
   ctx.editando = true;
+  abrirHistorial();
   mostrarEstadoGuardado();
   $('#editor-aceptada').hidden = true;
   if ($('#editor-respuestas')) $('#editor-respuestas').hidden = true;
