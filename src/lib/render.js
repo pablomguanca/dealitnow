@@ -23,6 +23,7 @@ import {
 import { decoracionPortadaSVG } from './decoraciones.js';
 import { analizarVideo } from '../video.js';
 import { resolverColoresTema } from './tema.js';
+import { atributoEditar } from '../editar-documento.js';
 
 export const ICONO_SUMAR = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9"/></svg>';
 export const ICONO_SUMADO = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7"/></svg>';
@@ -300,7 +301,8 @@ export const bloquePortafolioEnPropuestaHTML = (pfResumen, web, lightbox = true)
     ${galeriaPf.length ? `<div style="margin-top:${proyectos.length ? '1.6em' : '0'}">${galeriaSeccionHTML(galeriaPf, { galeriaLayout: 'bento', lightbox }, web)}</div>` : ''}`;
 };
 
-export const servicioHTML = (s, moneda, web, { seleccion = new Set(), esAceptada = false, lightbox = true } = {}) => {
+export const servicioHTML = (s, moneda, web, { seleccion = new Set(), esAceptada = false, lightbox = true, ed = () => '', indice = -1 } = {}) => {
+  const k = campo => (indice >= 0 ? ed(`servicios:${indice}${campo ? `:${campo}` : ''}`) : '');
   const precio = numero(s.precio);
   const cantidad = numero(s.cantidad);
   let modo = 'Pago único';
@@ -326,20 +328,20 @@ export const servicioHTML = (s, moneda, web, { seleccion = new Set(), esAceptada
   const totalItem = totalServicio(s);
   const mostrarPrecio = s.modalidad !== 'incluido' && totalItem > 0;
   const bloquePrecio = mostrarPrecio
-    ? `<p class="servicio__precio">${dinero(totalItem, moneda)}<span class="servicio__modo">${esc(modo)}</span></p>`
+    ? `<p class="servicio__precio"${k('precio')}>${dinero(totalItem, moneda)}<span class="servicio__modo">${esc(modo)}</span></p>`
     : '';
   return `
-    <div class="servicio${s.opcional ? ' servicio--opcional' : ''}${sumado ? ' servicio--sumado' : ''}">
+    <div class="servicio${s.opcional ? ' servicio--opcional' : ''}${sumado ? ' servicio--sumado' : ''}"${k()}>
       ${mediaSrv}
       <div class="servicio__cabecera">
         <div class="servicio__titular">
           ${insignia}
-          <h3 class="servicio__nombre">${s.nombre.trim() ? esc(s.nombre) : vacioHTML('Servicio sin nombre')}</h3>
+          <h3 class="servicio__nombre"${k('nombre')}>${s.nombre.trim() ? esc(s.nombre) : vacioHTML('Servicio sin nombre')}</h3>
         </div>
         ${bloquePrecio}
       </div>
-      ${s.descripcion.trim() ? `<p class="servicio__desc">${esc(s.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
-      ${entregables.length ? `<ul class="doc-lista servicio__entregables">${entregables.map(e => `<li>${ICONO_CHECK}<span>${esc(e)}</span></li>`).join('')}</ul>` : ''}
+      ${s.descripcion.trim() ? `<p class="servicio__desc"${k('descripcion')}>${esc(s.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
+      ${entregables.length ? `<ul class="doc-lista servicio__entregables"${k('entregables')}>${entregables.map(e => `<li>${ICONO_CHECK}<span>${esc(e)}</span></li>`).join('')}</ul>` : ''}
       ${boton}
     </div>`;
 };
@@ -815,7 +817,7 @@ export const generarPortafolioHTML = (s, { web = true, tipoDecoracion = 'marco',
 
 // Presupuesto en tabla (opciones.formato === 'presupuesto'): una hoja como la de toda la
 // vida, para cualquier oficio. Es el mismo link: el cliente suma opcionales y acepta online.
-const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
+const generarPresupuestoHTML = (s, { web, seleccion, compartida, ed = () => '' }) => {
   const m = s.inversion.moneda;
   const c = calcularTotales(s, seleccion);
   const e = s.emisor;
@@ -829,8 +831,8 @@ const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
   const consultaUrl = armarEnlaceWhatsApp(msgConsulta, e) || armarEnlaceEmail(`Consulta sobre ${titulo}`, msgConsulta, e);
 
   const marca = e.logo
-    ? `<img class="presu__logo" src="${esc(e.logo)}" alt="${esc(e.nombre || 'Logo')}">`
-    : `<span class="presu__marca">${nombreEm ? esc(nombreEm) : vacioHTML('Tu nombre o tu negocio')}</span>`;
+    ? `<img class="presu__logo"${ed('paso:Tus datos')} src="${esc(e.logo)}" alt="${esc(e.nombre || 'Logo')}">`
+    : `<span class="presu__marca"${ed('emisor.nombre')}>${nombreEm ? esc(nombreEm) : vacioHTML('Tu nombre o tu negocio')}</span>`;
   const numero_ = p.numero.trim();
 
   const datos = (lista) => lista.filter(Boolean).map(x => `<span>${x}</span>`).join('');
@@ -846,6 +848,8 @@ const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
 
   // Filas: concepto (con su descripción abajo), cantidad, precio unitario y subtotal.
   const fila = (x, i) => {
+    const idx = s.servicios.indexOf(x);
+    const k = campo => ed(`servicios:${idx}${campo ? `:${campo}` : ''}`);
     const cant = numero(x.cantidad);
     const precio = numero(x.precio);
     const incluido = x.modalidad === 'incluido';
@@ -859,15 +863,15 @@ const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
         : `<button type="button" class="presu__sumar" data-accion="sumar" data-id="${esc(x.id)}" aria-pressed="${sumado}">${sumado ? `${ICONO_SUMADO} Sumado` : `${ICONO_SUMAR} Sumar`}</button>`)
       : (x.opcional && sumado ? '<span class="presu__sumado">Sumado por el cliente</span>' : '');
     return `
-      <tr class="${x.opcional ? 'presu__fila--opcional' : ''}${sumado ? ' presu__fila--sumada' : ''}">
+      <tr class="${x.opcional ? 'presu__fila--opcional' : ''}${sumado ? ' presu__fila--sumada' : ''}"${k()}>
         <td class="presu__num">${i}</td>
         <td class="presu__concepto">
-          <span class="presu__nombre">${x.nombre.trim() ? esc(x.nombre) : vacioHTML('Trabajo sin nombre')}</span>
-          ${x.descripcion.trim() ? `<span class="presu__desc">${esc(x.descripcion.trim())}</span>` : ''}
+          <span class="presu__nombre"${k('nombre')}>${x.nombre.trim() ? esc(x.nombre) : vacioHTML('Trabajo sin nombre')}</span>
+          ${x.descripcion.trim() ? `<span class="presu__desc"${k('descripcion')}>${esc(x.descripcion.trim())}</span>` : ''}
           ${boton}
         </td>
-        <td class="presu__cifra">${cantTexto}</td>
-        <td class="presu__cifra">${precioTexto}</td>
+        <td class="presu__cifra"${k('cantidad')}>${cantTexto}</td>
+        <td class="presu__cifra"${k('precio')}>${precioTexto}</td>
         <td class="presu__cifra presu__subtotal">${subtotal}</td>
       </tr>`;
   };
@@ -887,13 +891,13 @@ const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
 
   const pagos = s.inversion.pagos.filter(x => x.concepto.trim() || numero(x.porcentaje) > 0);
   const pagosHTML = pagos.length && c.inicial.total > 0 ? `
-    <div class="presu__seccion">
+    <div class="presu__seccion"${ed('lista:pagos')}>
       <h3 class="presu__subtitulo">Forma de pago</h3>
       <ul class="presu__pagos">${pagos.map(x => `<li><span>${x.concepto.trim() ? esc(x.concepto) : 'Pago'} (${cantidadTexto(numero(x.porcentaje))} %)</span><strong>${dinero(c.inicial.total * numero(x.porcentaje) / 100, m)}</strong></li>`).join('')}</ul>
     </div>` : '';
   const condiciones = lineas(s.condiciones);
   const condicionesHTML = condiciones.length ? `
-    <div class="presu__seccion">
+    <div class="presu__seccion"${ed('condiciones')}>
       <h3 class="presu__subtitulo">Condiciones</h3>
       <ul class="presu__condiciones">${condiciones.map(x => `<li>${esc(x)}</li>`).join('')}</ul>
     </div>` : '';
@@ -907,7 +911,7 @@ const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
 
   const pie = `
     <footer class="presu__pie">
-      ${vig.vence ? `<span>${web && vig.vencida ? 'Venció el' : 'Válido hasta el'} ${esc(fechaLarga(vig.vence))}</span>` : ''}
+      ${vig.vence ? `<span${ed('propuesta.validez')}>${web && vig.vencida ? 'Venció el' : 'Válido hasta el'} ${esc(fechaLarga(vig.vence))}</span>` : ''}
       ${web ? '<button type="button" class="pie__pdf" data-accion="pdf">Descargar en PDF</button>' : ''}
       ${s.opciones.credito ? creditoHTML('presupuesto') : ''}
     </footer>`;
@@ -919,22 +923,22 @@ const generarPresupuestoHTML = (s, { web, seleccion, compartida }) => {
     <section class="presu" id="sec-prop-inicio" aria-label="Presupuesto">
       ${aviso}
       <header class="presu__cabecera">
-        <div class="presu__emisor">${marca}${e.rol.trim() ? `<span class="presu__rol">${esc(e.rol.trim())}</span>` : ''}</div>
+        <div class="presu__emisor">${marca}${e.rol.trim() ? `<span class="presu__rol"${ed('emisor.rol')}>${esc(e.rol.trim())}</span>` : ''}</div>
         <div class="presu__datos">
           <span class="presu__etiqueta">Presupuesto</span>
-          ${numero_ ? `<strong class="presu__numero">${esc(numero_)}</strong>` : ''}
-          ${vig.fecha ? `<span>${esc(fechaLarga(vig.fecha))}</span>` : ''}
+          ${numero_ ? `<strong class="presu__numero"${ed('propuesta.numero')}>${esc(numero_)}</strong>` : ''}
+          ${vig.fecha ? `<span${ed('propuesta.fecha')}>${esc(fechaLarga(vig.fecha))}</span>` : ''}
         </div>
       </header>
       <div class="presu__partes">
-        <div><span class="presu__etiqueta">De</span>${de || '—'}</div>
-        <div><span class="presu__etiqueta">Para</span>${para}</div>
+        <div${ed('paso:Tus datos')}><span class="presu__etiqueta">De</span>${de || '—'}</div>
+        <div${ed('paso:Cliente')}><span class="presu__etiqueta">Para</span>${para}</div>
       </div>
-      ${p.titulo.trim() ? `<h1 class="presu__titulo">${esc(p.titulo.trim())}</h1>` : ''}
-      ${s.contexto.trim() ? `<p class="presu__detalle">${esc(s.contexto.trim()).replace(/\n/g, '<br>')}</p>` : ''}
+      ${p.titulo.trim() ? `<h1 class="presu__titulo"${ed('propuesta.titulo')}>${esc(p.titulo.trim())}</h1>` : ''}
+      ${s.contexto.trim() ? `<p class="presu__detalle"${ed('contexto')}>${esc(s.contexto.trim()).replace(/\n/g, '<br>')}</p>` : ''}
       ${tabla}
       ${tablaOpcionales}
-      ${totales.length ? `<div class="presu__totales">${totales.join('')}</div>` : ''}
+      ${totales.length ? `<div class="presu__totales"${ed('paso:Inversión')}>${totales.join('')}</div>` : ''}
       ${pagosHTML}
       ${mediosPagoHTML(s, web, esAceptada)}
       ${condicionesHTML}
@@ -953,10 +957,13 @@ export const generarPropuestaHTML = (
     seleccion = new Set(),
     compartida = null,
     tipoDecoracion = 'marco',
-    tipoPortada = 'editorial'
+    tipoPortada = 'editorial',
+    editable = false
   } = {}
 ) => {
-  if (s.opciones?.formato === 'presupuesto') return generarPresupuestoHTML(s, { web, seleccion, compartida });
+  // En el editor, cada texto lleva la clave del campo que lo arma (ver editar-documento.js).
+  const ed = atributoEditar(editable);
+  if (s.opciones?.formato === 'presupuesto') return generarPresupuestoHTML(s, { web, seleccion, compartida, ed });
   const m = s.inversion.moneda;
   const c = calcularTotales(s, seleccion);
   const e = s.emisor;
@@ -971,21 +978,21 @@ export const generarPropuestaHTML = (
   const destinatario = cl.empresa.trim() || cl.nombre.trim();
 
   const marca = e.logo
-    ? `<img class="portada__logo" src="${esc(e.logo)}" alt="${esc(e.nombre || 'Logo')}">`
-    : `<span class="portada__marca">${e.nombre.trim() ? esc(e.nombre) : vacioHTML('Tu marca')}</span>`;
+    ? `<img class="portada__logo"${ed('paso:Tus datos')} src="${esc(e.logo)}" alt="${esc(e.nombre || 'Logo')}">`
+    : `<span class="portada__marca"${ed('emisor.nombre')}>${e.nombre.trim() ? esc(e.nombre) : vacioHTML('Tu marca')}</span>`;
 
   const meta = [];
   if (cl.nombre.trim() || cl.empresa.trim()) {
     const sec = [cl.cargo.trim(), cl.empresa.trim() && cl.nombre.trim() ? cl.empresa.trim() : ''].filter(Boolean).join(', ');
-    meta.push(['Preparada para', `${esc(cl.nombre.trim() || cl.empresa.trim())}${sec ? `<span>${esc(sec)}</span>` : ''}`]);
+    meta.push(['Preparada para', `${esc(cl.nombre.trim() || cl.empresa.trim())}${sec ? `<span>${esc(sec)}</span>` : ''}`, 'paso:Cliente']);
   }
-  if (e.nombre.trim()) meta.push(['Preparada por', `${esc(e.nombre)}${e.rol.trim() ? `<span>${esc(e.rol)}</span>` : ''}`]);
-  if (vig.fecha) meta.push(['Fecha', esc(fechaLarga(vig.fecha))]);
+  if (e.nombre.trim()) meta.push(['Preparada por', `${esc(e.nombre)}${e.rol.trim() ? `<span>${esc(e.rol)}</span>` : ''}`, 'paso:Tus datos']);
+  if (vig.fecha) meta.push(['Fecha', esc(fechaLarga(vig.fecha)), 'propuesta.fecha']);
   if (vig.vence) {
-    if (web && vig.vencida) meta.push(['Venció el', esc(fechaLarga(vig.vence))]);
+    if (web && vig.vencida) meta.push(['Venció el', esc(fechaLarga(vig.vence)), 'propuesta.validez']);
     else {
       const urgente = web && vig.restantes !== null && vig.restantes <= 30 ? `<span class="portada__urgente">${textoRestantes(vig.restantes)}</span>` : '';
-      meta.push(['Válida hasta', `${esc(fechaLarga(vig.vence))}${urgente}`]);
+      meta.push(['Válida hasta', `${esc(fechaLarga(vig.vence))}${urgente}`, 'propuesta.validez']);
     }
   }
 
@@ -1006,14 +1013,14 @@ export const generarPropuestaHTML = (
       ${marcaAguaNumero}
       <div class="portada__superior">
         ${marca}
-        ${p.numero.trim() ? `<p class="portada__numero">${esc(/^propuesta\b/i.test(p.numero.trim()) ? p.numero.trim() : `Propuesta ${p.numero.trim()}`)}</p>` : ''}
+        ${p.numero.trim() ? `<p class="portada__numero"${ed('propuesta.numero')}>${esc(/^propuesta\b/i.test(p.numero.trim()) ? p.numero.trim() : `Propuesta ${p.numero.trim()}`)}</p>` : ''}
       </div>
       <div class="portada__centro">
-        <p class="portada__para"><span class="portada__para-chip">${destinatario ? `Propuesta para ${esc(destinatario)}` : 'Propuesta comercial'}</span></p>
-        <h1 class="portada__titulo">${p.titulo.trim() ? esc(p.titulo) : vacioHTML('Título de la propuesta')}</h1>
+        <p class="portada__para"><span class="portada__para-chip"${ed(cl.empresa.trim() ? 'cliente.empresa' : 'cliente.nombre')}>${destinatario ? `Propuesta para ${esc(destinatario)}` : 'Propuesta comercial'}</span></p>
+        <h1 class="portada__titulo"${ed('propuesta.titulo')}>${p.titulo.trim() ? esc(p.titulo) : vacioHTML('Título de la propuesta')}</h1>
         <hr class="portada__regla">
       </div>
-      ${meta.length ? `<dl class="portada__meta">${meta.map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join('')}</dl>` : ''}
+      ${meta.length ? `<dl class="portada__meta">${meta.map(([a, b, clave]) => `<div${ed(clave)}><dt>${a}</dt><dd>${b}</dd></div>`).join('')}</dl>` : ''}
     </section>`;
 
   const bloques = [];
@@ -1022,6 +1029,7 @@ export const generarPropuestaHTML = (
     bloques.push({
       id: 'sec-prop-sobre',
       nav: 'Sobre mí',
+      editar: 'emisor.presentacion',
       titulo: e.nombre.trim() ? `Sobre ${e.nombre.trim()}` : 'Quién presenta esta propuesta',
       html: sobreMiBloqueHTML(e, [], web, usaLightbox)
     });
@@ -1032,6 +1040,7 @@ export const generarPropuestaHTML = (
     const htmlPf = bloquePortafolioEnPropuestaHTML(pfAdjunto, web, usaLightbox);
     if (htmlPf) {
       bloques.push({
+        editar: 'opciones.portafolioId',
         titulo: pfAdjunto.titulo?.trim() || 'Trabajos y casos destacados',
         html: htmlPf
       });
@@ -1043,6 +1052,7 @@ export const generarPropuestaHTML = (
     bloques.push({
       id: 'sec-prop-video',
       nav: 'Video',
+      editar: 'video.titulo',
       titulo: s.video.titulo.trim() || 'Te lo cuento en video',
       html: videoProp
     });
@@ -1051,6 +1061,7 @@ export const generarPropuestaHTML = (
   if (s.contexto.trim()) {
     bloques.push({
       titulo: 'El punto de partida',
+      editar: 'contexto',
       html: `<div class="contexto-bloque">${parrafos(s.contexto)}</div>`
     });
   }
@@ -1059,8 +1070,9 @@ export const generarPropuestaHTML = (
   if (objetivos.length) {
     bloques.push({
       titulo: 'Qué queremos lograr',
+      editar: 'lista:objetivos',
       html: `<ul class="doc-lista objetivos-lista">${objetivos.map((o, i) => `
-        <li class="objetivo-item">
+        <li class="objetivo-item"${ed(`objetivos:${s.objetivos.indexOf(o)}:texto`)}>
           <span class="objetivo-item__indice" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span>
           <span class="objetivo-item__texto">${esc(o.texto.trim())}</span>
         </li>`).join('')}</ul>`
@@ -1069,9 +1081,9 @@ export const generarPropuestaHTML = (
 
   const incluidos = s.servicios.filter(x => !x.opcional && servicioConContenido(x));
   const opcionales = s.servicios.filter(x => x.opcional && servicioConContenido(x));
-  const srvOpts = { seleccion, esAceptada, lightbox: usaLightbox };
+  const srvOpts = x => ({ seleccion, esAceptada, lightbox: usaLightbox, ed, indice: s.servicios.indexOf(x) });
   if (incluidos.length || opcionales.length) {
-    let html = `<div class="servicios-grilla">${incluidos.map(x => servicioHTML(x, m, web, srvOpts)).join('')}</div>`;
+    let html = `<div class="servicios-grilla">${incluidos.map(x => servicioHTML(x, m, web, srvOpts(x))).join('')}</div>`;
     if (opcionales.length) {
       const nota = web
         ? 'No están incluidos en la inversión base. Sumá los que quieras con un toque y el total se actualiza en el momento.'
@@ -1084,25 +1096,26 @@ export const generarPropuestaHTML = (
           </div>
           <p class="doc-nota">${nota}</p>
           <div class="servicios-grilla servicios-grilla--opcionales">
-            ${opcionales.map(x => servicioHTML(x, m, web, srvOpts)).join('')}
+            ${opcionales.map(x => servicioHTML(x, m, web, srvOpts(x))).join('')}
           </div>
         </div>`;
     }
-    bloques.push({ titulo: 'Qué incluye la propuesta', html });
+    bloques.push({ titulo: 'Qué incluye la propuesta', editar: 'lista:servicios', html });
   }
 
   const etapas = s.etapas.filter(x => x.nombre.trim() || x.descripcion.trim() || x.duracion.trim());
   if (etapas.length) {
     bloques.push({
       titulo: 'Cómo vamos a trabajar',
+      editar: 'lista:etapas',
       html: `<ol class="etapas">${etapas.map((x, i) => `
-        <li class="etapa">
+        <li class="etapa"${ed(`etapas:${s.etapas.indexOf(x)}`)}>
           <span class="etapa__num" aria-hidden="true">${i + 1}</span>
           <div class="etapa__cuerpo">
-            <p class="etapa__nombre">${x.nombre.trim() ? esc(x.nombre) : vacioHTML('Etapa sin nombre')}</p>
-            ${x.descripcion.trim() ? `<p class="etapa__desc">${esc(x.descripcion.trim())}</p>` : ''}
+            <p class="etapa__nombre"${ed(`etapas:${s.etapas.indexOf(x)}:nombre`)}>${x.nombre.trim() ? esc(x.nombre) : vacioHTML('Etapa sin nombre')}</p>
+            ${x.descripcion.trim() ? `<p class="etapa__desc"${ed(`etapas:${s.etapas.indexOf(x)}:descripcion`)}>${esc(x.descripcion.trim())}</p>` : ''}
           </div>
-          ${x.duracion.trim() ? `<p class="etapa__duracion"><span class="etapa__chip">${esc(x.duracion.trim())}</span></p>` : '<p class="etapa__duracion etapa__duracion--vacia"></p>'}
+          ${x.duracion.trim() ? `<p class="etapa__duracion"${ed(`etapas:${s.etapas.indexOf(x)}:duracion`)}><span class="etapa__chip">${esc(x.duracion.trim())}</span></p>` : '<p class="etapa__duracion etapa__duracion--vacia"></p>'}
         </li>`).join('')}</ol>`
     });
   }
@@ -1122,12 +1135,12 @@ export const generarPropuestaHTML = (
         ${barraSegmentos ? `<div class="pagos-barra" aria-hidden="true">${barraSegmentos}</div>` : ''}
         <table class="pagos">
           <thead><tr><th scope="col">Momento</th><th scope="col" class="pagos__num">Porcentaje</th><th scope="col" class="pagos__num">Monto</th></tr></thead>
-          <tbody>${pagos.map(x => `<tr><td>${x.concepto.trim() ? esc(x.concepto) : vacioHTML('Pago sin descripción')}</td><td class="pagos__num"><span class="pagos__pct">${cantidadTexto(numero(x.porcentaje))}%</span></td><td class="pagos__num pagos__monto">${dinero(c.inicial.total * numero(x.porcentaje) / 100, m)}</td></tr>`).join('')}</tbody>
+          <tbody>${pagos.map(x => `<tr${ed(`pagos:${s.inversion.pagos.indexOf(x)}`)}><td${ed(`pagos:${s.inversion.pagos.indexOf(x)}:concepto`)}>${x.concepto.trim() ? esc(x.concepto) : vacioHTML('Pago sin descripción')}</td><td class="pagos__num"><span class="pagos__pct">${cantidadTexto(numero(x.porcentaje))}%</span></td><td class="pagos__num pagos__monto">${dinero(c.inicial.total * numero(x.porcentaje) / 100, m)}</td></tr>`).join('')}</tbody>
         </table>`;
       if (c.mensual.base > 0) html += '<p class="doc-nota">El servicio mensual se factura por mes adelantado, desde que empieza ese servicio.</p>';
     }
     html += mediosPagoHTML(s, web, esAceptada);
-    bloques.push({ titulo: 'Inversión', html });
+    bloques.push({ titulo: 'Inversión', editar: 'paso:Inversión', html });
   }
 
   const galeriaPropValida = (s.galeria || []).filter(g => g && g.imagen);
@@ -1135,6 +1148,7 @@ export const generarPropuestaHTML = (
     bloques.push({
       id: 'sec-prop-galeria',
       nav: 'Galería',
+      editar: 'paso:Galería',
       titulo: s.opciones?.galeriaTitulo?.trim() || 'Galería visual y referencias',
       html: galeriaSeccionHTML(galeriaPropValida, s.opciones, web)
     });
@@ -1145,6 +1159,7 @@ export const generarPropuestaHTML = (
     bloques.push({
       id: 'sec-prop-testimonios',
       nav: 'Testimonios',
+      editar: 'lista:testimonios',
       titulo: 'Referencias y experiencias de clientes',
       html: testimoniosSeccionHTML(testimoniosPropValidos, web, usaLightbox)
     });
@@ -1155,6 +1170,7 @@ export const generarPropuestaHTML = (
     bloques.push({
       id: 'sec-prop-faq',
       nav: 'Preguntas',
+      editar: 'lista:faqs',
       titulo: 'Preguntas frecuentes',
       html: faqsSeccionHTML(faqsPropValidas, web)
     });
@@ -1162,7 +1178,7 @@ export const generarPropuestaHTML = (
 
   const condiciones = lineas(s.condiciones);
   if (condiciones.length) {
-    bloques.push({ id: 'sec-prop-condiciones', titulo: 'Condiciones', html: `<ul class="doc-lista">${condiciones.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` });
+    bloques.push({ id: 'sec-prop-condiciones', titulo: 'Condiciones', editar: 'condiciones', html: `<ul class="doc-lista">${condiciones.map(x => `<li>${esc(x)}</li>`).join('')}</ul>` });
   }
 
   const pasos = lineas(s.proximosPasos);
@@ -1171,7 +1187,7 @@ export const generarPropuestaHTML = (
   const firmaOnline = !web ? firmaAceptadaHTML(compartida?.aceptacion) : '';
   const firmas = !web && (s.opciones.firmas || !!firmaOnline);
   if (pasos.length || firmas || web) {
-    let html = pasos.length ? `<ol class="pasos">${pasos.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : '';
+    let html = pasos.length ? `<ol class="pasos"${ed('proximosPasos')}>${pasos.map(x => `<li>${esc(x)}</li>`).join('')}</ol>` : '';
     if (web) html += cierrePropuestaHTML(vig, { compartida, nombreEmisor: nombreEm, consultaUrl, conCobro: cobraPorTransferencia(s), conMp: pagaConMp(s), pago: primerPagoTexto(s, c), conFirma: pideFirma(s) });
     if (firmas) {
       const quienCliente = cl.nombre.trim() || cl.empresa.trim() || 'Cliente';
@@ -1184,7 +1200,7 @@ export const generarPropuestaHTML = (
           ${emisor}
         </div>`;
     }
-    bloques.push({ titulo: pasos.length ? 'Próximos pasos' : (web ? 'Siguiente paso' : 'Aceptación'), html });
+    bloques.push({ editar: 'paso:Cierre', titulo: pasos.length ? 'Próximos pasos' : (web ? 'Siguiente paso' : 'Aceptación'), html });
   }
 
   const contactos = [];
@@ -1196,7 +1212,7 @@ export const generarPropuestaHTML = (
   }
   const pie = `
     <footer class="pie">
-      ${e.nombre.trim() ? `<span class="pie__nombre">${esc(e.nombre)}</span>` : ''}
+      ${e.nombre.trim() ? `<span class="pie__nombre"${ed('emisor.nombre')}>${esc(e.nombre)}</span>` : ''}
       ${contactos.map(x => `<span>${x}</span>`).join('')}
       ${web ? '<button type="button" class="pie__pdf" data-accion="pdf">Descargar en PDF</button>' : ''}
       ${s.opciones.credito ? creditoHTML('propuesta', web) : ''}
@@ -1217,7 +1233,7 @@ export const generarPropuestaHTML = (
     <div class="cuerpo">
       ${aviso}
       ${bloques.length ? bloques.map((b, i) => `
-        <section class="bloque" id="${esc(b.id || `sec-prop-${i + 1}`)}">
+        <section class="bloque" id="${esc(b.id || `sec-prop-${i + 1}`)}"${ed(b.editar)}>
           <span class="bloque__num" aria-hidden="true">${i + 1}</span>
           <div class="bloque__contenido">
             <h2 class="bloque__titulo">${esc(b.titulo)}</h2>

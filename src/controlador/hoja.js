@@ -14,7 +14,7 @@ const ETIQUETAS = {
 
 let altura = 'media';
 
-const esCelular = () => typeof matchMedia === 'function' && matchMedia('(max-width: 900px)').matches;
+export const esCelular = () => typeof matchMedia === 'function' && matchMedia('(max-width: 900px)').matches;
 
 export const fijarHoja = nueva => {
   if (!ALTURAS.includes(nueva)) return;
@@ -71,6 +71,13 @@ const ocultarEditor = oculto => {
 };
 const editorOcultoGuardado = () => {
   try { return localStorage.getItem(CLAVE_EDITOR_OCULTO) === '1'; } catch { return false; }
+};
+
+// Tocar el documento para editar: en escritorio, si el editor estaba oculto, vuelve; en
+// celular, la hoja queda a media altura (el bloque tocado se ve arriba y el campo, abajo).
+export const abrirEditorParaCampo = () => {
+  if (esCelular()) fijarHoja('media');
+  else if ($('#app')?.classList.contains('app--sin-editor')) ocultarEditor(false);
 };
 
 export const irADiseno = () => {

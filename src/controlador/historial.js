@@ -13,6 +13,7 @@ import { registrarAcciones } from './acciones.js';
 import { avisarConAccion, cerrarAviso } from './avisos.js';
 import { llenarFormulario } from './formulario.js';
 import { actualizar } from './documento.js';
+import { mostrarLugar } from './ir-a-campo.js';
 
 const DOCUMENTOS_MAX = 5;
 const MARCA_VIGENCIA = 2000;
@@ -104,31 +105,6 @@ const esEscritura = el => el.matches('textarea, input:not([type="checkbox"]):not
 const marcar = (el, agrupar) => {
   const lugar = selectorDe(el);
   marca = { lugar, grupo: agrupar && lugar ? lugar : null, cuando: Date.now() };
-};
-
-const reducido = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-// Lleva la vista al campo que cambió y lo resalta un momento, para que se vea qué se
-// deshizo. En pantallas táctiles no enfoca (abriría el teclado).
-const mostrarLugar = lugar => {
-  let el = null;
-  try { el = lugar ? document.querySelector(`#editor-cuerpo ${lugar}`) : null; } catch { }
-  if (!el) return;
-  // Si el cambio quedó dentro de un paso plegado, se abre.
-  for (let d = el.closest('details:not([open])'); d; d = d.parentElement?.closest('details:not([open])')) d.open = true;
-  if (!el.getClientRects().length) return;
-  el.scrollIntoView({ block: 'nearest', behavior: reducido() ? 'auto' : 'smooth' });
-  if (el.matches('input, textarea, select') && !matchMedia('(pointer: coarse)').matches) {
-    el.focus({ preventScroll: true });
-    if (esEscritura(el) && typeof el.setSelectionRange === 'function') {
-      try { el.setSelectionRange(el.value.length, el.value.length); } catch { }
-    }
-  }
-  const resaltado = el.closest('.campo, .item') || el;
-  resaltado.classList.remove('historial-destello');
-  void resaltado.offsetWidth; // reinicia la animación si se deshace dos veces seguidas
-  resaltado.classList.add('historial-destello');
-  setTimeout(() => resaltado.classList.remove('historial-destello'), 1400);
 };
 
 // ---------- Deshacer y rehacer ----------

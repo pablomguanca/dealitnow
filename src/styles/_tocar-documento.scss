@@ -1,0 +1,43 @@
+// Tocar el documento para editar (ver src/controlador/tocar-documento.js). data-editar solo
+// existe en la vista previa del editor: el link del cliente y el PDF no lo llevan.
+// Dentro de #documento, --dorado-papel es el acento del tema de la propuesta. Solo se usa
+// outline (no fondo, ni bordes, ni transición) para no pisar el diseño de cada tema.
+
+#documento [data-editar] {
+  cursor: pointer;
+  scroll-margin-top: 5rem;
+}
+
+// Con mouse: al pasar, se marca el texto más chico que se va a editar (no la sección
+// entera que lo contiene). Las secciones y los pasos completos no se marcan: son el respaldo.
+@media (hover: hover) and (pointer: fine) {
+  #documento [data-editar]:not([data-editar^="paso:"]):not([data-editar^="lista:"]):hover:not(:has([data-editar]:hover)) {
+    outline: 1px dashed var(--dorado-papel, var(--dorado));
+    outline-offset: 3px;
+  }
+}
+
+// Con el dedo: el toque se nota al instante, antes de que suba la hoja.
+@media (pointer: coarse) {
+  #documento [data-editar] {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  #documento [data-editar]:not([data-editar^="paso:"]):not([data-editar^="lista:"]):active:not(:has([data-editar]:active)) {
+    outline: 2px solid var(--dorado-tenue, var(--dorado));
+    outline-offset: 3px;
+  }
+}
+
+// El campo enfocado en el editor: su bloque queda marcado mientras se escribe.
+#documento .doc-editando {
+  outline: 2px solid var(--dorado-papel, var(--dorado));
+  outline-offset: 3px;
+}
+
+@media print {
+  #documento [data-editar],
+  #documento .doc-editando {
+    outline: none !important;
+  }
+}

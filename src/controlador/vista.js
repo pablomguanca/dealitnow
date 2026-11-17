@@ -22,6 +22,11 @@ import { montarMarcasMp } from '../lib/mp-marca.js';
 let prepararPropuesta = () => { };
 export const alPrepararPropuesta = fn => { prepararPropuesta = fn; };
 
+// Después de dibujar la propuesta en el editor (tocar-documento.js vuelve a resaltar el
+// bloque del campo que se está editando). La vista del cliente no lo usa.
+let despuesDeDibujar = () => { };
+export const alDibujarPropuesta = fn => { despuesDeDibujar = fn; };
+
 // La primera vez que se dibuja, el documento entra con animación; después queda estático.
 const marcarAnimacionInicial = (doc, web) => {
   if (!ctx.animacionInicialLista && web) {
@@ -92,9 +97,12 @@ export const renderDocumento = () => {
     seleccion: ctx.seleccion,
     compartida: ctx.compartida,
     tipoDecoracion,
-    tipoPortada
+    tipoPortada,
+    // Tocar el documento para editar: solo en el editor, nunca en el link ni al imprimir.
+    editable: !ctx.esCliente && !ctx.imprimiendo
   });
   terminarDocumento(doc, web);
+  if (!ctx.esCliente) despuesDeDibujar();
   // En el editor el documento se redibuja con cada tecla: el Brick se monta al dejar de escribir.
   if (web) montarMarcasMp(doc, { espera: ctx.esCliente ? 0 : 900 });
 };
