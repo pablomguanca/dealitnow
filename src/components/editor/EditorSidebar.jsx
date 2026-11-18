@@ -16,15 +16,24 @@ export function EditorSidebar() {
         <button type="button" className="hoja__asa" id="hoja-asa" aria-label="Agrandar el editor" aria-controls="editor-cuerpo"></button>
         <nav className="hoja__secciones" id="hoja-secciones" aria-label="Secciones del editor"></nav>
         {/* Modo foco (celular): el campo del texto que se tocó en el documento, solo. */}
+        {/* Título a la izquierda (sección y campo); a la derecha, anterior / siguiente en un
+            grupo, como deshacer / rehacer de la barra de arriba, y «Listo» con un tilde. */}
         <div className="hoja__foco" id="hoja-foco">
-          <button type="button" className="hoja__foco-mover" data-accion="foco-anterior" aria-label="Campo anterior">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5"/></svg>
+          <p className="hoja__foco-titulo" id="hoja-foco-titulo" aria-live="polite">
+            <span className="hoja__foco-seccion" id="hoja-foco-seccion"></span>
+            <span className="hoja__foco-campo" id="hoja-foco-campo"></span>
+          </p>
+          <div className="hoja__foco-pasos" role="group" aria-label="Pasar de campo">
+            <button type="button" className="hoja__foco-paso" data-accion="foco-anterior" aria-label="Campo anterior" title="Campo anterior">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5" /></svg>
+            </button>
+            <button type="button" className="hoja__foco-paso" data-accion="foco-siguiente" aria-label="Campo siguiente" title="Campo siguiente">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5" /></svg>
+            </button>
+          </div>
+          <button type="button" className="hoja__foco-listo" id="hoja-foco-listo" data-accion="foco-listo" aria-label="Listo" title="Listo">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" /></svg>
           </button>
-          <p className="hoja__foco-titulo" id="hoja-foco-titulo" aria-live="polite"></p>
-          <button type="button" className="hoja__foco-mover" data-accion="foco-siguiente" aria-label="Campo siguiente">
-            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5L10.5 8 6 12.5"/></svg>
-          </button>
-          <button type="button" className="boton boton--primario boton--chico hoja__foco-listo" id="hoja-foco-listo" data-accion="foco-listo">Listo</button>
         </div>
       </div>
       <div className="editor__cuerpo" id="editor-cuerpo">

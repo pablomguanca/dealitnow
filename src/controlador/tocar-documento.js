@@ -55,8 +55,18 @@ const asegurarSobreLaHoja = el => {
   const hoja = $('.editor')?.getBoundingClientRect();
   const tope = hoja ? hoja.top : innerHeight * 0.44;
   const r = el.getBoundingClientRect();
-  if (r.top >= 64 && r.top <= tope - 48) return;
-  el.scrollIntoView({ block: 'start', behavior: reducido() ? 'auto' : 'smooth' });
+  const arriba = $('.barra')?.getBoundingClientRect().bottom ?? 64;
+  const espacio = tope - arriba;
+  // Si el bloque entra en el espacio libre, se tiene que ver entero; si es más alto, al
+  // menos su principio, cerca de arriba.
+  const seVe = r.height <= espacio - 16
+    ? r.top >= arriba && r.bottom <= tope - 8
+    : r.top >= arriba && r.top <= arriba + 48;
+  if (seVe) return;
+  const destino = r.height <= espacio - 16
+    ? r.top - arriba - (espacio - r.height) / 2 // centrado en el espacio libre
+    : r.top - arriba - 16;
+  (el.closest('.visor') || window).scrollBy({ top: destino, behavior: reducido() ? 'auto' : 'smooth' });
 };
 
 const alTocar = ev => {
@@ -115,12 +125,26 @@ const marcarCamino = el => {
     n.classList.add('foco-camino');
     if (n.id === 'editor-cuerpo') break;
   }
-  // El título de la barra: dónde está el campo («Servicio 3») y qué es («Precio»).
-  const etiqueta = $('.campo__etiqueta', campo)?.textContent.trim() || '';
-  const donde = el.closest('.item')?.querySelector('.item__titulo')?.textContent.trim()
-    || el.closest('details.paso')?.querySelector('.paso__titulo')?.textContent.trim() || '';
-  const titulo = $('#hoja-foco-titulo');
-  if (titulo) titulo.innerHTML = `${donde ? `<span>${donde.replace(/[<>&]/g, '')}</span>` : ''}${etiqueta.replace(/[<>&]/g, '')}`;
+  // El título de la barra: la sección («Contexto y objetivos», o «Servicio 3» en una lista)
+  // arriba y el campo («El punto de partida») abajo.
+  const donde = textoVisible(el.closest('.item')?.querySelector('.item__titulo'))
+    || textoVisible(el.closest('details.paso')?.querySelector('.paso__titulo'));
+  const etiqueta = textoVisible($('.campo__etiqueta', campo));
+  const seccion = $('#hoja-foco-seccion');
+  const nombre = $('#hoja-foco-campo');
+  if (seccion) seccion.textContent = etiqueta ? donde : '';
+  if (nombre) nombre.textContent = etiqueta || donde;
+};
+
+// Texto de un título tal como se ve: varios traen las dos versiones (propuesta y
+// presupuesto, con data-solo-…) y una está escondida. Se lee antes de que el modo foco
+// esconda nada, pero por las dudas no depende del CSS: descarta lo que no corresponde.
+const textoVisible = el => {
+  if (!el) return '';
+  const copia = el.cloneNode(true);
+  const presupuesto = document.body.classList.contains('formato-presupuesto');
+  copia.querySelectorAll(`[hidden], ${presupuesto ? '[data-solo-propuesta]' : '[data-solo-presupuesto]'}`).forEach(n => n.remove());
+  return copia.textContent.replace(/\s+/g, ' ').trim();
 };
 
 const pintarBotonesFoco = () => {
