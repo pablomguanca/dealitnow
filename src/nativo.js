@@ -223,6 +223,11 @@ const cerrarDialogoAbierto = () => {
 const alTocarAtras = App => {
   const body = document.body;
   if (cerrarDialogoAbierto()) return;
+  // El editor en modo foco (un solo campo, tocar-documento.js) vuelve al documento.
+  if (body.dataset.hoja === 'foco') {
+    document.querySelector('#hoja-foco-listo')?.click();
+    return;
+  }
   // El login abierto encima (sin cuenta) se cierra, como un diálogo.
   const cerrarLogin = document.querySelector('#auth-pantalla:not([hidden]) #auth-cerrar:not([hidden])');
   if (cerrarLogin) { cerrarLogin.click(); return; }

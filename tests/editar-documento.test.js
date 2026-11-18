@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { atributoEditar, selectorDeClave, claveDeCampo, clavesParaResaltar } from '../src/editar-documento.js';
+import { atributoEditar, selectorDeClave, claveDeCampo, clavesParaResaltar, clavesNavegables, claveVecina, primerCampoDe } from '../src/editar-documento.js';
 import { normalizarPropuesta, vacio } from '../src/modelo.js';
 import { generarPropuestaHTML } from '../src/lib/render.js';
 
@@ -50,6 +50,30 @@ describe('claves del documento', () => {
     expect(atributoEditar(true)('a"b')).toBe(' data-editar="a&quot;b"');
     expect(atributoEditar(true)('')).toBe('');
     expect(atributoEditar(false)('propuesta.titulo')).toBe('');
+  });
+});
+
+describe('modo foco', () => {
+  const delDocumento = ['emisor.nombre', 'propuesta.titulo', 'paso:Cliente', 'lista:servicios', 'servicios:0', 'servicios:0:nombre', 'servicios:0:precio', 'emisor.nombre', 'paso:Inversión'];
+
+  it('pasa por los campos en el orden del documento, sin repetir ni respaldos', () => {
+    expect(clavesNavegables(delDocumento)).toEqual(['emisor.nombre', 'propuesta.titulo', 'servicios:0:nombre', 'servicios:0:precio']);
+  });
+
+  it('anterior y siguiente frenan en los extremos', () => {
+    const claves = clavesNavegables(delDocumento);
+    expect(claveVecina(claves, 'propuesta.titulo', 1)).toBe('servicios:0:nombre');
+    expect(claveVecina(claves, 'propuesta.titulo', -1)).toBe('emisor.nombre');
+    expect(claveVecina(claves, 'emisor.nombre', -1)).toBeNull();
+    expect(claveVecina(claves, 'servicios:0:precio', 1)).toBeNull();
+    expect(claveVecina(claves, 'otra.cosa', 1)).toBeNull();
+  });
+
+  it('tocar un ítem entero abre su primer campo', () => {
+    const claves = clavesNavegables(delDocumento);
+    expect(primerCampoDe(claves, 'servicios:0')).toBe('servicios:0:nombre');
+    expect(primerCampoDe(claves, 'servicios:9')).toBe('servicios:9');
+    expect(primerCampoDe(claves, 'propuesta.titulo')).toBe('propuesta.titulo');
   });
 });
 

@@ -1,6 +1,8 @@
 // Editor en celular: el documento queda siempre a la vista y el editor es una hoja que
 // sube desde abajo, con tres alturas (solo la barra, media pantalla o casi completa) y una
 // barra de secciones para saltar a cada paso. En escritorio no cambia nada.
+// Además está el modo «foco» (tocar-documento.js): la hoja muestra un solo campo, el del
+// texto que se tocó en el documento, arriba del teclado.
 
 import { $, $$, esc } from '../lib/formato.js';
 import { registrarAcciones } from './acciones.js';
@@ -9,22 +11,29 @@ const ALTURAS = ['cerrada', 'media', 'completa'];
 const ETIQUETAS = {
   cerrada: 'Abrir el editor',
   media: 'Agrandar el editor',
-  completa: 'Achicar el editor'
+  completa: 'Achicar el editor',
+  foco: 'Ver todo el editor'
 };
 
 let altura = 'media';
+let alSalirFoco = () => { };
+export const alSalirDelFoco = fn => { alSalirFoco = fn; };
+export const hojaEnFoco = () => altura === 'foco';
 
 export const esCelular = () => typeof matchMedia === 'function' && matchMedia('(max-width: 900px)').matches;
 
 export const fijarHoja = nueva => {
-  if (!ALTURAS.includes(nueva)) return;
+  if (!ALTURAS.includes(nueva) && nueva !== 'foco') return;
+  const veniaDelFoco = altura === 'foco' && nueva !== 'foco';
   altura = nueva;
   document.body.dataset.hoja = nueva;
   $('#hoja-asa')?.setAttribute('aria-label', ETIQUETAS[nueva]);
   $('#hoja-asa')?.setAttribute('aria-expanded', String(nueva !== 'cerrada'));
+  if (veniaDelFoco) alSalirFoco();
 };
 
-const mover = pasos => fijarHoja(ALTURAS[Math.max(0, Math.min(ALTURAS.length - 1, ALTURAS.indexOf(altura) + pasos))]);
+// Desde el foco, subir muestra todo el editor (media) y bajar lo cierra.
+const mover = pasos => (altura === 'foco' ? fijarHoja(pasos > 0 ? 'media' : 'cerrada') : fijarHoja(ALTURAS[Math.max(0, Math.min(ALTURAS.length - 1, ALTURAS.indexOf(altura) + pasos))]));
 
 // Reemplaza a las viejas pestañas «Editar / Vista previa»: en celular, ver la vista previa
 // es bajar la hoja; en escritorio el editor y el documento ya están lado a lado.
@@ -100,7 +109,7 @@ export const instalarHoja = () => {
   let inicio = null;
   let arrastro = false;
   cabecera?.addEventListener('pointerdown', ev => {
-    if (ev.target.closest('.hoja__seccion')) return;
+    if (ev.target.closest('.hoja__seccion, .hoja__foco button')) return;
     inicio = ev.clientY;
     arrastro = false;
   });

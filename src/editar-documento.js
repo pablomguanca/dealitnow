@@ -39,6 +39,22 @@ export const claveDeCampo = ({ campo, lista, indice, item } = {}) => {
   return item ? `${lista}:${indice}:${item}` : `${lista}:${indice}`;
 };
 
+// Campos por los que se pasa con «anterior / siguiente» en el modo foco: los del documento,
+// en el orden en que se leen, sin repetir y sin los respaldos (pasos, listas, ítems enteros).
+const esCampo = clave => !/^(paso|lista):/.test(clave) && !/^[^:]+:\d+$/.test(clave);
+export const clavesNavegables = claves => [...new Set(claves.filter(c => c && esCampo(c)))];
+
+// La clave vecina de la actual (paso -1 o +1), o null en los extremos o si no está.
+export const claveVecina = (claves, actual, paso) => {
+  const i = claves.indexOf(actual);
+  return i < 0 ? null : claves[i + paso] ?? null;
+};
+
+// Tocar un ítem entero (la tarjeta de un servicio) en el modo foco abre su primer campo.
+export const primerCampoDe = (claves, clave) => (/^[^:]+:\d+$/.test(clave || '')
+  ? claves.find(c => c.startsWith(`${clave}:`)) || clave
+  : clave);
+
 // Para resaltar en el documento: la clave exacta y, si no está dibujada (un campo que no se
 // ve, como el precio de un servicio incluido), la del ítem que la contiene.
 export const clavesParaResaltar = clave => {

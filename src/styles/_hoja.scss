@@ -119,6 +119,138 @@
       }
     }
 
+    // ---------- Modo foco: un solo campo, arriba del teclado ----------
+    // tocar-documento.js marca el campo (.foco-campo) y sus contenedores (.foco-camino);
+    // todo lo demás del editor se esconde. --teclado y --vv-alto los pone el JS.
+    .hoja__foco {
+      display: none;
+    }
+
+    &[data-hoja="foco"] {
+      --hoja-alto: auto;
+
+      .visor {
+        padding-bottom: 70dvh;
+      }
+
+      .editor {
+        bottom: var(--teclado, 0px);
+        height: auto;
+        max-height: calc(var(--vv-alto, 100dvh) - 5.5rem);
+        transition: none;
+      }
+
+      // Los avisos (como «Deshacer»), arriba de la hoja.
+      &:not(.vista-inicio) .avisos {
+        bottom: calc(var(--teclado, 0px) + 10rem) !important;
+      }
+
+      .hoja__secciones {
+        display: none;
+      }
+
+      .hoja__foco {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0 0.75rem;
+      }
+
+      .editor__cuerpo {
+        visibility: visible;
+        padding: 0.75rem 1rem 0.9rem;
+      }
+
+      #editor-cuerpo.foco-camino > :not(.foco-camino):not(.foco-campo),
+      #editor-cuerpo .foco-camino > :not(.foco-camino):not(.foco-campo) {
+        display: none !important;
+      }
+
+      // Los contenedores del camino (paso, ítem, grilla) no suman cajas ni márgenes.
+      #editor-cuerpo .foco-camino {
+        display: block;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: none;
+        box-shadow: none;
+      }
+
+      .foco-campo {
+        margin: 0;
+
+        .campo__etiqueta {
+          display: none; // ya está en la barra
+        }
+
+        .control {
+          font-size: 1.05rem; // 16 px o más: iPhone no hace zoom al enfocar
+        }
+
+        textarea.control {
+          min-height: 7.5rem;
+          max-height: 40dvh;
+        }
+      }
+    }
+
+    .hoja__foco-titulo {
+      flex: 1;
+      min-width: 0;
+      margin: 0;
+      overflow: hidden;
+      color: var(--marfil);
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 1.2;
+      text-align: center;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      span {
+        display: block;
+        overflow: hidden;
+        color: var(--marfil-apagado);
+        font-size: 0.72rem;
+        font-weight: 500;
+        text-overflow: ellipsis;
+      }
+    }
+
+    .hoja__foco-mover {
+      display: grid;
+      flex: none;
+      place-items: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      padding: 0;
+      border: 1px solid var(--superficie-borde);
+      border-radius: 999px;
+      background: var(--negro-2);
+      color: var(--marfil);
+      cursor: pointer;
+
+      svg {
+        width: 1rem;
+        height: 1rem;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.8;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      &:disabled {
+        opacity: 0.35;
+        cursor: default;
+      }
+    }
+
+    .hoja__foco-listo {
+      flex: none;
+      min-height: 2.5rem;
+    }
+
     // Los avisos aparecen arriba de la hoja, no debajo.
     &:not(.vista-inicio) .avisos {
       bottom: calc(var(--hoja-alto) + 0.75rem) !important;
