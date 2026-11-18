@@ -15,6 +15,7 @@ import { registrarAcciones } from './acciones.js';
 import { mostrarLugar } from './ir-a-campo.js';
 import { cerrarExplorador } from './explorador-plantillas.js';
 import { alDibujarPropuesta } from './vista.js';
+import { esAppNativa } from '../nativo.js';
 
 const CLASE = 'doc-editando';
 const INTERACTIVOS = 'a[href], button, input, select, textarea, label, summary, iframe, video, [data-accion], [data-lightbox-src], [data-video-embed], [data-scroll-interno], [data-enlace-cliente]';
@@ -153,6 +154,7 @@ const entrarEnFoco = clave => {
     return;
   }
   claveFoco = clave;
+  sumarPasoAlHistorial();
   // Sin esperar a focusin: si el campo ya tenía el foco (tocar dos veces el mismo texto), no hay.
   claveActiva = clave;
   remarcar();
@@ -184,7 +186,40 @@ const terminarFoco = () => {
   setTimeout(() => bloque.classList.remove('historial-destello'), 1400);
 };
 
+// «Atrás» en el navegador (Chrome en Android, deslizar en Safari): el modo foco suma un paso
+// al historial, con la misma dirección, para que volver cierre el campo y no el editor. En
+// la app de Android no hace falta: «atrás» lo atiende nativo.js.
+const MARCA_HISTORIAL = 'dealitFoco';
+let ignorarVuelta = false;
+const enPasoDelFoco = () => !!history.state?.[MARCA_HISTORIAL];
+
+const sumarPasoAlHistorial = () => {
+  if (esAppNativa() || enPasoDelFoco()) return;
+  try { history.pushState({ ...history.state, [MARCA_HISTORIAL]: true }, '', location.href); } catch { }
+};
+
+// Se sale del foco sin «atrás» (Listo, bajar la hoja): se saca el paso que se sumó, solo si
+// todavía se está en él (si se fue a otra pantalla, ese paso ya quedó atrás).
+const sacarPasoDelHistorial = () => {
+  if (!enPasoDelFoco()) return;
+  ignorarVuelta = true;
+  history.back();
+};
+
+const alVolver = ev => {
+  if (ignorarVuelta) {
+    ignorarVuelta = false;
+    ev.stopImmediatePropagation();
+    return;
+  }
+  if (!hojaEnFoco() || enPasoDelFoco()) return;
+  // Volvió del paso del foco al editor: misma dirección, nada que navegar.
+  ev.stopImmediatePropagation();
+  terminarFoco();
+};
+
 const alSalir = () => {
+  sacarPasoDelHistorial();
   claveFoco = null;
   limpiarCamino();
   document.body.style.removeProperty('--teclado');
@@ -215,6 +250,8 @@ export const instalarTocarDocumento = () => {
   document.addEventListener('click', alTocar);
 
   alSalirDelFoco(alSalir);
+  // En captura: corre antes que la navegación de la app (navegacion.js y React Router).
+  window.addEventListener('popstate', alVolver, true);
   window.visualViewport?.addEventListener('resize', ajustarAlTeclado);
   window.visualViewport?.addEventListener('scroll', ajustarAlTeclado);
   // Los botones de la barra no se llevan el foco: el teclado queda abierto al pasar de campo.
