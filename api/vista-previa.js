@@ -3,11 +3,13 @@
 // JavaScript: leen las etiquetas og: del HTML. vercel.json manda acá solo a esos lectores
 // (por su user-agent) cuando piden /p/… o /portafolio/…; las personas abren la app como siempre.
 //
-// La imagen es el logo que el dueño cargó en esa propuesta o portfolio, en cualquier plan; sin
-// logo, el ícono de Dealit. Se usa la misma versión que ve el cliente (contenidoDelLink).
+// La imagen es el logo que el dueño cargó en esa propuesta o portfolio, en cualquier plan (de la
+// misma versión que ve el cliente, contenidoDelLink); si no tiene, el logo de su cuenta (Mi cuenta);
+// y si tampoco, el ícono de Dealit.
 //
-// Con &imagen=1 devuelve el logo en un cuadrado (centrado, con margen y el color de su fondo):
-// WhatsApp muestra chica, al costado, una imagen cuadrada, y enorme arriba una apaisada.
+// Con &imagen=1 devuelve el logo en un cuadrado chico (centrado, con margen y el color de su
+// fondo). WhatsApp muestra la imagen chica, al costado del texto, solo si mide menos de 300 px
+// de ancho; desde 300 la pone enorme arriba del mensaje, aunque sea cuadrada.
 import { createHash } from 'node:crypto';
 import { firestore } from './_lib/firebase-admin.js';
 import { urlAppDe } from './_lib/avisos.js';
@@ -29,7 +31,8 @@ const TIPOS = {
   }
 };
 
-export const LADO_IMAGEN = 400;
+export const LADO_IMAGEN = 240;
+const LADO_ICONO = 192;
 const MAX_LOGO_BYTES = 5 * 1024 * 1024;
 
 const esc = texto => String(texto ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -54,10 +57,10 @@ export const htmlVistaPrevia = ({ titulo, descripcion, url, imagen, nombre, cuad
 <meta property="og:description" content="${esc(descripcion)}">
 <meta property="og:url" content="${esc(url)}">
 <meta property="og:image" content="${esc(imagen)}">
-${cuadrada ? `<meta property="og:image:type" content="image/png">
-<meta property="og:image:width" content="${LADO_IMAGEN}">
-<meta property="og:image:height" content="${LADO_IMAGEN}">
-` : ''}<meta name="twitter:card" content="summary">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="${cuadrada ? LADO_IMAGEN : LADO_ICONO}">
+<meta property="og:image:height" content="${cuadrada ? LADO_IMAGEN : LADO_ICONO}">
+<meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="${esc(titulo)}">
 <meta name="twitter:description" content="${esc(descripcion)}">
 <meta name="twitter:image" content="${esc(imagen)}">
@@ -94,15 +97,25 @@ export const crearHandler = ({ db, fetchFn = fetch }) => async (req, res) => {
   const id = String(req.query?.id || '');
   const app = urlAppDe(req);
   const url = `${app}/${config.ruta}/${encodeURIComponent(id)}`;
-  const icono = `${app}/iconos/icono-512.png`;
+  // El de 192 (no el de 512), para que WhatsApp también lo muestre chico.
+  const icono = `${app}/iconos/icono-${LADO_ICONO}.png`;
   let contenido = null;
+  let logo = '';
   if (ID_PROPUESTA.test(id)) {
     try {
       const snap = await db().collection(config.coleccion).doc(id).get();
-      if (snap.exists && snap.get('publico') === true) contenido = contenidoDelLink(snap.data());
+      if (snap.exists && snap.get('publico') === true) {
+        contenido = contenidoDelLink(snap.data());
+        logo = logoDe(contenido);
+        // Sin logo en la propuesta, el de Mi cuenta.
+        const uid = snap.get('userId');
+        if (!logo && typeof uid === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(uid)) {
+          const cuenta = await db().collection('users').doc(uid).get();
+          if (cuenta.exists) logo = logoDe({ emisor: cuenta.get('emisor') });
+        }
+      }
     } catch { /* sin datos, va la vista previa genérica */ }
   }
-  const logo = logoDe(contenido);
 
   if (req.query?.imagen) {
     // Sin logo (o si no se puede armar el cuadrado), el ícono de Dealit, que ya es cuadrado.
@@ -120,7 +133,8 @@ export const crearHandler = ({ db, fetchFn = fetch }) => async (req, res) => {
     return res.status(302).end();
   }
 
-  const version = logo ? createHash('sha256').update(logo).digest('hex').slice(0, 12) : '';
+  // Cambia con el logo y con el tamaño del cuadrado: la imagen queda un año en la caché.
+  const version = logo ? createHash('sha256').update(`${logo}|${LADO_IMAGEN}`).digest('hex').slice(0, 12) : '';
   const imagen = logo
     ? `${app}/api/vista-previa?tipo=${tipo}&id=${encodeURIComponent(id)}&imagen=1&v=${version}`
     : icono;

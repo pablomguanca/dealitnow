@@ -37,9 +37,23 @@ describe('vista previa del link', () => {
     const res = await pedir(db, { tipo: 'propuesta', id: ID });
     expect(res.codigo).toBe(200);
     expect(imagen(res.cuerpo)).toMatch(/^https:\/\/dealit\.com\.ar\/api\/vista-previa\?tipo=propuesta&id=AAAAAAAAAAAAAAAAAAA1&imagen=1&v=[0-9a-f]{12}$/);
-    expect(res.cuerpo).toContain('og:image:width" content="400"');
+    expect(res.cuerpo).toContain('og:image:width" content="240"');
     expect(res.cuerpo).toContain('content="https://dealit.com.ar/p/AAAAAAAAAAAAAAAAAAA1"');
     expect(res.cuerpo).toContain('og:site_name" content="Atenea"');
+  });
+
+  it('sin logo en la propuesta, usa el logo de Mi cuenta', async () => {
+    const db = crearDb({
+      [`proposals/${ID}`]: { publico: true, userId: 'dueno1', payload: { emisor: { logo: '' } } },
+      'users/dueno1': { emisor: { logo: LOGO } }
+    });
+    const res = await pedir(db, { tipo: 'propuesta', id: ID });
+    expect(imagen(res.cuerpo)).toContain('&imagen=1&v=');
+    const pedidos = [];
+    const png = await sharp({ create: { width: 50, height: 50, channels: 3, background: '#fff' } }).png().toBuffer();
+    const img = await pedir(db, { tipo: 'propuesta', id: ID, imagen: '1' }, async url => { pedidos.push(url); return new Response(png); });
+    expect(img.codigo).toBe(200);
+    expect(pedidos).toEqual([LOGO]);
   });
 
   it('usa el logo del portfolio', async () => {
@@ -50,7 +64,7 @@ describe('vista previa del link', () => {
   });
 
   it('sin logo, sin link activo o con un id raro, va el ícono de Dealit', async () => {
-    const icono = 'https://dealit.com.ar/iconos/icono-512.png';
+    const icono = 'https://dealit.com.ar/iconos/icono-192.png';
     const db = crearDb({
       [`proposals/${ID}`]: { publico: true, payload: { emisor: { logo: '' } } },
       'proposals/BBBBBBBBBBBBBBBBBBB2': { publico: false, payload: { emisor: { logo: LOGO } } }
@@ -68,7 +82,7 @@ describe('vista previa del link', () => {
     expect(logoDe({ emisor: { logo: 'https://x.com/a.png" onload="x' } })).toBe('');
   });
 
-  it('arma el logo apaisado en un cuadrado de 400 con el color de su fondo', async () => {
+  it('arma el logo apaisado en un cuadrado chico (menos de 300, para que WhatsApp no lo agrande) con el color de su fondo', async () => {
     const apaisado = await sharp({ create: { width: 900, height: 300, channels: 3, background: '#0b0b10' } })
       .composite([{ input: await sharp({ create: { width: 500, height: 120, channels: 3, background: '#d4af37' } }).png().toBuffer(), left: 200, top: 90 }])
       .png().toBuffer();
@@ -79,7 +93,7 @@ describe('vista previa del link', () => {
     expect(pedidos).toEqual([LOGO]);
     expect(res.cabeceras['Content-Type']).toBe('image/png');
     const { width, height } = await sharp(res.cuerpo).metadata();
-    expect([width, height]).toEqual([400, 400]);
+    expect([width, height]).toEqual([240, 240]);
     const { data } = await sharp(res.cuerpo).extract({ left: 0, top: 0, width: 1, height: 1 }).raw().toBuffer({ resolveWithObject: true });
     expect([...data.subarray(0, 3)]).toEqual([11, 11, 16]);
   });
@@ -90,7 +104,7 @@ describe('vista previa del link', () => {
       'proposals/BBBBBBBBBBBBBBBBBBB2': { publico: true, payload: { emisor: { logo: LOGO } } }
     });
     const sinLogo = await pedir(db, { tipo: 'propuesta', id: ID, imagen: '1' });
-    expect([sinLogo.codigo, sinLogo.cabeceras.Location]).toEqual([302, 'https://dealit.com.ar/iconos/icono-512.png']);
+    expect([sinLogo.codigo, sinLogo.cabeceras.Location]).toEqual([302, 'https://dealit.com.ar/iconos/icono-192.png']);
     const caido = await pedir(db, { tipo: 'propuesta', id: 'BBBBBBBBBBBBBBBBBBB2', imagen: '1' }, async () => new Response('', { status: 404 }));
     expect(caido.codigo).toBe(302);
   });
