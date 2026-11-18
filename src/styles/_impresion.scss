@@ -1,12 +1,11 @@
 // Reglas de exportación e impresión en hoja A4 (@media print)
 
 @media print {
+  // Hojas sin márgenes de impresora: los márgenes del diálogo («Predeterminado», «Ninguno»)
+  // salen en blanco y no con el color de la propuesta. El aire de arriba y abajo lo da el
+  // propio documento (.cuerpo y .presu, más abajo), repetido en cada hoja con «clone».
   @page {
     size: A4;
-    margin: 16mm 0 18mm;
-  }
-
-  @page :first {
     margin: 0;
   }
 
@@ -85,10 +84,20 @@
     break-after: page;
   }
 
+  // El padding se repite arriba y abajo de cada hoja (box-decoration-break: clone): así
+  // nada queda pegado al borde, ni al empezar una hoja ni al terminarla.
   .cuerpo {
     margin: 0;
-    padding: 0 5.8em;
+    padding: 20mm 5.8em 20mm;
     box-shadow: none;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .presu {
+    padding: 16mm 14mm !important;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
 
   .bloque__titulo,
@@ -149,28 +158,13 @@
   display: none;
 }
 
-// App de Android (html.imprimiendo-app, lo pone imprimirNativo en nativo.js): esa ventana
-// web no respeta «@page :first { margin: 0 }» y pinta los márgenes con el fondo oscuro de la
-// app. Ahí las hojas van sin márgenes (@page margin 0, también lo agrega imprimirNativo) y el
-// espacio de arriba y abajo lo da el propio documento, repetido en cada hoja (clone).
+// App de Android (html.imprimiendo-app, lo pone imprimirNativo en nativo.js): esa ventana web
+// mide la hoja un poco más corta, así que la portada es algo más baja para no pasarse.
 @media print {
   html.imprimiendo-app {
     .portada,
     .doc--web .portada {
       aspect-ratio: 210 / 293;
-    }
-
-    .cuerpo {
-      padding-top: 16mm;
-      padding-bottom: 18mm;
-      -webkit-box-decoration-break: clone;
-      box-decoration-break: clone;
-    }
-
-    .presu {
-      padding-bottom: 14mm;
-      -webkit-box-decoration-break: clone;
-      box-decoration-break: clone;
     }
   }
 }

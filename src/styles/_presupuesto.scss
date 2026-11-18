@@ -397,11 +397,10 @@
 }
 
 @media print {
-  // La primera hoja no tiene márgenes (por la portada de la propuesta): el presupuesto se
-  // da su propio margen arriba y a los costados.
+  // Las hojas no tienen márgenes: el presupuesto se da el suyo, repetido en cada hoja
+  // (padding y clone en _impresion.scss).
   .presu {
     max-width: none;
-    padding: 14mm 14mm 0;
     font-size: 10pt;
 
     &__tabla tr {
