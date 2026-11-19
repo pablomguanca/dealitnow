@@ -5,9 +5,13 @@
 import './inicio.scss';
 import { haySesionGuardada, marcarSesion } from '../lib/marca-sesion.js';
 
-// En la app de Android (Capacitor abre dealit.com.ar) nunca va la landing: /empezar entra al
-// editor sin cuenta o, con la sesión iniciada, al panel.
-if (window.Capacitor?.isNativePlatform?.()) {
+// Abierta como app instalada (la PWA, o Dealit en la pantalla de inicio del iPhone).
+const instalada = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+
+// En la app de Android (Capacitor abre dealit.com.ar) y en la PWA instalada nunca va la landing:
+// /empezar entra al editor sin cuenta o, con la sesión iniciada, al panel. La PWA arranca en `/`
+// (start_url) y, sin la cookie (en iPhone la app instalada no comparte las de Safari), caería acá.
+if (window.Capacitor?.isNativePlatform?.() || instalada) {
   location.replace('/empezar');
 } else if (location.pathname === '/') {
   // Quien tiene la sesión iniciada pero todavía no la marca (por ejemplo, entró antes de que
@@ -128,7 +132,7 @@ const instalarPeriodo = () => {
     });
     precio.textContent = anual ? precio.dataset.precioAnio : precio.dataset.precioMes;
     sufijo.textContent = anual ? sufijo.dataset.sufijoAnio : sufijo.dataset.sufijoMes;
-    usd.textContent = anual ? usd.dataset.usdAnio : usd.dataset.usdMes;
+    if (usd) usd.textContent = anual ? usd.dataset.usdAnio : usd.dataset.usdMes;
     precio.classList.remove('cambia');
     void precio.offsetWidth;
     precio.classList.add('cambia');
@@ -141,20 +145,91 @@ const instalarCabeceraYFijo = () => {
   const fijo = $('#cta-fijo');
   const heroBoton = $('[data-cta="hero"]');
   const cierre = $('.ld-cierre');
+  // Tampoco tapa el botón «Instalar» de la tarjeta de instalación.
+  const instalador = $('#instalador');
   addEventListener('scroll', () => cabecera.classList.toggle('con-fondo', scrollY > 12), { passive: true });
   if (!('IntersectionObserver' in window) || !heroBoton) return;
   const visibles = new Map();
   const observador = new IntersectionObserver(entradas => {
     entradas.forEach(e => visibles.set(e.target, e.isIntersecting));
     const heroVisible = visibles.get(heroBoton) ?? true;
-    const cierreVisible = visibles.get(cierre) ?? false;
-    fijo.classList.toggle('visible', !heroVisible && !cierreVisible);
+    const tapa = [cierre, instalador].some(el => visibles.get(el));
+    fijo.classList.toggle('visible', !heroVisible && !tapa);
   });
   observador.observe(heroBoton);
-  if (cierre) observador.observe(cierre);
+  [cierre, instalador].forEach(el => el && observador.observe(el));
+};
+
+// Instalar Dealit como app (PWA), sin tienda. En la compu se ve el QR que lleva a /instalar
+// (esta misma landing, bajando hasta acá); en el celular, lo que corresponde a su sistema:
+// - Android y navegadores con Chromium: el botón «Instalar» con el aviso propio del navegador
+//   (beforeinstallprompt). Si no lo ofrece (Firefox, ya instalada, etc.), los pasos del menú.
+//   En la compu, si el navegador también la puede instalar, un link discreto bajo el QR.
+// - iPhone y iPad: no hay aviso propio, solo los pasos de Compartir → «Agregar a inicio».
+const plataforma = () => {
+  const ua = navigator.userAgent;
+  if (/iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) return 'ios';
+  if (/Android/.test(ua) || matchMedia('(pointer: coarse) and (hover: none)').matches) return 'android';
+  return 'escritorio';
+};
+
+const instalarInstalador = () => {
+  const seccion = $('#instalar');
+  if (!seccion) return;
+  seccion.dataset.plataforma = plataforma();
+
+  let aviso = null;
+  const botones = seccion.querySelectorAll('[data-instalar]');
+  const mostrarBotones = si => {
+    botones.forEach(b => { b.hidden = !si; });
+    seccion.toggleAttribute('data-con-aviso', si);
+  };
+
+  addEventListener('beforeinstallprompt', evento => {
+    evento.preventDefault();
+    aviso = evento;
+    mostrarBotones(true);
+  });
+  addEventListener('appinstalled', () => {
+    aviso = null;
+    mostrarBotones(false);
+    seccion.dataset.plataforma = 'lista';
+  });
+  botones.forEach(boton => boton.addEventListener('click', async () => {
+    if (!aviso) return;
+    const evento = aviso;
+    aviso = null;
+    evento.prompt();
+    const { outcome } = await evento.userChoice.catch(() => ({}));
+    // El aviso se usa una sola vez: si lo cerró, quedan los pasos del menú.
+    mostrarBotones(false);
+    if (outcome === 'accepted') seccion.dataset.plataforma = 'lista';
+  }));
+
+  // Sin service worker, algunos navegadores (Samsung Internet, Chrome viejos) no la consideran
+  // instalable. El de Dealit no guarda nada en caché, así que registrarlo no cambia la landing.
+  if ('serviceWorker' in navigator) {
+    const registrar = () => navigator.serviceWorker.register('/sw.js').catch(() => {});
+    if ('requestIdleCallback' in window) requestIdleCallback(registrar, { timeout: 4000 });
+    else setTimeout(registrar, 2000);
+  }
+
+  // Llegó escaneando el QR (/instalar): directo a la sección, de un salto (el scroll suave de
+  // la página tardaría en recorrerla entera) y con todo cargado, para que nada la corra después.
+  if (location.pathname.replace(/\/$/, '') === '/instalar') {
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    const ir = () => seccion.scrollIntoView({ block: 'start', behavior: 'instant' });
+    ir();
+    // Al terminar de cargar, se reacomoda solo si la persona no se movió de ahí.
+    const donde = scrollY;
+    if (document.readyState !== 'complete') {
+      addEventListener('load', () => { if (Math.abs(scrollY - donde) < 80) ir(); }, { once: true });
+    }
+  }
 };
 
 instalarApariciones();
+instalarInstalador();
 instalarCelular();
 instalarRecorridos();
 instalarPeriodo();

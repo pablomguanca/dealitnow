@@ -21,6 +21,8 @@
 <meta name="theme-color" content="#06060A">
 <link rel="icon" type="image/png" sizes="48x48" href="/iconos/favicon-48.png">
 <link rel="apple-touch-icon" href="/iconos/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-title" content="Dealit">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -478,6 +480,7 @@
           </span>
           <h3>Tu oficina es tu teléfono</h3>
           <p>Armás, mandás y seguís todo desde el celular: en la web o en la app de Android. Cerrás tratos saliendo de un café o entre dos reuniones.</p>
+          <a class="ld-bento__link" href="#instalar">Instalala en tu celular →</a>
         </article>
 
         <article class="ld-bento__celda ld-bento__celda--diseno ld-aparece">
@@ -772,7 +775,87 @@
     </div>
   </section>
 
-  <!-- ============ 8. PRECIOS + FAQ ============ -->
+  <!-- ============ 8. INSTALAR (PWA, sin tienda) ============ -->
+  <!-- Qué se ve lo decide inicio.js (data-plataforma): en la compu, el QR que lleva a /instalar;
+       en Android, el botón «Instalar» (o los pasos del menú, si el navegador no lo ofrece); en
+       iPhone y iPad, los pasos de «Agregar a inicio». Sin JS, el CSS elige por el tipo de puntero. -->
+  <section class="ld-seccion ld-instalar" id="instalar" aria-labelledby="instalar-titulo">
+    <div class="ld-contenedor ld-instalar__grilla">
+      <div class="ld-instalar__texto">
+        <p class="ld-sobretitulo ld-aparece">La app, sin tienda</p>
+        <h2 class="ld-titulo ld-aparece" id="instalar-titulo">Instalala en tu celular. <span class="ld-acento">Sin pasar por ninguna tienda.</span></h2>
+        <p class="ld-bajada ld-aparece">Dealit se instala desde el navegador en segundos: sin Google Play, sin App Store y sin descargas pesadas. Queda con su ícono en la pantalla de inicio, como cualquier app.</p>
+      </div>
+
+      <div class="ld-instalar__tarjeta ld-aparece" id="instalador">
+        <!-- Compu: QR al celular -->
+        <div class="ld-instalar__modo ld-instalar__modo--escritorio">
+          <div class="ld-qr">
+            <svg viewBox="-3 -3 39 39" shape-rendering="crispEdges" role="img" aria-label="Código QR para abrir dealit.com.ar/instalar en el celular"><path d="M0 0h7v1H0zM10 0h2v1H10zM14 0h1v1H14zM16 0h1v1H16zM19 0h2v1H19zM22 0h1v1H22zM24 0h1v1H24zM26 0h7v1H26zM0 1h1v1H0zM6 1h1v1H6zM12 1h1v1H12zM14 1h3v1H14zM18 1h1v1H18zM20 1h2v1H20zM23 1h1v1H23zM26 1h1v1H26zM32 1h1v1H32zM0 2h1v1H0zM2 2h3v1H2zM6 2h1v1H6zM8 2h1v1H8zM10 2h1v1H10zM15 2h1v1H15zM17 2h2v1H17zM21 2h2v1H21zM26 2h1v1H26zM28 2h3v1H28zM32 2h1v1H32zM0 3h1v1H0zM2 3h3v1H2zM6 3h1v1H6zM9 3h8v1H9zM20 3h2v1H20zM24 3h1v1H24zM26 3h1v1H26zM28 3h3v1H28zM32 3h1v1H32zM0 4h1v1H0zM2 4h3v1H2zM6 4h1v1H6zM8 4h1v1H8zM13 4h1v1H13zM17 4h1v1H17zM20 4h2v1H20zM24 4h1v1H24zM26 4h1v1H26zM28 4h3v1H28zM32 4h1v1H32zM0 5h1v1H0zM6 5h1v1H6zM8 5h1v1H8zM11 5h2v1H11zM18 5h2v1H18zM21 5h4v1H21zM26 5h1v1H26zM32 5h1v1H32zM0 6h7v1H0zM8 6h1v1H8zM10 6h1v1H10zM12 6h1v1H12zM14 6h1v1H14zM16 6h1v1H16zM18 6h1v1H18zM20 6h1v1H20zM22 6h1v1H22zM24 6h1v1H24zM26 6h7v1H26zM9 7h3v1H9zM14 7h2v1H14zM17 7h1v1H17zM24 7h1v1H24zM0 8h1v1H0zM3 8h1v1H3zM6 8h1v1H6zM8 8h1v1H8zM11 8h2v1H11zM14 8h1v1H14zM17 8h1v1H17zM19 8h1v1H19zM21 8h2v1H21zM25 8h1v1H25zM27 8h2v1H27zM30 8h1v1H30zM0 9h3v1H0zM4 9h2v1H4zM8 9h2v1H8zM16 9h2v1H16zM19 9h6v1H19zM27 9h1v1H27zM29 9h2v1H29zM32 9h1v1H32zM1 10h2v1H1zM4 10h3v1H4zM10 10h1v1H10zM14 10h2v1H14zM17 10h6v1H17zM24 10h2v1H24zM31 10h2v1H31zM1 11h1v1H1zM3 11h1v1H3zM7 11h6v1H7zM14 11h1v1H14zM16 11h1v1H16zM18 11h1v1H18zM20 11h1v1H20zM23 11h3v1H23zM27 11h1v1H27zM29 11h2v1H29zM32 11h1v1H32zM0 12h2v1H0zM4 12h1v1H4zM6 12h1v1H6zM8 12h1v1H8zM21 12h3v1H21zM25 12h4v1H25zM31 12h2v1H31zM1 13h3v1H1zM5 13h1v1H5zM10 13h1v1H10zM22 13h2v1H22zM25 13h1v1H25zM27 13h1v1H27zM30 13h3v1H30zM2 14h1v1H2zM5 14h2v1H5zM11 14h1v1H11zM25 14h3v1H25zM32 14h1v1H32zM1 15h1v1H1zM3 15h2v1H3zM7 15h2v1H7zM10 15h2v1H10zM21 15h1v1H21zM30 15h1v1H30zM32 15h1v1H32zM2 16h1v1H2zM6 16h1v1H6zM8 16h1v1H8zM10 16h2v1H10zM21 16h2v1H21zM24 16h2v1H24zM29 16h2v1H29zM1 17h2v1H1zM4 17h2v1H4zM8 17h4v1H8zM21 17h1v1H21zM23 17h1v1H23zM25 17h4v1H25zM30 17h1v1H30zM32 17h1v1H32zM0 18h1v1H0zM2 18h2v1H2zM6 18h1v1H6zM8 18h1v1H8zM10 18h2v1H10zM22 18h2v1H22zM25 18h1v1H25zM31 18h1v1H31zM1 19h1v1H1zM3 19h2v1H3zM7 19h1v1H7zM10 19h1v1H10zM23 19h1v1H23zM27 19h3v1H27zM31 19h2v1H31zM0 20h1v1H0zM3 20h2v1H3zM6 20h1v1H6zM8 20h3v1H8zM21 20h1v1H21zM25 20h1v1H25zM27 20h1v1H27zM29 20h2v1H29zM32 20h1v1H32zM0 21h1v1H0zM4 21h1v1H4zM7 21h2v1H7zM10 21h1v1H10zM14 21h12v1H14zM27 21h1v1H27zM31 21h1v1H31zM0 22h7v1H0zM9 22h1v1H9zM15 22h2v1H15zM18 22h2v1H18zM22 22h2v1H22zM25 22h6v1H25zM32 22h1v1H32zM0 23h3v1H0zM5 23h1v1H5zM7 23h1v1H7zM11 23h2v1H11zM15 23h1v1H15zM21 23h2v1H21zM24 23h3v1H24zM30 23h1v1H30zM32 23h1v1H32zM0 24h1v1H0zM2 24h5v1H2zM8 24h2v1H8zM12 24h1v1H12zM14 24h2v1H14zM20 24h10v1H20zM31 24h2v1H31zM8 25h1v1H8zM10 25h4v1H10zM15 25h1v1H15zM17 25h1v1H17zM19 25h1v1H19zM21 25h1v1H21zM23 25h2v1H23zM28 25h1v1H28zM30 25h3v1H30zM0 26h7v1H0zM9 26h1v1H9zM12 26h9v1H12zM22 26h1v1H22zM24 26h1v1H24zM26 26h1v1H26zM28 26h1v1H28zM31 26h2v1H31zM0 27h1v1H0zM6 27h1v1H6zM12 27h1v1H12zM14 27h3v1H14zM18 27h2v1H18zM22 27h3v1H22zM28 27h1v1H28zM30 27h3v1H30zM0 28h1v1H0zM2 28h3v1H2zM6 28h1v1H6zM10 28h1v1H10zM14 28h1v1H14zM18 28h1v1H18zM22 28h1v1H22zM24 28h7v1H24zM32 28h1v1H32zM0 29h1v1H0zM2 29h3v1H2zM6 29h1v1H6zM8 29h1v1H8zM10 29h2v1H10zM13 29h2v1H13zM17 29h1v1H17zM20 29h1v1H20zM22 29h1v1H22zM0 30h1v1H0zM2 30h3v1H2zM6 30h1v1H6zM9 30h2v1H9zM14 30h1v1H14zM17 30h2v1H17zM22 30h1v1H22zM25 30h1v1H25zM29 30h2v1H29zM0 31h1v1H0zM6 31h1v1H6zM9 31h14v1H9zM24 31h3v1H24zM28 31h1v1H28zM31 31h2v1H31zM0 32h7v1H0zM8 32h3v1H8zM12 32h4v1H12zM17 32h2v1H17zM20 32h4v1H20zM25 32h3v1H25zM30 32h1v1H30zM32 32h1v1H32z" /></svg>
+            <img src="/iconos/icono-192.png" alt="" width="48" height="48" loading="lazy" decoding="async">
+            <span class="ld-qr__barrido" aria-hidden="true"></span>
+          </div>
+          <p class="ld-instalar__h">Escaneá el código con la cámara de tu celular</p>
+          <p class="ld-instalar__ayuda">O entrá desde el celular a <b>dealit.com.ar/instalar</b></p>
+          <button type="button" class="ld-instalar__compu" data-instalar data-cta="instalar-compu" hidden>¿La querés también en esta compu? <u>Instalar acá</u></button>
+        </div>
+
+        <!-- Android (y otros celulares) -->
+        <div class="ld-instalar__modo ld-instalar__modo--android">
+          <div class="ld-instalar__app">
+            <img src="/iconos/icono-192.png" alt="" width="64" height="64" loading="lazy" decoding="async">
+            <div><b>Dealit</b><small>dealit.com.ar · gratis</small></div>
+          </div>
+          <button type="button" class="ld-boton ld-boton--grande ld-instalar__boton" data-instalar data-cta="instalar" hidden>
+            Instalar Dealit
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 3v10M5.5 8.5 10 13l4.5-4.5M4 17h12" /></svg>
+          </button>
+          <ol class="ld-instalar__pasos ld-instalar__pasos--menu">
+            <li>Tocá el menú <span class="ld-instalar__tecla" aria-label="de los tres puntos">⋮</span> del navegador, arriba a la derecha.</li>
+            <li>Elegí <b>«Instalar app»</b> o <b>«Agregar a la pantalla principal»</b>.</li>
+            <li>Confirmá y listo: Dealit queda con su ícono, junto a tus otras apps.</li>
+          </ol>
+        </div>
+
+        <!-- iPhone y iPad -->
+        <div class="ld-instalar__modo ld-instalar__modo--ios">
+          <div class="ld-instalar__app">
+            <img src="/iconos/icono-192.png" alt="" width="64" height="64" loading="lazy" decoding="async">
+            <div><b>Dealit</b><small>dealit.com.ar · gratis</small></div>
+          </div>
+          <ol class="ld-instalar__pasos">
+            <li>Tocá <b>Compartir</b> <span class="ld-instalar__tecla" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" /><path d="M8 10.5H6.5A1.5 1.5 0 0 0 5 12v7.5A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V12a1.5 1.5 0 0 0-1.5-1.5H16" /></svg></span> en Safari (si no lo ves, está dentro del botón <b>···</b>).</li>
+            <li>Bajá y elegí <b>«Agregar a inicio»</b> <span class="ld-instalar__tecla" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4" /><path d="M12 8.5v7M8.5 12h7" /></svg></span>.</li>
+            <li>Tocá <b>«Agregar»</b> y abrila desde el ícono nuevo.</li>
+          </ol>
+        </div>
+
+        <!-- Recién instalada -->
+        <div class="ld-instalar__modo ld-instalar__modo--lista" role="status">
+          <span class="ld-instalar__ok" aria-hidden="true">✓</span>
+          <p class="ld-instalar__h">¡Listo! Dealit ya está instalada</p>
+          <p class="ld-instalar__ayuda">Abrila desde el ícono en tu pantalla de inicio.</p>
+        </div>
+      </div>
+
+      <ul class="ld-instalar__ventajas">
+        <li class="ld-aparece">
+          <span class="ld-instalar__icono" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="6" y="2.5" width="12" height="19" rx="2.5" /><path d="M10.5 18.5h3" /></svg></span>
+          <div><h3>Un toque y estás adentro</h3><p>Se abre a pantalla completa desde tu pantalla de inicio, sin buscar el link ni pelear con pestañas.</p></div>
+        </li>
+        <li class="ld-aparece">
+          <span class="ld-instalar__icono" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></svg></span>
+          <div><h3>Los avisos, en el celular</h3><p>Te enterás cuando tu cliente acepta y, con Pro, cada vez que abre la propuesta. En iPhone, los avisos solo llegan con la app instalada.</p></div>
+        </li>
+        <li class="ld-aparece">
+          <span class="ld-instalar__icono" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.35-5.65" /><path d="M20 4v4.5h-4.5" /></svg></span>
+          <div><h3>Siempre al día, sin ocupar lugar</h3><p>No hay nada que actualizar: cada mejora te llega sola la próxima vez que la abrís.</p></div>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ============ 9. PRECIOS + FAQ ============ -->
   <section class="ld-seccion ld-precios" id="precios" aria-labelledby="precios-titulo">
     <div class="ld-contenedor">
       <p class="ld-sobretitulo ld-aparece">Precios claros</p>
@@ -871,7 +954,7 @@
     </div>
   </section>
 
-  <!-- ============ 9. CIERRE ============ -->
+  <!-- ============ 10. CIERRE ============ -->
   <section class="ld-cierre" aria-labelledby="cierre-titulo">
     <div class="ld-contenedor">
       <h2 class="ld-cierre__titulo ld-aparece" id="cierre-titulo">No pierdas tiempo armando presupuestos<br><span class="ld-acento">Dictá desde tu celular en segundos y cerrá el trato hoy.</span></h2>
@@ -891,6 +974,7 @@
       <a href="#como-funciona">Cómo hacer un presupuesto</a>
       <a href="#precios">Precios</a>
       <a href="#preguntas">Preguntas frecuentes</a>
+      <a href="#instalar">Instalar la app</a>
     </nav>
     <nav aria-label="Legales">
       <a href="/ingresar">Ingresar</a>

@@ -35,6 +35,11 @@ describe('rutas de vercel.json', () => {
     expect(ir('/inicio', { cookie: 'dealit_sesion=1' })).toBeNull();
   });
 
+  it('/instalar (el QR de la landing) muestra la landing, también con la cookie', () => {
+    expect(ir('/instalar')).toEqual({ destino: '/inicio' });
+    expect(ir('/instalar', { cookie: 'dealit_sesion=1' })).toEqual({ destino: '/inicio' });
+  });
+
   it('los lectores de vista previa de un link de cliente van a /api/vista-previa', () => {
     const whatsapp = { 'user-agent': 'WhatsApp/2.24.1.6 A' };
     const facebook = { 'user-agent': 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)' };

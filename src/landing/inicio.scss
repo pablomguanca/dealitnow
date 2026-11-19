@@ -904,6 +904,16 @@ a { color: inherit; }
 
 /* ---------- 4. Bento ---------- */
 .ld-bento-seccion { background: var(--ld-noche); }
+.ld-bento__link {
+  position: relative;
+  display: inline-block;
+  margin-top: 0.9rem;
+  color: var(--ld-verde);
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  &:hover { color: var(--ld-verde-claro); text-decoration: underline; text-underline-offset: 3px; }
+}
 
 .ld-bento {
   display: grid;
@@ -1729,7 +1739,211 @@ a { color: inherit; }
   96%, 100% { opacity: 0; transform: translateY(1.5em); }
 }
 
-/* ---------- 8. Precios + FAQ (claro) ---------- */
+/* ---------- 8. Instalar la app (oscuro) ---------- */
+// Qué modo se ve lo pone inicio.js en data-plataforma (escritorio | android | ios | lista). Sin
+// JS, el tipo de puntero: mouse → el QR; dedo → los pasos del menú.
+.ld-instalar {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(50% 60% at 85% 40%, rgba(0, 200, 150, 0.16), transparent 70%),
+    var(--ld-noche);
+  border-top: 1px solid var(--ld-borde-noche);
+  scroll-margin-top: -2rem;
+}
+// En el celular, la tarjeta va enseguida del título (quien escaneó el QR viene a instalar); en la
+// compu, a la derecha del texto y las ventajas.
+.ld-instalar__grilla {
+  display: grid;
+  gap: 2.5rem;
+  @media (min-width: 900px) {
+    grid-template-columns: 1fr 24rem;
+    grid-template-areas: 'texto tarjeta' 'ventajas tarjeta';
+    align-items: center;
+    column-gap: 4rem;
+    row-gap: 2.25rem;
+    .ld-instalar__texto { grid-area: texto; align-self: end; }
+    .ld-instalar__tarjeta { grid-area: tarjeta; }
+    .ld-instalar__ventajas { grid-area: ventajas; align-self: start; }
+  }
+}
+.ld-instalar__ventajas {
+  display: grid;
+  gap: 1.4rem;
+  li { display: flex; gap: 1rem; align-items: flex-start; }
+  h3 { margin-bottom: 0.25rem; font-size: 1.05rem; font-weight: 700; }
+  p { color: var(--ld-suave-noche); font-size: 0.95rem; }
+}
+.ld-instalar__icono {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 0.8rem;
+  background: var(--ld-verde-tenue);
+  svg { width: 1.3rem; fill: none; stroke: var(--ld-verde); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+}
+
+.ld-instalar__tarjeta {
+  position: relative;
+  width: 100%;
+  max-width: 24rem;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+  border: 1px solid var(--ld-borde-noche);
+  border-radius: 1.75rem;
+  background: linear-gradient(160deg, var(--ld-noche-3), var(--ld-noche-2));
+  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(0, 200, 150, 0.08);
+  text-align: center;
+}
+
+.ld-instalar__modo { display: none; }
+.ld-instalar__modo--android { display: grid; gap: 1.25rem; }
+@media (hover: hover) and (pointer: fine) {
+  .ld-instalar__modo--escritorio { display: grid; }
+  .ld-instalar__modo--android { display: none; }
+}
+.ld-instalar[data-plataforma] .ld-instalar__modo { display: none; }
+.ld-instalar[data-plataforma='escritorio'] .ld-instalar__modo--escritorio,
+.ld-instalar[data-plataforma='android'] .ld-instalar__modo--android,
+.ld-instalar[data-plataforma='ios'] .ld-instalar__modo--ios,
+.ld-instalar[data-plataforma='lista'] .ld-instalar__modo--lista { display: grid; gap: 1.25rem; }
+.ld-instalar__modo--escritorio { justify-items: center; gap: 1rem; }
+// Con el botón del navegador, los pasos del menú sobran.
+.ld-instalar[data-con-aviso] .ld-instalar__pasos--menu { display: none; }
+
+.ld-qr {
+  position: relative;
+  overflow: hidden;
+  width: 13.5rem;
+  aspect-ratio: 1;
+  margin-bottom: 0.5rem;
+  padding: 0.6rem;
+  border-radius: 1.25rem;
+  background: #fff;
+  box-shadow: 0 0 0 6px rgba(0, 200, 150, 0.18), 0 24px 50px -20px rgba(0, 200, 150, 0.5);
+  svg { width: 100%; height: 100%; fill: #06060A; }
+  img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 19%;
+    height: auto;
+    border-radius: 22%;
+    transform: translate(-50%, -50%);
+  }
+}
+// Una línea verde que barre el código, como el visor de la cámara.
+.ld-qr__barrido {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 22%;
+  background: linear-gradient(transparent, rgba(0, 200, 150, 0.28));
+  border-bottom: 2px solid rgba(0, 200, 150, 0.8);
+  pointer-events: none;
+  animation: ld-qr-barrido 3.2s ease-in-out infinite;
+}
+@keyframes ld-qr-barrido {
+  0% { transform: translateY(-100%); opacity: 0; }
+  15% { opacity: 1; }
+  70% { opacity: 1; }
+  85%, 100% { transform: translateY(460%); opacity: 0; }
+}
+
+.ld-instalar__h { font: 400 1.7rem/1 var(--ld-display); letter-spacing: 0.02em; text-wrap: balance; }
+.ld-instalar__ayuda {
+  color: var(--ld-suave-noche);
+  font-size: 0.9rem;
+  b { color: var(--ld-texto-noche); font-weight: 600; }
+}
+.ld-instalar__compu {
+  margin-top: 0.25rem;
+  padding: 0.4rem;
+  border: 0;
+  background: none;
+  color: var(--ld-suave-noche);
+  font: 500 0.85rem/1.3 var(--ld-texto);
+  cursor: pointer;
+  u { color: var(--ld-verde); text-underline-offset: 3px; }
+  &:hover u { color: var(--ld-verde-claro); }
+  &[hidden] { display: none; }
+}
+
+.ld-instalar__app {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+  justify-content: center;
+  text-align: left;
+  img { width: 4rem; height: 4rem; border-radius: 1rem; box-shadow: 0 14px 30px -12px rgba(0, 200, 150, 0.6); }
+  b { display: block; font: 400 1.8rem/1 var(--ld-display); letter-spacing: 0.03em; }
+  small { color: var(--ld-suave-noche); font-size: 0.85rem; }
+}
+.ld-instalar__boton[hidden] { display: none; }
+
+.ld-instalar__pasos {
+  display: grid;
+  gap: 0.8rem;
+  counter-reset: paso;
+  text-align: left;
+  li {
+    position: relative;
+    padding: 0.85rem 0.9rem 0.85rem 3rem;
+    border: 1px solid var(--ld-borde-noche);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--ld-suave-noche);
+    font-size: 0.92rem;
+    counter-increment: paso;
+    &::before {
+      content: counter(paso);
+      position: absolute;
+      top: 0.8rem;
+      left: 0.85rem;
+      display: grid;
+      place-items: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      background: var(--ld-verde);
+      color: #04130E;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+  }
+  b { color: var(--ld-texto-noche); font-weight: 600; }
+}
+.ld-instalar__tecla {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.6rem;
+  height: 1.6rem;
+  margin: -0.2rem 0.1rem;
+  padding: 0 0.3rem;
+  border-radius: 0.45rem;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ld-texto-noche);
+  font-weight: 800;
+  vertical-align: middle;
+  svg { width: 1.05rem; fill: none; stroke: #4BA3FF; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+}
+
+.ld-instalar__modo--lista { justify-items: center; }
+.ld-instalar__ok {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: var(--ld-verde);
+  color: #04130E;
+  font-size: 2rem;
+  font-weight: 800;
+  animation: ld-cambia 0.5s var(--ld-rebote);
+}
+
+/* ---------- 9. Precios + FAQ (claro) ---------- */
 .ld-precios {
   background: var(--ld-dia);
   color: var(--ld-tinta);
@@ -1863,7 +2077,7 @@ a { color: inherit; }
   p { padding: 0 0 1.3rem; color: var(--ld-tinta-suave); }
 }
 
-/* ---------- 9. Cierre ---------- */
+/* ---------- 10. Cierre ---------- */
 .ld-cierre {
   position: relative;
   overflow: hidden;

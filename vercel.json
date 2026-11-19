@@ -99,6 +99,10 @@
       "destination": "/inicio"
     },
     {
+      "source": "/instalar",
+      "destination": "/inicio"
+    },
+    {
       "source": "/empezar",
       "destination": "/app"
     },
