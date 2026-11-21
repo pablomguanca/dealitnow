@@ -778,12 +778,21 @@ a { color: inherit; }
   display: grid;
   gap: 1rem;
   margin-top: 2.5rem;
-  @media (min-width: 900px) { grid-template-columns: repeat(3, 1fr); gap: 1.25rem; }
+  @media (min-width: 900px) { grid-template-columns: repeat(3, 1fr); gap: 0 1.25rem; }
 }
 
 .ld-asesino {
   position: relative;
   padding: 1.6rem 1.4rem;
+  // En fila (desktop), las tarjetas comparten las filas de la grilla (número, título, texto,
+  // «Con Dealit»): así cada parte empieza a la misma altura en las tres.
+  @media (min-width: 900px) {
+    display: grid;
+    grid-row: span 4;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+    align-content: start;
+  }
   border: 1px solid var(--ld-borde-noche);
   border-radius: 1.25rem;
   background: var(--ld-noche-3);
