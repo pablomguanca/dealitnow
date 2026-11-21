@@ -12,7 +12,10 @@
 //   responde «limite-portafolios» (con su nombre en detalle); con reemplazar: true, desactiva
 //   ese link y activa este. Los que ya estaban activos antes de este límite siguen andando.
 // Con los planes apagados (ver _lib/planes-activos.js) los envíos se cuentan pero no se frenan.
+// Programa de Fundadores (src/fundadores.js): compartir una propuesta le da a la cuenta uno de
+// los cupos que queden (contador en fundadores/cupos) y responde su número en «fundador».
 import { ID_PROPUESTA } from '../src/aceptacion.js';
+import { esFundador, proximoCupo } from '../src/fundadores.js';
 import {
   LIMITE_ENVIOS_GRATIS, LIMITE_PORTAFOLIOS_GRATIS, clienteDe, enviosDelMes, esPro, mesDe, mismoCliente, tieneCliente, usosPro
 } from '../src/planes.js';
@@ -70,6 +73,7 @@ export const crearHandler = ({ db, sesionDe, planesActivos, ahora = () => new Da
     }
 
     const refPropuesta = db().collection('proposals').doc(cuerpo.id);
+    const refCupos = db().collection('fundadores').doc('cupos');
     const resultado = await db().runTransaction(async tx => {
       const [snapPropuesta, snapPlan] = await Promise.all([tx.get(refPropuesta), tx.get(refPlan)]);
       const doc = snapPropuesta.exists ? snapPropuesta.data() : null;
@@ -100,13 +104,27 @@ export const crearHandler = ({ db, sesionDe, planesActivos, ahora = () => new Da
         if (primeraVez && usados >= LIMITE_ENVIOS_GRATIS) throw new ErrorHttp(403, 'limite-envios');
       }
 
+      // Fundador: si todavía no lo es y quedan cupos, compartir le da el siguiente. También al
+      // volver a compartir una ya enviada: quien compartía antes del programa no queda afuera.
+      const cambiosPlan = {};
+      let fundador = null;
+      if (!esFundador(plan)) {
+        const snapCupos = await tx.get(refCupos);
+        fundador = proximoCupo(snapCupos.exists ? snapCupos.data().asignados : 0);
+        if (fundador) {
+          tx.set(refCupos, { asignados: fundador }, { merge: true });
+          cambiosPlan.fundador = { numero: fundador, desde: FieldValue.serverTimestamp() };
+        }
+      }
+
       // Volver a compartirla después de un «No avanzo por ahora» es una nueva oportunidad:
       // vuelve a estar enviada (el motivo queda en `rechazo`, para Resultados).
       if (!doc.status || doc.status === 'draft' || doc.status === 'rejected') cambios.status = 'sent';
       if (primeraVez) cambios.enviadaEn = FieldValue.serverTimestamp();
       tx.update(refPropuesta, cambios);
-      if (primeraVez) tx.set(refPlan, { envios: { [mesDe(momento)]: usados + 1 } }, { merge: true });
-      return { primeraVez, usados: primeraVez ? usados + 1 : usados, pro, actualizada: doc.publico === true };
+      if (primeraVez) cambiosPlan.envios = { [mesDe(momento)]: usados + 1 };
+      if (Object.keys(cambiosPlan).length) tx.set(refPlan, cambiosPlan, { merge: true });
+      return { primeraVez, usados: primeraVez ? usados + 1 : usados, pro, actualizada: doc.publico === true, ...(fundador ? { fundador } : {}) };
     });
     return responder(res, 200, { ...resultado, limite: resultado.pro ? null : LIMITE_ENVIOS_GRATIS });
   } catch (e) {

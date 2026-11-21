@@ -2,13 +2,14 @@
 // se verifica con la firma y, aun así, no se le cree: se consulta el estado real de la
 // suscripción a Mercado Pago antes de tocar el plan. Responder 200 rápido evita reintentos.
 import { planDesdeSuscripcion } from '../src/planes.js';
+import { fundadorAlSuscribirse } from '../src/fundadores.js';
 import { FieldValue, firestore } from './_lib/firebase-admin.js';
 import { fallar, responder } from './_lib/http.js';
 import { firmaValida, obtenerPagoDeSuscripcion, obtenerSuscripcion } from './_lib/mercadopago.js';
 
 const UID = /^[A-Za-z0-9]{10,128}$/;
 
-export const crearHandler = ({ db, mp, verificarFirma }) => async (req, res) => {
+export const crearHandler = ({ db, mp, verificarFirma, ahora = () => new Date() }) => async (req, res) => {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
     return responder(res, 405, { error: 'metodo-no-permitido' });
@@ -37,7 +38,13 @@ export const crearHandler = ({ db, mp, verificarFirma }) => async (req, res) => 
       const actual = snap.exists ? snap.data() : {};
       // Un aviso viejo de otra suscripción no pisa la vigente.
       if (actual.mpSuscripcionId && actual.mpSuscripcionId !== String(suscripcion.id) && actual.estado === 'activa' && suscripcion.status !== 'authorized') return;
-      tx.set(ref, { ...planDesdeSuscripcion(suscripcion, actual), actualizado: FieldValue.serverTimestamp() }, { merge: true });
+      // Primera suscripción de un Fundador: usó su mes gratis y la tarifa corre desde acá.
+      const fundador = fundadorAlSuscribirse(actual, suscripcion, ahora());
+      tx.set(ref, {
+        ...planDesdeSuscripcion(suscripcion, actual),
+        ...(fundador ? { fundador } : {}),
+        actualizado: FieldValue.serverTimestamp()
+      }, { merge: true });
     });
     return responder(res, 200, { ok: true });
   } catch (e) {

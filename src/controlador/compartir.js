@@ -73,9 +73,9 @@ const activarLink = async () => {
   if (restantes === 1 && !await confirmarUltimoEnvio()) return false;
   await conEspera(ctx.ultimaEscritura);
   try {
-    const { primeraVez, usados, limite, actualizada } = await llamarApi('/api/activar', { id: ctx.propuestaId });
+    const { primeraVez, usados, limite, actualizada, fundador } = await llamarApi('/api/activar', { id: ctx.propuestaId });
     if (primeraVez) guardarVersion('enviada');
-    return { primeraVez, congelado: !!limite, actualizada: !!actualizada, quedan: primeraVez && limite ? Math.max(0, limite - usados) : null };
+    return { primeraVez, congelado: !!limite, actualizada: !!actualizada, quedan: primeraVez && limite ? Math.max(0, limite - usados) : null, fundador };
   } catch (e) {
     if (e.codigo === 'limite-envios') ofrecerPro('limite');
     else if (e.codigo === 'otro-cliente') ofrecerDuplicar();
@@ -173,6 +173,8 @@ export const abrirCompartir = async () => {
     if (!activado) return;
     linkActual = linkCorto(ctx.propuestaId);
     congelado = !!activado.congelado;
+    // Programa de Fundadores (src/fundadores.js): este envío le dio un cupo.
+    if (activado.fundador) avisos.push(`¡Sos Fundador #${activado.fundador} de Dealit! Cuando abramos los planes, tu primer mes de Pro es sin cargo y tenés tarifa de fundador el primer año.`);
     if (congelado && activado.actualizada && !activado.primeraVez) avisos.push('Actualizamos el link con tus últimos cambios.');
     if (activado.quedan != null) {
       avisos.push(activado.quedan === 0

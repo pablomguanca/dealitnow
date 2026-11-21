@@ -31,6 +31,12 @@ const llamar = async (ruta, { method = 'GET', body } = {}) => {
 // (init_point) donde la persona carga su medio de pago.
 export const crearSuscripcion = datos => llamar('/preapproval', { method: 'POST', body: datos });
 export const obtenerSuscripcion = id => llamar(`/preapproval/${encodeURIComponent(id)}`);
+// Cambiar el monto de una suscripción (fin de la tarifa de fundador): Mercado Pago cobra el
+// nuevo desde el próximo débito y se lo avisa a quien paga.
+export const actualizarMontoSuscripcion = (id, { monto, moneda }) => llamar(`/preapproval/${encodeURIComponent(id)}`, {
+  method: 'PUT',
+  body: { auto_recurring: { transaction_amount: monto, currency_id: moneda } }
+});
 export const obtenerPagoDeSuscripcion = id => llamar(`/authorized_payments/${encodeURIComponent(id)}`);
 
 // Suscripciones de una cuenta de Dealit (external_reference = uid), de la más nueva a la más vieja.

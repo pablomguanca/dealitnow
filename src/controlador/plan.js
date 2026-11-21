@@ -10,6 +10,7 @@
 
 import { $, $$, dinero } from '../lib/formato.js';
 import { LIMITE_ENVIOS_GRATIS, PRECIOS_PRO, enviosDelMes, esPro, finDePro, proParaVerificar } from '../planes.js';
+import { DESCUENTO_FUNDADOR, MESES_TARIFA_FUNDADOR, esFundador, mesGratisDisponible, preciosProPara, tarifaFundadorVigente } from '../fundadores.js';
 import { LIMITE_IA_GRATIS } from '../ia.js';
 import { LIMITE_EDICION_GRATIS } from '../ia-editar.js';
 import { ctx, AteneaDB } from './contexto.js';
@@ -41,17 +42,26 @@ let planLlegado = false;
 // Meses que regala el anual frente a pagar 12 mensuales (hoy, 2).
 export const mesesGratisAnual = () => Math.round(12 - PRECIOS_PRO.anual.monto / PRECIOS_PRO.mensual.monto);
 
+// Los precios de esta cuenta: con la tarifa de fundador si le corresponde (src/fundadores.js).
+const precios = () => preciosProPara(ctx.plan);
+const descuento = `${Math.round(DESCUENTO_FUNDADOR * 100)}% OFF`;
+
 const precioTexto = periodo => {
-  const p = PRECIOS_PRO[periodo];
-  if (periodo === 'anual') return `${dinero(p.monto, p.moneda)} por año · ${mesesGratisAnual()} meses gratis`;
-  return `${dinero(p.monto, p.moneda)} por mes`;
+  const p = precios()[periodo];
+  const fundador = p.fundador ? ` · tarifa de fundador (${descuento})` : '';
+  if (periodo === 'anual') return `${dinero(p.monto, p.moneda)} por año · ${mesesGratisAnual()} meses gratis${fundador}`;
+  return `${dinero(p.monto, p.moneda)} por mes${fundador}`;
 };
+
+// Fundador que todavía no usó su mes de Pro sin cargo.
+const notaMesGratis = () => (mesGratisDisponible(ctx.plan) ? 'Primer mes sin cargo: el primer cobro es dentro de un mes.' : '');
 
 // Las dos formas de pagar Pro, como tarjetas de plan en el cartel (ver DialogoConfirmacion):
 // la anual primero y destacada.
 const opcionesPro = () => {
   if (!ventaPermitida()) return [];
-  const { mensual, anual } = PRECIOS_PRO;
+  const { mensual, anual } = precios();
+  const cintaFundador = anual.fundador ? `Fundador · ${descuento}` : '';
   return [
     {
       valor: 'anual',
@@ -61,8 +71,8 @@ const opcionesPro = () => {
         nombre: 'Pro anual',
         precio: dinero(anual.monto, anual.moneda),
         periodo: 'por año',
-        cinta: `${mesesGratisAnual()} meses gratis`,
-        nota: `Equivale a ${dinero(Math.round(anual.monto / 12), anual.moneda)} por mes`,
+        cinta: cintaFundador || `${mesesGratisAnual()} meses gratis`,
+        nota: notaMesGratis() || `Equivale a ${dinero(Math.round(anual.monto / 12), anual.moneda)} por mes`,
         destacado: true,
         accion: 'Elegir anual'
       }
@@ -75,7 +85,7 @@ const opcionesPro = () => {
         nombre: 'Pro mensual',
         precio: dinero(mensual.monto, mensual.moneda),
         periodo: 'por mes',
-        nota: 'Cancelás cuando quieras',
+        nota: notaMesGratis() || 'Cancelás cuando quieras',
         accion: 'Elegir mensual'
       }
     }
@@ -171,6 +181,17 @@ const reactivarPro = async () => {
   if (eleccion) suscribir(eleccion);
 };
 
+// En Mi cuenta: su número y lo que le queda del programa.
+const textoFundador = plan => {
+  const numero = `Sos Fundador #${plan.fundador.numero}.`;
+  if (mesGratisDisponible(plan)) return `${numero} Tu primer mes de Pro es sin cargo y tenés ${descuento} por ${MESES_TARIFA_FUNDADOR} meses.`;
+  if (tarifaFundadorVigente(plan)) {
+    const hasta = plan.fundador.tarifaHasta ? ` hasta el ${fechaLarga(new Date(plan.fundador.tarifaHasta))}` : '';
+    return `${numero} Tarifa de fundador (${descuento})${hasta}.`;
+  }
+  return numero;
+};
+
 const pintarPlan = () => {
   const tarjeta = $('.tarjeta--plan');
   if (tarjeta) tarjeta.hidden = !planesActivos;
@@ -192,6 +213,7 @@ const pintarPlan = () => {
     const termino = fin?.terminado && fin.dias >= -30 ? `Tu Pro terminó el ${fechaLarga(fin.vence)}. ` : '';
     estado.textContent = `${termino}Plan Gratis: ${usados} de ${LIMITE_ENVIOS_GRATIS} propuestas enviadas este mes. ${quedan === 0 ? 'No te quedan envíos: se renuevan el mes que viene.' : quedan === 1 ? 'Te queda 1 envío.' : `Te quedan ${quedan} envíos.`}`;
   }
+  if (esFundador(plan)) estado.textContent += ` ${textoFundador(plan)}`;
   // Con Pro, la tarjeta se viste de Pro: logo, «Dealit Pro» y lo que incluye.
   $('.tarjeta--plan')?.classList.toggle('tarjeta--pro', pro);
   const bloquePro = $('#plan-pro');
@@ -297,8 +319,12 @@ const suscribir = periodo => {
   const fin = finPro();
   const nota = $('#pago-nota');
   if (nota) {
-    nota.hidden = !(fin && !fin.terminado && esPro(ctx.plan));
-    if (!nota.hidden) nota.textContent = noPagaDosVeces(fin);
+    const sinPagarDosVeces = fin && !fin.terminado && esPro(ctx.plan) ? noPagaDosVeces(fin) : '';
+    const fundador = !sinPagarDosVeces && tarifaFundadorVigente(ctx.plan)
+      ? [notaMesGratis(), `Tarifa de fundador por ${MESES_TARIFA_FUNDADOR} meses desde el primer cobro; después, el precio normal.`].filter(Boolean).join(' ')
+      : '';
+    nota.textContent = sinPagarDosVeces || fundador;
+    nota.hidden = !nota.textContent;
   }
   let guardado = '';
   try { guardado = localStorage.getItem(CLAVE_EMAIL_PAGO) || ''; } catch { }

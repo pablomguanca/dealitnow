@@ -8,6 +8,8 @@ import { FieldValue, firestore, uidDeLaSolicitud } from './_lib/firebase-admin.j
 import { ErrorHttp, fallar, leerPost, responder } from './_lib/http.js';
 import { crearAvisador, urlAppDe } from './_lib/avisos.js';
 import { planesActivosPara } from './_lib/planes-activos.js';
+import { crearFinTarifas } from './_lib/tarifa-fundador.js';
+import { actualizarMontoSuscripcion } from './_lib/mercadopago.js';
 import { clienteDe, contenidoDelLink } from '../src/planes.js';
 import { DIAS_AVISO_VENCE, hoyArgentina, recordatorioPendiente, ultimoDia } from '../src/respuestas.js';
 import { desdeISO } from '../src/lib/formato.js';
@@ -21,11 +23,19 @@ const milisDe = v => (typeof v?.toMillis === 'function' ? v.toMillis() : v insta
 // src/respuestas.js; el aviso es solo para Pro, lo decide _lib/avisos.js). Va en esta
 // función porque el plan de Vercel limita la cantidad. Vercel manda
 // «Authorization: Bearer $CRON_SECRET»; sin esa variable no corre.
-export const crearTareaDiaria = ({ db, avisar = async () => {}, ahora = () => new Date(), entorno = process.env, marcaDeTiempo = FieldValue.serverTimestamp }) => async (req, res) => {
+// También pasa al precio normal a los Fundadores que terminan su tarifa (finTarifas, ver
+// _lib/tarifa-fundador.js).
+export const crearTareaDiaria = ({ db, avisar = async () => {}, finTarifas = async () => [], ahora = () => new Date(), entorno = process.env, marcaDeTiempo = FieldValue.serverTimestamp }) => async (req, res) => {
   const secreto = entorno.CRON_SECRET;
   if (!secreto) return responder(res, 503, { error: 'sin-configurar' });
   if (req.headers?.authorization !== `Bearer ${secreto}`) return responder(res, 401, { error: 'no-autorizado' });
   try {
+    // Un error acá no frena los recordatorios.
+    const fundadores = await finTarifas().catch(e => {
+      console.error('Fin de tarifas de fundador:', e.message);
+      return [{ resultado: 'error' }];
+    });
+    if (fundadores.length) console.log('Tarifas de fundador:', JSON.stringify(fundadores));
     const snap = await db().collection('proposals').where('publico', '==', true).where('status', '==', 'sent').get();
     let avisadas = 0;
     // Qué pasó con cada propuesta, para entender una corrida desde Vercel («Run» o los logs).
@@ -54,7 +64,7 @@ export const crearTareaDiaria = ({ db, avisar = async () => {}, ahora = () => ne
       avisadas += 1;
     }
     console.log('Tarea diaria de recordatorios:', JSON.stringify({ revisadas: snap.size, avisadas, detalle }));
-    return responder(res, 200, { revisadas: snap.size, avisadas, detalle: detalle.slice(0, 100) });
+    return responder(res, 200, { revisadas: snap.size, avisadas, detalle: detalle.slice(0, 100), ...(fundadores.length ? { fundadores } : {}) });
   } catch (e) {
     return fallar(res, e);
   }
@@ -125,5 +135,9 @@ export default crearHandler({
   db: firestore,
   uidDe: uidDeLaSolicitud,
   avisar: avisador,
-  tareaDiaria: crearTareaDiaria({ db: firestore, avisar: avisador })
+  tareaDiaria: crearTareaDiaria({
+    db: firestore,
+    avisar: avisador,
+    finTarifas: crearFinTarifas({ db: firestore, mp: { actualizarMontoSuscripcion } })
+  })
 });

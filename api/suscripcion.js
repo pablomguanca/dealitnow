@@ -1,7 +1,10 @@
 // POST /api/suscripcion { periodo: 'mensual' | 'anual', emailPago? } — crea la suscripción
 // a Pro en Mercado Pago y devuelve el link donde la persona paga. El plan NO se activa
 // acá: lo activa /api/mercadopago cuando Mercado Pago confirma el pago.
+// Fundadores (src/fundadores.js): con la tarifa de fundador y, la primera vez, el primer
+// cobro al mes (ese mes es Pro sin cargo).
 import { PRECIOS_PRO, esPro, finDePro } from '../src/planes.js';
+import { mesGratisDisponible, preciosProPara, sumarMeses } from '../src/fundadores.js';
 import { firestore, sesionDeLaSolicitud } from './_lib/firebase-admin.js';
 import { planesActivosPara } from './_lib/planes-activos.js';
 import { fallar, leerPost, responder } from './_lib/http.js';
@@ -12,8 +15,7 @@ const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}\.[^\s@]{2,}$/;
 export const crearHandler = ({ db, sesionDe, planesActivos, mp, urlApp, ahora = () => new Date() }) => async (req, res) => {
   const cuerpo = leerPost(req, res);
   if (!cuerpo) return;
-  const precio = PRECIOS_PRO[cuerpo.periodo];
-  if (!precio) return responder(res, 400, { error: 'periodo-invalido' });
+  if (!PRECIOS_PRO[cuerpo.periodo]) return responder(res, 400, { error: 'periodo-invalido' });
 
   try {
     const sesion = await sesionDe(req);
@@ -33,11 +35,16 @@ export const crearHandler = ({ db, sesionDe, planesActivos, mp, urlApp, ahora = 
 
     // Canceló y todavía le quedan días de Pro: la suscripción nueva arranca cuando termina lo
     // que ya pagó, así no paga dos veces el mismo período.
-    const fin = esPro(plan, ahora()) ? finDePro(plan, ahora()) : null;
-    const inicio = fin && fin.vence.getTime() - ahora().getTime() > 3600000 ? fin.vence.toISOString() : null;
+    const momento = ahora();
+    const fin = esPro(plan, momento) ? finDePro(plan, momento) : null;
+    const precio = preciosProPara(plan, momento)[cuerpo.periodo];
+    // Fundador que se suscribe por primera vez: el primer cobro, al mes.
+    const inicio = mesGratisDisponible(plan) && !fin
+      ? sumarMeses(momento, 1).toISOString()
+      : fin && fin.vence.getTime() - momento.getTime() > 3600000 ? fin.vence.toISOString() : null;
 
     const suscripcion = await mp.crearSuscripcion({
-      reason: `Dealit Pro (${precio.nombre})`,
+      reason: `Dealit Pro (${precio.nombre})${precio.fundador ? ' · Fundador' : ''}`,
       external_reference: uid,
       payer_email: email,
       auto_recurring: {

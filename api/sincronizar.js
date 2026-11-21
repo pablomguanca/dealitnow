@@ -3,6 +3,7 @@
 // app al volver del pago y con «Ya pagué, actualizar mi plan». El navegador no decide nada:
 // el estado sale de Mercado Pago, consultado con el token del servidor.
 import { planDesdeSuscripcion } from '../src/planes.js';
+import { fundadorAlSuscribirse } from '../src/fundadores.js';
 import { FieldValue, firestore, sesionDeLaSolicitud } from './_lib/firebase-admin.js';
 import { fallar, leerPost, responder } from './_lib/http.js';
 import { buscarSuscripciones } from './_lib/mercadopago.js';
@@ -26,8 +27,11 @@ export const crearHandler = ({ db, sesionDe, planesActivos, mp }) => async (req,
     const ref = db().collection('planes').doc(sesion.uid);
     const plan = await db().runTransaction(async tx => {
       const snap = await tx.get(ref);
-      const nuevo = planDesdeSuscripcion(suscripcion, snap.exists ? snap.data() : {});
-      tx.set(ref, { ...nuevo, actualizado: FieldValue.serverTimestamp() }, { merge: true });
+      const actual = snap.exists ? snap.data() : {};
+      const nuevo = planDesdeSuscripcion(suscripcion, actual);
+      // Como en el webhook: la primera suscripción de un Fundador fija su tarifa.
+      const fundador = fundadorAlSuscribirse(actual, suscripcion, new Date());
+      tx.set(ref, { ...nuevo, ...(fundador ? { fundador } : {}), actualizado: FieldValue.serverTimestamp() }, { merge: true });
       return nuevo;
     });
     return responder(res, 200, { encontrada: true, plan });

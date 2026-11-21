@@ -336,8 +336,16 @@ window.fetch = async (url, opciones = {}) => {
     if (!doc.status || doc.status === 'draft') doc.status = 'sent';
     if (primeraVez) doc.enviadaEn = new Date().toISOString();
     guardar(docs);
-    if (primeraVez) guardarPlan({ ...plan, envios: { ...plan.envios, [mesDe()]: usados + 1 } });
-    return respuesta(200, { primeraVez, usados: primeraVez ? usados + 1 : usados, limite, actualizada });
+    // Como api/activar: compartir le da un cupo de Fundador (en la demo hay una sola cuenta: el #1).
+    const fundador = plan.fundador?.numero ? null : 1;
+    if (primeraVez || fundador) {
+      guardarPlan({
+        ...plan,
+        ...(primeraVez ? { envios: { ...plan.envios, [mesDe()]: usados + 1 } } : {}),
+        ...(fundador ? { fundador: { numero: fundador, desde: new Date().toISOString() } } : {})
+      });
+    }
+    return respuesta(200, { primeraVez, usados: primeraVez ? usados + 1 : usados, limite, actualizada, ...(fundador ? { fundador } : {}) });
   }
   // En la demo no hay Mercado Pago: la suscripción se activa en el momento.
   if (ruta === '/api/suscripcion') {
