@@ -802,6 +802,15 @@ a { color: inherit; }
   b { color: var(--ld-verde); }
 }
 
+/* ---------- 1b. Fundadores ---------- */
+.ld-fundadores {
+  // Arriba, más aire: el título no queda debajo de la cabecera fija al llegar scrolleando.
+  padding: 6rem 0 4rem;
+  @media (min-width: 900px) { padding: 7rem 0 5rem; }
+  .ld-asesino__num { color: var(--ld-verde); }
+  .ld-asesino:hover { border-color: var(--ld-verde); }
+}
+
 .ld-versus {
   display: grid;
   gap: 1rem;
