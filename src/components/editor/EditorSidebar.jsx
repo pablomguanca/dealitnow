@@ -48,8 +48,9 @@ export function EditorSidebar() {
             </button>
           </div>
           <h1 className="editor__titulo" id="editor-titulo">Armá tu propuesta</h1>
-          {/* Guía de primeros pasos (controlador/guia.js): mientras está abierta, reemplaza la caja de abajo. */}
-          <section className="guia solo-invitado" id="guia" aria-labelledby="guia-titulo" hidden>
+          {/* Guía de primeros pasos (controlador/guia.js): sin cuenta, en el editor de prueba (reemplaza
+              la caja de abajo); con cuenta, en la primera propuesta. */}
+          <section className="guia" id="guia" aria-labelledby="guia-titulo" hidden>
             <div className="guia__cabecera">
               <h2 className="guia__titulo" id="guia-titulo">Tu primera propuesta en 3 pasos</h2>
               <button type="button" className="guia__cerrar" data-accion="guia-cerrar" aria-label="Cerrar la guía" title="Cerrar la guía">
@@ -77,12 +78,12 @@ export function EditorSidebar() {
                 <span className="guia__marca" aria-hidden="true"></span>
                 <div>
                   <p className="guia__nombre">Compartila por WhatsApp</p>
-                  <p className="guia__detalle">Creás tu cuenta gratis, te damos el link y te avisamos cuando la acepte.</p>
+                  <p className="guia__detalle" id="guia-compartir-detalle">Creás tu cuenta gratis, te damos el link y te avisamos cuando la acepte.</p>
                   <button type="button" className="boton boton--primario boton--chico guia__accion" data-accion="compartir">Compartir propuesta</button>
                 </div>
               </li>
             </ol>
-            <p className="guia__pie">Se guarda en este navegador mientras la armás.</p>
+            <p className="guia__pie" id="guia-pie">Se guarda en este navegador mientras la armás.</p>
           </section>
           <div className="editor__invitado solo-invitado">
             <p>Estás probando Dealit sin cuenta: tus propuestas y portfolios se guardan en este navegador.</p>

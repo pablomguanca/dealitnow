@@ -31,8 +31,10 @@ export const pasosHechos = (guia, estado) => {
     || (paso === 'editar' && editoClienteYPrecios(guia?.base, estado)));
 };
 
-// El paso que sigue: el primero sin hacer (null si hizo todos).
+// El paso que sigue: el primero sin hacer. null si ya compartió (es el objetivo: los pasos
+// que se salteó no hacen falta) o si hizo todos.
 export const pasoActual = (guia, estado) => {
   const hechos = pasosHechos(guia, estado);
+  if (hechos.includes('compartir')) return null;
   return PASOS_GUIA.find(paso => !hechos.includes(paso)) ?? null;
 };

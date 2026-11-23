@@ -12,6 +12,7 @@ import { irAPortafolios, abrirPortafolio } from './portafolios.js';
 import { irACuenta } from './cuenta.js';
 import { cerrarExplorador } from './explorador-plantillas.js';
 import { irAResultados } from './resultados.js';
+import { pintarGuia } from './guia.js';
 
 let navegarReactRouter = null;
 
@@ -133,6 +134,8 @@ export const mostrarVista = vista => {
   });
   abrirMenu(false);
   if (TITULOS_VISTA[vista]) document.title = TITULOS_VISTA[vista];
+  // La guía de primeros pasos depende de qué se edita (propuesta o portfolio, y cuál).
+  pintarGuia();
 };
 
 // Antes de cambiar de propuesta o de vista, lo pendiente se manda a la cuenta.

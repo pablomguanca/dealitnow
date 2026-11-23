@@ -23,6 +23,7 @@ import { ofrecerPro, ofrecerCambioPortafolio, restriccionesActivas, confirmarUlt
 import { usosPro, contenidoDelLink } from '../planes.js';
 import { mensajeRecordatorio, porVencer } from '../respuestas.js';
 import { esAppNativa, compartirNativo } from '../nativo.js';
+import { marcarPasoGuia } from './guia.js';
 
 let linkActual = '';
 
@@ -171,6 +172,7 @@ export const abrirCompartir = async () => {
   if (conCuenta) {
     const activado = await activarLink();
     if (!activado) return;
+    marcarPasoGuia('compartir');
     linkActual = linkCorto(ctx.propuestaId);
     congelado = !!activado.congelado;
     // Programa de Fundadores (src/fundadores.js): este envío le dio un cupo.

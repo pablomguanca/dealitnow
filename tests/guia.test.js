@@ -35,6 +35,10 @@ describe('guía de primeros pasos', () => {
     expect(pasoActual({ base, hechos: ['editar', 'ver', 'compartir'] }, ejemplo())).toBeNull();
   });
 
+  it('compartir termina la guía aunque se haya salteado un paso', () => {
+    expect(pasoActual({ base, hechos: ['editar', 'compartir'] }, ejemplo())).toBeNull();
+  });
+
   it('tolera datos incompletos', () => {
     expect(huellaGuia(undefined)).toEqual({ cliente: '|', servicios: '' });
     expect(pasosHechos(null, ejemplo())).toEqual([]);

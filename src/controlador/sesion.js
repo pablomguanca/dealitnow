@@ -31,7 +31,7 @@ import { abrirCompartir } from './compartir.js';
 import { escucharPlan, reiniciarPlan } from './plan.js';
 import { desactivarPushEnEsteDispositivo, reiniciarPush } from './push.js';
 import { mostrarBienvenida, ocultarBienvenida } from './bienvenida.js';
-import { empezarGuia } from './guia.js';
+import { empezarGuia, adoptarGuia } from './guia.js';
 import { reiniciarCobro } from './cobro.js';
 
 let invitadoIniciado = false;
@@ -432,6 +432,8 @@ const iniciarConCuenta = async () => {
   } else if (migrada && continuar) {
     mostrarEditor(migrada.id, migrada.contenido, { historial: false });
     irRuta(`/propuesta/${encodeURIComponent(migrada.id)}`, { reemplazar: true });
+    // La guía que venía haciendo sin cuenta sigue con esta propuesta.
+    adoptarGuia(migrada.id);
     if (continuar === 'compartir') abrirCompartir();
     else if (continuar === 'pdf') descargarPDF();
   } else if (idPortafolioEnUrl()) await abrirPortafolio(idPortafolioEnUrl(), { historial: false });

@@ -28,6 +28,7 @@ import { linkCorto } from './compartir.js';
 import { cargarFuente } from '../lib/tema.js';
 import { restriccionesActivas } from './plan.js';
 import { hayDatosDeCobro, mpVinculado } from './cobro.js';
+import { guiaPrimeraPropuesta, pintarGuia } from './guia.js';
 
 // La lista se escucha en tiempo real toda la sesión: refleja al instante lo que se
 // edita, se duplica o se borra, también sin conexión.
@@ -217,6 +218,7 @@ export const mostrarEditor = (id, contenido, { historial = true } = {}) => {
   $('#editor-ia').hidden = false;
   $('#menu-editar-ia').hidden = false;
   migrarLogo();
+  pintarGuia();
 };
 
 export const abrirPropuesta = async (id, opciones) => {
@@ -237,14 +239,19 @@ export const abrirPropuesta = async (id, opciones) => {
 
 // Tus datos de contacto se repiten en cada propuesta: la nueva toma los de Mi cuenta y,
 // lo que falte (como el logo), de la última propuesta editada.
-export const nuevaPropuesta = base => {
+// `origen: 'ia'`: la armó la IA (la guía de la primera propuesta arranca con el primer paso hecho).
+export const nuevaPropuesta = (base, { origen } = {}) => {
+  // Sin ninguna propuesta todavía: es la primera, y la acompaña la guía de primeros pasos.
+  const primera = !panelCargando && !panelError && !ctx.propuestas.length;
   cerrarEdicion();
   const nueva = base ? normalizar(base) : vacio();
   if (!base) nueva.emisor = emisorDeCuenta(nueva.emisor);
   // Los datos de cobro son de la cuenta: la propuesta solo anota si existen (para el botón).
   nueva.cobro = { ...nueva.cobro, conDatos: hayDatosDeCobro(), conMp: mpVinculado() };
   const creada = crearEnCuenta(nueva);
-  if (creada) mostrarEditor(creada.id, nueva);
+  if (!creada) return;
+  mostrarEditor(creada.id, nueva);
+  if (primera) guiaPrimeraPropuesta(creada.id, nueva, { origen });
 };
 
 const duplicarPropuesta = id => {

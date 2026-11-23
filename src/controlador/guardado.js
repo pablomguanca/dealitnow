@@ -16,7 +16,7 @@ import {
 import { avisarExito, avisarError } from './avisos.js';
 import { actualizarSelectorPortafolio } from './formulario.js';
 import { registrarCambio } from './historial.js';
-import { pintarGuia } from './guia.js';
+import { pintarGuia, CLAVE_GUIA } from './guia.js';
 
 const GUARDADO_ESPERA = 800;
 const PAYLOAD_MAX = 900000; // Firestore admite hasta 1 MiB por documento
@@ -159,6 +159,7 @@ export const limpiarAlmacenamientoLocal = ({ conservarInvitado = false } = {}) =
     if (!conservarInvitado) {
       sessionStorage.removeItem(CLAVE);
       sessionStorage.removeItem(CLAVE_PORTAFOLIOS);
+      localStorage.removeItem(CLAVE_GUIA);
     }
     sessionStorage.removeItem(`${CLAVE}:continuar`);
   } catch { }

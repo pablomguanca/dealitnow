@@ -14,8 +14,8 @@ export function DocumentPreview() {
         <button type="button" className="segmento" data-accion="vista" data-vista="pdf" aria-pressed="false">PDF</button>
       </div>
     </div>
-    {/* Aviso de la guía del editor sin cuenta (controlador/guia.js): se va al tocar un texto. */}
-    <p className="guia-tip solo-invitado" id="guia-tip" role="status" hidden>
+    {/* Aviso de la guía de primeros pasos (controlador/guia.js): se va al tocar un texto. */}
+    <p className="guia-tip" id="guia-tip" role="status" hidden>
       <span>Tocá cualquier texto de la propuesta para cambiarlo</span>
       <button type="button" className="guia-tip__cerrar" data-accion="guia-tip-cerrar" aria-label="Entendido">
         <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>

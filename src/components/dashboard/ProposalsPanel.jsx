@@ -59,13 +59,40 @@ export function ProposalsPanel() {
           <p className="panel__estado" id="panel-estado" role="status" aria-live="polite"></p>
           <ul className="propuestas" id="lista-propuestas" aria-label="Propuestas"></ul>
 
-          <div className="panel__vacio" id="panel-vacio" hidden>
-            <h2 className="panel__vacio-titulo">Todavía no tenés propuestas</h2>
-            <p>Contanos el trabajo en un audio y armamos la propuesta por vos. También podés elegir una plantilla de tu rubro o empezar desde cero.</p>
-            <div className="panel__acciones">
-              <button type="button" className="boton boton--primario boton--ia" data-accion="abrir-ia"><IconoIA /> Armá tu propuesta con IA</button>
-              <a className="boton boton--secundario" href="/plantillas" data-accion="panel-pestana" data-pestana="plantillas">Ver plantillas</a>
-              <button type="button" className="boton boton--secundario" data-accion="nueva">Empezar en blanco</button>
+          {/* Cuenta sin propuestas: el mismo arranque que la bienvenida sin cuenta (controlador/arranque.js):
+              el rubro y después «¿Cómo querés arrancar?». */}
+          <div className="panel__vacio arranque" id="panel-vacio" hidden>
+            <div className="arranque__paso" id="arranque-rubros-paso">
+              <h2 className="panel__vacio-titulo">Armemos tu primera propuesta</h2>
+              <p>¿A qué te dedicás? Arrancás con un ejemplo de tu rubro y lo cambiás por lo tuyo.</p>
+              <div className="arranque__rubros" id="arranque-rubros" role="group" aria-label="Rubros"></div>
+              <p className="arranque__mas">¿No está tu rubro? <a href="/plantillas" data-accion="panel-pestana" data-pestana="plantillas">Mirá todas las plantillas</a></p>
+            </div>
+            <div className="arranque__paso" id="arranque-como" hidden>
+              <button type="button" className="arranque__volver" data-accion="arranque-volver">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" /></svg>
+                Cambiar rubro
+              </button>
+              <h2 className="panel__vacio-titulo" id="arranque-como-titulo">¿Cómo querés arrancar?</h2>
+              <p>Elegiste <strong id="arranque-rubro"></strong>.</p>
+              <div className="arranque__opciones" role="group" aria-labelledby="arranque-como-titulo">
+                <button type="button" className="arranque__opcion arranque__opcion--ia" data-accion="arranque-ia">
+                  <span className="arranque__icono"><IconoIA /></span>
+                  <span className="arranque__texto">
+                    <span className="arranque__titulo">Contásela a la IA <span className="arranque__recomendado">Recomendado</span></span>
+                    <span className="arranque__detalle">Dictá o escribí el trabajo y el precio: la IA arma la propuesta en segundos.</span>
+                  </span>
+                </button>
+                <button type="button" className="arranque__opcion" data-accion="arranque-ejemplo">
+                  <span className="arranque__icono">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.8 2.7a1.6 1.6 0 0 1 2.3 2.3l-7.4 7.4-3 .7.7-3z" /></svg>
+                  </span>
+                  <span className="arranque__texto">
+                    <span className="arranque__titulo" id="arranque-ejemplo-titulo">Editar el ejemplo</span>
+                    <span className="arranque__detalle" id="arranque-ejemplo-detalle">Una propuesta ya armada de tu rubro: cambiás el cliente, los servicios y los precios.</span>
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </section>

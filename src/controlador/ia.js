@@ -400,7 +400,7 @@ const generar = async () => {
     };
     $('#ia-texto').value = '';
     $('#dialogo-ia').close();
-    nuevaPropuesta(datos);
+    nuevaPropuesta(datos, { origen: 'ia' });
     avisarExito('¡Tu propuesta está lista! Revisá los precios y los datos antes de enviarla.', 7000);
     if (avisos?.length) setTimeout(() => avisar(`Para revisar: ${avisos.join(' · ')}`, 12000), 900);
   } catch (e) {
