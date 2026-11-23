@@ -8,10 +8,24 @@ import { ctx, normalizar } from './contexto.js';
 import { registrarAcciones, ejecutarAccion } from './acciones.js';
 import { volverAEditorPropuestaInvitado } from './propuestas.js';
 import { empezarGuia } from './guia.js';
+import { llamarApi } from './api.js';
+import { ejemploDeRubro } from '../planes.js';
+
+// ¿Están prendidos los planes para todos? (null: todavía no se sabe). Sin cuenta no se sabe
+// el plan; con los planes prendidos, quien se registre va a estar en Gratis, y un rubro con
+// plantilla PRO arranca con un diseño gratis para que la pueda mandar (ejemploDeRubro).
+let planesPrendidos = null;
+const consultarPlanes = () => {
+  if (planesPrendidos !== null) return;
+  llamarApi('/api/plan', { publico: true })
+    .then(r => { planesPrendidos = r?.activos === true; })
+    .catch(() => { });
+};
 
 export const mostrarBienvenida = () => {
   const el = $('#bienvenida');
   if (!el) return;
+  consultarPlanes();
   // Los rubros y, al final, «En blanco» como una opción más.
   $('#bienvenida-rubros').innerHTML = Object.entries(PLANTILLAS)
     .filter(([id, p]) => id !== 'en-blanco' && !p.catalogo)
@@ -48,12 +62,12 @@ const elegirRubro = id => {
   $('[data-accion="bienvenida-ia"]')?.focus();
 };
 
-// Abre el editor con la plantilla del rubro y la guía de primeros pasos desde cero.
+// Abre el editor con el ejemplo del rubro y la guía de primeros pasos desde cero. Si no se
+// llegó a saber si los planes están prendidos, va la plantilla tal cual (como en la validación).
 const cargarRubro = () => {
-  const tpl = PLANTILLAS[rubroElegido];
-  if (!tpl) return false;
-  const base = normalizar(tpl.crear());
-  if (rubroElegido !== 'en-blanco') base.plantilla = rubroElegido;
+  const crudo = ejemploDeRubro(rubroElegido, { conPro: planesPrendidos !== true });
+  if (!crudo) return false;
+  const base = normalizar(crudo);
   ocultarBienvenida();
   if (ctx.invitado) {
     volverAEditorPropuestaInvitado(base);

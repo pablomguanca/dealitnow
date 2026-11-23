@@ -1,3 +1,4 @@
+// POST /api/plan { publico: true } — sin sesión: si los planes están activos para todos.
 // POST /api/plan {} — le dice a la app si los planes están activos para esta cuenta
 // (ver api/_lib/planes-activos.js). Con los planes apagados no se muestra «Tu plan».
 // También si la IA está configurada (GEMINI_API_KEY): si no, la app oculta sus botones.
@@ -16,8 +17,13 @@ const proDe = async (db, uid) => {
 };
 
 export const crearHandler = ({ sesionDe, planesActivos, iaDisponible = () => !!process.env.GEMINI_API_KEY, clavePush = () => clavePublicaPush(), db = firestore, esProDe = proDe }) => async (req, res) => {
-  if (!leerPost(req, res)) return;
+  const cuerpo = leerPost(req, res);
+  if (!cuerpo) return;
   try {
+    // Sin sesión ({ publico: true }): solo si los planes están prendidos para todos
+    // (PLANES_ACTIVOS). Lo usa la bienvenida sin cuenta para no arrancar con un diseño PRO
+    // que en Gratis no se podría mandar. No dice nada de ninguna cuenta.
+    if (cuerpo.publico === true) return responder(res, 200, { activos: planesActivos(null) });
     const sesion = await sesionDe(req);
     if (!sesion) return responder(res, 401, { error: 'sin-sesion' });
     const pro = await esProDe(db, sesion.uid).catch(e => {

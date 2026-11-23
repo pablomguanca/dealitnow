@@ -5,6 +5,7 @@
 
 import { $, esc } from '../lib/formato.js';
 import { PLANTILLAS } from '../modelo.js';
+import { ejemploDeRubro } from '../planes.js';
 import { registrarAcciones, ejecutarAccion } from './acciones.js';
 import { normalizar } from './contexto.js';
 import { avisarExito } from './avisos.js';
@@ -29,25 +30,17 @@ const mostrarPaso = como => {
   $('#arranque-como').hidden = !como;
 };
 
-// Diseño gratis para el ejemplo de un rubro PRO cuando la cuenta no puede usarlo.
-const DISENO_GRATIS = 'diseno-web';
-
 // Crea la primera propuesta con el ejemplo del rubro. Si la plantilla es PRO y la cuenta es
 // Gratis (con los planes activos), trae igual los textos, servicios y precios del rubro, pero
-// con un diseño gratis: la primera propuesta no puede arrancar con el cartel de Pro.
+// con un diseño gratis (ejemploDeRubro): la primera propuesta no arranca con el cartel de Pro.
 const editarEjemplo = () => {
   if (rubroElegido === 'en-blanco') {
     ejecutarAccion('nueva');
     return;
   }
-  const tpl = PLANTILLAS[rubroElegido];
-  if (!tpl) return;
-  const datos = normalizar(tpl.crear());
-  if (tpl.plan === 'pro' && restriccionesActivas()) {
-    datos.tema = normalizar(PLANTILLAS[DISENO_GRATIS].crear()).tema;
-  } else {
-    datos.plantilla = rubroElegido;
-  }
+  const crudo = ejemploDeRubro(rubroElegido, { conPro: !restriccionesActivas() });
+  if (!crudo) return;
+  const datos = normalizar(crudo);
   datos.emisor = emisorDeCuenta(datos.emisor);
   nuevaPropuesta(datos);
   avisarExito('Tu propuesta de ejemplo está lista. Cambiá los datos por los de tu trabajo.');

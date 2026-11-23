@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createHmac } from 'node:crypto';
-import { LIMITE_ENVIOS_GRATIS, clienteDe, contenidoDelLink, enviosDelMes, mismoCliente, esPro, finDePro, mesDe, planDesdeSuscripcion, proParaVerificar, puedeEnviar, usosPro } from '../src/planes.js';
+import { LIMITE_ENVIOS_GRATIS, clienteDe, contenidoDelLink, enviosDelMes, mismoCliente, esPro, finDePro, mesDe, planDesdeSuscripcion, proParaVerificar, puedeEnviar, usosPro, ejemploDeRubro } from '../src/planes.js';
 import { crearHandler as crearActivar } from '../api/activar.js';
 import { crearHandler as crearSuscripcion } from '../api/suscripcion.js';
 import { crearHandler as crearWebhook } from '../api/mercadopago.js';
@@ -424,6 +424,39 @@ describe('interruptor de los planes', () => {
     const sinSesion = res();
     await crearPlan({ sesionDe: async () => null, planesActivos: () => true })(post({}), sinSesion);
     expect(sinSesion.estado).toBe(401);
+  });
+
+  it('/api/plan sin sesión ({ publico: true }) solo dice si los planes están prendidos para todos', async () => {
+    const pedidos = [];
+    const planesActivos = email => { pedidos.push(email); return false; };
+    const r = res();
+    await crearPlan({ sesionDe: async () => { throw new Error('no se consulta la sesión'); }, planesActivos })(post({ publico: true }), r);
+    expect(r.estado).toBe(200);
+    expect(r.cuerpo).toEqual({ activos: false });
+    expect(pedidos).toEqual([null]);
+  });
+});
+
+describe('ejemplo de un rubro', () => {
+  it('con Pro, la plantilla PRO tal cual', () => {
+    const datos = ejemploDeRubro('software-saas', { conPro: true });
+    expect(datos.plantilla).toBe('software-saas');
+    expect(usosPro(datos).length).toBeGreaterThan(0);
+  });
+
+  it('sin Pro, los textos del rubro PRO con un diseño gratis que se puede mandar', () => {
+    const conPro = ejemploDeRubro('software-saas', { conPro: true });
+    const datos = ejemploDeRubro('software-saas', { conPro: false });
+    expect(datos.plantilla).toBeUndefined();
+    expect(usosPro(datos)).toEqual([]);
+    expect(datos.propuesta.titulo).toBe(conPro.propuesta.titulo);
+    expect(datos.servicios.map(s => s.nombre)).toEqual(conPro.servicios.map(s => s.nombre));
+  });
+
+  it('un rubro gratis queda igual con o sin Pro', () => {
+    expect(ejemploDeRubro('diseno-web', { conPro: false }).plantilla).toBe('diseno-web');
+    expect(ejemploDeRubro('en-blanco', { conPro: false }).plantilla).toBeUndefined();
+    expect(ejemploDeRubro('no-existe')).toBeNull();
   });
 });
 

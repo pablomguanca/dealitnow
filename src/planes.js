@@ -73,6 +73,20 @@ export const usosPro = (documento, { esPortafolio = false } = {}) => {
   return usos;
 };
 
+// Ejemplo de un rubro para arrancar (bienvenida sin cuenta y panel de una cuenta sin
+// propuestas). Con `conPro`, la plantilla tal cual; sin, si la plantilla es PRO trae los
+// mismos textos, servicios y precios con el diseño de una plantilla gratis, para que la
+// primera propuesta se pueda mandar en Gratis. Devuelve el contenido sin normalizar.
+export const PLANTILLA_DISENO_GRATIS = 'diseno-web';
+export const ejemploDeRubro = (id, { conPro = true } = {}) => {
+  const plantilla = PLANTILLAS[id];
+  if (!plantilla) return null;
+  const datos = plantilla.crear();
+  if (plantilla.plan === 'pro' && !conPro) datos.tema = PLANTILLAS[PLANTILLA_DISENO_GRATIS].crear().tema;
+  else if (id !== 'en-blanco') datos.plantilla = id;
+  return datos;
+};
+
 // Link congelado en Gratis. El cliente ve la versión que se mandó (publicado, la escribe
 // el servidor al activar el link o al actualizarlo), no la que se está editando: así un
 // link no se reusa para mandarle otra propuesta a otro cliente sin gastar un envío.

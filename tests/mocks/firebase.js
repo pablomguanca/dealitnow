@@ -232,6 +232,7 @@ window.fetch = async (url, opciones = {}) => {
       return respuesta(204);
     }
   }
+  if (ruta === '/api/plan' && cuerpo.publico === true) return respuesta(200, { activos: true });
   if (ruta === '/api/plan') return respuesta(uid ? 200 : 401, uid ? { activos: true, ia: true, push: CLAVE_PUSH_DEMO, pro: esPro(leerPlan()) } : { error: 'sin-sesion' });
   // Push: no hay servidor que mande avisos; la prueba se muestra desde el propio service worker.
   if (ruta === '/api/push') {
