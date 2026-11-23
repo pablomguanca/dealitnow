@@ -2,6 +2,10 @@
 // qué es Dealit, «¿A qué te dedicás?» para arrancar con una propuesta de su rubro, y entrar.
 // Pensada para entrar entera en la pantalla del celular, sin scroll. En la compu es una
 // tarjeta dividida: qué es Dealit a la izquierda, y elegir el rubro y entrar a la derecha.
+// Al elegir el rubro, la derecha pasa a «¿Cómo querés arrancar?» (con la IA o editando el
+// ejemplo); `bienvenida--arranque` en la sección.
+
+import { IconoIA } from '../IconoIA.jsx';
 
 export function Bienvenida() {
   return (
@@ -40,6 +44,34 @@ export function Bienvenida() {
             <h2 className="bienvenida__pregunta">¿A qué te dedicás?</h2>
             <p className="bienvenida__ayuda">Arrancá con un ejemplo de tu rubro y cambialo por lo tuyo.</p>
             <div className="bienvenida__rubros" id="bienvenida-rubros" role="group" aria-label="Rubros"></div>
+          </div>
+
+          {/* Segundo paso, después de elegir el rubro: con la IA o editando el ejemplo. */}
+          <div className="bienvenida__arranque" id="bienvenida-arranque">
+            <button type="button" className="bienvenida__volver" data-accion="bienvenida-volver">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5 5.5 8l4.5 4.5" /></svg>
+              Cambiar rubro
+            </button>
+            <h2 className="bienvenida__pregunta" id="bienvenida-arranque-titulo">¿Cómo querés arrancar?</h2>
+            <p className="bienvenida__ayuda bienvenida__ayuda--siempre">Elegiste <strong id="bienvenida-arranque-rubro"></strong>.</p>
+            <div className="bienvenida__opciones" role="group" aria-labelledby="bienvenida-arranque-titulo">
+              <button type="button" className="bienvenida__opcion bienvenida__opcion--ia" data-accion="bienvenida-ia">
+                <span className="bienvenida__opcion-icono"><IconoIA /></span>
+                <span className="bienvenida__opcion-texto">
+                  <span className="bienvenida__opcion-titulo">Contásela a la IA <span className="bienvenida__recomendado">Recomendado</span></span>
+                  <span className="bienvenida__opcion-detalle">Dictá o escribí el trabajo y el precio: la IA arma la propuesta en segundos. Te pide crear la cuenta gratis.</span>
+                </span>
+              </button>
+              <button type="button" className="bienvenida__opcion" data-accion="bienvenida-ejemplo">
+                <span className="bienvenida__opcion-icono">
+                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.8 2.7a1.6 1.6 0 0 1 2.3 2.3l-7.4 7.4-3 .7.7-3z" /></svg>
+                </span>
+                <span className="bienvenida__opcion-texto">
+                  <span className="bienvenida__opcion-titulo" id="bienvenida-ejemplo-titulo">Editar el ejemplo</span>
+                  <span className="bienvenida__opcion-detalle" id="bienvenida-ejemplo-detalle">Una propuesta ya armada: cambiás el cliente, los servicios y los precios.</span>
+                </span>
+              </button>
+            </div>
           </div>
 
           <div className="bienvenida__acciones">

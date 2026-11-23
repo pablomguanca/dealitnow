@@ -31,6 +31,7 @@ import { abrirCompartir } from './compartir.js';
 import { escucharPlan, reiniciarPlan } from './plan.js';
 import { desactivarPushEnEsteDispositivo, reiniciarPush } from './push.js';
 import { mostrarBienvenida, ocultarBienvenida } from './bienvenida.js';
+import { empezarGuia } from './guia.js';
 import { reiniciarCobro } from './cobro.js';
 
 let invitadoIniciado = false;
@@ -298,6 +299,8 @@ const iniciarInvitado = () => {
   ctx.editando = true;
   abrirHistorial();
   mostrarEstadoGuardado();
+  // Guía de primeros pasos (se reinicia si elige un rubro en la bienvenida).
+  empezarGuia();
   // Primera vez y sin nada armado: bienvenida para elegir su rubro.
   if (!guardada && !pideIngresar) mostrarBienvenida();
   if (pideIngresar) abrirRegistro('ingresar');

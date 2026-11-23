@@ -48,6 +48,42 @@ export function EditorSidebar() {
             </button>
           </div>
           <h1 className="editor__titulo" id="editor-titulo">Armá tu propuesta</h1>
+          {/* Guía de primeros pasos (controlador/guia.js): mientras está abierta, reemplaza la caja de abajo. */}
+          <section className="guia solo-invitado" id="guia" aria-labelledby="guia-titulo" hidden>
+            <div className="guia__cabecera">
+              <h2 className="guia__titulo" id="guia-titulo">Tu primera propuesta en 3 pasos</h2>
+              <button type="button" className="guia__cerrar" data-accion="guia-cerrar" aria-label="Cerrar la guía" title="Cerrar la guía">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" /></svg>
+              </button>
+            </div>
+            <div className="guia__barra" id="guia-barra" aria-hidden="true"><span></span></div>
+            <ol className="guia__pasos">
+              <li className="guia__paso" data-paso-guia="editar">
+                <span className="guia__marca" aria-hidden="true"></span>
+                <div>
+                  <p className="guia__nombre">Cambiá el cliente y los precios</p>
+                  <p className="guia__detalle">Tocá cualquier texto de la propuesta para cambiarlo, o completá los pasos de acá abajo.</p>
+                </div>
+              </li>
+              <li className="guia__paso" data-paso-guia="ver">
+                <span className="guia__marca" aria-hidden="true"></span>
+                <div>
+                  <p className="guia__nombre">Mirá cómo la ve tu cliente</p>
+                  <p className="guia__detalle">Así le llega al celular cuando abre el link.</p>
+                  <button type="button" className="boton boton--secundario boton--chico guia__accion" data-accion="guia-ver">Ver como cliente</button>
+                </div>
+              </li>
+              <li className="guia__paso" data-paso-guia="compartir">
+                <span className="guia__marca" aria-hidden="true"></span>
+                <div>
+                  <p className="guia__nombre">Compartila por WhatsApp</p>
+                  <p className="guia__detalle">Creás tu cuenta gratis, te damos el link y te avisamos cuando la acepte.</p>
+                  <button type="button" className="boton boton--primario boton--chico guia__accion" data-accion="compartir">Compartir propuesta</button>
+                </div>
+              </li>
+            </ol>
+            <p className="guia__pie">Se guarda en este navegador mientras la armás.</p>
+          </section>
           <div className="editor__invitado solo-invitado">
             <p>Estás probando Dealit sin cuenta: tus propuestas y portfolios se guardan en este navegador.</p>
             <button type="button" className="boton boton--primario boton--chico" data-accion="registrarse">Crear cuenta gratis</button>

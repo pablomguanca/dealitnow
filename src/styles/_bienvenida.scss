@@ -170,6 +170,149 @@ body.bienvenida-activa {
     }
   }
 
+  // Segundo paso («¿Cómo querés arrancar?»): reemplaza los rubros y los botones de la cuenta.
+  &__arranque {
+    display: none;
+  }
+
+  &--arranque {
+    .bienvenida__eleccion,
+    .bienvenida__acciones {
+      display: none;
+    }
+
+    .bienvenida__arranque {
+      display: block;
+      animation: bienvenida-arranque 0.45s var(--ease-out-expo) both;
+    }
+  }
+
+  &__volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0 0 clamp(0.6rem, 1.6dvh, 1rem) -0.35rem;
+    padding: 0.35rem 0.5rem 0.35rem 0.35rem;
+    border: 0;
+    border-radius: 0.5rem;
+    background: none;
+    color: #A6B3B0;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    svg {
+      width: 0.95rem;
+      height: 0.95rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    &:hover { color: #E7EEEC; background: rgba(255, 255, 255, 0.05); }
+  }
+
+  &__ayuda--siempre {
+    display: block !important;
+
+    strong { color: #E7EEEC; }
+  }
+
+  &__opciones {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  &__opcion {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    width: 100%;
+    padding: 1rem;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    color: #E7EEEC;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+
+    &:hover { border-color: rgba(138, 219, 171, 0.5); background: rgba(138, 219, 171, 0.08); }
+    &:active { transform: scale(0.985); }
+
+    &:focus-visible {
+      outline: 2px solid #8ADBAB;
+      outline-offset: 2px;
+    }
+
+    &--ia {
+      border-color: rgba(138, 219, 171, 0.45);
+      background: linear-gradient(135deg, rgba(0, 200, 150, 0.16), rgba(11, 110, 140, 0.14));
+    }
+  }
+
+  &__opcion-icono {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 0.7rem;
+    background: rgba(138, 219, 171, 0.12);
+    color: #8ADBAB;
+
+    svg {
+      width: 1.15rem;
+      height: 1.15rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: var(--icono-trazo);
+      stroke-linejoin: round;
+    }
+
+    .icono-ia {
+      fill: currentColor;
+      stroke: none;
+    }
+  }
+
+  &__opcion-texto {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  &__opcion-titulo {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.98rem;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  &__opcion-detalle {
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: #A6B3B0;
+  }
+
+  &__recomendado {
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    background: #8ADBAB;
+    color: #10251B;
+    font-size: 0.66rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
   &__acciones {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -307,8 +450,13 @@ body.bienvenida-activa {
   }
 }
 
+@keyframes bienvenida-arranque {
+  from { opacity: 0; transform: translateX(0.8rem); }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .bienvenida {
+  .bienvenida,
+  .bienvenida--arranque .bienvenida__arranque {
     animation: none;
   }
 }

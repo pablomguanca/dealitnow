@@ -11,6 +11,7 @@ import { instalarTocarDocumento } from './tocar-documento.js';
 import { instalarGestos } from './gestos.js';
 import { instalarNativo } from '../nativo.js';
 import { instalarBienvenida } from './bienvenida.js';
+import { instalarGuia } from './guia.js';
 import { instalarCobro } from './cobro.js';
 import { instalarVista } from './vista.js';
 import { instalarVideos } from './video.js';
@@ -72,6 +73,7 @@ export const inicializarControladorDealit = () => {
   instalarPlan();
   instalarPush();
   instalarBienvenida();
+  instalarGuia();
   instalarCobro();
   instalarSesion();
   instalarNativo();
