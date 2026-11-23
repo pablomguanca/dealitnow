@@ -147,15 +147,19 @@ export const guardarLocal = () => {
   mostrarEstadoGuardado();
 };
 
-export const limpiarAlmacenamientoLocal = () => {
+// `conservarInvitado`: deja lo que armó sin cuenta en esta pestaña (sessionStorage, que solo
+// se escribe sin sesión), para que sobreviva a una recarga.
+export const limpiarAlmacenamientoLocal = ({ conservarInvitado = false } = {}) => {
   try {
     localStorage.removeItem(CLAVE);
     localStorage.removeItem(CLAVE_PORTAFOLIOS);
     Object.keys(localStorage)
       .filter(k => k.startsWith(`${CLAVE}:borrador:`))
       .forEach(k => localStorage.removeItem(k));
-    sessionStorage.removeItem(CLAVE);
-    sessionStorage.removeItem(CLAVE_PORTAFOLIOS);
+    if (!conservarInvitado) {
+      sessionStorage.removeItem(CLAVE);
+      sessionStorage.removeItem(CLAVE_PORTAFOLIOS);
+    }
     sessionStorage.removeItem(`${CLAVE}:continuar`);
   } catch { }
 };

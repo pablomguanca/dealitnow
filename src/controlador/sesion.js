@@ -521,10 +521,14 @@ export const arrancarSesion = () => {
     if (!user) {
       // Sin sesión, dealit.com.ar/ vuelve a mostrar la landing.
       quitarMarcaSesion();
+      // Si en esta página había una sesión (se cerró en otra pestaña o venció), se borra todo.
+      // Si arranca sin sesión, se conserva lo que armó sin cuenta en esta pestaña: así una
+      // recarga no le borra el borrador.
+      const habiaSesion = ultimoUid !== null;
       editorIniciado = false;
       ultimoUid = null;
       limpiarEstadoMemoria();
-      limpiarAlmacenamientoLocal();
+      limpiarAlmacenamientoLocal({ conservarInvitado: !habiaSesion });
       // Sin sesión: la plataforma queda abierta en modo prueba (invitado) sin mostrar
       // jamás datos de sesiones anteriores. La cuenta se pide al compartir o guardar.
       iniciarInvitado();
