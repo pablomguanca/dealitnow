@@ -23,7 +23,7 @@ import { descargarPDF } from './documento.js';
 import { irAResultados } from './resultados.js';
 import { abrirIA } from './ia.js';
 import { marcarSesion, quitarMarcaSesion } from '../lib/marca-sesion.js';
-import { irRuta, idEnUrl, idPortafolioEnUrl, seccionEnUrl, esRutaEntrada, pideIngresarEnUrl } from './navegacion.js';
+import { irRuta, idEnUrl, idPortafolioEnUrl, seccionEnUrl, esRutaEntrada, pideIngresarEnUrl, pideCuentaEnUrl } from './navegacion.js';
 import { escucharPropuestas, reiniciarPanel, irAlPanel, abrirPropuesta, mostrarEditor } from './propuestas.js';
 import { escucharPortafoliosNube, reiniciarPortafolios, irAPortafolios, abrirPortafolio } from './portafolios.js';
 import { cargarPerfil, reiniciarCuenta, irACuenta, pintarAvatar } from './cuenta.js';
@@ -74,10 +74,20 @@ export const abrirRegistro = motivo => {
   $('#auth-google').focus();
 };
 
+// Llegó sin sesión a una pantalla de la cuenta (ej. /cuenta) y se le abrió el login.
+let ingresoPorCuenta = false;
+
 const cerrarRegistro = () => {
   if (!ctx.invitado) return;
   $('#auth-pantalla').hidden = true;
   recordarLogin(false);
+  // Cerró el login sin entrar: la dirección de la cuenta ya no aplica y, si no armó nada,
+  // ve la bienvenida como cualquiera que llega de cero.
+  if (ingresoPorCuenta) {
+    ingresoPorCuenta = false;
+    irRuta('/', { reemplazar: true });
+    if (!ctx.invitadoEdito) mostrarBienvenida();
+  }
   try {
     sessionStorage.removeItem(`${CLAVE}:continuar`);
     // Si solo se guardó para el registro y al final no se registró, no queda nada guardado.
@@ -265,14 +275,18 @@ const iniciarInvitado = () => {
   ctx.invitado = true;
   document.body.classList.add('invitado');
   document.body.classList.remove('auth-activo');
-  const pideIngresar = pideIngresarEnUrl() || loginRecordado();
+  // En /cuenta, /resultados, etc. sin sesión: el login, y la dirección se queda para que al
+  // entrar vaya a esa pantalla (iniciarConCuenta) y no al panel.
+  const pideCuenta = !invitadoIniciado && pideCuentaEnUrl();
+  const pideIngresar = pideIngresarEnUrl() || loginRecordado() || pideCuenta;
   if (!pideIngresar) $('#auth-pantalla').hidden = true;
   if (invitadoIniciado) {
     document.body.classList.remove('auth-cargando');
     return;
   }
   invitadoIniciado = true;
-  if (location.search || esRutaEntrada()) irRuta('/', { reemplazar: true });
+  ingresoPorCuenta = pideCuenta;
+  if (!pideCuenta && (location.search || esRutaEntrada())) irRuta('/', { reemplazar: true });
   ctx.portafolios = cargarPortafoliosLocales();
   const guardada = cargarGuardado();
   ctx.invitadoEdito = !!guardada;

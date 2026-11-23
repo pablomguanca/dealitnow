@@ -58,6 +58,13 @@ export const seccionEnUrl = () => {
 export const esRutaEntrada = () => /^\/(empezar|ingresar)\/?$/.test(location.pathname);
 export const pideIngresarEnUrl = () => /^\/ingresar\/?$/.test(location.pathname) || new URLSearchParams(location.search).has('ingresar');
 
+// Pantallas que solo existen con la sesión iniciada (Mi cuenta, Resultados, Mis portfolios,
+// Plantillas, o una propuesta o un portfolio de la cuenta). Sin sesión abren el login en lugar
+// de la bienvenida, y al entrar se va a esa pantalla.
+const SECCIONES_CON_CUENTA = ['cuenta', 'resultados', 'portafolios', 'plantillas'];
+export const pideCuentaEnUrl = () =>
+  SECCIONES_CON_CUENTA.includes(seccionEnUrl()) || !!idEnUrl() || !!idPortafolioEnUrl();
+
 // Un clic común abre en esta pestaña; con Ctrl, Cmd o la rueda, el navegador abre una nueva.
 export const clicComun = ev => ev.button === 0 && !ev.ctrlKey && !ev.metaKey && !ev.shiftKey && !ev.altKey;
 
