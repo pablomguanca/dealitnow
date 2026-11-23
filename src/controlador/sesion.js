@@ -362,10 +362,18 @@ export const cerrarSesion = async () => {
   await Promise.race([desactivarPushEnEsteDispositivo(), new Promise(res => setTimeout(res, 3000))]);
   limpiarEstadoMemoria();
   limpiarAlmacenamientoLocal();
-  await AteneaDB.auth.signOut();
+  // La marca se saca primero: aunque el signOut falle, `/` ya no abre el panel.
   quitarMarcaSesion();
-  // Vuelve directo al login (sin pasar por la bienvenida de quien entra por primera vez).
-  location.replace('/ingresar');
+  try {
+    await AteneaDB.auth.signOut();
+  } finally {
+    // Sale enseguida a la landing, sin dejar montado el editor sin cuenta hasta recargar. En la
+    // app de Android y en la PWA instalada la landing no se muestra (manda al editor sin cuenta),
+    // así que ahí vuelve directo al login.
+    const instalada = window.Capacitor?.isNativePlatform?.()
+      || matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+    location.replace(instalada ? '/ingresar' : '/');
+  }
 };
 
 // Sin Firebase: un solo editor que guarda en el navegador, como antes de las cuentas.

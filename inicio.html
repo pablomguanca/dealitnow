@@ -19,6 +19,7 @@
 <meta property="og:image:alt" content="Logo de Dealit, propuestas y presupuestos online">
 <meta name="twitter:card" content="summary">
 <meta name="theme-color" content="#06060A">
+<meta name="color-scheme" content="dark">
 <link rel="icon" type="image/png" sizes="48x48" href="/iconos/favicon-48.png">
 <link rel="apple-touch-icon" href="/iconos/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
@@ -26,6 +27,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Lienzo oscuro desde el primer instante, mientras baja el CSS de la landing (sin pestañeo blanco) -->
+<style>html, body { background-color: #06060A; color: #F4F7F6; }</style>
 <script type="module" src="/src/landing/inicio.js"></script>
 <script type="application/ld+json">
 {
@@ -218,13 +221,16 @@
 </head>
 <body class="ld">
 
-<!-- Cabecera: solo la marca y el botón. Nada de menú que distraiga. -->
+<!-- Cabecera: la marca, «Ingresar» para quien ya tiene cuenta y el botón. Nada de menú que distraiga. -->
 <header class="ld-cabecera" id="cabecera">
   <a class="ld-marca" href="/" aria-label="Dealit, inicio">
     <img src="/iconos/icono-192.png" alt="" width="32" height="32">
     <span>Dealit</span>
   </a>
-  <a class="ld-boton ld-boton--chico" href="/empezar" data-cta="cabecera">Acceso Fundadores</a>
+  <nav class="ld-cabecera__acciones" aria-label="Cuenta">
+    <a class="ld-cabecera__ingresar" href="/ingresar">Ingresar</a>
+    <a class="ld-boton ld-boton--chico" href="/empezar" data-cta="cabecera">Acceso Fundadores</a>
+  </nav>
 </header>
 
 <main>

@@ -157,6 +157,32 @@ a { color: inherit; }
   }
 }
 
+// «Ingresar» al lado del botón: discreto, para quien ya tiene cuenta.
+.ld-cabecera__acciones {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  @media (min-width: 640px) { gap: 0.75rem; }
+
+  .ld-boton {
+    white-space: nowrap;
+    @media (max-width: 399px) { padding-inline: 0.8rem; font-size: 0.85rem; }
+  }
+}
+
+.ld-cabecera__ingresar {
+  padding: 0.55rem 0.5rem;
+  color: var(--ld-suave-noche);
+  font-size: 0.9rem;
+  white-space: nowrap;
+  @media (max-width: 399px) { font-size: 0.85rem; }
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+  &:hover,
+  &:focus-visible { color: var(--ld-texto-noche); }
+}
+
 .ld-marca {
   display: inline-flex;
   align-items: center;
