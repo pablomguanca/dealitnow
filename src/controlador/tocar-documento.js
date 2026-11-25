@@ -1,4 +1,4 @@
-// Tocar el documento para editar (solo en el editor del dueño, en propuestas):
+// Tocar el documento para editar (solo en el editor del dueño, en propuestas y portfolios):
 // - Tocar un texto de la vista previa abre en el editor el campo que lo arma. En celular,
 //   la hoja pasa al modo foco: solo ese campo, arriba del teclado, con «anterior»,
 //   «siguiente» (en el orden del documento) y «Listo». Un paso o una lista entera (tocar el
@@ -8,7 +8,7 @@
 // Las claves las pone render.js con { editable: true }: ver src/editar-documento.js.
 
 import { $, $$ } from '../lib/formato.js';
-import { selectorDeClave, claveDeCampo, clavesParaResaltar, clavesNavegables, claveVecina, primerCampoDe } from '../editar-documento.js';
+import { selectorDeClave, claveDeCampo, clavesParaResaltar, clavesNavegables, claveVecina, primerCampoDe, esRespaldo } from '../editar-documento.js';
 import { ctx } from './contexto.js';
 import { abrirEditorParaCampo, esCelular, fijarHoja, hojaEnFoco, alSalirDelFoco } from './hoja.js';
 import { registrarAcciones } from './acciones.js';
@@ -70,7 +70,7 @@ const asegurarSobreLaHoja = el => {
 };
 
 const alTocar = ev => {
-  if (ctx.esCliente || ctx.modoEditor === 'portafolio' || ev.defaultPrevented || ev.button > 0) return;
+  if (ctx.esCliente || ev.defaultPrevented || ev.button > 0) return;
   const doc = ev.target.closest?.('#documento');
   if (!doc || ev.target.closest(INTERACTIVOS)) return;
   // Seleccionar texto con el mouse no es pedir editarlo.
@@ -83,7 +83,7 @@ const alTocar = ev => {
 
   cerrarExplorador();
   // Un campo o un ítem se enfoca para escribir; un paso o una lista entera solo se abren.
-  const escribir = !/^(paso|lista):/.test(clave);
+  const escribir = !esRespaldo(clave);
   if (escribir && esCelular()) {
     entrarEnFoco(primerCampoDe(navegables(), clave));
     return;
@@ -260,6 +260,11 @@ const revisarCamino = () => {
 };
 
 const claveDelCampo = el => {
+  if (el.dataset.campoPf) return claveDeCampo({ campo: el.dataset.campoPf, pf: true });
+  if (el.dataset.itemPf && ctx.modoEditor === 'portafolio') {
+    const nodoPf = el.closest('[data-indice-pf]');
+    return claveDeCampo({ lista: nodoPf?.closest('.lista')?.dataset.listaPf, indice: nodoPf?.dataset.indicePf, item: el.dataset.itemPf, pf: true });
+  }
   if (el.dataset.campo) return claveDeCampo({ campo: el.dataset.campo });
   const nodo = el.closest('[data-indice]');
   const lista = nodo?.closest('.lista')?.dataset.lista;
@@ -292,7 +297,7 @@ export const instalarTocarDocumento = () => {
 
   document.addEventListener('focusin', ev => {
     const el = ev.target;
-    if (ctx.modoEditor === 'portafolio' || !el.closest?.('#editor-cuerpo') || !el.matches('input, textarea, select')) return;
+    if (!el.closest?.('#editor-cuerpo') || !el.matches('input, textarea, select')) return;
     const clave = claveDelCampo(el);
     if (clave === claveActiva) return;
     claveActiva = clave;

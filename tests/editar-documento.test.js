@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { atributoEditar, selectorDeClave, claveDeCampo, clavesParaResaltar, clavesNavegables, claveVecina, primerCampoDe } from '../src/editar-documento.js';
-import { normalizarPropuesta, vacio } from '../src/modelo.js';
+import { atributoEditar, selectorDeClave, claveDeCampo, clavesParaResaltar, clavesNavegables, claveVecina, primerCampoDe, esRespaldo } from '../src/editar-documento.js';
+import { normalizarPropuesta, vacio, normalizarPortafolio, vacioPortafolio } from '../src/modelo.js';
+import { generarPortafolioHTML, heroDePortada, iniciales } from '../src/lib/render-portafolio.js';
 import { generarPropuestaHTML } from '../src/lib/render.js';
 
 const propuesta = (formato = 'propuesta') => normalizarPropuesta({
@@ -94,4 +95,61 @@ describe('render con editable', () => {
       expect(html).toContain('data-editar="servicios:2:nombre"');
     });
   }
+});
+
+describe('portfolio', () => {
+  const portfolio = (cambios = {}) => normalizarPortafolio({
+    ...vacioPortafolio(),
+    emisor: { ...vacioPortafolio().emisor, nombre: 'Estudio Norte', rol: 'Diseño web' },
+    portafolio: { ...vacioPortafolio().portafolio, titulo: 'Marcas que crecen' },
+    proyectos: [
+      { id: 'a', titulo: '', descripcion: '' },
+      { id: 'b', titulo: 'Tienda online', categoria: 'E-commerce', descripcion: 'Rediseño completo' }
+    ],
+    faqs: [{ id: 'f', pregunta: '¿Plazos?', respuesta: 'Seis semanas' }],
+    ...cambios
+  });
+
+  it('las claves del portfolio apuntan a los campos de su editor', () => {
+    expect(selectorDeClave('pf:portafolio.titulo')).toBe('[data-campo-pf="portafolio.titulo"]');
+    expect(selectorDeClave('pf:proyectos:2:titulo')).toBe('.lista[data-lista-pf="proyectos"] > [data-indice-pf="2"] [data-item-pf="titulo"]');
+    expect(selectorDeClave('pf:proyectos:2')).toBe('.lista[data-lista-pf="proyectos"] > [data-indice-pf="2"]');
+    expect(selectorDeClave('pf:lista:galeria')).toBe('.lista[data-lista-pf="galeria"]');
+    expect(selectorDeClave('pf:')).toBeNull();
+    expect(claveDeCampo({ campo: 'portafolio.titulo', pf: true })).toBe('pf:portafolio.titulo');
+    expect(claveDeCampo({ lista: 'proyectos', indice: '1', item: 'titulo', pf: true })).toBe('pf:proyectos:1:titulo');
+  });
+
+  it('el modo foco trata igual las claves del portfolio', () => {
+    const claves = clavesNavegables(['pf:portafolio.titulo', 'pf:lista:proyectos', 'pf:proyectos:1', 'pf:proyectos:1:titulo', 'paso:Portada']);
+    expect(claves).toEqual(['pf:portafolio.titulo', 'pf:proyectos:1:titulo']);
+    expect(primerCampoDe(claves, 'pf:proyectos:1')).toBe('pf:proyectos:1:titulo');
+    expect(clavesParaResaltar('pf:proyectos:1:tags')).toEqual(['pf:proyectos:1:tags', 'pf:proyectos:1']);
+    expect(esRespaldo('pf:lista:faqs')).toBe(true);
+    expect(esRespaldo('pf:faqs:0:respuesta')).toBe(false);
+  });
+
+  it('en el editor cada texto lleva su clave, con el índice real; el link, ninguna', () => {
+    const html = generarPortafolioHTML(portfolio(), { editable: true });
+    expect(html).toContain('data-editar="pf:portafolio.titulo"');
+    expect(html).toContain('data-editar="emisor.nombre"');
+    expect(html).not.toContain('data-editar="pf:proyectos:0');
+    expect(html).toContain('data-editar="pf:proyectos:1:titulo"');
+    expect(html).toContain('data-editar="pf:faqs:0:respuesta"');
+    expect(generarPortafolioHTML(portfolio())).not.toContain('data-editar');
+  });
+
+  it('sin foto de portada se arma igual, con el monograma', () => {
+    const html = generarPortafolioHTML(portfolio());
+    expect(html).toContain('pf-hero--sin-foto');
+    expect(html).toContain('pf-hero__monograma">EN<');
+    expect(iniciales('', 'marcas que crecen')).toBe('MQ');
+    expect(iniciales('', '')).toBe('P');
+  });
+
+  it('cada portada del estudio cae en una de las tres del portfolio', () => {
+    expect(heroDePortada('dividida')).toBe('dividida');
+    expect(heroDePortada('franja')).toBe('impacto');
+    expect(heroDePortada('cualquiera')).toBe('bloque');
+  });
 });

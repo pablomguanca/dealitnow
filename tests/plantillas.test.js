@@ -3,7 +3,8 @@ import { PLANTILLAS, PLANTILLAS_PORTAFOLIO, TEMAS, FUENTES_TITULOS, FUENTES_CUER
 import { PLANTILLAS_CATALOGO, TEMAS_CATALOGO } from '../src/plantillas-catalogo.js';
 import { PLANTILLAS_PORTFOLIO_CATALOGO } from '../src/portfolios-catalogo.js';
 import { usosPro } from '../src/planes.js';
-import { generarPropuestaHTML, generarPortafolioHTML } from '../src/lib/render.js';
+import { generarPropuestaHTML } from '../src/lib/render.js';
+import { generarPortafolioHTML } from '../src/lib/render-portafolio.js';
 
 const catalogo = Object.keys(PLANTILLAS_CATALOGO);
 

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { analizarVideo, estadoVideo, normalizarVideo } from '../src/video.js';
 import { normalizarPropuesta, normalizarPortafolio } from '../src/modelo.js';
-import { generarPropuestaHTML, generarPortafolioHTML, videoSeccionHTML } from '../src/lib/render.js';
+import { generarPropuestaHTML, videoSeccionHTML } from '../src/lib/render.js';
+import { generarPortafolioHTML } from '../src/lib/render-portafolio.js';
 
 describe('analizarVideo', () => {
   it('reconoce YouTube en todos sus formatos', () => {

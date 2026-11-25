@@ -210,7 +210,8 @@ describe('normalizarPortafolio', () => {
 
 import { decoracionPortadaSVG } from '../src/lib/decoraciones.js';
 import { resolverColoresTema } from '../src/lib/tema.js';
-import { generarPropuestaHTML, generarPortafolioHTML, textoBotonConfirmar } from '../src/lib/render.js';
+import { generarPropuestaHTML, textoBotonConfirmar } from '../src/lib/render.js';
+import { generarPortafolioHTML } from '../src/lib/render-portafolio.js';
 import { filtrosHTML, metricasHTML } from '../src/lib/paneles.js';
 
 describe('módulos de render, tema, imágenes y decoraciones', () => {
@@ -260,7 +261,7 @@ describe('módulos de render, tema, imágenes y decoraciones', () => {
     expect(htmlProp).toContain('barra-cliente');
 
     const htmlPf = generarPortafolioHTML(ejemploPortafolio(), { web: true });
-    expect(htmlPf).toContain('portada');
+    expect(htmlPf).toContain('pf-hero');
     expect(htmlPf).toContain('sec-proyectos');
   });
 

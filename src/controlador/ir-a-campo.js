@@ -26,7 +26,12 @@ const traerALaVista = el => {
 // en pantallas táctiles (abre el teclado): solo cuando la persona pidió editarlo.
 export const mostrarLugar = (lugar, { enfocar = false } = {}) => {
   let el = null;
-  try { el = lugar ? document.querySelector(`#editor-cuerpo ${lugar}`) : null; } catch { }
+  // Los pasos de la propuesta y del portfolio comparten el editor (el que no se usa queda
+  // con hidden) y algunos se llaman igual («Galería»): se elige el que está a la vista.
+  try {
+    const todos = lugar ? [...document.querySelectorAll(`#editor-cuerpo ${lugar}`)] : [];
+    el = todos.find(x => !x.closest('[hidden]')) || todos[0] || null;
+  } catch { }
   if (!el) return null;
   // Si el campo quedó dentro de un paso plegado, se abre.
   for (let d = el.closest('details:not([open])'); d; d = d.parentElement?.closest('details:not([open])')) d.open = true;

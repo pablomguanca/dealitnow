@@ -32,7 +32,7 @@ export function PortfolioSteps() {
               <input className="control" type="text" data-campo-pf="portafolio.disponibilidad" placeholder="Ej.: Disponible para nuevos proyectos" />
             </label>
             <div className="campo campo--ancho">
-              <span className="campo__etiqueta">Foto de fondo en portada Hero (opcional)</span>
+              <span className="campo__etiqueta">Foto de portada (opcional)</span>
               <div className="logo">
                 <img className="logo__vista proyecto-imagen__vista" id="portada-pf-vista" alt="Fondo de portada" hidden />
                 <label className="boton boton--secundario boton--chico">
@@ -41,11 +41,11 @@ export function PortfolioSteps() {
                 </label>
                 <button type="button" className="boton boton--texto boton--chico" data-accion="quitar-portada-pf" id="portada-pf-quitar" hidden>Quitar</button>
               </div>
-              <p className="campo__ayuda">Acepta imágenes de hasta 50 MB (se optimizan solas) y se combina con el color de tu portada para que el texto se lea perfecto.</p>
+              <p className="campo__ayuda">Sin foto, la portada se arma igual con tu nombre y tu color. Acepta imágenes de hasta 50 MB (se optimizan solas).</p>
             </div>
             <label className="campo campo--ancho" id="portada-pf-opacidad-wrap" hidden>
               <span className="campo__etiqueta campo__etiqueta--fila">
-                <span>Intensidad de la foto de portada</span>
+                <span>Intensidad de la foto (en la portada «Banda de impacto»)</span>
                 <output className="campo__valor" id="portada-pf-opacidad-val">35%</output>
               </span>
               <input className="rango-input" type="range" min="10" max="85" step="5" data-campo-pf="portafolio.opacidadPortada" data-tipo="numero" />

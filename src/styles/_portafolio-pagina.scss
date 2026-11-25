@@ -1,0 +1,1000 @@
+// Página del portfolio (src/lib/render-portafolio.js): portada de portfolio en tres variantes
+// (bloque, dividida, impacto), secciones numeradas, proyectos como casos y cierre de contacto.
+// Usa las variables del tema (tema.js): --portada-* en la portada, --d-* en el cuerpo y
+// --dorado (el acento) con --acento-tinta encima, que siempre contrasta.
+// Las medidas responden al ancho del visor (container queries), como el resto del documento.
+
+.doc--portafolio {
+  --pf-gutter: clamp(1.3em, 6cqw, 4.5em);
+  --pf-ancho: 66em;
+  --pf-lado: max(var(--pf-gutter), calc((100% - var(--pf-ancho)) / 2));
+  --esp: var(--escala-espaciado, 1);
+
+  background: var(--d-fondo);
+  color: var(--d-texto);
+}
+
+/* ---------- Portada ---------- */
+
+.pf-hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas: "barra" "texto" "visual" "datos";
+  gap: 2.2em;
+  padding: calc(1.6em * var(--esp)) var(--pf-gutter) calc(3em * var(--esp));
+  overflow: hidden;
+  background: var(--portada-fondo, var(--negro));
+  color: var(--portada-texto, var(--marfil));
+
+  &__barra {
+    grid-area: barra;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8em 1.2em;
+  }
+
+  &__logo {
+    display: block;
+    max-width: 11em;
+    max-height: calc(2.6em * var(--escala-logo, 1));
+    object-fit: contain;
+  }
+
+  &__marca {
+    font-family: var(--fuente-display);
+    font-size: calc(1.3em * var(--escala-logo, 1));
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  &__estado {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55em;
+    padding: 0.4em 0.9em;
+    border: 1px solid var(--portada-linea);
+    border-radius: 999px;
+    font-size: 0.78em;
+    color: var(--portada-apagado);
+
+    i {
+      flex: none;
+      width: 0.55em;
+      height: 0.55em;
+      border-radius: 50%;
+      background: #22C55E;
+      box-shadow: 0 0 0 0.25em rgba(34, 197, 94, 0.2);
+    }
+  }
+
+  &__texto {
+    grid-area: texto;
+    position: relative;
+    z-index: 2;
+    min-width: 0;
+  }
+
+  &__etiqueta {
+    margin: 0 0 1em;
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--portada-acento);
+  }
+
+  &__titulo {
+    margin: 0;
+    font-family: var(--fuente-display);
+    font-size: calc(clamp(2.5em, 8cqw, 6.2em) * var(--escala-titulo-portada, 1));
+    font-weight: 500;
+    line-height: 0.98;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+    overflow-wrap: break-word;
+
+    &--largo {
+      font-size: calc(clamp(2.1em, 5.4cqw, 4.3em) * var(--escala-titulo-portada, 1));
+      line-height: 1.04;
+    }
+
+    &--corto {
+      font-size: calc(clamp(3.4em, 12.5cqw, 9.5em) * var(--escala-titulo-portada, 1));
+      line-height: 0.9;
+    }
+  }
+
+  &__sub {
+    max-width: 32em;
+    margin: 1.2em 0 0;
+    font-size: 1.1em;
+    line-height: 1.5;
+    color: var(--portada-apagado);
+  }
+
+  &__firma {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3em 0.8em;
+    margin: 1.5em 0 0;
+    font-size: 0.92em;
+  }
+
+  &__nombre {
+    font-weight: 700;
+  }
+
+  &__rol {
+    padding-left: 0.8em;
+    border-left: 2px solid var(--portada-acento);
+    color: var(--portada-apagado);
+  }
+
+  &__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.9em 1.5em;
+    margin-top: 2em;
+  }
+
+  &__ver {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5em;
+    padding-bottom: 0.15em;
+    border-bottom: 1px solid var(--portada-acento);
+    color: var(--portada-texto);
+    font-weight: 600;
+    text-decoration: none;
+
+    svg {
+      width: 1em;
+      height: 1em;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      transition: transform var(--transicion);
+    }
+
+    &:hover svg {
+      transform: translateX(0.2em);
+    }
+  }
+
+  &__datos {
+    grid-area: datos;
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em 2.6em;
+    margin: 0;
+    padding-top: 1.4em;
+    border-top: 1px solid var(--portada-linea);
+
+    div {
+      display: flex;
+      flex-direction: column-reverse;
+      gap: 0.2em;
+    }
+
+    dd {
+      margin: 0;
+      font-family: var(--fuente-display);
+      font-size: 1.7em;
+      line-height: 1;
+    }
+
+    dt {
+      font-size: 0.7em;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--portada-apagado);
+    }
+  }
+
+  // Visual: la foto (opcional) o, sin foto, un bloque de color con el monograma.
+  &__foto,
+  &__arte {
+    grid-area: visual;
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+    margin: 0;
+  }
+
+  &__foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__arte {
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    background: var(--dorado);
+    color: var(--acento-tinta);
+  }
+
+  &__monograma {
+    font-family: var(--fuente-display);
+    font-size: clamp(5em, 26cqw, 15em);
+    font-weight: 500;
+    line-height: 0.8;
+    letter-spacing: -0.02em;
+  }
+
+  &__palabra {
+    position: absolute;
+    left: 1.2em;
+    bottom: 1em;
+    font-size: 0.72em;
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+  }
+}
+
+// Bloque (clásica): el título manda; la foto o el bloque de color, al costado, con una
+// pieza de acento que asoma detrás.
+.pf-hero--bloque {
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: var(--pf-gutter);
+    width: 4.5em;
+    height: 0.5em;
+    background: var(--dorado);
+  }
+
+  .pf-hero__foto {
+    aspect-ratio: 4 / 3;
+    margin: 0 1em 1em 0;
+
+    img {
+      position: relative;
+      z-index: 1;
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      right: -1em;
+      bottom: -1em;
+      width: 62%;
+      height: 58%;
+      background: var(--dorado);
+    }
+  }
+
+  .pf-hero__arte {
+    aspect-ratio: 4 / 3;
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0.9em;
+      border: 1px solid currentColor;
+      opacity: 0.3;
+    }
+  }
+}
+
+// Dividida: mitad visual, mitad texto (en celular, la foto arriba de punta a punta).
+.pf-hero--dividida {
+  grid-template-areas: "barra" "visual" "texto" "datos";
+
+  .pf-hero__foto,
+  .pf-hero__arte {
+    aspect-ratio: 4 / 4.4;
+    margin: 0 calc(-1 * var(--pf-gutter));
+  }
+
+  .pf-hero__arte {
+    &::before {
+      content: "";
+      position: absolute;
+      width: 58%;
+      aspect-ratio: 1;
+      top: -12%;
+      right: -14%;
+      border-radius: 50%;
+      background: var(--portada-fondo);
+      opacity: 0.16;
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 1.2em;
+      top: 1.2em;
+      width: 2.4em;
+      height: 2.4em;
+      border-left: 0.35em solid currentColor;
+      border-top: 0.35em solid currentColor;
+    }
+  }
+
+  .pf-hero__palabra {
+    left: auto;
+    right: 1.2em;
+  }
+}
+
+// Impacto: cartel a pantalla completa; con foto, de fondo; sin foto, la palabra gigante.
+.pf-hero--impacto {
+  grid-template-areas: "barra" "texto" "datos";
+  grid-template-rows: auto 1fr auto;
+  min-height: calc(36em * var(--esp));
+
+  .pf-hero__texto {
+    align-self: end;
+    padding-top: 4em;
+  }
+
+  .pf-hero__titulo {
+    text-transform: uppercase;
+  }
+
+  .pf-hero__etiqueta {
+    display: inline-block;
+    padding: 0.4em 0.75em;
+    background: var(--dorado);
+    color: var(--acento-tinta);
+  }
+
+  .pf-hero__foto {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+
+    img {
+      opacity: var(--pf-foto-op, 0.4);
+    }
+
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, var(--portada-fondo) 6%, transparent 75%);
+    }
+  }
+
+  .pf-hero__arte {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: none;
+    color: var(--portada-acento);
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 32%;
+      width: 0.6em;
+      height: 36%;
+      background: var(--dorado);
+    }
+  }
+
+  .pf-hero__monograma {
+    display: none;
+  }
+
+  .pf-hero__palabra {
+    left: auto;
+    right: -0.04em;
+    top: 9%;
+    bottom: auto;
+    font-family: var(--fuente-display);
+    font-size: clamp(5em, 24cqw, 17em);
+    font-weight: 500;
+    line-height: 0.8;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    color: transparent;
+    -webkit-text-stroke: 1px var(--portada-acento);
+    opacity: 0.6;
+  }
+}
+
+@container (min-width: 760px) {
+  .pf-hero--bloque {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    grid-template-areas: "barra barra" "texto visual" "datos datos";
+    column-gap: 3.5em;
+    align-items: center;
+    padding-top: calc(2em * var(--esp));
+
+    .pf-hero__foto,
+    .pf-hero__arte {
+      aspect-ratio: 4 / 5;
+    }
+  }
+
+  .pf-hero--dividida {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    grid-template-areas: "visual barra" "visual texto" "visual datos";
+    grid-template-rows: auto 1fr auto;
+    column-gap: 0;
+    min-height: calc(36em * var(--esp));
+    padding: 0;
+
+    > .pf-hero__barra,
+    > .pf-hero__texto,
+    > .pf-hero__datos {
+      margin-inline: clamp(1.6em, 5cqw, 4em);
+    }
+
+    > .pf-hero__barra {
+      margin-top: calc(1.8em * var(--esp));
+    }
+
+    > .pf-hero__texto {
+      align-self: center;
+    }
+
+    > .pf-hero__datos {
+      margin-bottom: calc(2.4em * var(--esp));
+    }
+
+    .pf-hero__foto,
+    .pf-hero__arte {
+      aspect-ratio: auto;
+      margin: 0;
+    }
+  }
+
+  .pf-hero--impacto {
+    min-height: calc(40em * var(--esp));
+  }
+}
+
+/* ---------- Cuerpo y secciones ---------- */
+
+.pf-cuerpo {
+  padding: calc(4.5em * var(--esp)) var(--pf-lado) calc(2em * var(--esp));
+}
+
+.pf-vacio {
+  margin: 0;
+  color: var(--d-suave);
+}
+
+.pf-sec {
+  padding-block: calc(3.4em * var(--esp));
+  border-top: 1px solid var(--d-linea);
+  scroll-margin-top: 3.5em;
+
+  &:first-child {
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  &__cab {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: end;
+    column-gap: 0.7em;
+    margin-bottom: calc(2em * var(--escala-espaciado-interno, 1));
+  }
+
+  &__num {
+    font-family: var(--fuente-display);
+    font-size: calc(3.2em * var(--escala-titulos, 1));
+    font-weight: 500;
+    line-height: 0.8;
+    color: var(--d-acento);
+  }
+
+  &__titulo {
+    margin: 0;
+    font-family: var(--fuente-display);
+    font-size: calc(2.3em * var(--escala-titulos, 1));
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  &__bajada {
+    grid-column: 1 / -1;
+    max-width: 36em;
+    margin: 0.9em 0 0;
+    color: var(--d-suave);
+  }
+}
+
+// Sobre mí: foto con un bloque de acento detrás, saludo grande y especialidades.
+.pf-sobre {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2.4em;
+  align-items: center;
+
+  &__foto {
+    position: relative;
+    max-width: 24em;
+    margin: 0 1.2em 1.2em 0;
+
+    &::before {
+      content: "";
+      position: absolute;
+      inset: 1.2em -1.2em -1.2em 1.2em;
+      background: var(--dorado);
+    }
+
+    img {
+      position: relative;
+      display: block;
+      width: 100%;
+      aspect-ratio: 4 / 5;
+      object-fit: cover;
+    }
+
+    [data-lightbox-src] {
+      cursor: zoom-in;
+    }
+  }
+
+  &__etiqueta {
+    margin: 0;
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--d-acento);
+
+    span {
+      margin-right: 0.4em;
+    }
+  }
+
+  &__titulo {
+    margin: 0.35em 0 0.45em;
+    font-family: var(--fuente-display);
+    font-size: calc(2.8em * var(--escala-titulos, 1));
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  &__ubicacion {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    margin: 0 0 1em;
+    font-size: 0.9em;
+    color: var(--d-suave);
+
+    svg {
+      width: 1em;
+      height: 1em;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.5;
+    }
+  }
+
+  &__presentacion {
+    color: var(--d-suave);
+
+    p {
+      max-width: 38em;
+    }
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+    margin: 1.4em 0 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      padding: 0.45em 0.95em;
+      border: 1px solid var(--d-linea);
+      border-radius: 999px;
+      font-size: 0.85em;
+    }
+  }
+}
+
+@container (min-width: 700px) {
+  .pf-sobre {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 4em;
+  }
+
+  .pf-sobre--sin-foto {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// Índice de proyectos (como la «tabla de contenidos» de un portfolio impreso).
+.pf-indice {
+  margin: 0 0 calc(3.2em * var(--esp));
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--d-linea);
+
+  &__item {
+    display: grid;
+    grid-template-columns: 2.6em minmax(0, 1fr) auto;
+    align-items: baseline;
+    gap: 1em;
+    padding: 0.95em 0;
+    border-bottom: 1px solid var(--d-linea);
+    color: inherit;
+    text-decoration: none;
+    transition: padding var(--transicion), color var(--transicion);
+
+    &:hover {
+      padding-left: 0.6em;
+      color: var(--d-acento);
+    }
+  }
+
+  &__num {
+    font-family: var(--fuente-display);
+    font-size: 1.3em;
+    color: var(--d-acento);
+  }
+
+  &__titulo {
+    font-weight: 600;
+  }
+
+  &__cat {
+    font-size: 0.74em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: right;
+    color: var(--d-tenue);
+  }
+}
+
+// Cada proyecto, un caso: fotos grandes y la ficha al costado, alternando lados.
+.pf-casos {
+  display: grid;
+  gap: calc(4.5em * var(--esp));
+}
+
+.pf-caso {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.8em;
+  scroll-margin-top: 4em;
+
+  &__media {
+    position: relative;
+    min-width: 0;
+    margin: 0.9em 0 0 0.9em;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: -0.9em;
+      left: -0.9em;
+      width: 26%;
+      aspect-ratio: 1;
+      background: var(--dorado);
+    }
+
+    > * {
+      position: relative;
+    }
+
+    .proyecto-card__media,
+    .proyecto-card__arte {
+      border-radius: 0;
+    }
+
+    .proyecto-card__arte {
+      min-height: 0;
+      aspect-ratio: 4 / 3;
+    }
+  }
+
+  &__cabecera {
+    display: flex;
+    align-items: center;
+    gap: 0.85em;
+    margin: 0 0 0.8em;
+  }
+
+  &__num {
+    font-family: var(--fuente-display);
+    font-size: calc(3.4em * var(--escala-titulos, 1));
+    font-weight: 500;
+    line-height: 0.8;
+    color: var(--d-acento);
+  }
+
+  &__cat {
+    padding-left: 0.85em;
+    border-left: 1px solid var(--d-linea);
+    font-size: 0.74em;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--d-suave);
+  }
+
+  &__titulo {
+    margin: 0 0 0.35em;
+    font-family: var(--fuente-display);
+    font-size: calc(2em * var(--escala-titulos, 1));
+    font-weight: 500;
+    line-height: 1.05;
+  }
+
+  &__sub {
+    margin: 0 0 1em;
+    font-size: 0.92em;
+    color: var(--d-suave);
+  }
+
+  &__dato {
+    display: inline-block;
+    margin: 0 0 1em;
+    padding: 0.45em 0.85em;
+    border-left: 3px solid var(--dorado);
+    background: var(--dorado-fondo);
+    font-size: 0.9em;
+    font-weight: 600;
+  }
+
+  &__desc {
+    color: var(--d-suave);
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em;
+    margin: 1em 0 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+      padding: 0.3em 0.75em;
+      border: 1px solid var(--d-linea);
+      border-radius: 999px;
+      font-size: 0.75em;
+      color: var(--d-suave);
+    }
+  }
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    margin-top: 1.3em;
+    border-bottom: 1px solid currentColor;
+    color: var(--d-acento);
+    font-weight: 600;
+    text-decoration: none;
+
+    svg {
+      width: 0.95em;
+      height: 0.95em;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+    }
+  }
+}
+
+@container (min-width: 760px) {
+  .pf-caso {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+    gap: 3.2em;
+    align-items: center;
+
+    &:nth-child(even) {
+      grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr);
+
+      .pf-caso__media {
+        order: 2;
+        margin: 0.9em 0.9em 0 0;
+
+        &::before {
+          left: auto;
+          right: -0.9em;
+        }
+      }
+    }
+  }
+}
+
+.pf-servicio__num {
+  display: block;
+  margin: 0.2em 0 0.35em;
+  font-family: var(--fuente-display);
+  font-size: 2em;
+  line-height: 1;
+  color: var(--d-acento);
+}
+
+/* ---------- Contacto ---------- */
+
+.pf-contacto {
+  position: relative;
+  overflow: hidden;
+  margin-top: calc(2em * var(--esp));
+  padding: calc(4.6em * var(--esp)) var(--pf-lado);
+  background: var(--dorado);
+  color: var(--acento-tinta);
+  scroll-margin-top: 3.5em;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: -7em;
+    right: -5em;
+    width: 19em;
+    aspect-ratio: 1;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+    opacity: 0.25;
+  }
+
+  > * {
+    position: relative;
+  }
+
+  &__etiqueta {
+    margin: 0 0 1em;
+    font-size: 0.78em;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    opacity: 0.75;
+  }
+
+  &__titulo {
+    max-width: 14em;
+    margin: 0 0 0.4em;
+    font-family: var(--fuente-display);
+    font-size: calc(clamp(2.4em, 6.6cqw, 4.8em) * var(--escala-titulos, 1));
+    font-weight: 500;
+    line-height: 0.98;
+    text-wrap: balance;
+  }
+
+  &__texto {
+    max-width: 34em;
+    margin: 0;
+    font-size: 1.08em;
+    opacity: 0.85;
+  }
+
+  &__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8em;
+    margin-top: 2em;
+
+    .boton--primario,
+    .boton--primario:hover {
+      border-color: transparent;
+      background: var(--acento-tinta);
+      color: var(--dorado);
+    }
+
+    .boton--secundario {
+      border-color: currentColor;
+      background: transparent;
+      color: var(--acento-tinta);
+    }
+  }
+
+  &__datos {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12em, 1fr));
+    gap: 1.2em 2em;
+    margin: 3em 0 0;
+    padding-top: 1.6em;
+    border-top: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+
+    dt {
+      margin-bottom: 0.3em;
+      font-size: 0.7em;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      opacity: 0.7;
+    }
+
+    dd {
+      margin: 0;
+      font-weight: 600;
+      overflow-wrap: anywhere;
+    }
+
+    a {
+      color: inherit;
+    }
+  }
+}
+
+.doc--portafolio > .pie {
+  margin-top: 0;
+  padding-top: calc(1.6em * var(--esp));
+}
+
+/* ---------- Aparición en el link ---------- */
+
+.doc--web .pf-hero__texto > *,
+.doc--web .pf-hero__datos {
+  animation: revelar 0.8s var(--ease-out-expo) both;
+}
+
+@for $i from 1 through 6 {
+  .doc--web .pf-hero__texto > :nth-child(#{$i}) {
+    animation-delay: #{0.15 + $i * 0.1}s;
+  }
+}
+
+.doc--web .pf-hero__datos {
+  animation-delay: 0.9s;
+}
+
+.doc--web .pf-hero__foto,
+.doc--web .pf-hero__arte {
+  animation: aparecerSuave 1s 0.2s var(--ease-out-expo) both;
+}
+
+.doc--web .pf-sec,
+.doc--web .pf-caso {
+  opacity: 0;
+  transform: translateY(2em);
+  transition: opacity 0.65s var(--ease-out-expo), transform 0.65s var(--ease-out-expo);
+
+  &.visible {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.doc--web.doc--estatico {
+  .pf-hero__texto > *,
+  .pf-hero__datos,
+  .pf-hero__foto,
+  .pf-hero__arte {
+    animation: none;
+  }
+}
+
+@media print {
+  .pf-sec,
+  .pf-caso {
+    opacity: 1 !important;
+    transform: none !important;
+    break-inside: avoid;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .doc--web .pf-hero__texto > *,
+  .doc--web .pf-hero__datos,
+  .doc--web .pf-hero__foto,
+  .doc--web .pf-hero__arte {
+    animation: none;
+  }
+}
+
+// En el cartel gigante va solo «Portfolio», sin el año.
+.pf-hero--impacto .pf-hero__palabra span {
+  display: none;
+}

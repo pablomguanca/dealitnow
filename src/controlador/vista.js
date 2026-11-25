@@ -4,7 +4,8 @@
 
 import { $ } from '../lib/formato.js';
 import { aplicarTema } from '../lib/tema.js';
-import { observarElementos, generarPortafolioHTML, generarPropuestaHTML, marcaDeAguaHTML } from '../lib/render.js';
+import { observarElementos, generarPropuestaHTML, marcaDeAguaHTML } from '../lib/render.js';
+import { generarPortafolioHTML } from '../lib/render-portafolio.js';
 import { usosPro } from '../planes.js';
 import {
   abrirLightboxDesdeNodo,
@@ -82,15 +83,23 @@ export const renderPortafolio = () => {
     document.querySelector('[data-accion="vista"][data-vista="escritorio"]')?.click();
     return;
   }
-  const { doc, web, tipoDecoracion, tipoPortada } = prepararDocumento(ctx.estadoPortafolio.tema);
-  doc.innerHTML = generarPortafolioHTML(conMarca(ctx.estadoPortafolio), { web, tipoDecoracion, tipoPortada });
+  const { doc, web, tipoPortada } = prepararDocumento(ctx.estadoPortafolio.tema);
+  doc.innerHTML = generarPortafolioHTML(conMarca(ctx.estadoPortafolio), {
+    web,
+    tipoPortada,
+    // Tocar el documento para editar, como en las propuestas: solo en el editor.
+    editable: !ctx.esCliente && !ctx.imprimiendo
+  });
+  doc.classList.add('doc--portafolio');
   terminarDocumento(doc, web);
+  if (!ctx.esCliente) despuesDeDibujar();
 };
 
 export const renderDocumento = () => {
   if (ctx.modoEditor === 'portafolio') return renderPortafolio();
   document.body.classList.remove('editando-portafolio');
   const { doc, web, tipoDecoracion, tipoPortada } = prepararDocumento(ctx.estado.tema);
+  doc.classList.remove('doc--portafolio');
   prepararPropuesta();
   doc.innerHTML = generarPropuestaHTML(conMarca(ctx.estado), {
     web,

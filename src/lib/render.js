@@ -160,7 +160,9 @@ export const sobreMiBloqueHTML = (e = {}, especialidades = [], web = true, light
     </div>`;
 };
 
-export const galeriaSeccionHTML = (fotos = [], opciones = {}, web = true) => {
+// editar (opcional, en las cuatro de abajo): arma el atributo de edición de cada ítem, para
+// tocar el documento en el editor del portfolio: editar(item) o editar(item, 'campo').
+export const galeriaSeccionHTML = (fotos = [], opciones = {}, web = true, { editar = () => '' } = {}) => {
   const validas = (fotos || []).filter(g => g && g.imagen);
   if (!validas.length) return '';
   const layout = LAYOUTS_GALERIA[opciones.galeriaLayout] ? opciones.galeriaLayout : 'bento';
@@ -172,7 +174,7 @@ export const galeriaSeccionHTML = (fotos = [], opciones = {}, web = true) => {
     const encuadreGal = (ENCUADRES_IMAGEN[g.encuadre] || ENCUADRES_IMAGEN.centro).css;
     const cap = [g.titulo?.trim(), g.descripcion?.trim()].filter(Boolean).join(' — ');
     return `
-      <figure class="galeria-item">
+      <figure class="galeria-item"${editar(g)}>
         <div class="galeria-item__media media-ratio--${esc(prop)}"${usaLightbox ? ` data-lightbox-src="${esc(g.imagen)}" data-lightbox-caption="${esc(cap)}" data-lightbox-group="galeria"` : ''}>
           <img src="${esc(g.imagen)}" alt="${esc(g.titulo?.trim() || `Imagen ${idx + 1}`)}" style="object-position:${esc(encuadreGal)}">
         </div>
@@ -186,7 +188,7 @@ export const galeriaSeccionHTML = (fotos = [], opciones = {}, web = true) => {
   return `${sub}<div class="galeria-web galeria-web--${esc(layout)}">${items}</div>`;
 };
 
-export const testimoniosSeccionHTML = (lista = [], web = true, lightbox = true) => {
+export const testimoniosSeccionHTML = (lista = [], web = true, lightbox = true, { editar = () => '' } = {}) => {
   const validos = (lista || []).filter(t => t && (t.texto?.trim() || t.autor?.trim()));
   if (!validos.length) return '';
   return `<div class="testimonios-grilla">${validos.map(t => {
@@ -195,33 +197,32 @@ export const testimoniosSeccionHTML = (lista = [], web = true, lightbox = true) 
       ? `<img class="testimonio-card__avatar" src="${esc(t.avatar)}" alt="${esc(t.autor || 'Cliente')}"${web && lightbox ? ` data-lightbox-src="${esc(t.avatar)}" data-lightbox-caption="${esc(t.autor || '')}"` : ''}>`
       : `<span class="testimonio-card__inicial" aria-hidden="true">${esc(inicial)}</span>`;
     return `
-      <blockquote class="testimonio-card">
-        ${t.texto?.trim() ? `<p class="testimonio-card__texto">“${esc(t.texto.trim()).replace(/\n/g, '<br>')}”</p>` : ''}
+      <blockquote class="testimonio-card"${editar(t)}>
+        ${t.texto?.trim() ? `<p class="testimonio-card__texto"${editar(t, 'texto')}>“${esc(t.texto.trim()).replace(/\n/g, '<br>')}”</p>` : ''}
         <footer class="testimonio-card__autor">
           ${avatar}
           <div>
-            <span class="testimonio-card__nombre">${esc(t.autor?.trim() || 'Cliente')}</span>
-            ${t.rol?.trim() ? `<span class="testimonio-card__rol">${esc(t.rol.trim())}</span>` : ''}
+            <span class="testimonio-card__nombre"${editar(t, 'autor')}>${esc(t.autor?.trim() || 'Cliente')}</span>
+            ${t.rol?.trim() ? `<span class="testimonio-card__rol"${editar(t, 'rol')}>${esc(t.rol.trim())}</span>` : ''}
           </div>
         </footer>
       </blockquote>`;
   }).join('')}</div>`;
 };
 
-export const faqsSeccionHTML = (lista = [], web = true) => {
+export const faqsSeccionHTML = (lista = [], web = true, { editar = () => '' } = {}) => {
   const validas = (lista || []).filter(f => f && (f.pregunta?.trim() || f.respuesta?.trim()));
   if (!validas.length) return '';
   return `<div class="faqs-lista">${validas.map((f, i) => `
-    <details class="faq-item"${!web || i === 0 ? ' open' : ''}>
+    <details class="faq-item"${!web || i === 0 ? ' open' : ''}${editar(f)}>
       <summary class="faq-item__pregunta">${esc(f.pregunta?.trim() || 'Pregunta frecuente')}</summary>
-      <div class="faq-item__respuesta">${parrafos(f.respuesta || '')}</div>
+      <div class="faq-item__respuesta"${editar(f, 'respuesta')}>${parrafos(f.respuesta || '')}</div>
     </details>`).join('')}</div>`;
 };
 
-export const proyectoCardHTML = (p, idx, web, lightbox = true) => {
-  const tags = texto(p.tags).split(/[,\n]/).map(t => t.trim()).filter(Boolean);
-  const urlRaw = texto(p.enlace).trim();
-  const url = urlRaw ? (/^https?:\/\//i.test(urlRaw) ? urlRaw : `https://${urlRaw}`) : '';
+// Fotos de un proyecto (o su portada tipográfica, si no tiene): las usan la tarjeta del
+// proyecto (portfolio adjunto a una propuesta) y el caso de la página del portfolio.
+export const proyectoMediaHTML = (p, idx, web, lightbox = true) => {
   const prop = PROPORCIONES_IMAGEN[p.proporcion] ? p.proporcion : 'panoramica';
   const extras = Array.isArray(p.galeria) ? p.galeria.filter(Boolean) : [];
   const imagenPrincipal = p.imagen || extras[0] || '';
@@ -264,6 +265,19 @@ export const proyectoCardHTML = (p, idx, web, lightbox = true) => {
         </button>`).join('')}</div>`
     : '';
 
+  return { media, tiraExtras, imagenPrincipal };
+};
+
+export const proyectoTagsYLink = p => {
+  const tags = texto(p.tags).split(/[,\n]/).map(t => t.trim()).filter(Boolean);
+  const urlRaw = texto(p.enlace).trim();
+  const url = urlRaw ? (/^https?:\/\//i.test(urlRaw) ? urlRaw : `https://${urlRaw}`) : '';
+  return { tags, url };
+};
+
+export const proyectoCardHTML = (p, idx, web, lightbox = true) => {
+  const { media, tiraExtras, imagenPrincipal } = proyectoMediaHTML(p, idx, web, lightbox);
+  const { tags, url } = proyectoTagsYLink(p);
   return `
     <article class="proyecto-card">
       ${media}
@@ -541,7 +555,7 @@ export const textoBotonConfirmar = ({ conFirma = false, conCobro = false, conMp 
 };
 
 let observador;
-const OBS_SEL = '.bloque, .resumen, .cierre, .pie, .doc-aviso';
+const OBS_SEL = '.bloque, .resumen, .cierre, .pie, .doc-aviso, .pf-sec, .pf-caso';
 const HIJO_SEL = '.servicio, .etapa, .proyecto-card, .galeria-item, .testimonio-card, .faq-item, .servicio-web-card';
 
 // Muestra todo de una, sin animaciones de entrada (miniaturas y vistas previas de plantillas).
@@ -593,227 +607,13 @@ export const observarElementos = (raiz, esCliente = false) => {
   });
 };
 // Marca de Dealit al pie, con la tipografía del logo. Es solo texto (sin link), en el link y en el PDF.
-const creditoHTML = tipo => `<span class="pie__credito">${{ portafolio: 'Portfolio creado', presupuesto: 'Presupuesto creado' }[tipo] || 'Propuesta creada'} con <b class="pie__marca">Dealit</b></span>`;
+export const creditoHTML = tipo => `<span class="pie__credito">${{ portafolio: 'Portfolio creado', presupuesto: 'Presupuesto creado' }[tipo] || 'Propuesta creada'} con <b class="pie__marca">Dealit</b></span>`;
 
 // Marca de agua al imprimir (sin cuenta, o en Gratis con un diseño PRO): tres franjas por hoja.
 export const marcaDeAguaHTML = tipo => `
   <div class="marca-agua" aria-hidden="true">
     ${Array.from({ length: 3 }, () => `<p><span>${tipo === 'portafolio' ? 'Portfolio creado' : 'Propuesta creada'} con</span><b>Dealit</b></p>`).join('')}
   </div>`;
-
-export const generarPortafolioHTML = (s, { web = true, tipoDecoracion = 'marco', tipoPortada = 'editorial' } = {}) => {
-  const e = s.emisor;
-  const pf = s.portafolio;
-  const usaLightbox = s.opciones?.lightbox !== false;
-  const tituloPf = pf.titulo.trim() || pf.nombreInterno.trim() || 'tu portfolio';
-
-  const marca = e.logo
-    ? `<img class="portada__logo" src="${esc(e.logo)}" alt="${esc(e.nombre || 'Logo')}">`
-    : `<span class="portada__marca">${e.nombre.trim() ? esc(e.nombre) : vacioHTML('Tu marca')}</span>`;
-
-  const proyectosValidos = s.proyectos.filter(proyectoConContenido);
-  const especialidadesValidas = s.especialidades.filter(x => x.texto.trim());
-  const galeriaValida = (s.galeria || []).filter(g => g && g.imagen);
-  const serviciosWebValidos = (s.serviciosWeb || []).filter(sw => sw && (sw.titulo.trim() || sw.descripcion.trim() || sw.imagen));
-  const testimoniosValidos = (s.testimonios || []).filter(t => t && (t.texto.trim() || t.autor.trim()));
-  const faqsValidas = (s.faqs || []).filter(f => f && (f.pregunta.trim() || f.respuesta.trim()));
-
-  const meta = [];
-  if (e.nombre.trim()) meta.push(['Presentado por', `${esc(e.nombre)}${e.rol.trim() ? `<span>${esc(e.rol)}</span>` : ''}`]);
-  if (proyectosValidos.length) meta.push(['Casos seleccionados', `${proyectosValidos.length} ${proyectosValidos.length === 1 ? 'proyecto destacado' : 'proyectos destacados'}`]);
-  if (pf.disponibilidad.trim()) meta.push(['Estado', `<span class="portada__urgente">${esc(pf.disponibilidad.trim())}</span>`]);
-  if (e.ubicacion?.trim() || e.web.trim() || e.email.trim()) meta.push(['Ubicación / Web', esc(e.ubicacion?.trim() || e.web.trim() || e.email.trim())]);
-
-  const marcaAgua = tipoPortada === 'impacto'
-    ? `<span class="portada__marca-agua" aria-hidden="true">${esc(String(proyectosValidos.length || '01').padStart(2, '0'))}</span>`
-    : '';
-
-  const colTema = resolverColoresTema(s.tema);
-  const opPortada = Math.min(0.85, Math.max(0.08, (Number(pf.opacidadPortada) || 35) / 100));
-  const fondoFotoHTML = pf.imagenPortada
-    ? `<div class="portada__fondo-img" style="--portada-img-opacidad:${opPortada}" aria-hidden="true"><img src="${esc(pf.imagenPortada)}" alt=""></div>`
-    : '';
-
-  const portada = `
-    <section class="portada portada--${esc(tipoPortada)}" id="sec-inicio" aria-label="Portada del portfolio">
-      ${fondoFotoHTML}
-      <div class="portada__decoracion" style="color:${esc(colTema.colorSvg)}" aria-hidden="true">${decoracionPortadaSVG(tipoDecoracion, colTema.opacidadSvg, colTema.colorSvg)}</div>
-      ${marcaAgua}
-      <div class="portada__superior">
-        ${marca}
-        ${pf.disponibilidad.trim() ? `<p class="portada__numero">${esc(pf.disponibilidad.trim())}</p>` : ''}
-      </div>
-      <div class="portada__centro">
-        <p class="portada__para"><span class="portada__para-chip">${esc(pf.insignia.trim() || 'Portfolio & Página Web')}</span></p>
-        <h1 class="portada__titulo">${pf.titulo.trim() ? esc(pf.titulo) : vacioHTML('Título de tu página o portfolio')}</h1>
-        ${pf.subtitulo.trim() ? `<p class="portada__subtitulo">${esc(pf.subtitulo.trim())}</p>` : ''}
-        <hr class="portada__regla">
-      </div>
-      ${meta.length ? `<dl class="portada__meta">${meta.map(([a, b]) => `<div><dt>${a}</dt><dd>${b}</dd></div>`).join('')}</dl>` : ''}
-    </section>`;
-
-  const bloques = [];
-
-  if (e.presentacion.trim() || e.foto || especialidadesValidas.length || e.instagram?.trim() || e.linkedin?.trim() || e.behance?.trim()) {
-    bloques.push({
-      id: 'sec-sobre-mi',
-      nav: 'Sobre mí',
-      titulo: e.nombre.trim() ? `Sobre ${e.nombre.trim()}` : 'Perfil y especialidades',
-      html: sobreMiBloqueHTML(e, especialidadesValidas, web, usaLightbox)
-    });
-  }
-
-  const videoPf = videoSeccionHTML(s.video, web);
-  if (videoPf) {
-    bloques.push({
-      id: 'sec-video',
-      nav: 'Video',
-      titulo: s.video.titulo.trim() || 'Mirá cómo trabajo',
-      html: videoPf
-    });
-  }
-
-  if (proyectosValidos.length) {
-    bloques.push({
-      id: 'sec-proyectos',
-      nav: 'Proyectos',
-      titulo: 'Proyectos y casos seleccionados',
-      html: `<div class="portafolio-grilla">${proyectosValidos.map((p, idx) => proyectoCardHTML(p, idx, web, usaLightbox)).join('')}</div>`
-    });
-  }
-
-  if (galeriaValida.length) {
-    bloques.push({
-      id: 'sec-galeria',
-      nav: 'Galería',
-      titulo: s.opciones?.galeriaTitulo?.trim() || 'Galería visual',
-      html: galeriaSeccionHTML(galeriaValida, s.opciones, web)
-    });
-  }
-
-  const ctaLabel = pf.ctaTexto.trim() || 'Contactar';
-  const msgContacto = `Hola${e.nombre.trim() ? ` ${e.nombre.trim().split(' ')[0]}` : ''}! Vi tu página «${tituloPf}» y me gustaría conversar sobre un proyecto.`;
-  const waUrl = armarEnlaceWhatsApp(msgContacto, e);
-  const mailUrl = armarEnlaceEmail(`Consulta desde tu página: ${tituloPf}`, msgContacto, e);
-  const principalUrl = waUrl || mailUrl;
-
-  if (serviciosWebValidos.length) {
-    const htmlSrv = `<div class="servicios-web-grilla">${serviciosWebValidos.map(sw => {
-      const msgSrv = `Hola${e.nombre.trim() ? ` ${e.nombre.trim().split(' ')[0]}` : ''}! Me interesa consultar por «${sw.titulo.trim() || 'tu servicio'}» que vi en tu página.`;
-      const linkSrv = armarEnlaceWhatsApp(msgSrv, e) || armarEnlaceEmail(`Consulta por ${sw.titulo.trim() || 'servicio'}`, msgSrv, e);
-      return `
-        <article class="servicio-web-card">
-          ${sw.imagen ? `<div class="servicio-web-card__media"${web && usaLightbox ? ` data-lightbox-src="${esc(sw.imagen)}" data-lightbox-caption="${esc(sw.titulo || '')}"` : ''}><img src="${esc(sw.imagen)}" alt="${esc(sw.titulo || 'Servicio')}"></div>` : ''}
-          <div class="servicio-web-card__cabecera">
-            <h3 class="servicio-web-card__titulo">${sw.titulo.trim() ? esc(sw.titulo) : vacioHTML('Servicio')}</h3>
-            ${sw.precio.trim() ? `<span class="servicio-web-card__precio">${esc(sw.precio.trim())}</span>` : ''}
-          </div>
-          ${sw.descripcion.trim() ? `<p class="servicio-web-card__desc">${esc(sw.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
-          ${web ? (linkSrv
-            ? `<a class="boton boton--secundario boton--chico servicio-web-card__cta" href="${esc(linkSrv)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(sw.cta.trim() || 'Consultar')}</a>`
-            : `<button type="button" class="boton boton--secundario boton--chico servicio-web-card__cta" data-accion="contacto-demo">${esc(sw.cta.trim() || 'Consultar')}</button>`) : ''}
-        </article>`;
-    }).join('')}</div>`;
-    bloques.push({
-      id: 'sec-servicios',
-      nav: 'Servicios',
-      titulo: s.opciones?.serviciosTitulo?.trim() || 'Servicios y soluciones',
-      html: htmlSrv
-    });
-  }
-
-  if (testimoniosValidos.length) {
-    bloques.push({
-      id: 'sec-testimonios',
-      nav: 'Testimonios',
-      titulo: 'Qué dicen quienes trabajaron conmigo',
-      html: testimoniosSeccionHTML(testimoniosValidos, web, usaLightbox)
-    });
-  }
-
-  if (faqsValidas.length) {
-    bloques.push({
-      id: 'sec-faq',
-      nav: 'Preguntas',
-      titulo: 'Preguntas frecuentes',
-      html: faqsSeccionHTML(faqsValidas, web)
-    });
-  }
-
-  if (web) {
-    const botonesCierre = [];
-    if (waUrl) {
-      botonesCierre.push(`<a class="boton boton--primario boton--grande" href="${esc(waUrl)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(ctaLabel)} por WhatsApp</a>`);
-    }
-    if (mailUrl) {
-      botonesCierre.push(`<a class="boton ${waUrl ? 'boton--secundario' : 'boton--primario'} boton--grande" href="${esc(mailUrl)}" data-enlace-cliente>${waUrl ? 'Escribir por email' : esc(ctaLabel)}</a>`);
-    }
-    if (!botonesCierre.length) {
-      botonesCierre.push(`<button type="button" class="boton boton--primario boton--grande" data-accion="contacto-demo">${esc(ctaLabel)}</button>`);
-    }
-    bloques.push({
-      id: 'sec-contacto',
-      nav: 'Contacto',
-      titulo: 'Contacto',
-      html: `
-        <div class="cierre">
-          <p class="cierre__titulo">${esc(pf.cierreTitulo.trim() || '¿Trabajamos juntos?')}</p>
-          <p class="cierre__texto">${esc(pf.cierreTexto.trim() || 'Contame qué tenés en mente y armamos una propuesta a medida.')}</p>
-          <div class="cierre__acciones">${botonesCierre.join('')}</div>
-        </div>`
-    });
-  }
-
-  const navLanding = web && s.opciones?.barraNav !== false && bloques.length > 1
-    ? `<nav class="doc-nav" aria-label="Secciones de la página">
-        <a class="doc-nav__marca" href="#sec-inicio" data-scroll-interno>${esc(e.nombre.trim() || pf.insignia.trim() || 'Inicio')}</a>
-        <ul class="doc-nav__links">
-          ${bloques.filter(b => b.nav).map(b => `<li><a class="doc-nav__link" href="#${esc(b.id)}" data-scroll-interno>${esc(b.nav)}</a></li>`).join('')}
-        </ul>
-      </nav>`
-    : '';
-
-  const contactos = [];
-  if (e.email.trim()) contactos.push(web ? `<a href="mailto:${esc(e.email.trim())}" data-enlace-cliente>${esc(e.email.trim())}</a>` : esc(e.email.trim()));
-  if (e.telefono.trim()) contactos.push(esc(e.telefono.trim()));
-  if (e.web.trim()) {
-    const url = /^https?:\/\//i.test(e.web.trim()) ? e.web.trim() : `https://${e.web.trim()}`;
-    contactos.push(web ? `<a href="${esc(url)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(e.web.trim())}</a>` : esc(e.web.trim()));
-  }
-  const pie = `
-    <footer class="pie">
-      ${e.nombre.trim() ? `<span class="pie__nombre">${esc(e.nombre)}</span>` : ''}
-      ${contactos.map(x => `<span>${x}</span>`).join('')}
-      ${s.opciones.credito ? creditoHTML('portafolio', web) : ''}
-    </footer>`;
-
-  const barraInferior = web ? `
-    <div class="barra-cliente">
-      <div>
-        <span class="barra-cliente__etiqueta">${esc(pf.disponibilidad.trim() || 'Página profesional')}</span>
-        <span class="barra-cliente__monto">${esc(e.nombre.trim() || pf.titulo.trim() || 'Disponible')}</span>
-        ${e.rol.trim() ? `<span class="barra-cliente__extra">${esc(e.rol.trim())}</span>` : ''}
-      </div>
-      ${principalUrl
-        ? `<a class="boton boton--primario" href="${esc(principalUrl)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(ctaLabel)}</a>`
-        : `<button type="button" class="boton boton--primario" data-accion="contacto-demo">${esc(ctaLabel)}</button>`}
-    </div>` : '';
-
-  const cuerpo = `
-    <div class="cuerpo">
-      ${bloques.length ? bloques.map((b, i) => `
-        <section class="bloque" id="${esc(b.id || `sec-${i + 1}`)}">
-          <span class="bloque__num" aria-hidden="true">${i + 1}</span>
-          <div class="bloque__contenido">
-            <h2 class="bloque__titulo">${esc(b.titulo)}</h2>
-            ${b.html}
-          </div>
-        </section>`).join('') : '<p class="doc-nota">Sumá tus proyectos o fotos desde el panel izquierdo para armar tu página.</p>'}
-      ${pie}
-    </div>`;
-
-  return portada + navLanding + cuerpo + barraInferior;
-};
 
 // Presupuesto en tabla (opciones.formato === 'presupuesto'): una hoja como la de toda la
 // vida, para cualquier oficio. Es el mismo link: el cliente suma opcionales y acepta online.
