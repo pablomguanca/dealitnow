@@ -92,6 +92,35 @@ export const ENCUADRES_IMAGEN = {
   derecha: { nombre: 'Derecha', css: 'right center' }
 };
 const encuadreValido = v => (ENCUADRES_IMAGEN[v] ? v : 'centro');
+
+// Foto de portada del portfolio: cómo se recorta y se muestra para que cualquier imagen
+// (una foto, un logo, una ilustración) se vea bien. La primera opción es la de siempre.
+export const FOTO_PORTADA = {
+  forma: {
+    auto: 'Automática (según la portada)',
+    vertical: 'Vertical (4:5)',
+    cuadrada: 'Cuadrada (1:1)',
+    horizontal: 'Horizontal (4:3)',
+    panoramica: 'Panorámica (16:9)',
+    natural: 'Original (como la subiste)'
+  },
+  ajuste: {
+    recortar: 'Llenar el marco (recorta lo que sobra)',
+    entera: 'Mostrar entera (sin recortar)'
+  },
+  mascara: {
+    recta: 'Recta',
+    redondeada: 'Esquinas redondeadas',
+    arco: 'Arco',
+    circulo: 'Círculo'
+  },
+  tamano: {
+    mediana: 'Mediana',
+    chica: 'Chica',
+    grande: 'Grande'
+  }
+};
+const opcionFoto = (grupo, v) => (FOTO_PORTADA[grupo][v] ? v : Object.keys(FOTO_PORTADA[grupo])[0]);
 const disposicionValida = v => (DISPOSICIONES_FOTOS[v] ? v : 'grilla');
 
 export const LAYOUTS_GALERIA = {
@@ -1188,6 +1217,12 @@ export const vacioPortafolio = () => ({
     disponibilidad: 'Disponible para nuevos proyectos',
     imagenPortada: '',
     opacidadPortada: 35,
+    formaPortada: 'auto',
+    ajustePortada: 'recortar',
+    mascaraPortada: 'recta',
+    tamanoPortada: 'mediana',
+    encuadrePortada: 'centro',
+    zoomPortada: 100,
     ctaTexto: 'Contactar',
     cierreTitulo: '¿Trabajamos juntos en tu próximo proyecto?',
     cierreTexto: 'Escribime por WhatsApp o email para conversar sobre tu proyecto o solicitar una propuesta a medida.'
@@ -1752,7 +1787,13 @@ export const normalizarPortafolio = (datos, { logoValido = logo => /^data:image\
     emisor: limpiar(d.emisor, base.emisor),
     portafolio: {
       ...limpiar(d.portafolio, base.portafolio),
-      opacidadPortada: opPortadaValida
+      opacidadPortada: opPortadaValida,
+      formaPortada: opcionFoto('forma', d.portafolio?.formaPortada),
+      ajustePortada: opcionFoto('ajuste', d.portafolio?.ajustePortada),
+      mascaraPortada: opcionFoto('mascara', d.portafolio?.mascaraPortada),
+      tamanoPortada: opcionFoto('tamano', d.portafolio?.tamanoPortada),
+      encuadrePortada: encuadreValido(d.portafolio?.encuadrePortada),
+      zoomPortada: rangoEntero(d.portafolio?.zoomPortada, 100, 250, 100)
     },
     especialidades: lista(d.especialidades, LISTAS_PORTAFOLIO.especialidades.nuevo),
     video: normalizarVideo(d.video, texto),

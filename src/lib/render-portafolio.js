@@ -10,6 +10,7 @@
 
 import { esc, parrafos } from './formato.js';
 import { atributoEditar } from '../editar-documento.js';
+import { ENCUADRES_IMAGEN } from '../modelo.js';
 import {
   ICONO_EXTERNO,
   vacioHTML,
@@ -111,9 +112,18 @@ export const generarPortafolioHTML = (s, { web = true, tipoPortada = 'editorial'
   if (especialidades.length) datosHero.push([dosDigitos(especialidades.length), especialidades.length === 1 ? 'Especialidad' : 'Especialidades', 'pf:lista:especialidades']);
   if (e.ubicacion?.trim()) datosHero.push([esc(e.ubicacion.trim()), 'Base', 'emisor.ubicacion', true]);
 
+  // La foto va en un marco: forma (proporción), máscara, si llena el marco o va entera,
+  // qué parte se ve y zoom. Lo elige el dueño en el paso «Portada» (ver FOTO_PORTADA).
+  const posFoto = (ENCUADRES_IMAGEN[pf.encuadrePortada] || ENCUADRES_IMAGEN.centro).css;
+  const zoomFoto = pf.ajustePortada === 'entera' ? 1 : Math.min(2.5, Math.max(1, (Number(pf.zoomPortada) || 100) / 100));
+  const estiloFoto = [
+    `--pf-foto-pos:${posFoto}`,
+    `--pf-foto-zoom:${zoomFoto}`,
+    hero === 'impacto' ? `--pf-foto-op:${opFoto}` : ''
+  ].filter(Boolean).join(';');
   const visual = foto
-    ? `<figure class="pf-hero__foto"${ed('paso:Portada')}${hero === 'impacto' ? ` style="--pf-foto-op:${opFoto}"` : ''}>
-        <img src="${esc(foto)}" alt="${esc(titulo || nombre || 'Portada')}">
+    ? `<figure class="pf-hero__foto" data-forma="${esc(pf.formaPortada || 'auto')}" data-ajuste="${esc(pf.ajustePortada || 'recortar')}" data-mascara="${esc(pf.mascaraPortada || 'recta')}"${ed('paso:Portada')} style="${esc(estiloFoto)}">
+        <div class="pf-hero__marco"><img src="${esc(foto)}" alt="${esc(titulo || nombre || 'Portada')}"></div>
       </figure>`
     : `<div class="pf-hero__arte"${ed('paso:Portada')} aria-hidden="true">
         <span class="pf-hero__monograma">${esc(iniciales(nombre, titulo))}</span>
@@ -121,7 +131,7 @@ export const generarPortafolioHTML = (s, { web = true, tipoPortada = 'editorial'
       </div>`;
 
   const portada = `
-    <header class="pf-hero pf-hero--${hero} ${foto ? 'pf-hero--con-foto' : 'pf-hero--sin-foto'}" id="sec-inicio" aria-label="Portada">
+    <header class="pf-hero pf-hero--${hero} ${foto ? 'pf-hero--con-foto' : 'pf-hero--sin-foto'}"${foto ? ` data-tamano="${esc(pf.tamanoPortada || 'mediana')}"` : ''} id="sec-inicio" aria-label="Portada">
       ${visual}
       <div class="pf-hero__barra">
         ${marca}

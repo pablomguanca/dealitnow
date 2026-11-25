@@ -1186,3 +1186,152 @@
     padding: 1.2em 1.4em;
   }
 }
+
+/* ---------- Foto de portada: marco, forma, máscara, ajuste, encuadre, zoom y tamaño ---------- */
+// Las opciones salen de FOTO_PORTADA (modelo.js) y van como data-* en la figura.
+
+.pf-hero__marco {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: var(--pf-foto-pos, center);
+    transform: scale(var(--pf-foto-zoom, 1));
+    transform-origin: var(--pf-foto-pos, center);
+  }
+}
+
+// Entera: la imagen completa, sin recortar (logos, ilustraciones), sobre un fondo suave.
+.pf-hero__foto[data-ajuste="entera"] .pf-hero__marco {
+  background: var(--portada-superficie, rgba(127, 127, 127, 0.08));
+
+  img {
+    object-fit: contain;
+    transform: none;
+  }
+}
+
+// Forma del marco (en la portada clásica, y en la dividida en celular).
+.pf-hero--bloque .pf-hero__foto,
+.pf-hero--dividida .pf-hero__foto {
+  &[data-forma="vertical"] { aspect-ratio: 4 / 5; }
+  &[data-forma="cuadrada"] { aspect-ratio: 1 / 1; }
+  &[data-forma="horizontal"] { aspect-ratio: 4 / 3; }
+  &[data-forma="panoramica"] { aspect-ratio: 16 / 9; }
+
+  // Original: el marco toma la proporción de la imagen.
+  &[data-forma="natural"] {
+    aspect-ratio: auto;
+
+    .pf-hero__marco,
+    .pf-hero__marco img {
+      height: auto;
+    }
+  }
+
+  // Máscaras. El bloque de color que asoma detrás acompaña la forma.
+  &[data-mascara="redondeada"] {
+    .pf-hero__marco,
+    &::before {
+      border-radius: 1.4em;
+    }
+  }
+
+  &[data-mascara="arco"] {
+    .pf-hero__marco,
+    &::before {
+      border-radius: 999em 999em 0.3em 0.3em;
+    }
+  }
+
+  &[data-mascara="circulo"] {
+    aspect-ratio: 1 / 1;
+
+    .pf-hero__marco,
+    &::before {
+      border-radius: 50%;
+    }
+
+    .pf-hero__marco,
+    .pf-hero__marco img {
+      height: 100%;
+    }
+  }
+}
+
+// En la dividida, el marco con máscara no va de punta a punta: respira dentro de su mitad.
+.pf-hero--dividida .pf-hero__foto:not([data-mascara="recta"]) {
+  margin-inline: 0;
+}
+
+// Tamaño en celular: la chica no ocupa todo el ancho.
+.pf-hero--bloque[data-tamano="chica"] .pf-hero__foto,
+.pf-hero--dividida[data-tamano="chica"] .pf-hero__foto {
+  width: 62%;
+}
+
+@container (min-width: 760px) {
+  // Clásica: cuánto de la portada ocupa la foto.
+  .pf-hero--bloque[data-tamano="chica"] {
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 0.45fr);
+  }
+
+  .pf-hero--bloque[data-tamano="grande"] {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  }
+
+  .pf-hero--bloque[data-tamano="chica"] .pf-hero__foto {
+    width: 100%;
+  }
+
+  // Dividida: la foto ocupa más o menos de la mitad.
+  .pf-hero--dividida[data-tamano="chica"] {
+    grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr);
+  }
+
+  .pf-hero--dividida[data-tamano="grande"] {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.75fr);
+  }
+
+  .pf-hero--dividida[data-tamano="chica"] .pf-hero__foto {
+    width: 100%;
+  }
+
+  // Con una forma elegida (o una máscara), la foto deja de llenar la mitad entera y se
+  // centra en ella, con su proporción.
+  .pf-hero--dividida .pf-hero__foto:is([data-forma]:not([data-forma="auto"]), :not([data-mascara="recta"])) {
+    align-self: center;
+    margin: clamp(1.4em, 4cqw, 3em);
+  }
+}
+
+// Entera con forma automática: el marco toma la proporción de la imagen (sin franjas).
+.pf-hero--bloque .pf-hero__foto,
+.pf-hero--dividida .pf-hero__foto {
+  &[data-ajuste="entera"][data-forma="auto"]:not([data-mascara="circulo"]) {
+    aspect-ratio: auto;
+    align-self: center;
+
+    .pf-hero__marco,
+    .pf-hero__marco img {
+      height: auto;
+    }
+
+    .pf-hero__marco {
+      background: none;
+    }
+  }
+}
+
+@container (min-width: 760px) {
+  .pf-hero--dividida .pf-hero__foto[data-ajuste="entera"][data-forma="auto"] {
+    margin: clamp(1.4em, 4cqw, 3em);
+  }
+}

@@ -391,3 +391,14 @@
     text-decoration: underline;
   }
 }
+
+// Ajustes de la foto de portada en el editor (PortfolioSteps.jsx): se ocultan con hidden,
+// que .grilla y .campo pisarían con su propio display.
+.foto-ajustes[hidden],
+.foto-ajustes [hidden] {
+  display: none;
+}
+
+.foto-ajustes {
+  margin-top: -0.2rem;
+}

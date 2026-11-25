@@ -134,6 +134,10 @@ export const actualizarLogo = () => {
     pintarImagen(prefijo, img, 'Subir foto de portada', 'Cambiar foto de portada');
     if ($(`#${prefijo}-opacidad-wrap`)) $(`#${prefijo}-opacidad-wrap`).hidden = !img;
     if ($(`#${prefijo}-opacidad-val`)) $(`#${prefijo}-opacidad-val`).textContent = `${datos?.opacidadPortada ?? 35}%`;
+    // Ajustes de la foto (solo en el portfolio): se ven cuando hay foto; el zoom, al recortar.
+    if ($(`#${prefijo}-ajustes`)) $(`#${prefijo}-ajustes`).hidden = !img;
+    if ($(`#${prefijo}-zoom-val`)) $(`#${prefijo}-zoom-val`).textContent = `${datos?.zoomPortada ?? 100}%`;
+    if ($(`#${prefijo}-zoom-wrap`)) $(`#${prefijo}-zoom-wrap`).hidden = datos?.ajustePortada === 'entera';
   });
 };
 
@@ -311,7 +315,7 @@ const alEditar = ev => {
     }
     if (el.dataset.campoPf) {
       asignar(estadoPortafolio, el.dataset.campoPf, leerValor(el));
-      if (el.dataset.campoPf === 'portafolio.opacidadPortada') actualizarLogo();
+      if (/^portafolio.(opacidad|zoom|ajuste)Portada$/.test(el.dataset.campoPf)) actualizarLogo();
       actualizar();
       return;
     }

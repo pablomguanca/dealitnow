@@ -158,3 +158,26 @@ describe('portfolio', () => {
     expect(heroDePortada('cualquiera')).toBe('bloque');
   });
 });
+
+describe('foto de portada del portfolio', () => {
+  const conFoto = portafolio => normalizarPortafolio({
+    ...vacioPortafolio(),
+    portafolio: { ...vacioPortafolio().portafolio, imagenPortada: 'data:image/png;base64,AA', ...portafolio }
+  }, { logoValido: () => true });
+
+  it('valida las opciones y usa las de siempre si faltan o vienen mal', () => {
+    const vieja = conFoto({});
+    expect(vieja.portafolio).toMatchObject({ formaPortada: 'auto', ajustePortada: 'recortar', mascaraPortada: 'recta', tamanoPortada: 'mediana', encuadrePortada: 'centro', zoomPortada: 100 });
+    const mala = conFoto({ formaPortada: 'rara', ajustePortada: 'x', zoomPortada: 999, encuadrePortada: 'diagonal' });
+    expect(mala.portafolio).toMatchObject({ formaPortada: 'auto', ajustePortada: 'recortar', zoomPortada: 250, encuadrePortada: 'centro' });
+  });
+
+  it('el marco lleva forma, ajuste, máscara, encuadre y zoom; entera no hace zoom', () => {
+    const html = generarPortafolioHTML(conFoto({ formaPortada: 'cuadrada', mascaraPortada: 'circulo', tamanoPortada: 'grande', encuadrePortada: 'arriba', zoomPortada: 150 }));
+    expect(html).toContain('data-tamano="grande"');
+    expect(html).toContain('data-forma="cuadrada"');
+    expect(html).toContain('data-mascara="circulo"');
+    expect(html).toContain('--pf-foto-pos:center top;--pf-foto-zoom:1.5');
+    expect(generarPortafolioHTML(conFoto({ ajustePortada: 'entera', zoomPortada: 150 }))).toContain('--pf-foto-zoom:1');
+  });
+});

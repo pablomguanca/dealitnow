@@ -1,5 +1,7 @@
 // Pasos 2 a 4 del editor de portfolios y páginas web: portada Hero, casos/proyectos, servicios web, galería, testimonios, FAQs y cierre.
 
+import { FOTO_PORTADA, ENCUADRES_IMAGEN } from '../../modelo.js';
+
 export function PortfolioSteps() {
   return (
     <div id="pasos-portafolio" hidden>
@@ -42,6 +44,49 @@ export function PortfolioSteps() {
                 <button type="button" className="boton boton--texto boton--chico" data-accion="quitar-portada-pf" id="portada-pf-quitar" hidden>Quitar</button>
               </div>
               <p className="campo__ayuda">Sin foto, la portada se arma igual con tu nombre y tu color. Acepta imágenes de hasta 50 MB (se optimizan solas).</p>
+            </div>
+            {/* Cómo se muestra la foto: forma, si se recorta o va entera, máscara, tamaño,
+                qué parte se ve y zoom. Aparece cuando hay foto (controlador/formulario.js). */}
+            <div className="campo--ancho grilla foto-ajustes" id="portada-pf-ajustes" hidden>
+              <p className="campo__ayuda campo--ancho foto-ajustes__intro">Ajustá cómo se ve la foto. Si es un logo o una ilustración, elegí «Mostrar entera» para que no se corte.</p>
+              <label className="campo">
+                <span className="campo__etiqueta">Cómo se ve</span>
+                <select className="control" data-campo-pf="portafolio.ajustePortada">
+                  {Object.entries(FOTO_PORTADA.ajuste).map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+                </select>
+              </label>
+              <label className="campo">
+                <span className="campo__etiqueta">Forma del marco</span>
+                <select className="control" data-campo-pf="portafolio.formaPortada">
+                  {Object.entries(FOTO_PORTADA.forma).map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+                </select>
+              </label>
+              <label className="campo">
+                <span className="campo__etiqueta">Máscara</span>
+                <select className="control" data-campo-pf="portafolio.mascaraPortada">
+                  {Object.entries(FOTO_PORTADA.mascara).map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+                </select>
+              </label>
+              <label className="campo">
+                <span className="campo__etiqueta">Tamaño</span>
+                <select className="control" data-campo-pf="portafolio.tamanoPortada">
+                  {Object.entries(FOTO_PORTADA.tamano).map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+                </select>
+              </label>
+              <label className="campo">
+                <span className="campo__etiqueta">Qué parte se ve</span>
+                <select className="control" data-campo-pf="portafolio.encuadrePortada">
+                  {Object.entries(ENCUADRES_IMAGEN).map(([v, o]) => <option key={v} value={v}>{o.nombre}</option>)}
+                </select>
+              </label>
+              <label className="campo" id="portada-pf-zoom-wrap">
+                <span className="campo__etiqueta campo__etiqueta--fila">
+                  <span>Zoom</span>
+                  <output className="campo__valor" id="portada-pf-zoom-val">100%</output>
+                </span>
+                <input className="rango-input" type="range" min="100" max="250" step="5" data-campo-pf="portafolio.zoomPortada" data-tipo="numero" />
+              </label>
+              <p className="campo__ayuda campo--ancho">En la portada «Banda de impacto» la foto va de fondo: ahí cuentan cómo se ve, qué parte se ve, el zoom y la intensidad.</p>
             </div>
             <label className="campo campo--ancho" id="portada-pf-opacidad-wrap" hidden>
               <span className="campo__etiqueta campo__etiqueta--fila">
