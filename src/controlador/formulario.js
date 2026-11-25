@@ -127,6 +127,11 @@ export const actualizarLogo = () => {
   const actual = docActivo();
   pintarImagen('logo', actual.emisor.logo, 'Subir logo', 'Cambiar logo');
   pintarImagen('foto-emisor', actual.emisor.foto || '', 'Subir foto', 'Cambiar foto');
+  // Ajustes de la foto de «Sobre mí» (solo en el portfolio; el CSS los oculta en propuestas).
+  const pfDatos = ctx.estadoPortafolio?.portafolio;
+  if ($('#foto-emisor-ajustes')) $('#foto-emisor-ajustes').hidden = !(ctx.modoEditor === 'portafolio' && actual.emisor.foto);
+  if ($('#foto-emisor-zoom-val')) $('#foto-emisor-zoom-val').textContent = `${pfDatos?.zoomFotoSobre ?? 100}%`;
+  if ($('#foto-emisor-zoom-wrap')) $('#foto-emisor-zoom-wrap').hidden = pfDatos?.ajusteFotoSobre === 'entera';
 
   // Foto de portada Hero de la propuesta y del portfolio
   [['portada-prop', ctx.estado.propuesta], ['portada-pf', ctx.estadoPortafolio.portafolio]].forEach(([prefijo, datos]) => {
@@ -315,7 +320,7 @@ const alEditar = ev => {
     }
     if (el.dataset.campoPf) {
       asignar(estadoPortafolio, el.dataset.campoPf, leerValor(el));
-      if (/^portafolio.(opacidad|zoom|ajuste)Portada$/.test(el.dataset.campoPf)) actualizarLogo();
+      if (/^portafolio\.((opacidad|zoom|ajuste)Portada|(zoom|ajuste)FotoSobre)$/.test(el.dataset.campoPf)) actualizarLogo();
       actualizar();
       return;
     }

@@ -1223,6 +1223,13 @@ export const vacioPortafolio = () => ({
     tamanoPortada: 'mediana',
     encuadrePortada: 'centro',
     zoomPortada: 100,
+    // Foto de «Sobre mí» (emisor.foto): mismas opciones que la de portada (FOTO_PORTADA).
+    formaFotoSobre: 'auto',
+    ajusteFotoSobre: 'recortar',
+    mascaraFotoSobre: 'recta',
+    tamanoFotoSobre: 'mediana',
+    encuadreFotoSobre: 'centro',
+    zoomFotoSobre: 100,
     ctaTexto: 'Contactar',
     cierreTitulo: '¿Trabajamos juntos en tu próximo proyecto?',
     cierreTexto: 'Escribime por WhatsApp o email para conversar sobre tu proyecto o solicitar una propuesta a medida.'
@@ -1793,7 +1800,13 @@ export const normalizarPortafolio = (datos, { logoValido = logo => /^data:image\
       mascaraPortada: opcionFoto('mascara', d.portafolio?.mascaraPortada),
       tamanoPortada: opcionFoto('tamano', d.portafolio?.tamanoPortada),
       encuadrePortada: encuadreValido(d.portafolio?.encuadrePortada),
-      zoomPortada: rangoEntero(d.portafolio?.zoomPortada, 100, 250, 100)
+      zoomPortada: rangoEntero(d.portafolio?.zoomPortada, 100, 250, 100),
+      formaFotoSobre: opcionFoto('forma', d.portafolio?.formaFotoSobre),
+      ajusteFotoSobre: opcionFoto('ajuste', d.portafolio?.ajusteFotoSobre),
+      mascaraFotoSobre: opcionFoto('mascara', d.portafolio?.mascaraFotoSobre),
+      tamanoFotoSobre: opcionFoto('tamano', d.portafolio?.tamanoFotoSobre),
+      encuadreFotoSobre: encuadreValido(d.portafolio?.encuadreFotoSobre),
+      zoomFotoSobre: rangoEntero(d.portafolio?.zoomFotoSobre, 100, 250, 100)
     },
     especialidades: lista(d.especialidades, LISTAS_PORTAFOLIO.especialidades.nuevo),
     video: normalizarVideo(d.video, texto),

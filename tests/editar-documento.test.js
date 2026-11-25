@@ -180,4 +180,13 @@ describe('foto de portada del portfolio', () => {
     expect(html).toContain('--pf-foto-pos:center top;--pf-foto-zoom:1.5');
     expect(generarPortafolioHTML(conFoto({ ajustePortada: 'entera', zoomPortada: 150 }))).toContain('--pf-foto-zoom:1');
   });
+
+  it('la foto de «Sobre mí» tiene los mismos ajustes', () => {
+    const d = conFoto({ ajusteFotoSobre: 'entera', mascaraFotoSobre: 'arco', tamanoFotoSobre: 'chica', zoomFotoSobre: 180 });
+    d.emisor.foto = 'data:image/png;base64,BB';
+    const html = generarPortafolioHTML(d);
+    expect(html).toMatch(/<section class="pf-sec pf-sobre" id="sec-sobre-mi" data-tamano="chica">/);
+    expect(html).toMatch(/<figure class="pf-sobre__foto" data-forma="auto" data-ajuste="entera" data-mascara="arco"[^>]*--pf-foto-zoom:1"/);
+    expect(normalizarPortafolio({ portafolio: { zoomFotoSobre: 5 } }).portafolio.zoomFotoSobre).toBe(100);
+  });
 });

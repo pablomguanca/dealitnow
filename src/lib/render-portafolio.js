@@ -55,6 +55,17 @@ export const iniciales = (...textos) => {
   return 'P';
 };
 
+// Marco de una foto con sus ajustes (FOTO_PORTADA): forma, si llena el marco o va entera,
+// máscara, qué parte se ve y zoom. Lo usan la portada y «Sobre mí».
+const marcoFoto = ({ clase, src, alt, forma, ajuste, mascara, encuadre, zoom, editar = '', estiloExtra = '', atributosImg = '' }) => {
+  const pos = (ENCUADRES_IMAGEN[encuadre] || ENCUADRES_IMAGEN.centro).css;
+  const escala = ajuste === 'entera' ? 1 : Math.min(2.5, Math.max(1, (Number(zoom) || 100) / 100));
+  const estilo = [`--pf-foto-pos:${pos}`, `--pf-foto-zoom:${escala}`, estiloExtra].filter(Boolean).join(';');
+  return `<figure class="${clase}" data-forma="${esc(forma || 'auto')}" data-ajuste="${esc(ajuste || 'recortar')}" data-mascara="${esc(mascara || 'recta')}"${editar} style="${esc(estilo)}">
+        <div class="pf-hero__marco pf-marco"><img src="${esc(src)}" alt="${esc(alt)}"${atributosImg}></div>
+      </figure>`;
+};
+
 const ICONO_FLECHA = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h9M8.5 4l4 4-4 4"/></svg>';
 const ICONO_UBICACION = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14s4.5-4.2 4.5-7.5a4.5 4.5 0 1 0-9 0C3.5 9.8 8 14 8 14z"/><circle cx="8" cy="6.5" r="1.5"/></svg>';
 
@@ -114,17 +125,19 @@ export const generarPortafolioHTML = (s, { web = true, tipoPortada = 'editorial'
 
   // La foto va en un marco: forma (proporción), máscara, si llena el marco o va entera,
   // qué parte se ve y zoom. Lo elige el dueño en el paso «Portada» (ver FOTO_PORTADA).
-  const posFoto = (ENCUADRES_IMAGEN[pf.encuadrePortada] || ENCUADRES_IMAGEN.centro).css;
-  const zoomFoto = pf.ajustePortada === 'entera' ? 1 : Math.min(2.5, Math.max(1, (Number(pf.zoomPortada) || 100) / 100));
-  const estiloFoto = [
-    `--pf-foto-pos:${posFoto}`,
-    `--pf-foto-zoom:${zoomFoto}`,
-    hero === 'impacto' ? `--pf-foto-op:${opFoto}` : ''
-  ].filter(Boolean).join(';');
   const visual = foto
-    ? `<figure class="pf-hero__foto" data-forma="${esc(pf.formaPortada || 'auto')}" data-ajuste="${esc(pf.ajustePortada || 'recortar')}" data-mascara="${esc(pf.mascaraPortada || 'recta')}"${ed('paso:Portada')} style="${esc(estiloFoto)}">
-        <div class="pf-hero__marco"><img src="${esc(foto)}" alt="${esc(titulo || nombre || 'Portada')}"></div>
-      </figure>`
+    ? marcoFoto({
+      clase: 'pf-hero__foto',
+      src: foto,
+      alt: titulo || nombre || 'Portada',
+      forma: pf.formaPortada,
+      ajuste: pf.ajustePortada,
+      mascara: pf.mascaraPortada,
+      encuadre: pf.encuadrePortada,
+      zoom: pf.zoomPortada,
+      editar: ed('paso:Portada'),
+      estiloExtra: hero === 'impacto' ? `--pf-foto-op:${opFoto}` : ''
+    })
     : `<div class="pf-hero__arte"${ed('paso:Portada')} aria-hidden="true">
         <span class="pf-hero__monograma">${esc(iniciales(nombre, titulo))}</span>
         <span class="pf-hero__palabra">Portfolio<span> · ${new Date().getFullYear()}</span></span>
@@ -166,11 +179,19 @@ export const generarPortafolioHTML = (s, { web = true, tipoPortada = 'editorial'
       ? `<ul class="pf-sobre__chips">${especialidades.map(x => `<li${clave('especialidades', s.especialidades)(x, 'texto')}>${esc(x.texto.trim())}</li>`).join('')}</ul>`
       : '';
     sumar('sec-sobre-mi', 'Sobre mí', `
-      <section class="pf-sec pf-sobre${e.foto ? '' : ' pf-sobre--sin-foto'}" id="sec-sobre-mi">
-        ${e.foto ? `
-          <figure class="pf-sobre__foto"${ed('paso:Tus datos')}>
-            <img src="${esc(e.foto)}" alt="${esc(nombre || 'Foto de perfil')}"${lb ? ` data-lightbox-src="${esc(e.foto)}" data-lightbox-caption="${esc(nombre)}"` : ''}>
-          </figure>` : ''}
+      <section class="pf-sec pf-sobre${e.foto ? '' : ' pf-sobre--sin-foto'}" id="sec-sobre-mi"${e.foto ? ` data-tamano="${esc(pf.tamanoFotoSobre || 'mediana')}"` : ''}>
+        ${e.foto ? marcoFoto({
+          clase: 'pf-sobre__foto',
+          src: e.foto,
+          alt: nombre || 'Foto de perfil',
+          forma: pf.formaFotoSobre,
+          ajuste: pf.ajusteFotoSobre,
+          mascara: pf.mascaraFotoSobre,
+          encuadre: pf.encuadreFotoSobre,
+          zoom: pf.zoomFotoSobre,
+          editar: ed('paso:Tus datos'),
+          atributosImg: lb ? ` data-lightbox-src="${esc(e.foto)}" data-lightbox-caption="${esc(nombre)}"` : ''
+        }) : ''}
         <div class="pf-sobre__texto">
           <p class="pf-sobre__etiqueta"><span aria-hidden="true">${dosDigitos(num())}</span> Sobre mí</p>
           <h2 class="pf-sobre__titulo"${ed('emisor.nombre')}>${nombre ? `Hola, soy ${tituloSinCortes(nombre)}` : 'Quién soy'}</h2>

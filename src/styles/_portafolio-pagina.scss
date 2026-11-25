@@ -540,6 +540,7 @@
 
   &__foto {
     position: relative;
+    aspect-ratio: 4 / 5; // forma automática; la cambian los ajustes de la foto
     max-width: 24em;
     margin: 0 1.2em 1.2em 0;
 
@@ -550,13 +551,7 @@
       background: var(--dorado);
     }
 
-    img {
-      position: relative;
-      display: block;
-      width: 100%;
-      aspect-ratio: 4 / 5;
-      object-fit: cover;
-    }
+
 
     [data-lightbox-src] {
       cursor: zoom-in;
@@ -1190,7 +1185,7 @@
 /* ---------- Foto de portada: marco, forma, máscara, ajuste, encuadre, zoom y tamaño ---------- */
 // Las opciones salen de FOTO_PORTADA (modelo.js) y van como data-* en la figura.
 
-.pf-hero__marco {
+.pf-marco {
   position: relative;
   z-index: 1;
   width: 100%;
@@ -1209,7 +1204,7 @@
 }
 
 // Entera: la imagen completa, sin recortar (logos, ilustraciones), sobre un fondo suave.
-.pf-hero__foto[data-ajuste="entera"] .pf-hero__marco {
+.pf-hero__foto[data-ajuste="entera"] .pf-marco {
   background: var(--portada-superficie, rgba(127, 127, 127, 0.08));
 
   img {
@@ -1220,7 +1215,8 @@
 
 // Forma del marco (en la portada clásica, y en la dividida en celular).
 .pf-hero--bloque .pf-hero__foto,
-.pf-hero--dividida .pf-hero__foto {
+.pf-hero--dividida .pf-hero__foto,
+.pf-sobre__foto {
   &[data-forma="vertical"] { aspect-ratio: 4 / 5; }
   &[data-forma="cuadrada"] { aspect-ratio: 1 / 1; }
   &[data-forma="horizontal"] { aspect-ratio: 4 / 3; }
@@ -1230,22 +1226,22 @@
   &[data-forma="natural"] {
     aspect-ratio: auto;
 
-    .pf-hero__marco,
-    .pf-hero__marco img {
+    .pf-marco,
+    .pf-marco img {
       height: auto;
     }
   }
 
   // Máscaras. El bloque de color que asoma detrás acompaña la forma.
   &[data-mascara="redondeada"] {
-    .pf-hero__marco,
+    .pf-marco,
     &::before {
       border-radius: 1.4em;
     }
   }
 
   &[data-mascara="arco"] {
-    .pf-hero__marco,
+    .pf-marco,
     &::before {
       border-radius: 999em 999em 0.3em 0.3em;
     }
@@ -1254,13 +1250,13 @@
   &[data-mascara="circulo"] {
     aspect-ratio: 1 / 1;
 
-    .pf-hero__marco,
+    .pf-marco,
     &::before {
       border-radius: 50%;
     }
 
-    .pf-hero__marco,
-    .pf-hero__marco img {
+    .pf-marco,
+    .pf-marco img {
       height: 100%;
     }
   }
@@ -1314,17 +1310,18 @@
 
 // Entera con forma automática: el marco toma la proporción de la imagen (sin franjas).
 .pf-hero--bloque .pf-hero__foto,
-.pf-hero--dividida .pf-hero__foto {
+.pf-hero--dividida .pf-hero__foto,
+.pf-sobre__foto {
   &[data-ajuste="entera"][data-forma="auto"]:not([data-mascara="circulo"]) {
     aspect-ratio: auto;
     align-self: center;
 
-    .pf-hero__marco,
-    .pf-hero__marco img {
+    .pf-marco,
+    .pf-marco img {
       height: auto;
     }
 
-    .pf-hero__marco {
+    .pf-marco {
       background: none;
     }
   }
@@ -1333,5 +1330,24 @@
 @container (min-width: 760px) {
   .pf-hero--dividida .pf-hero__foto[data-ajuste="entera"][data-forma="auto"] {
     margin: clamp(1.4em, 4cqw, 3em);
+  }
+}
+
+// Tamaño de la foto de «Sobre mí».
+.pf-sobre[data-tamano="chica"] .pf-sobre__foto {
+  max-width: 15em;
+}
+
+.pf-sobre[data-tamano="grande"] .pf-sobre__foto {
+  max-width: none;
+}
+
+@container (min-width: 700px) {
+  .pf-sobre[data-tamano="chica"] {
+    grid-template-columns: minmax(0, 0.55fr) minmax(0, 1.45fr);
+  }
+
+  .pf-sobre[data-tamano="grande"] {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }

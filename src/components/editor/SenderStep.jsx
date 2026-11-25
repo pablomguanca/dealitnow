@@ -1,5 +1,7 @@
 // Paso 1 del editor: datos de identidad del emisor, logo, foto de perfil, redes y vinculación de portfolio.
 
+import { FOTO_PORTADA, ENCUADRES_IMAGEN } from '../../modelo.js';
+
 export function SenderStep() {
   return (
     <details className="paso" data-corto="Tus datos">
@@ -64,6 +66,48 @@ export function SenderStep() {
               <button type="button" className="boton boton--texto boton--chico" data-accion="quitar-foto-emisor" id="foto-emisor-quitar" hidden>Quitar</button>
             </div>
             <p className="campo__ayuda">Se luce en tu presentación «Sobre mí».</p>
+          </div>
+          {/* Cómo se ve la foto en el «Sobre mí» del portfolio (solo al editar un portfolio y
+              con foto cargada; controlador/formulario.js). Mismas opciones que la portada. */}
+          <div className="campo--ancho grilla foto-ajustes" id="foto-emisor-ajustes" data-solo-portafolio hidden>
+            <p className="campo__ayuda campo--ancho foto-ajustes__intro">Ajustá cómo se ve tu foto en «Sobre mí». Si es un logo, elegí «Mostrar entera» para que no se corte.</p>
+            <label className="campo">
+              <span className="campo__etiqueta">Cómo se ve</span>
+              <select className="control" data-campo-pf="portafolio.ajusteFotoSobre">
+                {Object.entries(FOTO_PORTADA.ajuste).map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+              </select>
+            </label>
+            <label className="campo">
+              <span className="campo__etiqueta">Forma del marco</span>
+              <select className="control" data-campo-pf="portafolio.formaFotoSobre">
+                {Object.entries(FOTO_PORTADA.forma).map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+              </select>
+            </label>
+            <label className="campo">
+              <span className="campo__etiqueta">Máscara</span>
+              <select className="control" data-campo-pf="portafolio.mascaraFotoSobre">
+                {Object.entries(FOTO_PORTADA.mascara).map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+              </select>
+            </label>
+            <label className="campo">
+              <span className="campo__etiqueta">Tamaño</span>
+              <select className="control" data-campo-pf="portafolio.tamanoFotoSobre">
+                {Object.entries(FOTO_PORTADA.tamano).map(([v, n]) => <option key={v} value={v}>{n}</option>)}
+              </select>
+            </label>
+            <label className="campo">
+              <span className="campo__etiqueta">Qué parte se ve</span>
+              <select className="control" data-campo-pf="portafolio.encuadreFotoSobre">
+                {Object.entries(ENCUADRES_IMAGEN).map(([v, o]) => <option key={v} value={v}>{o.nombre}</option>)}
+              </select>
+            </label>
+            <label className="campo" id="foto-emisor-zoom-wrap">
+              <span className="campo__etiqueta campo__etiqueta--fila">
+                <span>Zoom</span>
+                <output className="campo__valor" id="foto-emisor-zoom-val">100%</output>
+              </span>
+              <input className="rango-input" type="range" min="100" max="250" step="5" data-campo-pf="portafolio.zoomFotoSobre" data-tipo="numero" />
+            </label>
           </div>
           <label data-solo-propuesta className="campo">
             <span className="campo__etiqueta">Ubicación / Modalidad (opcional)</span>

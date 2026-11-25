@@ -402,3 +402,8 @@
 .foto-ajustes {
   margin-top: -0.2rem;
 }
+
+// Controles que solo valen para el portfolio, dentro de pasos compartidos («Tus datos»).
+body:not(.editando-portafolio) [data-solo-portafolio] {
+  display: none;
+}
