@@ -934,7 +934,7 @@ export const generarPropuestaHTML = (
       html += `<h3 class="doc-subtitulo">Forma de pago</h3>
         ${barraSegmentos ? `<div class="pagos-barra" aria-hidden="true">${barraSegmentos}</div>` : ''}
         <table class="pagos">
-          <thead><tr><th scope="col">Momento</th><th scope="col" class="pagos__num">Porcentaje</th><th scope="col" class="pagos__num">Monto</th></tr></thead>
+          <thead><tr><th scope="col">Momento</th><th scope="col" class="pagos__num"><span class="pagos__largo">Porcentaje</span><span class="pagos__corto" aria-hidden="true">%</span></th><th scope="col" class="pagos__num">Monto</th></tr></thead>
           <tbody>${pagos.map(x => `<tr${ed(`pagos:${s.inversion.pagos.indexOf(x)}`)}><td${ed(`pagos:${s.inversion.pagos.indexOf(x)}:concepto`)}>${x.concepto.trim() ? esc(x.concepto) : vacioHTML('Pago sin descripción')}</td><td class="pagos__num"><span class="pagos__pct">${cantidadTexto(numero(x.porcentaje))}%</span></td><td class="pagos__num pagos__monto">${dinero(c.inicial.total * numero(x.porcentaje) / 100, m)}</td></tr>`).join('')}</tbody>
         </table>`;
       if (c.mensual.base > 0) html += '<p class="doc-nota">El servicio mensual se factura por mes adelantado, desde que empieza ese servicio.</p>';

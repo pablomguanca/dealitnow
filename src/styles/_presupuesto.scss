@@ -72,6 +72,7 @@
   &__numero {
     font-size: 1.2rem;
     color: var(--d-texto);
+    white-space: nowrap; // «P-2026-012» no se parte en el guion
   }
 
   &__partes {
@@ -111,7 +112,7 @@
     width: 100%;
     margin-top: 0.6rem;
     border-collapse: collapse;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: lining-nums tabular-nums;
 
     th {
       padding: 0.55rem 0.5rem;
@@ -363,8 +364,9 @@
   }
 }
 
-// En el celular: el número y la cantidad pasan debajo para que la tabla no se apriete.
-@media (max-width: 560px) {
+// En el celular (el ancho del documento, no de la ventana: así se ve igual en la vista
+// «Celular» del editor): la cabecera se apila y la tabla deja Concepto, Cant. y Subtotal.
+@container (max-width: 560px) {
   .presu {
     &__cabecera {
       flex-direction: column;

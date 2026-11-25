@@ -14,6 +14,8 @@
   font-size: calc((100cqw / 62) * var(--escala-texto, 1));
   line-height: 1.55;
   color: var(--d-texto);
+  // Números de caja alta: en fuentes como Cormorant el «1» antiguo parece una «I».
+  font-variant-numeric: lining-nums;
 
   p {
     margin: 0 0 0.9em;
@@ -76,6 +78,9 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 2em;
+    // Aire mínimo con lo que sigue: en las portadas donde el título no baja al medio,
+    // «Propuesta para…» quedaba pegada a la marca.
+    margin-bottom: 1.4em;
   }
 
   &__marca {
@@ -125,7 +130,8 @@
     line-height: 0.98;
     letter-spacing: -0.01em;
     text-wrap: balance;
-    overflow-wrap: break-word;
+    // No se parten palabras: si una no entra, ajustar-texto.js achica la letra.
+    overflow-wrap: normal;
   }
 
   &__regla {
@@ -293,7 +299,7 @@
     color: var(--d-texto);
     text-align: right;
     white-space: nowrap;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: lining-nums tabular-nums;
   }
 
   &__modo {
@@ -444,7 +450,7 @@
     gap: 1.5em;
     padding: 0.45em 0;
     border-bottom: 1px solid var(--d-panel-linea);
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: lining-nums tabular-nums;
 
     dt {
       color: var(--marfil-apagado);
@@ -484,7 +490,7 @@
   width: 100%;
   margin-top: 0.4em;
   border-collapse: collapse;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
 
   th {
     padding: 0 0 0.6em;
@@ -698,7 +704,7 @@
     font-size: 1.65rem;
     font-weight: 600;
     color: var(--dorado-lectura, var(--dorado));
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: lining-nums tabular-nums;
   }
 
   &__extra {
@@ -793,6 +799,27 @@
 
     .portada__titulo {
       font-size: calc(2.9em * var(--escala-titulo-portada, 1));
+    }
+
+    // En celular el título no baja hasta el medio: sin este aire, la marca (a veces en
+    // dos o tres líneas) queda pegada a «Propuesta para…».
+    .portada__superior {
+      margin-bottom: 1.8em;
+    }
+
+    .portada__marca {
+      font-size: 1.4em;
+    }
+
+    // El número de la propuesta cede lugar a la marca: pasa a dos líneas («PROPUESTA» /
+    // «P-2026-044») en lugar de dejar el nombre en tres.
+    .portada__numero {
+      max-width: 10em;
+    }
+
+    // En la portada con tarjeta el título va en una caja más angosta.
+    .portada--tarjeta .portada__titulo {
+      font-size: calc(2.55em * var(--escala-titulo-portada, 1));
     }
 
     .portada__para {
@@ -1070,5 +1097,38 @@ body.modo-cliente {
 
   .enlace {
     flex-direction: column;
+  }
+}
+
+// Palabras con guion (ajustar-texto.js las envuelve): no se parten en el guion.
+.pf-junto {
+  white-space: nowrap;
+}
+
+// Tabla de pagos: en celular el encabezado «Porcentaje» pasa a «%» y le deja lugar al momento.
+.pagos__corto {
+  display: none;
+}
+
+@container (max-width: 480px) {
+  // Oculto a la vista, pero lo sigue leyendo el lector de pantalla.
+  .pagos__largo {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .pagos__corto {
+    display: inline;
+  }
+
+  // Columnas de cifras al ancho justo: el momento se lleva el resto.
+  .pagos .pagos__num {
+    width: 1%;
+    padding-left: 0.8em;
+    white-space: nowrap;
   }
 }

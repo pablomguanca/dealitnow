@@ -113,6 +113,7 @@ export const renderDocumento = () => {
     editable: !ctx.esCliente && !ctx.imprimiendo
   });
   terminarDocumento(doc, web);
+  ajustarTextosSiempre(doc);
   if (!ctx.esCliente) despuesDeDibujar();
   // En el editor el documento se redibuja con cada tecla: el Brick se monta al dejar de escribir.
   if (web) montarMarcasMp(doc, { espera: ctx.esCliente ? 0 : 900 });

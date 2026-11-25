@@ -5,6 +5,7 @@ import { $, $$, esc } from '../lib/formato.js';
 import { PLANTILLAS } from '../modelo.js';
 import { aplicarTema } from '../lib/tema.js';
 import { generarPropuestaHTML, mostrarSinAnimar } from '../lib/render.js';
+import { ajustarTextosSiempre } from '../lib/ajustar-texto.js';
 import { normalizar } from './contexto.js';
 import { disenoProPermitido } from './plan.js';
 import { registrarAcciones } from './acciones.js';
@@ -122,6 +123,7 @@ export const dibujarPlantilla = (article, id) => {
     tipoPortada: article.dataset.portada || 'editorial'
   }));
   mostrarSinAnimar(article);
+  ajustarTextosSiempre(article);
 };
 
 const tarjetaHTML = ([id, tpl]) => `

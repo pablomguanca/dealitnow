@@ -738,7 +738,7 @@
       position: absolute;
       top: -0.9em;
       left: -0.9em;
-      width: 26%;
+      width: clamp(2.6em, 20%, 9em);
       aspect-ratio: 1;
       background: var(--dorado);
     }
@@ -759,8 +759,8 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    aspect-ratio: 4 / 3;
-    padding: 1.2em 1.4em;
+    aspect-ratio: 16 / 9; // en celular, más bajo: no se come la pantalla
+    padding: 1em 1.2em;
     overflow: hidden;
     border: 1px solid var(--dorado-tenue);
     background:
@@ -771,7 +771,7 @@
   &__afiche-num {
     width: 100%;
     font-family: var(--fuente-display);
-    font-size: clamp(6em, 30cqw, 13em);
+    font-size: clamp(3.4em, 16cqw, 12em);
     font-weight: 500;
     line-height: 0.85;
     white-space: nowrap;
@@ -1166,9 +1166,6 @@
   .pf-vacio { margin: 0; }
 }
 
-.pf-junto {
-  white-space: nowrap;
-}
 
 // Botones: en pantallas muy angostas, un texto largo pasa a dos líneas en lugar de salirse.
 .doc--portafolio .boton {
@@ -1181,4 +1178,11 @@
 .doc--portafolio .barra-cliente__monto {
   font-size: 1.15em;
   line-height: 1.15;
+}
+
+@container (min-width: 760px) {
+  .pf-caso__afiche {
+    aspect-ratio: 4 / 3;
+    padding: 1.2em 1.4em;
+  }
 }

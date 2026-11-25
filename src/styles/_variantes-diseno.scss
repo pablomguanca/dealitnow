@@ -61,11 +61,12 @@
 
   &__numero {
     display: inline-flex;
+    flex-wrap: wrap; // «Propuesta» y el código pasan a dos líneas si no entran
     align-items: center;
     justify-content: center;
     width: fit-content;
     max-width: min(100%, 22em);
-    gap: 0.4em;
+    gap: 0.1em 0.4em;
     padding: 0.36em 0.88em;
     border: 1px solid var(--portada-linea, rgba(255, 255, 255, 0.16));
     border-radius: var(--radio-pastilla, 999px);
@@ -305,6 +306,7 @@
 
 .doc-grupo__cabecera {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 1em;
@@ -317,6 +319,7 @@
 }
 
 .doc-grupo__badge {
+  flex: none;
   padding: 0.22em 0.7em;
   border-radius: var(--radio-pastilla, 999px);
   border: 1px solid var(--dorado-tenue);
@@ -381,7 +384,7 @@
     color: var(--acento-tinta, var(--negro));
     font-size: 0.78em;
     font-weight: 700;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: lining-nums tabular-nums;
     transition: flex 0.35s ease;
 
     &--2 {
@@ -792,6 +795,14 @@
   }
 }
 
+// En celular la ficha pasa a 2 × 2: la columna izquierda arranca sin separador ni sangría.
+@container (max-width: 760px) {
+  .portada--franja .portada__meta > div:nth-child(odd) {
+    padding-left: 0;
+    border-left: 0;
+  }
+}
+
 .portada--minimal {
   background-image: none;
 
@@ -949,7 +960,7 @@
   max-width: 100%;
   white-space: normal;
   text-wrap: balance;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal; // pasan a otra línea entre palabras; nunca parten una palabra
 }
 
 .proyecto-card__destacado {

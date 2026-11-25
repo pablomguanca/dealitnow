@@ -419,7 +419,7 @@ body:not(.ia-disponible) .arranque__opcion--ia {
   text-align: right;
   font-size: 0.9rem;
   font-weight: 500;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .propuesta__estado {
@@ -1120,7 +1120,7 @@ a.barra__logo {
   &__cuenta {
     font-size: 0.75rem;
     opacity: 0.7;
-    font-variant-numeric: tabular-nums;
+    font-variant-numeric: lining-nums tabular-nums;
   }
 }
 
@@ -1865,7 +1865,7 @@ body.invitado.guia-activa .editor__invitado,
 
 .propuesta-card__monto {
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums tabular-nums;
 }
 
 .propuesta-card__portada:focus-visible,
