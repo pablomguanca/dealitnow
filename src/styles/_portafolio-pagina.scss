@@ -92,20 +92,22 @@
   &__titulo {
     margin: 0;
     font-family: var(--fuente-display);
-    font-size: calc(clamp(2.5em, 8cqw, 6.2em) * var(--escala-titulo-portada, 1));
+    // Las palabras no se parten nunca: si alguna no entra, ajustar-texto.js achica la letra.
+    font-size: calc(clamp(1.75em, 8.6cqw, 6.2em) * var(--escala-titulo-portada, 1));
     font-weight: 500;
-    line-height: 0.98;
+    line-height: 1;
     letter-spacing: -0.005em;
     text-wrap: balance;
-    overflow-wrap: break-word;
+    overflow-wrap: normal;
+    hyphens: manual;
 
     &--largo {
-      font-size: calc(clamp(2.1em, 5.4cqw, 4.3em) * var(--escala-titulo-portada, 1));
-      line-height: 1.04;
+      font-size: calc(clamp(1.55em, 6cqw, 4.3em) * var(--escala-titulo-portada, 1));
+      line-height: 1.06;
     }
 
     &--corto {
-      font-size: calc(clamp(3.4em, 12.5cqw, 9.5em) * var(--escala-titulo-portada, 1));
+      font-size: calc(clamp(2.2em, 12cqw, 9.5em) * var(--escala-titulo-portada, 1));
       line-height: 0.9;
     }
   }
@@ -193,6 +195,12 @@
       line-height: 1;
     }
 
+    // Un dato en palabras (la ubicación) va más chico que los números.
+    .pf-hero__dato--texto dd {
+      font-size: 1.2em;
+      line-height: 1.15;
+    }
+
     dt {
       font-size: 0.7em;
       letter-spacing: 0.14em;
@@ -220,6 +228,7 @@
 
   &__arte {
     display: grid;
+    grid-template-columns: minmax(0, 1fr); // la columna no crece con el monograma
     place-items: center;
     overflow: hidden;
     background: var(--dorado);
@@ -227,6 +236,11 @@
   }
 
   &__monograma {
+    box-sizing: border-box;
+    width: 100%;
+    padding-inline: 0.12em;
+    text-align: center;
+    white-space: nowrap;
     font-family: var(--fuente-display);
     font-size: clamp(5em, 26cqw, 15em);
     font-weight: 500;
@@ -393,13 +407,15 @@
     display: none;
   }
 
+  // Ocupa el ancho de la portada, sin salirse: si la fuente es ancha, ajustar-texto.js la achica.
   .pf-hero__palabra {
-    left: auto;
-    right: -0.04em;
-    top: 9%;
+    left: var(--pf-gutter);
+    right: var(--pf-gutter);
+    top: 13%; // debajo de la barra; en % de la portada (en em contaría su propia letra gigante)
     bottom: auto;
+    text-align: right;
     font-family: var(--fuente-display);
-    font-size: clamp(5em, 24cqw, 17em);
+    font-size: clamp(4em, 21cqw, 16em);
     font-weight: 500;
     line-height: 0.8;
     letter-spacing: -0.01em;
@@ -563,7 +579,7 @@
   &__titulo {
     margin: 0.35em 0 0.45em;
     font-family: var(--fuente-display);
-    font-size: calc(2.8em * var(--escala-titulos, 1));
+    font-size: calc(clamp(1.9em, 7cqw, 2.8em) * var(--escala-titulos, 1));
     font-weight: 500;
     line-height: 1;
   }
@@ -628,40 +644,76 @@
   list-style: none;
   border-top: 1px solid var(--d-linea);
 
+  // Número a la izquierda; a la derecha, el rubro como etiqueta arriba del nombre, que
+  // así usa todo el ancho (en celular no queda apretado entre el número y la etiqueta).
   &__item {
     display: grid;
-    grid-template-columns: 2.6em minmax(0, 1fr) auto;
-    align-items: baseline;
-    gap: 1em;
-    padding: 0.95em 0;
+    grid-template-columns: 2.4em minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.9em;
+    padding: 1em 0;
     border-bottom: 1px solid var(--d-linea);
     color: inherit;
     text-decoration: none;
     transition: padding var(--transicion), color var(--transicion);
 
     &:hover {
-      padding-left: 0.6em;
+      padding-left: 0.5em;
       color: var(--d-acento);
+
+      .pf-indice__flecha {
+        transform: translateX(0.2em);
+        opacity: 1;
+      }
     }
   }
 
   &__num {
+    align-self: start;
     font-family: var(--fuente-display);
-    font-size: 1.3em;
+    font-size: 1.5em;
+    line-height: 1;
     color: var(--d-acento);
+  }
+
+  &__textos {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.45em;
+    min-width: 0;
   }
 
   &__titulo {
     font-weight: 600;
+    line-height: 1.3;
+    text-wrap: pretty;
   }
 
-  &__cat {
-    font-size: 0.74em;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    text-align: right;
-    color: var(--d-tenue);
+  &__flecha {
+    width: 1.1em;
+    height: 1.1em;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    opacity: 0.45;
+    transition: transform var(--transicion), opacity var(--transicion);
   }
+}
+
+// Rubro o categoría: etiqueta chica que entra en una línea arriba de cada proyecto.
+.pf-badge {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.3em 0.75em;
+  border: 1px solid var(--d-linea);
+  border-radius: 0.8em; // si pasa a dos líneas, sigue prolija
+  font-size: 0.68em;
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--d-acento);
 }
 
 // Cada proyecto, un caso: fotos grandes y la ficha al costado, alternando lados.
@@ -699,36 +751,54 @@
     .proyecto-card__arte {
       border-radius: 0;
     }
+  }
 
-    .proyecto-card__arte {
-      min-height: 0;
-      aspect-ratio: 4 / 3;
-    }
+  // Sin fotos: afiche con el número gigante en contorno y el cliente abajo.
+  &__afiche {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    aspect-ratio: 4 / 3;
+    padding: 1.2em 1.4em;
+    overflow: hidden;
+    border: 1px solid var(--dorado-tenue);
+    background:
+      radial-gradient(circle at 85% 15%, var(--dorado-tenue) 0%, transparent 60%),
+      linear-gradient(135deg, var(--d-panel) 0%, var(--d-fondo) 100%);
+  }
+
+  &__afiche-num {
+    width: 100%;
+    font-family: var(--fuente-display);
+    font-size: clamp(6em, 30cqw, 13em);
+    font-weight: 500;
+    line-height: 0.85;
+    white-space: nowrap;
+    color: transparent;
+    -webkit-text-stroke: 1.5px var(--d-acento);
+  }
+
+  &__afiche-pie {
+    font-size: 0.74em;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--d-suave);
   }
 
   &__cabecera {
-    display: flex;
-    align-items: center;
-    gap: 0.85em;
-    margin: 0 0 0.8em;
+    margin: 0 0 0.7em;
   }
 
   &__num {
+    display: block;
+    margin-bottom: 0.3em;
     font-family: var(--fuente-display);
     font-size: calc(3.4em * var(--escala-titulos, 1));
     font-weight: 500;
-    line-height: 0.8;
+    line-height: 0.85;
     color: var(--d-acento);
-  }
-
-  &__cat {
-    padding-left: 0.85em;
-    border-left: 1px solid var(--d-linea);
-    font-size: 0.74em;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--d-suave);
   }
 
   &__titulo {
@@ -818,13 +888,36 @@
   }
 }
 
+// Servicio: número y precio en la fila de arriba, el nombre a todo el ancho debajo.
+.pf-servicio__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em 1em;
+  margin: 0.2em 0 0.6em;
+}
+
 .pf-servicio__num {
-  display: block;
-  margin: 0.2em 0 0.35em;
   font-family: var(--fuente-display);
   font-size: 2em;
   line-height: 1;
   color: var(--d-acento);
+}
+
+.pf-servicio__precio {
+  padding: 0.3em 0.8em;
+  border-radius: 999px;
+  background: var(--dorado-fondo);
+  border: 1px solid var(--dorado-tenue);
+  color: var(--d-acento);
+  font-size: 0.82em;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.doc .pf-servicio__titulo {
+  margin: 0 0 0.5em;
 }
 
 /* ---------- Contacto ---------- */
@@ -1022,4 +1115,70 @@
       font-size: calc(clamp(1.9em, 3.8cqw, 3.4em) * var(--escala-titulo-portada, 1));
     }
   }
+}
+
+// Impacto sin foto: la palabra gigante va en su propia fila, arriba del título, como un
+// afiche (detrás se pisaría con la etiqueta o con un título largo).
+@container (min-width: 0) {
+  .pf-hero--impacto.pf-hero--sin-foto {
+    grid-template-areas: "barra" "visual" "texto" "datos";
+    grid-template-rows: auto auto 1fr auto;
+    row-gap: 1.2em;
+
+    .pf-hero__texto {
+      padding-top: 0;
+    }
+
+    .pf-hero__arte {
+      position: relative;
+      inset: auto;
+      display: block;
+      place-items: normal;
+      overflow: visible;
+
+      &::before {
+        display: none;
+      }
+    }
+
+    .pf-hero__palabra {
+      position: static;
+      display: block;
+      width: 100%;
+      text-align: left;
+    }
+  }
+}
+
+// Los párrafos del documento traen un margen general (.doc p): estos lo reemplazan.
+.doc {
+  .pf-hero__etiqueta { margin: 0 0 1em; }
+  .pf-hero__sub { margin: 1em 0 0; }
+  .pf-hero__firma { margin: 1.4em 0 0; }
+  .pf-sec__bajada { margin: 0.9em 0 0; }
+  .pf-sobre__etiqueta { margin: 0; }
+  .pf-sobre__ubicacion { margin: 0 0 1em; }
+  .pf-caso__cabecera { margin: 0 0 0.7em; }
+  .pf-caso__sub { margin: 0 0 1em; }
+  .pf-caso__dato { margin: 0 0 1em; }
+  .pf-contacto__etiqueta { margin: 0 0 1em; }
+  .pf-contacto__texto { margin: 0; }
+  .pf-vacio { margin: 0; }
+}
+
+.pf-junto {
+  white-space: nowrap;
+}
+
+// Botones: en pantallas muy angostas, un texto largo pasa a dos líneas en lugar de salirse.
+.doc--portafolio .boton {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+// Barra de abajo: el nombre, no un monto; más chico para que entre en una o dos líneas.
+.doc--portafolio .barra-cliente__monto {
+  font-size: 1.15em;
+  line-height: 1.15;
 }

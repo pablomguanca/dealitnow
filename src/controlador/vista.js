@@ -6,6 +6,7 @@ import { $ } from '../lib/formato.js';
 import { aplicarTema } from '../lib/tema.js';
 import { observarElementos, generarPropuestaHTML, marcaDeAguaHTML } from '../lib/render.js';
 import { generarPortafolioHTML } from '../lib/render-portafolio.js';
+import { ajustarTextosSiempre } from '../lib/ajustar-texto.js';
 import { usosPro } from '../planes.js';
 import {
   abrirLightboxDesdeNodo,
@@ -92,6 +93,7 @@ export const renderPortafolio = () => {
   });
   doc.classList.add('doc--portafolio');
   terminarDocumento(doc, web);
+  ajustarTextosSiempre(doc);
   if (!ctx.esCliente) despuesDeDibujar();
 };
 

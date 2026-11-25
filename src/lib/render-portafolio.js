@@ -40,6 +40,9 @@ export const heroDePortada = tipo => HEROES[tipo] || 'bloque';
 
 const dosDigitos = n => String(n).padStart(2, '0');
 
+// Texto de un título: las palabras compuestas («multi-depósito») no se parten en el guion.
+export const tituloSinCortes = t => esc(t).replace(/[^\s<>]+-[^\s<>]+/g, m => `<span class="pf-junto">${m}</span>`);
+
 // Iniciales para el monograma de la portada sin foto: «Estudio Norte» → «EN».
 export const iniciales = (...textos) => {
   for (const t of textos) {
@@ -58,7 +61,7 @@ const ICONO_UBICACION = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8
 const cabeceraHTML = ({ num, titulo, claveTitulo, bajada = '', claveBajada = '', ed }) => `
   <header class="pf-sec__cab">
     <span class="pf-sec__num" aria-hidden="true">${dosDigitos(num)}</span>
-    <h2 class="pf-sec__titulo"${ed(claveTitulo)}>${esc(titulo)}</h2>
+    <h2 class="pf-sec__titulo"${ed(claveTitulo)}>${tituloSinCortes(titulo)}</h2>
     ${bajada ? `<p class="pf-sec__bajada"${ed(claveBajada)}>${esc(bajada)}</p>` : ''}
   </header>`;
 
@@ -105,8 +108,8 @@ export const generarPortafolioHTML = (s, { web = true, tipoPortada = 'editorial'
   const largo = titulo.length > 44 ? ' pf-hero__titulo--largo' : titulo.length > 0 && titulo.length <= 18 ? ' pf-hero__titulo--corto' : '';
   const datosHero = [];
   if (proyectos.length) datosHero.push([dosDigitos(proyectos.length), proyectos.length === 1 ? 'Proyecto' : 'Proyectos', 'pf:lista:proyectos']);
-  if (e.ubicacion?.trim()) datosHero.push([esc(e.ubicacion.trim()), 'Base', 'emisor.ubicacion']);
   if (especialidades.length) datosHero.push([dosDigitos(especialidades.length), especialidades.length === 1 ? 'Especialidad' : 'Especialidades', 'pf:lista:especialidades']);
+  if (e.ubicacion?.trim()) datosHero.push([esc(e.ubicacion.trim()), 'Base', 'emisor.ubicacion', true]);
 
   const visual = foto
     ? `<figure class="pf-hero__foto"${ed('paso:Portada')}${hero === 'impacto' ? ` style="--pf-foto-op:${opFoto}"` : ''}>
@@ -126,7 +129,7 @@ export const generarPortafolioHTML = (s, { web = true, tipoPortada = 'editorial'
       </div>
       <div class="pf-hero__texto">
         ${pf.insignia.trim() ? `<p class="pf-hero__etiqueta"${ed('pf:portafolio.insignia')}>${esc(pf.insignia.trim())}</p>` : ''}
-        <h1 class="pf-hero__titulo${largo}"${ed('pf:portafolio.titulo')}>${titulo ? esc(titulo) : vacioHTML('Título de tu página')}</h1>
+        <h1 class="pf-hero__titulo${largo}"${ed('pf:portafolio.titulo')}>${titulo ? tituloSinCortes(titulo) : vacioHTML('Título de tu página')}</h1>
         ${pf.subtitulo.trim() ? `<p class="pf-hero__sub"${ed('pf:portafolio.subtitulo')}>${esc(pf.subtitulo.trim())}</p>` : ''}
         ${nombre || e.rol.trim() ? `
           <p class="pf-hero__firma">
@@ -139,7 +142,7 @@ export const generarPortafolioHTML = (s, { web = true, tipoPortada = 'editorial'
             ${proyectos.length ? `<a class="pf-hero__ver" href="#sec-proyectos" data-scroll-interno><span>Ver proyectos</span>${ICONO_FLECHA}</a>` : ''}
           </div>` : ''}
       </div>
-      ${datosHero.length ? `<dl class="pf-hero__datos">${datosHero.map(([v, t, k]) => `<div${ed(k)}><dt>${t}</dt><dd>${v}</dd></div>`).join('')}</dl>` : ''}
+      ${datosHero.length ? `<dl class="pf-hero__datos">${datosHero.map(([v, t, k, enPalabras]) => `<div${enPalabras ? ' class="pf-hero__dato--texto"' : ''}${ed(k)}><dt>${t}</dt><dd>${v}</dd></div>`).join('')}</dl>` : ''}
     </header>`;
 
   // ---------- Secciones ----------
@@ -160,7 +163,7 @@ export const generarPortafolioHTML = (s, { web = true, tipoPortada = 'editorial'
           </figure>` : ''}
         <div class="pf-sobre__texto">
           <p class="pf-sobre__etiqueta"><span aria-hidden="true">${dosDigitos(num())}</span> Sobre mí</p>
-          <h2 class="pf-sobre__titulo"${ed('emisor.nombre')}>${nombre ? `Hola, soy ${esc(nombre)}` : 'Quién soy'}</h2>
+          <h2 class="pf-sobre__titulo"${ed('emisor.nombre')}>${nombre ? `Hola, soy ${tituloSinCortes(nombre)}` : 'Quién soy'}</h2>
           ${e.ubicacion?.trim() ? `<p class="pf-sobre__ubicacion"${ed('emisor.ubicacion')}>${ICONO_UBICACION}${esc(e.ubicacion.trim())}</p>` : ''}
           ${e.presentacion.trim() ? `<div class="pf-sobre__presentacion"${ed('emisor.presentacion')}>${parrafos(e.presentacion)}</div>` : ''}
           ${chips}
@@ -185,23 +188,30 @@ export const generarPortafolioHTML = (s, { web = true, tipoPortada = 'editorial'
           <li>
             <a class="pf-indice__item" href="#pf-caso-${i + 1}"${web ? ' data-scroll-interno' : ''}>
               <span class="pf-indice__num">${dosDigitos(i + 1)}</span>
-              <span class="pf-indice__titulo">${esc(p.titulo.trim() || 'Proyecto')}</span>
-              ${p.categoria.trim() ? `<span class="pf-indice__cat">${esc(p.categoria.trim())}</span>` : ''}
+              <span class="pf-indice__textos">
+                ${p.categoria.trim() ? `<span class="pf-badge">${tituloSinCortes(p.categoria.trim())}</span>` : ''}
+                <span class="pf-indice__titulo">${tituloSinCortes(p.titulo.trim() || 'Proyecto')}</span>
+              </span>
+              <svg class="pf-indice__flecha" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8h9M8.5 4l4 4-4 4"/></svg>
             </a>
           </li>`).join('')}</ol>`
       : '';
     const casos = proyectos.map((p, i) => {
-      const { media, tiraExtras } = proyectoMediaHTML(p, i, web, usaLightbox);
+      const { media, tiraExtras, imagenPrincipal } = proyectoMediaHTML(p, i, web, usaLightbox);
       const { tags, url } = proyectoTagsYLink(p);
+      // Sin fotos, un afiche con el número gigante y el cliente (no repite la ficha); el
+      // número entonces no va de nuevo en la ficha.
+      const afiche = !imagenPrincipal;
+      const pieAfiche = p.subtitulo.trim() || p.categoria.trim() || 'Proyecto';
       return `
-        <article class="pf-caso" id="pf-caso-${i + 1}"${kp(p)}>
-          <div class="pf-caso__media">${media}${tiraExtras}</div>
+        <article class="pf-caso${afiche ? ' pf-caso--afiche' : ''}" id="pf-caso-${i + 1}"${kp(p)}>
+          <div class="pf-caso__media">${afiche
+            ? `<div class="pf-caso__afiche" aria-hidden="true"><span class="pf-caso__afiche-num">${dosDigitos(i + 1)}</span><span class="pf-caso__afiche-pie">${esc(pieAfiche)}</span></div>`
+            : `${media}${tiraExtras}`}</div>
           <div class="pf-caso__info">
-            <p class="pf-caso__cabecera">
-              <span class="pf-caso__num" aria-hidden="true">${dosDigitos(i + 1)}</span>
-              ${p.categoria.trim() ? `<span class="pf-caso__cat"${kp(p, 'categoria')}>${esc(p.categoria.trim())}</span>` : ''}
-            </p>
-            <h3 class="pf-caso__titulo"${kp(p, 'titulo')}>${p.titulo.trim() ? esc(p.titulo) : vacioHTML('Proyecto sin título')}</h3>
+            ${afiche ? '' : `<span class="pf-caso__num" aria-hidden="true">${dosDigitos(i + 1)}</span>`}
+            ${p.categoria.trim() ? `<p class="pf-caso__cabecera"><span class="pf-badge"${kp(p, 'categoria')}>${tituloSinCortes(p.categoria.trim())}</span></p>` : ''}
+            <h3 class="pf-caso__titulo"${kp(p, 'titulo')}>${p.titulo.trim() ? tituloSinCortes(p.titulo) : vacioHTML('Proyecto sin título')}</h3>
             ${p.subtitulo.trim() ? `<p class="pf-caso__sub"${kp(p, 'subtitulo')}>${esc(p.subtitulo.trim())}</p>` : ''}
             ${p.destacado.trim() ? `<p class="pf-caso__dato"${kp(p, 'destacado')}>${esc(p.destacado.trim())}</p>` : ''}
             ${p.descripcion.trim() ? `<p class="pf-caso__desc"${kp(p, 'descripcion')}>${esc(p.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
@@ -234,11 +244,11 @@ export const generarPortafolioHTML = (s, { web = true, tipoPortada = 'editorial'
       return `
         <article class="servicio-web-card pf-servicio"${ks(sw)}>
           ${sw.imagen ? `<div class="servicio-web-card__media"${lb ? ` data-lightbox-src="${esc(sw.imagen)}" data-lightbox-caption="${esc(sw.titulo || '')}"` : ''}><img src="${esc(sw.imagen)}" alt="${esc(sw.titulo || 'Servicio')}"></div>` : ''}
-          <span class="pf-servicio__num" aria-hidden="true">${dosDigitos(i + 1)}</span>
-          <div class="servicio-web-card__cabecera">
-            <h3 class="servicio-web-card__titulo"${ks(sw, 'titulo')}>${sw.titulo.trim() ? esc(sw.titulo) : vacioHTML('Servicio')}</h3>
-            ${sw.precio.trim() ? `<span class="servicio-web-card__precio"${ks(sw, 'precio')}>${esc(sw.precio.trim())}</span>` : ''}
+          <div class="pf-servicio__top">
+            <span class="pf-servicio__num" aria-hidden="true">${dosDigitos(i + 1)}</span>
+            ${sw.precio.trim() ? `<span class="pf-servicio__precio"${ks(sw, 'precio')}>${esc(sw.precio.trim())}</span>` : ''}
           </div>
+          <h3 class="servicio-web-card__titulo pf-servicio__titulo"${ks(sw, 'titulo')}>${sw.titulo.trim() ? tituloSinCortes(sw.titulo) : vacioHTML('Servicio')}</h3>
           ${sw.descripcion.trim() ? `<p class="servicio-web-card__desc"${ks(sw, 'descripcion')}>${esc(sw.descripcion.trim()).replace(/\n/g, '<br>')}</p>` : ''}
           ${web ? (link
             ? `<a class="boton boton--secundario boton--chico servicio-web-card__cta" href="${esc(link)}" target="_blank" rel="noopener" data-enlace-cliente>${esc(sw.cta.trim() || 'Consultar')}</a>`
@@ -285,7 +295,7 @@ export const generarPortafolioHTML = (s, { web = true, tipoPortada = 'editorial'
   const contacto = web || datos.length ? `
     <section class="pf-contacto" id="sec-contacto">
       <p class="pf-contacto__etiqueta">Contacto</p>
-      <h2 class="pf-contacto__titulo"${ed('pf:portafolio.cierreTitulo')}>${esc(pf.cierreTitulo.trim() || '¿Trabajamos juntos?')}</h2>
+      <h2 class="pf-contacto__titulo"${ed('pf:portafolio.cierreTitulo')}>${tituloSinCortes(pf.cierreTitulo.trim() || '¿Trabajamos juntos?')}</h2>
       <p class="pf-contacto__texto"${ed('pf:portafolio.cierreTexto')}>${esc(pf.cierreTexto.trim() || 'Contame qué tenés en mente y armamos una propuesta a medida.')}</p>
       ${botones.length ? `<div class="pf-contacto__acciones">${botones.join('')}</div>` : ''}
       ${datos.length ? `<dl class="pf-contacto__datos">${datos.map(([t, v, k]) => `<div${ed(k)}><dt>${t}</dt><dd>${v}</dd></div>`).join('')}</dl>` : ''}
@@ -312,7 +322,7 @@ export const generarPortafolioHTML = (s, { web = true, tipoPortada = 'editorial'
     <div class="barra-cliente">
       <div>
         <span class="barra-cliente__etiqueta">${esc(pf.disponibilidad.trim() || 'Página profesional')}</span>
-        <span class="barra-cliente__monto">${esc(nombre || pf.titulo.trim() || 'Disponible')}</span>
+        <span class="barra-cliente__monto">${esc(nombre || pf.insignia.trim() || 'Portfolio')}</span>
         ${e.rol.trim() ? `<span class="barra-cliente__extra">${esc(e.rol.trim())}</span>` : ''}
       </div>
       ${botonCta('boton--primario')}

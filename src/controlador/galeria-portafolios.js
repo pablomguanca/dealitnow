@@ -7,6 +7,7 @@ import { PLANTILLAS_PORTAFOLIO } from '../modelo.js';
 import { aplicarTema } from '../lib/tema.js';
 import { mostrarSinAnimar } from '../lib/render.js';
 import { generarPortafolioHTML } from '../lib/render-portafolio.js';
+import { ajustarTextosSiempre } from '../lib/ajustar-texto.js';
 import { normalizarPf } from './contexto.js';
 import { escalarMiniatura, observadorTamano } from './galeria-plantillas.js';
 import { registrarAcciones } from './acciones.js';
@@ -27,6 +28,7 @@ export const dibujarPortafolioPlantilla = (article, id) => {
     tipoPortada: article.dataset.portada || 'editorial'
   }));
   mostrarSinAnimar(article);
+  ajustarTextosSiempre(article);
 };
 
 // Se dibujan la primera vez que se ve el panel, de a una para no trabar la pantalla.

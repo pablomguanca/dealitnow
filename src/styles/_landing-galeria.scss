@@ -474,7 +474,34 @@
   color: var(--d-suave);
 }
 
+// Pie del testimonio tal como lo arma render.js: inicial (o foto) en un círculo, nombre y rol.
+footer.testimonio-card__autor {
+  display: flex;
+  align-items: center;
+  gap: 0.7em;
+  font-size: 1em;
+  font-weight: 400;
+}
+.testimonio-card__inicial {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.4em;
+  height: 2.4em;
+  border-radius: 50%;
+  background: var(--dorado);
+  color: var(--acento-tinta, #fff);
+  font-weight: 700;
+}
+.testimonio-card__nombre {
+  display: block;
+  font-size: 0.9em;
+  font-weight: 700;
+  color: var(--d-texto);
+}
+
 /* Preguntas Frecuentes (FAQ) */
+.faqs-lista,
 .faq-lista {
   display: flex;
   flex-direction: column;

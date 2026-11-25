@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { atributoEditar, selectorDeClave, claveDeCampo, clavesParaResaltar, clavesNavegables, claveVecina, primerCampoDe, esRespaldo } from '../src/editar-documento.js';
 import { normalizarPropuesta, vacio, normalizarPortafolio, vacioPortafolio } from '../src/modelo.js';
-import { generarPortafolioHTML, heroDePortada, iniciales } from '../src/lib/render-portafolio.js';
+import { generarPortafolioHTML, heroDePortada, iniciales, tituloSinCortes } from '../src/lib/render-portafolio.js';
 import { generarPropuestaHTML } from '../src/lib/render.js';
 
 const propuesta = (formato = 'propuesta') => normalizarPropuesta({
@@ -145,6 +145,11 @@ describe('portfolio', () => {
     expect(html).toContain('pf-hero__monograma">EN<');
     expect(iniciales('', 'marcas que crecen')).toBe('MQ');
     expect(iniciales('', '')).toBe('P');
+  });
+
+  it('las palabras con guion de los títulos no se parten', () => {
+    expect(tituloSinCortes('Tablero multi-depósito & e-commerce')).toBe('Tablero <span class="pf-junto">multi-depósito</span> &amp; <span class="pf-junto">e-commerce</span>');
+    expect(tituloSinCortes('Sin guiones')).toBe('Sin guiones');
   });
 
   it('cada portada del estudio cae en una de las tres del portfolio', () => {
