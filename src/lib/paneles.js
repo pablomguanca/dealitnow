@@ -3,7 +3,6 @@ import {
   esc,
   dinero
 } from './formato.js';
-import { TEMAS } from '../modelo.js';
 import { fechaDeAceptacion } from './render.js';
 import { resolverColoresTema } from './tema.js';
 import { MOTIVOS_RECHAZO, cambioPendiente, porVencer, venceTexto } from '../respuestas.js';
@@ -203,39 +202,42 @@ export const metricasHTML = (propuestas = [], { conSeguimiento = true } = {}) =>
   ].join('');
 };
 
+// Tarjeta de «Mis portfolios», como las de «Mis propuestas»: portada con los colores y la
+// letra de su diseño, si el link está activo, cuántos proyectos tiene, la última edición y
+// accesos para editar, ver la página, copiar el link, duplicar y borrar.
 export const portafolioItemHTML = (pf, { conNube = false } = {}) => {
   const titulo = texto(pf.title).trim() || 'Portfolio sin título';
-  const subtitulo = texto(pf.subtitle).trim() || 'Sin subtítulo';
+  const subtitulo = texto(pf.subtitle).trim();
+  const insignia = texto(pf.payload?.portafolio?.insignia).trim() || 'Portfolio';
   const cant = Number(pf.projectCount) || (pf.payload?.proyectos?.length || 0);
   const cantTexto = cant === 1 ? '1 proyecto' : `${cant} proyectos`;
-  const temaNombre = TEMAS[pf.theme]?.nombre || 'Elegante oscuro';
-  const inicial = titulo.charAt(0).toUpperCase() || 'P';
   const editada = fechaDe(pf.updatedAt) || (typeof pf.updatedAt === 'string' ? new Date(pf.updatedAt) : null);
-  const tiempo = editada && !Number.isNaN(editada.getTime()) ? tiempoHTML(editada, `Editado ${haceCuanto(editada)}`) : '';
+  const tiempo = editada && !Number.isNaN(editada.getTime()) ? tiempoHTML(editada, `Editado ${haceCuanto(editada)}`) : 'Sin cambios todavía';
   const esNube = !!(conNube && /^[A-Za-z0-9]{20}$/.test(pf.id));
+  const activo = esNube && pf.publico === true;
+  const id = esc(pf.id);
+  const href = `/editar-portafolio/${encodeURIComponent(pf.id)}`;
   return `
-    <li class="propuesta">
-      <a class="propuesta__abrir" href="/editar-portafolio/${encodeURIComponent(pf.id)}" data-accion="abrir-portafolio" data-id="${esc(pf.id)}">
-        <span class="propuesta__avatar" data-tono="${tonoDe(titulo)}" aria-hidden="true">${esc(inicial)}</span>
-        <span class="propuesta__textos">
-          <span class="propuesta__titulo">${esc(titulo)}</span>
-          <span class="propuesta__cliente">${esc(subtitulo)}</span>
-        </span>
+    <li class="propuesta-card portafolio-card">
+      <a class="propuesta-card__portada" href="${href}" data-accion="abrir-portafolio" data-id="${id}" style="${esc(estiloPortadaTarjeta(pf.payload?.tema))}" aria-label="Editar «${esc(titulo)}»">
+        <span class="propuesta-card__numero">${esc(insignia)}</span>
+        <span class="propuesta-card__titulo">${esc(titulo)}</span>
+        <span class="propuesta-card__cliente">${subtitulo ? esc(subtitulo) : 'Sin subtítulo'}</span>
       </a>
-      <span class="propuesta__monto">${esc(cantTexto)}</span>
-      <span class="propuesta__estado propuesta__estado--sent">${esc(temaNombre)}</span>
-      <span class="propuesta__fecha">${tiempo}</span>
-      <span class="propuesta__acciones">
-        ${esNube && pf.publico === true ? `<button type="button" class="icono-boton icono-boton--activo" data-accion="copiar-link-portafolio" data-id="${esc(pf.id)}" aria-label="Copiar link de «${esc(titulo)}»" title="Link activo: copiar">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.3 0l2-2a3 3 0 0 0-4.3-4.3l-.9.9M9.2 6.8a3 3 0 0 0-4.3 0l-2 2a3 3 0 0 0 4.3 4.3l.9-.9"/></svg>
-        </button>` : ''}
-        <button type="button" class="icono-boton" data-accion="duplicar-portafolio" data-id="${esc(pf.id)}" aria-label="Duplicar «${esc(titulo)}»" title="Duplicar para otro tipo de cliente">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="5.5" y="5.5" width="8" height="8" rx="1.2"/><path d="M10.5 5.5v-2a1 1 0 0 0-1-1h-6a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2"/></svg>
-        </button>
-        <button type="button" class="icono-boton icono-boton--peligro" data-accion="borrar-portafolio" data-id="${esc(pf.id)}" aria-label="Borrar «${esc(titulo)}»" title="Borrar">
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>
-        </button>
-      </span>
+      <div class="propuesta-card__cuerpo">
+        <div class="propuesta-card__fila">
+          <span class="propuesta__estado propuesta__estado--${activo ? 'accepted' : 'draft'}">${activo ? 'Link activo' : 'Sin compartir'}</span>
+          <span class="propuesta-card__monto">${esc(cantTexto)}</span>
+        </div>
+        <p class="propuesta-card__fecha">${tiempo}</p>
+        <div class="propuesta-card__acciones">
+          <a class="boton boton--secundario boton--chico" href="${href}" data-accion="abrir-portafolio" data-id="${id}">Editar</a>
+          <button type="button" class="icono-boton" data-accion="previsualizar-portafolio" data-id="${id}" aria-label="Ver «${esc(titulo)}» como tu cliente" title="Vista previa">${ICONO_VER}</button>
+          ${activo ? `<button type="button" class="icono-boton icono-boton--activo" data-accion="copiar-link-portafolio" data-id="${id}" aria-label="Copiar el link de «${esc(titulo)}»" title="Copiar link">${ICONO_LINK}</button>` : ''}
+          <button type="button" class="icono-boton" data-accion="duplicar-portafolio" data-id="${id}" aria-label="Duplicar «${esc(titulo)}»" title="Duplicar para otro tipo de cliente">${ICONO_DUPLICAR}</button>
+          <button type="button" class="icono-boton icono-boton--peligro" data-accion="borrar-portafolio" data-id="${id}" aria-label="Borrar «${esc(titulo)}»" title="Borrar">${ICONO_BORRAR}</button>
+        </div>
+      </div>
     </li>`;
 };
 

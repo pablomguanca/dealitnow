@@ -38,7 +38,7 @@ export function PortfoliosPanel() {
     </div>
 
     <p className="panel__estado" id="portafolios-estado" role="status" aria-live="polite"></p>
-    <ul className="propuestas portafolios-lista" id="lista-portafolios" aria-label="Portfolios"></ul>
+    <ul className="portafolios-lista" id="lista-portafolios" aria-label="Portfolios"></ul>
 
     <div className="panel__vacio" id="portafolios-vacio" hidden>
       <h2 className="panel__vacio-titulo">Armá tu primer portfolio</h2>
@@ -53,17 +53,28 @@ export function PortfoliosPanel() {
     <section className="pf-plantillas" aria-labelledby="pf-plantillas-titulo">
       <h2 className="pf-plantillas__titulo" id="pf-plantillas-titulo">Plantillas de portfolio</h2>
       <p className="pf-plantillas__bajada">Arrancá con textos, secciones y diseño pensados para tu rubro. Después cambiás todo por tus trabajos.</p>
-      <ul className="pf-plantillas__lista">
+      {/* Cada tarjeta lleva una miniatura real de la página (controlador/galeria-portafolios.js),
+          como las plantillas de propuesta: tocarla o «Vista previa» la abre entera. */}
+      <ul className="galeria-plantillas pf-plantillas__lista" aria-label="Plantillas de portfolio">
         {PLANTILLAS.map(([id, t]) => (
-          <li key={id} className="pf-plantilla">
-            <span className="pf-plantilla__rubro">
-              {t.rubro}
-              {t.plan === 'pro' ? <em className="insignia-pro">PRO</em> : <em className="pf-plantilla__gratis">Gratis</em>}
-              {t.catalogo && <em className="insignia-nueva">Nueva</em>}
-            </span>
-            <h3 className="pf-plantilla__nombre">{t.nombre}</h3>
-            <p className="pf-plantilla__desc">{t.desc}</p>
-            <button type="button" className="boton boton--secundario boton--chico" data-accion="crear-pf-rubro" data-rubro={id}>Usar plantilla</button>
+          <li key={id} className="plantilla-card" data-id={id}>
+            <div className="plantilla-card__lienzo" inert="" aria-hidden="true">
+              <article className="doc doc--web doc--estatico doc--miniatura doc--portafolio" data-miniatura-pf={id}></article>
+            </div>
+            <button type="button" className="plantilla-card__ver" data-accion="ver-plantilla-pf" data-id={id} aria-label={`Ver la plantilla «${t.nombre}»`}></button>
+            <div className="plantilla-card__info">
+              <span className="plantilla-card__rubro">
+                {t.rubro}
+                {t.plan === 'pro' ? <> <em className="insignia-pro">PRO</em></> : <> <em className="pf-plantilla__gratis">Gratis</em></>}
+                {t.catalogo && <> <em className="insignia-nueva">Nueva</em></>}
+              </span>
+              <h3 className="plantilla-card__nombre">{t.nombre}</h3>
+              <p className="plantilla-card__desc">{t.desc}</p>
+              <div className="plantilla-card__acciones">
+                <button type="button" className="boton boton--primario boton--chico" data-accion="crear-pf-rubro" data-rubro={id}>Usar plantilla</button>
+                <button type="button" className="boton boton--texto boton--chico" data-accion="ver-plantilla-pf" data-id={id}>Vista previa</button>
+              </div>
+            </div>
           </li>
         ))}
       </ul>

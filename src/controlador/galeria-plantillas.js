@@ -112,6 +112,7 @@ const sinIds = html => html.replace(/\sid="[^"]*"/g, '');
 
 export const dibujarPlantilla = (article, id) => {
   const datos = normalizar(PLANTILLAS[id].crear());
+  article.classList.remove('doc--portafolio');
   aplicarTema(article, datos.tema);
   article.innerHTML = sinIds(generarPropuestaHTML(datos, {
     web: true,
@@ -166,7 +167,10 @@ const verPlantilla = id => {
   if (!tpl) return;
   $('#plantilla-vista-titulo').textContent = tpl.nombre;
   $('#plantilla-vista-rubro').textContent = tpl.rubro;
-  $('#plantilla-vista-usar').dataset.id = id;
+  // El diálogo es compartido con las plantillas de portfolio (galeria-portafolios.js).
+  const usar = $('#plantilla-vista-usar');
+  usar.dataset.accion = 'usar-plantilla';
+  usar.dataset.id = id;
   const dialogo = $('#dialogo-plantilla-vista');
   dialogo.showModal();
   const lienzo = $('#plantilla-vista-documento');

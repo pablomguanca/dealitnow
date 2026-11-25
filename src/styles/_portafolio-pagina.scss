@@ -998,3 +998,28 @@
 .pf-hero--impacto .pf-hero__palabra span {
   display: none;
 }
+
+/* ---------- Miniaturas y vista previa de las plantillas ---------- */
+
+// El documento mide su propio ancho: la miniatura (1100 px, reducida) y la vista previa
+// se ven con el diseño de computadora, no el de celular.
+.doc--miniatura.doc--portafolio,
+.dialogo--vista__documento {
+  container-type: inline-size;
+}
+
+.doc--miniatura .doc-nav {
+  display: none;
+}
+
+// En la dividida el texto ocupa media portada: el título va más chico para no cortar palabras.
+@container (min-width: 760px) {
+  .pf-hero--dividida .pf-hero__titulo {
+    font-size: calc(clamp(2.2em, 5cqw, 4.4em) * var(--escala-titulo-portada, 1));
+    line-height: 1.02;
+
+    &--largo {
+      font-size: calc(clamp(1.9em, 3.8cqw, 3.4em) * var(--escala-titulo-portada, 1));
+    }
+  }
+}

@@ -7,7 +7,8 @@ import { fechaDe, sinAcentos, portafolioItemHTML, esqueletoFilasHTML } from '../
 import { ctx, AteneaDB, nube, normalizarPf } from './contexto.js';
 import { abrirHistorial } from './historial.js';
 import { registrarAcciones } from './acciones.js';
-import { avisarExito, avisarError, confirmar } from './avisos.js';
+import { avisar, avisarExito, avisarError, confirmar } from './avisos.js';
+import { linkCortoPortafolio } from './compartir.js';
 import {
   cargarPortafoliosLocales,
   guardarPortafoliosLocales,
@@ -20,6 +21,7 @@ import { llenarFormulario, actualizarSelectorPortafolio } from './formulario.js'
 import { renderDocumento } from './vista.js';
 import { emisorDeCuenta } from './cuenta.js';
 import { disenoProPermitido } from './plan.js';
+import { dibujarMiniaturasPortafolio } from './galeria-portafolios.js';
 import { irRuta, mostrarVista, cerrarEdicion, cambiarPestana, clicComun } from './navegacion.js';
 
 let dejarDeEscucharPortafolios = null;
@@ -27,6 +29,7 @@ let dejarDeEscucharPortafolios = null;
 export const renderPanelPortafolios = () => {
   const elPortafolios = $('#portafolios');
   if (!elPortafolios || elPortafolios.hidden) return;
+  dibujarMiniaturasPortafolio();
   const { portafolios } = ctx;
   const campoBuscar = $('#portafolios-buscar');
   const filtro = sinAcentos(campoBuscar?.value.trim() || '');
@@ -195,6 +198,7 @@ export const instalarPortafolios = () => {
       if (!tpl) return;
       // Como en las propuestas: en Gratis, una plantilla PRO ofrece Pro y no se aplica.
       if (tpl.plan === 'pro' && !(await disenoProPermitido(tpl.nombre))) return;
+      $('#dialogo-plantilla-vista')?.close();
       nuevoPortafolio({ ...tpl.crear(), plantilla: boton.dataset.rubro });
     },
     'abrir-portafolio': (boton, ev) => {
@@ -203,6 +207,17 @@ export const instalarPortafolios = () => {
         ev.preventDefault();
       }
       abrirPortafolio(boton.dataset.id);
+    },
+    // Como en las propuestas: con el link activo abre la página; si no, el editor en la vista del cliente.
+    'previsualizar-portafolio': async boton => {
+      const pf = ctx.portafolios.find(x => x.id === boton.dataset.id);
+      if (pf?.publico === true && nube() && /^[A-Za-z0-9]{20}$/.test(pf.id)) {
+        window.open(linkCortoPortafolio(pf.id), '_blank', 'noopener');
+        return;
+      }
+      await abrirPortafolio(boton.dataset.id);
+      cambiarPestana(true);
+      avisar('Así ve tu página quien abre el link. Para compartirla, tocá «Compartir link».');
     },
     'duplicar-portafolio': boton => duplicarPortafolio(boton.dataset.id),
     'borrar-portafolio': boton => borrarPortafolio(boton.dataset.id)

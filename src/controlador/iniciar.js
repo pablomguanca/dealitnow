@@ -28,6 +28,7 @@ import { instalarCompartir } from './compartir.js';
 import { instalarAceptar } from './aceptar.js';
 import { instalarPropuestas } from './propuestas.js';
 import { instalarGaleriaPlantillas } from './galeria-plantillas.js';
+import { instalarGaleriaPortafolios } from './galeria-portafolios.js';
 import { instalarPortafolios } from './portafolios.js';
 import { instalarCuenta } from './cuenta.js';
 import { instalarPlan } from './plan.js';
@@ -69,6 +70,7 @@ export const inicializarControladorDealit = () => {
   instalarAcciones();
   instalarPropuestas();
   instalarGaleriaPlantillas();
+  instalarGaleriaPortafolios();
   instalarPortafolios();
   instalarCuenta();
   instalarPlan();
