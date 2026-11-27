@@ -507,6 +507,15 @@ describe('POST /api/mercadopago', () => {
     expect(datos.planes).toBeUndefined();
   });
 
+  it('ignora sin error los avisos de algo que no existe en Mercado Pago (aviso de prueba)', async () => {
+    const { db, datos } = crearDb({});
+    const noExiste = async () => { throw Object.assign(new Error('Mercado Pago 404'), { estado: 404 }); };
+    const r = res();
+    await crearWebhook({ db, mp: { obtenerPagoDeSuscripcion: noExiste }, verificarFirma: () => true })(aviso('subscription_authorized_payment', '123456'), r);
+    expect(r.estado).toBe(200);
+    expect(datos.planes).toBeUndefined();
+  });
+
   it('verifica la firma HMAC de Mercado Pago', () => {
     const secreto = 'clave';
     const v1 = createHmac('sha256', secreto).update('id:abc123;request-id:r1;ts:1700;').digest('hex');

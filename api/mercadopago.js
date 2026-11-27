@@ -90,6 +90,9 @@ export const crearHandler = ({
     });
     return responder(res, 200, { ok: true });
   } catch (e) {
+    // Lo que no existe en Mercado Pago (como el aviso de prueba del panel, con id 123456)
+    // no se arregla reintentando: 200 para que no lo vuelva a mandar.
+    if (e?.estado === 404) return responder(res, 200, { ok: true, ignorado: 'no-existe' });
     return fallar(res, e);
   }
 };
