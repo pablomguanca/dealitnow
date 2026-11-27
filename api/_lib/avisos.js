@@ -1,4 +1,5 @@
-// Avisos al dueño: cuando su cliente acepta la propuesta, no avanza o pide un cambio (a todos,
+// Avisos al dueño: cuando su cliente acepta la propuesta, no avanza, pide un cambio o le paga
+// con Mercado Pago (a todos,
 // también en Gratis: es su cliente respondiendo) y, solo con Pro, cuando la abre y cuando
 // está por vencer sin respuesta (tarea diaria en api/visto). Van por email con Resend (RESEND_API_KEY) y como notificación push a los
 // dispositivos donde las activó (ver push.js). Sin las claves no se manda nada.
@@ -21,8 +22,12 @@ const datosDe = propuesta => {
 const PIE = {
   pro: 'Recibís este aviso porque tenés Dealit Pro.',
   gratis: 'Recibís este aviso porque tu propuesta se aceptó en Dealit. Con Dealit Pro también te avisamos cada vez que tu cliente la abre.',
-  respuesta: 'Recibís este aviso porque tu cliente respondió tu propuesta en Dealit.'
+  respuesta: 'Recibís este aviso porque tu cliente respondió tu propuesta en Dealit.',
+  pago: 'Recibís este aviso porque tu cliente te pagó con Mercado Pago desde tu propuesta en Dealit.'
 };
+
+// Quien pagó: el nombre con el que aceptó o, si no, el cliente de la propuesta.
+const pagadorDe = (propuesta, cliente) => texto(propuesta?.aceptacion?.nombre).trim() || cliente || 'Tu cliente';
 
 // Lo que escribió el cliente, recortado para el aviso.
 const citar = (t, max = 280) => {
@@ -44,9 +49,45 @@ const plantilla = ({ titular, parrafos, boton, url, pie = PIE.pro }) => `<!docty
 </body></html>`;
 
 // Asunto, HTML y texto plano de cada aviso. Puro: se testea sin red.
-export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, respuesta, recordatorio, urlApp, pro = true }) => {
+export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, respuesta, recordatorio, pago, urlApp, pro = true }) => {
   const { titulo, cliente } = datosDe(propuesta);
   const url = `${urlApp}/propuesta/${encodeURIComponent(id)}`;
+  if (tipo === 'pago-acreditado' || tipo === 'pago-revertido') {
+    const quien = pagadorDe(propuesta, cliente);
+    const monto = dinero(Number(pago?.monto) || 0, pago?.moneda || 'ARS');
+    const concepto = texto(pago?.concepto).trim() || 'Pago';
+    if (tipo === 'pago-acreditado') {
+      return {
+        asunto: `💸 ${quien} te pagó ${monto} por «${titulo}»`,
+        html: plantilla({
+          titular: `¡Se acreditó el pago de ${escapar(quien)}!`,
+          parrafos: [
+            `Mercado Pago confirmó el pago de <strong>«${escapar(titulo)}»</strong>.`,
+            `${escapar(concepto)}: <strong>${escapar(monto)}</strong>, en tu cuenta de Mercado Pago.`
+          ],
+          boton: 'Ver la propuesta',
+          url,
+          pie: PIE.pago
+        }),
+        texto: `Mercado Pago confirmó el pago de ${quien} por «${titulo}».\n${concepto}: ${monto}.\n\n${url}`
+      };
+    }
+    const que = pago?.estado === 'contracargo' ? 'desconoció el pago ante su tarjeta (contracargo)' : 'se devolvió';
+    return {
+      asunto: `El pago de «${titulo}» ${pago?.estado === 'contracargo' ? 'tiene un contracargo' : 'se reembolsó'}`,
+      html: plantilla({
+        titular: pago?.estado === 'contracargo' ? 'Un pago tiene un contracargo' : 'Se reembolsó un pago',
+        parrafos: [
+          `El pago de ${escapar(quien)} por <strong>«${escapar(titulo)}»</strong> (${escapar(concepto)}: ${escapar(monto)}) ${pago?.estado === 'contracargo' ? 'fue desconocido ante la tarjeta (contracargo)' : 'se devolvió'}.`,
+          'Revisá el detalle en tu cuenta de Mercado Pago.'
+        ],
+        boton: 'Ver la propuesta',
+        url,
+        pie: PIE.pago
+      }),
+      texto: `El pago de ${quien} por «${titulo}» (${concepto}: ${monto}) ${que}.\nRevisá el detalle en tu cuenta de Mercado Pago.\n\n${url}`
+    };
+  }
   if (tipo === 'rechazada') {
     const quien = quienResponde(respuesta, cliente);
     const motivo = MOTIVOS_RECHAZO[respuesta?.motivo] || 'Otro motivo';
@@ -158,12 +199,18 @@ export const contenidoAviso = ({ tipo, id, propuesta, aceptacion, respuesta, rec
 };
 
 // Notificación push del mismo aviso: corta, para la pantalla bloqueada. Pura.
-export const contenidoPush = ({ tipo, id, propuesta, aceptacion, respuesta, recordatorio, urlApp, vistas }) => {
+export const contenidoPush = ({ tipo, id, propuesta, aceptacion, respuesta, recordatorio, pago, urlApp, vistas }) => {
   const { titulo, cliente } = datosDe(propuesta);
   const url = `${urlApp}/propuesta/${encodeURIComponent(id)}`;
   // Cada visita con su propia etiqueta: si reemplazara al aviso anterior de la propuesta,
   // Android lo actualiza en silencio (sin sonido ni cartel) y parece que no llegó.
   const tag = tipo === 'revisita' ? `vista-${id}-${Number(vistas) || Date.now()}` : `${tipo}-${id}`;
+  if (tipo === 'pago-acreditado' || tipo === 'pago-revertido') {
+    const monto = dinero(Number(pago?.monto) || 0, pago?.moneda || 'ARS');
+    const concepto = texto(pago?.concepto).trim() || 'Pago';
+    if (tipo === 'pago-acreditado') return { titulo: `💸 ${pagadorDe(propuesta, cliente)} te pagó ${monto}`, cuerpo: `${concepto} de «${titulo}», acreditado en Mercado Pago.`, url, tag };
+    return { titulo: `El pago de «${titulo}» ${pago?.estado === 'contracargo' ? 'tiene un contracargo' : 'se reembolsó'}`, cuerpo: `${concepto}: ${monto}. Revisá tu Mercado Pago.`, url, tag };
+  }
   if (tipo === 'aceptada') {
     const nombre = texto(aceptacion?.nombre).trim() || cliente || 'Tu cliente';
     const moneda = aceptacion?.moneda || 'USD';
@@ -217,9 +264,9 @@ export const enviarEmail = async ({ para, asunto, html, texto: plano }, { entorn
 // aceptación, a todos; las visitas, solo con Pro (o con los planes apagados para su cuenta). Devuelve cómo le fue al email.
 // Las revisitas van solo por push: un email cada vez que el cliente abre el link sería demasiado.
 const SOLO_PUSH = new Set(['revisita']);
-const PARA_TODOS = new Set(['aceptada', 'rechazada', 'cambio']);
+const PARA_TODOS = new Set(['aceptada', 'rechazada', 'cambio', 'pago-acreditado', 'pago-revertido']);
 
-export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarPush = enviarPushReal }) => async ({ tipo, id, propuesta, aceptacion, respuesta, recordatorio, urlApp, vistas }) => {
+export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarPush = enviarPushReal }) => async ({ tipo, id, propuesta, aceptacion, respuesta, recordatorio, pago, urlApp, vistas }) => {
   try {
     const uid = propuesta?.userId;
     if (!uid) return 'sin-duenio';
@@ -231,7 +278,7 @@ export const crearAvisador = ({ db, planesActivos, enviar = enviarEmail, enviarP
     const plan = snapPlan.exists ? snapPlan.data() : {};
     const pro = esPro(plan) || !planesActivos(email);
     if (!pro && !PARA_TODOS.has(tipo)) return 'gratis';
-    const datos = { tipo, id, propuesta, aceptacion, respuesta, recordatorio, urlApp, vistas, pro };
+    const datos = { tipo, id, propuesta, aceptacion, respuesta, recordatorio, pago, urlApp, vistas, pro };
     const conEmail = email && !SOLO_PUSH.has(tipo);
     const [porEmail, porPush] = await Promise.allSettled([
       conEmail ? enviar({ para: email, ...contenidoAviso(datos) }) : Promise.resolve(null),

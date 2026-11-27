@@ -2606,3 +2606,76 @@ body.invitado.guia-activa .editor__invitado,
 
   .boton { align-self: flex-start; }
 }
+
+// ---------- Cobro con Mercado Pago (panel y editor; controlador/pagos.js) ----------
+.propuesta-card__pago {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radio-s);
+  background: color-mix(in srgb, var(--pago-color, var(--dorado)) 14%, transparent);
+  font-size: 0.78rem;
+  color: var(--marfil);
+
+  strong {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.propuesta-card__pago--acreditado,
+.editor__pago--acreditado { --pago-color: #2FA36B; }
+.propuesta-card__pago--rechazado,
+.propuesta-card__pago--cancelado,
+.propuesta-card__pago--reembolsado,
+.propuesta-card__pago--contracargo,
+.editor__pago--rechazado,
+.editor__pago--cancelado,
+.editor__pago--reembolsado,
+.editor__pago--contracargo { --pago-color: #E0703A; }
+
+.editor__pagos {
+  border-left-color: var(--pago-color, var(--dorado));
+
+  p {
+    margin: 0;
+  }
+
+  ol {
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.3rem;
+  }
+}
+
+.editor__pago {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.2rem 0.6rem;
+  padding-top: 0.3rem;
+  border-top: 1px solid var(--superficie-borde);
+
+  &::before {
+    content: '';
+    align-self: center;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--pago-color, var(--marfil-apagado));
+  }
+
+  span {
+    flex: 1;
+  }
+
+  time {
+    flex-basis: 100%;
+    padding-left: 1.1rem;
+    color: var(--marfil-apagado);
+    font-size: 0.75rem;
+  }
+}

@@ -8,6 +8,7 @@ import { validarAceptacion } from '../../src/aceptacion.js';
 import { respuestaPublica, validarPedidoCambio, validarRechazo } from '../../src/respuestas.js';
 import { ejemplo, normalizarCobro, normalizarDatosCobro, usaTransferencia } from '../../src/modelo.js';
 import { LIMITE_ENVIOS_GRATIS, clienteDe, contenidoDelLink, enviosDelMes, esPro, mesDe, mismoCliente, tieneCliente, usosPro } from '../../src/planes.js';
+import { pagoEsperado, pagoPublico, resumenDePropuesta } from '../../src/pagos.js';
 
 const CLAVE = 'dealit-demo';
 const ID_DEMO = 'DEMO0000000000000001';
@@ -130,6 +131,10 @@ export const AteneaDB = {
     obtener: async () => JSON.parse(localStorage.getItem(`${CLAVE}:cobro`) || 'null'),
     guardar: async datos => { localStorage.setItem(`${CLAVE}:cobro`, JSON.stringify(datos)); }
   },
+  // Pagos con Mercado Pago (en la app real los escribe solo el servidor).
+  pagos: {
+    listar: async propuestaId => JSON.parse(localStorage.getItem(`${CLAVE}:pagos`) || '[]').filter(x => x.propuestaId === propuestaId)
+  },
   proposals: {
     nuevoId: () => `DEMO${String(Date.now()).slice(-12)}${String(++n).padStart(4, '0')}`,
     crear: async (datos, id) => {
@@ -144,7 +149,7 @@ export const AteneaDB = {
       const d = leer()[id];
       if (!d || d.publico !== true) return null;
       const doc = comoFirestore(id, d);
-      return { payload: contenidoDelLink(doc), aceptacion: doc.aceptacion || null, marca: d.marca === true, respuesta: respuestaPublica(doc) };
+      return { payload: contenidoDelLink(doc), aceptacion: doc.aceptacion || null, marca: d.marca === true, respuesta: respuestaPublica(doc), pago: pagoPublico(doc.pago) };
     },
     actualizar: async (id, cambios) => actualizarDoc(id, cambios),
     borrar: async id => { const docs = leer(); delete docs[id]; guardar(docs); localStorage.removeItem(`${CLAVE}:versiones:proposals:${id}`); },
@@ -211,13 +216,22 @@ window.fetch = async (url, opciones = {}) => {
     const { contenido, ...resumen } = datos;
     return respuesta(200, { aceptacion: { ...resumen, fecha } });
   }
-  // Mercado Pago simulado: vincular «autoriza» al instante y pagar vuelve como aprobado.
+  // Mercado Pago simulado: vincular «autoriza» al instante y pagar acredita el pago (como si
+  // hubiera llegado el aviso de Mercado Pago) y vuelve al link, que pregunta el estado.
   if (ruta === '/api/cobro-mp') {
     const claveMp = `${CLAVE}:mp`;
     if (cuerpo.accion === 'pagar') {
-      if (!doc?.aceptacion) return respuesta(409, { error: 'sin-aceptar' });
-      return respuesta(200, { url: `/p/${cuerpo.id}?pago=aprobado` });
+      const esperado = pagoEsperado(doc);
+      if (esperado.error) return respuesta(esperado.estado, { error: esperado.error });
+      const ahora = new Date().toISOString();
+      const mpPagoId = String(Date.now());
+      const registro = { id: `mp_${mpPagoId}`, mpPagoId, propuestaId: cuerpo.id, userId: doc.userId, monto: esperado.monto, moneda: 'ARS', concepto: esperado.concepto, numero: 1, estado: 'acreditado', detalleMp: 'accredited', creadoMp: ahora, aprobado: ahora, actualizadoMp: ahora };
+      localStorage.setItem(`${CLAVE}:pagos`, JSON.stringify([...JSON.parse(localStorage.getItem(`${CLAVE}:pagos`) || '[]'), registro]));
+      doc.pago = resumenDePropuesta(doc.pago, registro);
+      guardar(docs);
+      return respuesta(200, { url: `/p/${cuerpo.id}?pago=mp` });
     }
+    if (cuerpo.accion === 'estado-pago') return respuesta(200, { pago: pagoPublico(doc?.pago) });
     if (!uid) return respuesta(401, { error: 'sin-sesion' });
     if (cuerpo.accion === 'estado') {
       const vinculado = localStorage.getItem(claveMp) === '1';

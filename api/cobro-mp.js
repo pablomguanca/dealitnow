@@ -6,11 +6,17 @@
 //   POST { accion: 'desvincular' }       (dueño) borra la cuenta vinculada
 //   POST { accion: 'pagar', id }         (cliente) link de pago del primer pago de una propuesta
 //                                        aceptada; el monto lo calcula el servidor
+//   POST { accion: 'estado-pago', id }   (cliente) estado del pago al volver de Mercado Pago:
+//                                        el servidor lo busca en Mercado Pago y lo registra
+// La confirmación de cada pago llega por el aviso de Mercado Pago (notification_url →
+// api/mercadopago?cobro=<id>); ver _lib/cobros-mp.js y src/pagos.js.
 import { ID_PROPUESTA } from '../src/aceptacion.js';
-import { normalizarCobro, normalizarPropuesta, primerPago, usaMercadoPago } from '../src/modelo.js';
+import { pagoEsperado, pagoPublico } from '../src/pagos.js';
 import { FieldValue, firestore, sesionDeLaSolicitud } from './_lib/firebase-admin.js';
 import { ErrorHttp, fallar, leerPost, responder } from './_lib/http.js';
-import { urlAppDe } from './_lib/avisos.js';
+import { crearAvisador, urlAppDe } from './_lib/avisos.js';
+import { planesActivosPara } from './_lib/planes-activos.js';
+import { sincronizarPagos as sincronizarPagosReal } from './_lib/cobros-mp.js';
 import {
   credenciales, crearPreferencia, cuentasMp, datosDeLaCuenta, firmarEstado, pedirToken,
   registroDeCuenta, tokenVigente, urlAutorizacion, verificarEstado
@@ -23,7 +29,16 @@ const redirigir = (res, url) => {
   return res.end();
 };
 
-export const crearHandler = ({ db, sesionDe, entorno = process.env, fetchFn = fetch, ahora = () => Date.now() }) => async (req, res) => {
+// Al volver de pagar, el link pregunta varias veces: a Mercado Pago se le consulta como mucho
+// una vez cada tanto por propuesta.
+const PAUSA_CONSULTA_MS = 4000;
+// No se crea otro pago si el anterior ya se acreditó o Mercado Pago lo está revisando.
+const PAGO_EN_CURSO = { acreditado: 'ya-pagado', 'en-mediacion': 'ya-pagado', 'en-proceso': 'pago-en-proceso' };
+
+export const crearHandler = ({
+  db, sesionDe, entorno = process.env, fetchFn = fetch, ahora = () => Date.now(),
+  sincronizarPagos = sincronizarPagosReal, avisar = async () => {}
+}) => async (req, res) => {
   const cred = credenciales(entorno);
   const app = urlAppDe(req);
   const redirectUri = `${app}/api/cobro-mp`;
@@ -59,28 +74,52 @@ export const crearHandler = ({ db, sesionDe, entorno = process.env, fetchFn = fe
       const snap = await db().collection('proposals').doc(cuerpo.id).get();
       const doc = snap.exists ? snap.data() : null;
       if (!doc || doc.publico !== true) return responder(res, 404, { error: 'no-disponible' });
-      if (!doc.aceptacion) return responder(res, 409, { error: 'sin-aceptar' });
       // Lo aceptado (con los opcionales que eligió el cliente): de ahí sale el monto.
-      const contenido = normalizarPropuesta(doc.aceptacion.contenido || doc.payload, { logoValido: () => true });
-      if (!usaMercadoPago(normalizarCobro(contenido.cobro).metodo)) return responder(res, 409, { error: 'sin-mercadopago' });
-      const moneda = doc.aceptacion.moneda || contenido.inversion.moneda;
-      if (moneda !== 'ARS') return responder(res, 409, { error: 'moneda-no-soportada' });
-      const pago = primerPago(contenido, doc.aceptacion.inicial);
-      if (!pago || !(pago.monto > 0)) return responder(res, 409, { error: 'sin-monto' });
+      const esperado = pagoEsperado(doc);
+      if (esperado.error) return responder(res, esperado.estado, { error: esperado.error });
+      if (PAGO_EN_CURSO[doc.pago?.estado]) return responder(res, 409, { error: PAGO_EN_CURSO[doc.pago.estado] });
       const token = await tokenVigente({ db, uid: doc.userId, cred, fetchFn, ahora: ahora() });
       if (!token) return responder(res, 409, { error: 'mp-no-vinculado' });
-      const titulo = String(contenido.propuesta.titulo || doc.title || 'Propuesta').trim().slice(0, 200);
-      const vuelta = `${app}/p/${encodeURIComponent(cuerpo.id)}`;
+      const titulo = String(esperado.contenido.propuesta.titulo || doc.title || 'Propuesta').trim().slice(0, 200);
+      // La vuelta no dice cómo salió el pago: el link se lo pregunta al servidor ('estado-pago').
+      const vuelta = `${app}/p/${encodeURIComponent(cuerpo.id)}?pago=mp`;
       const preferencia = await crearPreferencia(fetchFn, token, {
-        items: [{ id: cuerpo.id, title: `${titulo} · ${pago.concepto}`.slice(0, 250), quantity: 1, unit_price: pago.monto, currency_id: 'ARS' }],
+        items: [{ id: cuerpo.id, title: `${titulo} · ${esperado.concepto}`.slice(0, 250), quantity: 1, unit_price: esperado.monto, currency_id: 'ARS' }],
         external_reference: cuerpo.id,
-        back_urls: { success: `${vuelta}?pago=aprobado`, pending: `${vuelta}?pago=pendiente`, failure: `${vuelta}?pago=rechazado` },
+        // source_news=webhooks: solo avisos Webhooks (los que vienen firmados), no los IPN.
+        notification_url: `${app}/api/mercadopago?cobro=${encodeURIComponent(cuerpo.id)}&source_news=webhooks`,
+        metadata: { propuesta: cuerpo.id, numero_pago: esperado.numero },
+        back_urls: { success: vuelta, pending: vuelta, failure: vuelta },
         auto_return: 'approved',
         ...(doc.aceptacion.nombre ? { payer: { name: String(doc.aceptacion.nombre).slice(0, 120) } } : {})
       });
       const url = preferencia.init_point || preferencia.sandbox_init_point;
       if (!url) throw new Error('Mercado Pago no devolvió el link de pago');
-      return responder(res, 200, { url, monto: pago.monto, concepto: pago.concepto });
+      return responder(res, 200, { url, monto: esperado.monto, concepto: esperado.concepto });
+    }
+
+    // ---------- Estado del pago (cliente, sin sesión) ----------
+    // El estado lo trae Mercado Pago y lo valida el servidor: nada de lo que mande el
+    // navegador (ni la URL de vuelta) cambia un pago.
+    if (cuerpo.accion === 'estado-pago') {
+      if (typeof cuerpo.id !== 'string' || !ID_PROPUESTA.test(cuerpo.id)) return responder(res, 400, { error: 'id-invalido' });
+      const ref = db().collection('proposals').doc(cuerpo.id);
+      const snap = await ref.get();
+      const doc = snap.exists ? snap.data() : null;
+      if (!doc || doc.publico !== true) return responder(res, 404, { error: 'no-disponible' });
+      if (!doc.aceptacion) return responder(res, 200, { pago: null });
+      const acreditado = doc.pago?.estado === 'acreditado';
+      if (!cred || acreditado || ahora() - (Number(doc.pagoConsultado) || 0) < PAUSA_CONSULTA_MS) {
+        return responder(res, 200, { pago: pagoPublico(doc.pago) });
+      }
+      await ref.update({ pagoConsultado: ahora() });
+      try {
+        await sincronizarPagos({ db, propuestaId: cuerpo.id, cred, fetchFn, ahora: ahora(), avisar, urlApp: app });
+      } catch (e) {
+        console.error('No se pudo consultar el pago en Mercado Pago:', e.message);
+      }
+      const despues = await ref.get();
+      return responder(res, 200, { pago: pagoPublico(despues.data()?.pago) });
     }
 
     // ---------- Acciones del dueño ----------
@@ -113,4 +152,8 @@ export const crearHandler = ({ db, sesionDe, entorno = process.env, fetchFn = fe
   }
 };
 
-export default crearHandler({ db: firestore, sesionDe: sesionDeLaSolicitud });
+export default crearHandler({
+  db: firestore,
+  sesionDe: sesionDeLaSolicitud,
+  avisar: crearAvisador({ db: firestore, planesActivos: planesActivosPara })
+});

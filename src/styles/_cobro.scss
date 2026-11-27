@@ -431,3 +431,75 @@
   opacity: 0;
   pointer-events: none;
 }
+
+// ---------- Estado del pago con Mercado Pago (link aceptado, render.js: estadoPagoHTML) ----------
+// Lo confirma el servidor con Mercado Pago; «verificando» mientras espera la confirmación.
+.pago-estado {
+  --pago-color: var(--d-acento, var(--dorado-papel));
+
+  max-width: 34rem;
+  margin: 1.2rem auto 0;
+  padding: 0.95rem 1.1rem;
+  border: 1px solid color-mix(in srgb, var(--pago-color) 40%, transparent);
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--pago-color) 8%, transparent);
+  color: var(--d-texto, var(--marfil));
+  font-family: var(--fuente-texto);
+  text-align: left;
+
+  &__titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+
+    &::before {
+      content: '';
+      flex: none;
+      width: 0.6rem;
+      height: 0.6rem;
+      border-radius: 50%;
+      background: var(--pago-color);
+    }
+  }
+
+  &__texto {
+    margin: 0.35rem 0 0;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--d-suave, var(--marfil-apagado));
+
+    strong {
+      color: var(--d-texto, var(--marfil));
+    }
+  }
+
+  &--acreditado { --pago-color: #1E8E5A; }
+  &--rechazado,
+  &--cancelado,
+  &--contracargo { --pago-color: #C2410C; }
+  &--pendiente,
+  &--en-proceso,
+  &--sin-confirmar { --pago-color: #B7791F; }
+  &--verificando { --pago-color: #009EE3; }
+
+  &--verificando &__titulo::before {
+    animation: pagoLatido 1.1s ease-in-out infinite;
+  }
+}
+
+@keyframes pagoLatido {
+  50% { opacity: 0.25; transform: scale(0.7); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pago-estado--verificando .pago-estado__titulo::before { animation: none; }
+}
+
+@media print {
+  .pago-estado {
+    display: none;
+  }
+}

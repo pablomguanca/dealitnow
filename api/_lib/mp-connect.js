@@ -82,6 +82,15 @@ export const datosDeLaCuenta = (fetchFn, token) => pedir(fetchFn, '/users/me', {
 export const crearPreferencia = (fetchFn, token, preferencia) =>
   pedir(fetchFn, '/checkout/preferences', { method: 'POST', body: preferencia, token });
 
+// Pagos de la cuenta del freelancer (con su token: Mercado Pago solo devuelve los suyos).
+export const obtenerPago = (fetchFn, token, id) => pedir(fetchFn, `/v1/payments/${encodeURIComponent(id)}`, { token });
+export const buscarPagos = async (fetchFn, token, referencia) => {
+  const datos = await pedir(fetchFn, `/v1/payments/search?external_reference=${encodeURIComponent(referencia)}&sort=date_created&criteria=desc&limit=10`, { token });
+  return Array.isArray(datos?.results) ? datos.results : [];
+};
+// La orden del pago dice de qué preferencia salió (el pago no lo trae).
+export const obtenerOrden = (fetchFn, token, id) => pedir(fetchFn, `/merchant_orders/${encodeURIComponent(id)}`, { token });
+
 export const cuentasMp = db => db().collection('mpCuentas');
 
 // Lo que se guarda de la cuenta del freelancer (tokens cifrados).

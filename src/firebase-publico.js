@@ -6,6 +6,7 @@ import { getFirestore, doc, getDoc } from 'firebase/firestore/lite';
 import { firebaseConfig, PREFIJO_URL_LOGO } from './firebase-config.js';
 import { contenidoDelLink } from './planes.js';
 import { respuestaPublica } from './respuestas.js';
+import { pagoPublico } from './pagos.js';
 
 const crearAteneaPublico = () => {
   const app = initializeApp(firebaseConfig);
@@ -23,7 +24,7 @@ const crearAteneaPublico = () => {
 
   const obtenerPublica = async id => {
     const datos = await leerPublico('proposals', id);
-    return datos ? { payload: contenidoDelLink(datos), aceptacion: datos.aceptacion || null, marca: datos.marca === true, respuesta: respuestaPublica(datos) } : null;
+    return datos ? { payload: contenidoDelLink(datos), aceptacion: datos.aceptacion || null, marca: datos.marca === true, respuesta: respuestaPublica(datos), pago: pagoPublico(datos.pago) } : null;
   };
 
   const obtenerPortafolioPublico = async id => {

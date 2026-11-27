@@ -55,6 +55,7 @@ import {
 import { firebaseConfig, PREFIJO_URL_LOGO } from './firebase-config.js';
 import { esAppNativa, tokenGoogleNativo, cerrarSesionGoogleNativa } from './nativo.js';
 import { contenidoDelLink } from './planes.js';
+import { pagoPublico } from './pagos.js';
 
 const crearAteneaDB = () => {
   if (firebaseConfig.apiKey === 'TU_API_KEY') throw new Error('Firebase no está configurado: falta la API key.');
@@ -196,6 +197,10 @@ const crearAteneaDB = () => {
 
   const _colProposals = () => collection(db, 'proposals');
 
+  // Pagos con Mercado Pago de una propuesta (los escribe solo el servidor; ver src/pagos.js).
+  const listarPagos = async propuestaId =>
+    _docsDe(await getDocs(query(collection(db, 'pagos'), where('userId', '==', getUid()), where('propuestaId', '==', propuestaId), limit(20))));
+
   const _baseQuery = (...filtros) =>
     query(_colProposals(), where('userId', '==', getUid()), ...filtros, orderBy('createdAt', 'desc'));
 
@@ -246,8 +251,8 @@ const crearAteneaDB = () => {
     try {
       const snap = await getDoc(doc(_colProposals(), id));
       if (!snap.exists() || !snap.data().payload) return null;
-      const { aceptacion, marca } = snap.data();
-      return { payload: contenidoDelLink(snap.data()), aceptacion: aceptacion || null, marca: marca === true };
+      const { aceptacion, marca, pago } = snap.data();
+      return { payload: contenidoDelLink(snap.data()), aceptacion: aceptacion || null, marca: marca === true, pago: pagoPublico(pago) };
     } catch (e) {
       if (e.code === 'permission-denied') return null;
       throw e;
@@ -528,6 +533,7 @@ const crearAteneaDB = () => {
     plan: { escuchar: escucharPlan },
     perfil: { obtener: obtenerPerfil, guardar: guardarPerfil },
     cobro: { obtener: obtenerCobro, guardar: guardarCobro },
+    pagos: { listar: listarPagos },
     proposals: {
       nuevoId:    nuevoIdPropuesta,
       crear:      crearPropuesta,

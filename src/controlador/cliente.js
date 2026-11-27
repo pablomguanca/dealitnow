@@ -14,7 +14,7 @@ import {
   normalizarPf
 } from './contexto.js';
 import { renderDocumento, renderPortafolio } from './vista.js';
-import { registrarVisita, avisarVueltaDePago } from './aceptar.js';
+import { registrarVisita, verificarVueltaDePago } from './aceptar.js';
 
 const LINK_INCOMPLETO = 'El link llegó incompleto o se cortó al copiarlo. Pedile a quien te lo mandó que lo comparta de nuevo.';
 const SIN_CONEXION = 'Hubo un problema al conectar. Revisá tu conexión y recargá la página.';
@@ -74,12 +74,12 @@ const iniciarClienteCorto = async id => {
   try {
     const datos = await AteneaDB.proposals.obtenerPublica(id);
     if (datos) {
-      ctx.compartida = { id, aceptacion: datos.aceptacion, marca: datos.marca === true, respuesta: datos.respuesta || null };
+      ctx.compartida = { id, aceptacion: datos.aceptacion, marca: datos.marca === true, respuesta: datos.respuesta || null, pago: datos.pago || null };
       // Aceptada: se muestra la versión que se aceptó, con los opcionales elegidos.
       if (datos.aceptacion) ctx.seleccion = new Set((datos.aceptacion.opcionales || []).map(o => o.id));
       mostrarCliente(datos.aceptacion?.contenido || datos.payload);
       registrarVisita(id);
-      avisarVueltaDePago();
+      verificarVueltaDePago();
     } else errorCliente('Esta propuesta ya no está disponible', 'Puede que el link se haya desactivado. Pedile a quien te la mandó que te comparta uno nuevo.');
   } catch (e) {
     console.error('No se pudo abrir la propuesta compartida:', e);

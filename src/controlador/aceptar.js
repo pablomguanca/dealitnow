@@ -189,19 +189,53 @@ const MENSAJES_PAGO = {
   'mp-no-vinculado': 'Quien te mandó la propuesta todavía no tiene Mercado Pago vinculado. Escribile para coordinar el pago.',
   'moneda-no-soportada': 'Mercado Pago cobra en pesos y esta propuesta está en otra moneda. Escribile a quien te la mandó para coordinar el pago.',
   'sin-aceptar': 'Primero aceptá la propuesta.',
-  'mercadopago-rechazo': 'Mercado Pago no pudo crear el pago. Probá de nuevo en un minuto.'
+  'mercadopago-rechazo': 'Mercado Pago no pudo crear el pago. Probá de nuevo en un minuto.',
+  'ya-pagado': 'Este pago ya está acreditado. Mercado Pago te mandó el comprobante por email.',
+  'pago-en-proceso': 'Mercado Pago está revisando tu pago. Cuando se resuelva, lo vas a ver acá.'
 };
 
-// Vuelta de Mercado Pago al link (/p/…?pago=…): cómo salió el pago.
-export const avisarVueltaDePago = () => {
+// Estado del pago según el servidor, que lo consulta a Mercado Pago. Lo que diga la URL de
+// vuelta no cuenta: nadie puede «aprobar» un pago cambiando la dirección.
+const consultarPago = async () => {
+  const { pago } = await llamarApi('/api/cobro-mp', { accion: 'estado-pago', id: ctx.compartida.id });
+  ctx.compartida.pago = pago || null;
+  return ctx.compartida.pago;
+};
+
+// Pausas entre consultas al volver de pagar (~1 minuto en total).
+const ESPERAS_PAGO = [0, 2500, 4000, 5000, 7000, 10000, 12000, 15000];
+const espera = ms => new Promise(r => { setTimeout(r, ms); });
+const FINALES = new Set(['acreditado', 'rechazado', 'cancelado', 'reembolsado', 'contracargo', 'en-mediacion']);
+
+// Vuelta de Mercado Pago al link (/p/…?pago=mp): «Estamos verificando tu pago» hasta que el
+// servidor lo confirme con Mercado Pago (por su aviso o porque lo consulta él).
+export const verificarVueltaDePago = async () => {
   const parametros = new URLSearchParams(location.search);
-  const pago = parametros.get('pago');
-  if (!pago) return;
-  if (pago === 'aprobado') avisarExito('¡Pago realizado! Mercado Pago te manda el comprobante por email.', 9000);
-  else if (pago === 'pendiente') avisar('Tu pago quedó pendiente en Mercado Pago. Te avisan por email cuando se acredite.', 9000);
-  else avisarError('El pago no se completó. Podés intentarlo de nuevo desde el botón.', 9000);
+  if (!parametros.has('pago')) return;
   ['pago', 'collection_id', 'collection_status', 'payment_id', 'status', 'external_reference', 'payment_type', 'merchant_order_id', 'preference_id', 'site_id', 'processing_mode', 'merchant_account_id'].forEach(k => parametros.delete(k));
   history.replaceState(null, '', location.pathname + (parametros.toString() ? `?${parametros}` : ''));
+  if (!ctx.compartida?.id || !ctx.compartida.aceptacion || ctx.compartida.pago?.estado === 'acreditado') return;
+
+  const pintar = () => renderDocumento();
+  ctx.compartida.verificandoPago = true;
+  ctx.compartida.pagoSinConfirmar = false;
+  pintar();
+  let pago = ctx.compartida.pago;
+  for (const ms of ESPERAS_PAGO) {
+    await espera(ms);
+    try {
+      pago = await consultarPago();
+    } catch (e) {
+      console.warn('No se pudo consultar el estado del pago:', e);
+    }
+    if (FINALES.has(pago?.estado)) break;
+  }
+  ctx.compartida.verificandoPago = false;
+  ctx.compartida.pagoSinConfirmar = !pago;
+  pintar();
+  if (pago?.estado === 'acreditado') avisarExito('¡Pago acreditado! Mercado Pago te manda el comprobante por email.', 9000);
+  else if (pago?.estado === 'rechazado' || pago?.estado === 'cancelado') avisarError('El pago no se completó. Podés intentarlo de nuevo desde el botón.', 9000);
+  else if (pago) avisar('Mercado Pago todavía está procesando tu pago. Cuando se acredite, lo vas a ver en este link.', 9000);
 };
 
 export const instalarAceptar = () => {
@@ -230,6 +264,8 @@ export const instalarAceptar = () => {
       } catch (e) {
         avisarError(MENSAJES_PAGO[e.codigo] || 'No pudimos abrir Mercado Pago. Revisá tu conexión y probá de nuevo.', 9000);
         boton.disabled = false;
+        // Ya hay un pago acreditado o en revisión: se muestra su estado en lugar del botón.
+        if (e.codigo === 'ya-pagado' || e.codigo === 'pago-en-proceso') consultarPago().then(renderDocumento).catch(() => {});
       }
     },
     // Copiar el CBU, el alias o el titular de la tarjeta de transferencia.

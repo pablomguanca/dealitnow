@@ -53,7 +53,8 @@ service cloud.firestore {
       // api/aceptar, api/activar).
       // También lo que responde el cliente sin aceptar (rechazo, cambios) y el recordatorio de
       // vencimiento (recordatorio): api/aceptar y la tarea diaria de api/visto.
-      function camposDelServidor() { return ['vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion', 'enviadaEn', 'marca', 'publicado', 'publicadoEn', 'clienteEnviado', 'rechazo', 'cambios', 'recordatorio']; }
+      // Y el resumen del pago con Mercado Pago (pago, pagoConsultado): api/mercadopago y api/cobro-mp.
+      function camposDelServidor() { return ['vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion', 'enviadaEn', 'marca', 'publicado', 'publicadoEn', 'clienteEnviado', 'rechazo', 'cambios', 'recordatorio', 'pago', 'pagoConsultado']; }
 
       // Activar el link pasa por api/activar, que aplica el límite del plan. El navegador
       // solo puede desactivarlo.
@@ -67,7 +68,8 @@ service cloud.firestore {
         return d.keys().hasOnly(['userId', 'title', 'clientName', 'amount', 'status',
                                  'theme', 'payload', 'publico', 'createdAt', 'updatedAt',
                                  'vistas', 'vistoPrimero', 'vistoUltimo', 'aceptacion', 'enviadaEn', 'marca',
-                                 'publicado', 'publicadoEn', 'clienteEnviado', 'rechazo', 'cambios', 'recordatorio'])
+                                 'publicado', 'publicadoEn', 'clienteEnviado', 'rechazo', 'cambios', 'recordatorio',
+                                 'pago', 'pagoConsultado'])
           && d.title is string      && d.title.size() <= 200
           && d.clientName is string && d.clientName.size() <= 200
           && d.amount is number
@@ -189,6 +191,14 @@ service cloud.firestore {
       }
       allow read, delete: if esDueno(uid);
       allow create, update: if esDueno(uid) && verificado() && cobroValido();
+    }
+
+    // Pagos de los clientes con Mercado Pago (uno por pago, id mp_<id de Mercado Pago>): los
+    // escribe solo el servidor, después de verificarlos con Mercado Pago (api/_lib/cobros-mp.js).
+    // El dueño lee los suyos; nadie más, ni con el link.
+    match /pagos/{pagoId} {
+      allow get, list: if esDueno(resource.data.userId);
+      allow write: if false;
     }
 
     match /{document=**} {

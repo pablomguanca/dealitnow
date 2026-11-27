@@ -90,6 +90,8 @@ export function EditorSidebar() {
             <button type="button" className="boton boton--primario boton--chico" data-accion="registrarse">Crear cuenta gratis</button>
           </div>
           <p className="editor__aceptada" id="editor-aceptada" role="status" hidden></p>
+          {/* Pagos con Mercado Pago de esta propuesta: estado e historial (controlador/pagos.js). */}
+          <div className="editor__aceptada editor__pagos" id="editor-pagos" role="status" hidden></div>
           {/* Lo que respondió el cliente sin aceptar: «No avanzo por ahora» y pedidos de cambio. */}
           <div className="editor__aceptada editor__respuestas" id="editor-respuestas" role="status" hidden></div>
           <p className="editor__bajada" id="editor-bajada">Elegí una plantilla, escribí tus datos y mandala como link interactivo: el diseño se arma solo.</p>

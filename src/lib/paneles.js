@@ -6,6 +6,14 @@ import {
 import { fechaDeAceptacion } from './render.js';
 import { resolverColoresTema } from './tema.js';
 import { MOTIVOS_RECHAZO, cambioPendiente, porVencer, venceTexto } from '../respuestas.js';
+import { etiquetaPago } from '../pagos.js';
+
+// Cómo va el cobro con Mercado Pago (lo confirma el servidor; ver src/pagos.js).
+export const pagoTarjetaHTML = pago => {
+  const etiqueta = etiquetaPago(pago);
+  if (!etiqueta) return '';
+  return `<p class="propuesta-card__pago propuesta-card__pago--${esc(pago.estado)}"><span>${esc(etiqueta)}</span><strong>${esc(dinero(pago.monto, pago.moneda))}</strong></p>`;
+};
 
 export const ESTADOS_PROPUESTA = {
   draft: 'Borrador',
@@ -131,6 +139,7 @@ export const propuestaHTML = (p, { conSeguimiento = true } = {}) => {
         </div>
         <p class="propuesta-card__fecha">${editada ? tiempoHTML(editada, `Actualizada ${haceCuanto(editada)}`) : 'Sin cambios todavía'}</p>
         ${seguimiento ? `<p class="propuesta-card__seguimiento">${seguimiento}</p>` : ''}
+        ${pagoTarjetaHTML(p.pago)}
         ${recordar}
         <div class="propuesta-card__acciones">
           <a class="boton boton--secundario boton--chico" href="/propuesta/${encodeURIComponent(p.id)}" data-accion="abrir-propuesta" data-id="${id}">Editar</a>

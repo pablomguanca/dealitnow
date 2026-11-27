@@ -77,6 +77,10 @@ export const calcularResultados = (propuestas = [], { periodo = 'mes', ahora = n
   const aceptadas = propuestas.filter(p => p.aceptacion && enPeriodo(fechaAceptacion(p)));
 
   const ganado = sumarPorMoneda(aceptadas, p => p.aceptacion.inicial);
+  // Cobrado con Mercado Pago: pagos acreditados (confirmados por el servidor con Mercado
+  // Pago), por fecha de acreditación.
+  const cobradas = propuestas.filter(p => p.pago?.estado === 'acreditado' && enPeriodo(fechaDe(p.pago.aprobado)));
+  const cobrado = sumarPorMoneda(cobradas, p => p.pago.monto);
   const mensual = sumarPorMoneda(aceptadas.filter(p => Number(p.aceptacion.mensual) > 0), p => p.aceptacion.mensual);
   const monedaPrincipal = ganado[0]?.moneda || monedaDe(propuestas[0] || {});
   const aceptadasPrincipal = aceptadas.filter(p => monedaDe(p) === monedaPrincipal);
@@ -166,6 +170,7 @@ export const calcularResultados = (propuestas = [], { periodo = 'mes', ahora = n
     desde,
     monedaPrincipal,
     ganado,
+    cobrado,
     mensual,
     ticketMedio,
     diasHastaAceptar,

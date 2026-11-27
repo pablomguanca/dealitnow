@@ -10,6 +10,7 @@ import {
   fechaLarga
 } from './formato.js';
 import { firmaSVG, pideFirma } from '../firma.js';
+import { puedePagar } from '../pagos.js';
 import {
   PROPORCIONES_IMAGEN,
   LAYOUTS_GALERIA,
@@ -453,15 +454,53 @@ export const mediosPagoHTML = (s, web, esAceptada) => {
 
 // Botón para pagar con Mercado Pago (cuenta del freelancer vinculada). El link de pago lo
 // crea el servidor (api/cobro-mp) al tocarlo, con el monto que calcula él.
-export const pagoMpHTML = (pago, { conTransferencia = false } = {}) => `
+export const pagoMpHTML = (pago, { conTransferencia = false, reintento = false } = {}) => `
     <div class="pago-mp">
       <button type="button" class="pago-mp__boton" data-accion="pagar-mp">
         <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12.5" rx="2.2"/><path d="M3 10h18M6.5 15h4"/></svg>
-        <span>Pagar con Mercado Pago</span>
+        <span>${reintento ? 'Volver a intentar el pago' : 'Pagar con Mercado Pago'}</span>
       </button>
       <p class="pago-mp__nota">${pago ? `${esc(pago.concepto)}: <strong>${esc(pago.monto)}</strong>. ` : ''}Con tarjeta o dinero en cuenta, en Mercado Pago.${conTransferencia ? ' O, si preferís, transferí:' : ''}</p>
       ${marcaMpHTML()}
     </div>`;
+
+// Estado del pago con Mercado Pago en el link aceptado. Sale del servidor (`pago` de la
+// propuesta, que se escribe recién después de consultar a Mercado Pago), nunca de la URL de
+// vuelta. verificando: volvió de Mercado Pago y todavía no llegó la confirmación.
+// sinConfirmar: esperó y no llegó (puede tardar unos minutos).
+const TEXTOS_PAGO = {
+  pendiente: ['Pago pendiente', 'Mercado Pago todavía lo está procesando. Si elegiste pagar en efectivo, se acredita cuando lo abones. Si no lo completaste, podés intentarlo de nuevo.'],
+  'en-proceso': ['Pago en revisión', 'Mercado Pago lo está revisando. Suele resolverse en minutos; cuando se acredite, lo vas a ver acá.'],
+  acreditado: ['Pago acreditado', ''],
+  rechazado: ['El pago no se completó', 'Mercado Pago lo rechazó. Podés intentarlo de nuevo, con otro medio de pago si hace falta.'],
+  cancelado: ['El pago se canceló', 'Podés intentarlo de nuevo cuando quieras.'],
+  'en-mediacion': ['Pago en reclamo', 'Hay un reclamo abierto en Mercado Pago sobre este pago.'],
+  reembolsado: ['Pago devuelto', 'El pago se devolvió a tu medio de pago.'],
+  contracargo: ['Pago desconocido', 'El pago se desconoció ante la tarjeta.']
+};
+export const estadoPagoHTML = (pago, { verificando = false, sinConfirmar = false } = {}) => {
+  let estado = pago?.estado;
+  let [titulo, textoEstado] = TEXTOS_PAGO[estado] || [];
+  if (verificando && estado !== 'acreditado') {
+    estado = 'verificando';
+    titulo = 'Estamos verificando tu pago';
+    textoEstado = 'Mercado Pago nos está confirmando la operación. Tarda unos segundos.';
+  } else if (!titulo && sinConfirmar) {
+    estado = 'sin-confirmar';
+    titulo = 'Todavía no recibimos la confirmación';
+    textoEstado = 'Si pagaste, Mercado Pago puede tardar unos minutos en avisarnos: volvé a abrir este link en un rato. Si no completaste el pago, podés hacerlo desde el botón.';
+  }
+  if (!titulo) return '';
+  if (estado === 'acreditado') {
+    const fecha = pago.aprobado && !Number.isNaN(Date.parse(pago.aprobado)) ? new Date(pago.aprobado) : null;
+    textoEstado = `${esc(pago.concepto || 'Pago')}: <strong>${esc(dinero(pago.monto, pago.moneda))}</strong>${fecha ? `, acreditado el ${esc(fechaLarga(fecha))}` : ''}. Mercado Pago te manda el comprobante por email.`;
+  } else textoEstado = esc(textoEstado);
+  return `
+    <div class="pago-estado pago-estado--${esc(estado)}" role="status">
+      <p class="pago-estado__titulo">${esc(titulo)}</p>
+      <p class="pago-estado__texto">${textoEstado}</p>
+    </div>`;
+};
 
 // El primer pago a transferir: el primero de la forma de pago, o el total si no hay pagos.
 // Mercado Pago cobra en pesos: el botón se ofrece solo en las propuestas en ARS.
@@ -506,7 +545,8 @@ export const cierrePropuestaHTML = (vig, { compartida = null, nombreEmisor = '',
         <p class="cierre__titulo">${que === 'presupuesto' ? 'Presupuesto aceptado' : 'Propuesta aceptada'}</p>
         <p class="cierre__texto">${firma ? 'Aceptada y firmada' : 'Aceptada'} por ${esc(a.nombre)}${fecha ? ` el ${esc(fechaLarga(fecha))}` : ''}. Esta es la versión que se aceptó.</p>
         ${firma ? `<figure class="cierre__firma">${firma}<figcaption>${esc(a.nombre)}</figcaption></figure>` : ''}
-        ${conMp ? pagoMpHTML(pago, { conTransferencia: !!a.cobro }) : ''}
+        ${conMp ? estadoPagoHTML(compartida.pago, { verificando: compartida.verificandoPago, sinConfirmar: compartida.pagoSinConfirmar }) : ''}
+        ${conMp && !compartida.verificandoPago && puedePagar(compartida.pago) ? pagoMpHTML(pago, { conTransferencia: !!a.cobro, reintento: ['rechazado', 'cancelado'].includes(compartida.pago?.estado) }) : ''}
         ${tarjetaCobroHTML(a.cobro || null, { pago: conMp ? null : pago })}
         ${consultaUrl ? `<div class="cierre__acciones"><a class="boton boton--secundario boton--grande" href="${esc(consultaUrl)}" target="_blank" rel="noopener" data-enlace-cliente>Hacer una consulta</a></div>` : ''}
       </div>`;

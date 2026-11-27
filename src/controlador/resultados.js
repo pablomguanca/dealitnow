@@ -61,7 +61,8 @@ const cifrasHTML = r => {
         <span class="res-heroe__detalle">${esc([
           plural(r.aceptadas, 'propuesta aceptada', 'propuestas aceptadas'),
           ...otras.map(o => `y ${dinero(o.total, o.moneda)}`),
-          mensual ? `+ ${mensual}` : ''
+          mensual ? `+ ${mensual}` : '',
+          r.cobrado.length ? `Cobrado con Mercado Pago: ${r.cobrado.map(c => dinero(c.total, c.moneda)).join(' y ')}` : ''
         ].filter(Boolean).join(' · '))}</span>
       </div>
       <div class="res-heroe__cifras">

@@ -1,7 +1,7 @@
 // Panel «Mis propuestas» (lista en tiempo real, métricas, filtros y avisos de visitas
 // o aceptaciones) y apertura, creación, duplicado y borrado de propuestas.
 
-import { $, esc, texto, fechaLarga } from '../lib/formato.js';
+import { $, esc, texto, fechaLarga, dinero } from '../lib/formato.js';
 import { MOTIVOS_RECHAZO } from '../respuestas.js';
 import { vacio, ejemplo } from '../modelo.js';
 import { fechaDeAceptacion } from '../lib/render.js';
@@ -29,6 +29,7 @@ import { cargarFuente } from '../lib/tema.js';
 import { restriccionesActivas } from './plan.js';
 import { hayDatosDeCobro, mpVinculado } from './cobro.js';
 import { guiaPrimeraPropuesta, pintarGuia } from './guia.js';
+import { actualizarPagosEditor } from './pagos.js';
 
 // La lista se escucha en tiempo real toda la sesión: refleja al instante lo que se
 // edita, se duplica o se borra, también sin conexión.
@@ -103,7 +104,8 @@ const avisarNovedades = docs => {
     aceptada: !!p.aceptacion,
     vistas: Number(p.vistas) || 0,
     rechazada: p.status === 'rejected' && !!p.rechazo,
-    cambios: Array.isArray(p.cambios) ? p.cambios.length : 0
+    cambios: Array.isArray(p.cambios) ? p.cambios.length : 0,
+    pagoAcreditado: p.pago?.estado === 'acreditado' ? p.pago.id : ''
   }]));
   if (seguimientoAnterior) {
     for (const p of docs) {
@@ -111,7 +113,8 @@ const avisarNovedades = docs => {
       if (!antes) continue;
       const titulo = texto(p.title).trim() || 'tu propuesta';
       const ahora = actual.get(p.id);
-      if (p.aceptacion && !antes.aceptada) celebrar(`${texto(p.aceptacion.nombre)} aceptó «${titulo}».`);
+      if (ahora.pagoAcreditado && ahora.pagoAcreditado !== antes.pagoAcreditado) celebrar(`Se acreditó el pago de «${titulo}»: ${dinero(p.pago.monto, p.pago.moneda)}.`);
+      else if (p.aceptacion && !antes.aceptada) celebrar(`${texto(p.aceptacion.nombre)} aceptó «${titulo}».`);
       else if (ahora.cambios > antes.cambios) avisar(`Tu cliente te pidió un cambio en «${titulo}».`, 9000);
       else if (ahora.rechazada && !antes.rechazada) avisar(`Tu cliente no avanza por ahora con «${titulo}»: ${(MOTIVOS_RECHAZO[p.rechazo.motivo] || 'otro motivo').toLowerCase()}.`, 9000);
       else if ((Number(p.vistas) || 0) > antes.vistas && !restriccionesActivas()) avisar(`Tu cliente está viendo «${titulo}».`, 6000);
@@ -168,6 +171,7 @@ export const escucharPropuestas = () => {
     renderPanel();
     actualizarAvisoAceptada();
     actualizarAvisoRespuestas();
+    actualizarPagosEditor();
   }, () => {
     panelCargando = false;
     panelError = true;
@@ -215,6 +219,7 @@ export const mostrarEditor = (id, contenido, { historial = true } = {}) => {
   mostrarEstadoGuardado();
   actualizarAvisoAceptada();
   actualizarAvisoRespuestas();
+  actualizarPagosEditor();
   $('#editor-ia').hidden = false;
   $('#menu-editar-ia').hidden = false;
   migrarLogo();
