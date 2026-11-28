@@ -176,7 +176,9 @@ export const copiarPortafolioEnPropuesta = () => {
     return;
   }
   const pfDoc = ctx.portafolios.find(x => x.id === pfId);
-  if (pfDoc) estado.opciones.portafolio = resumenPortafolio(pfDoc.payload, pfDoc.id, pfDoc.publico);
+  if (pfDoc) {
+    estado.opciones.portafolio = resumenPortafolio(pfDoc.payload, pfDoc.id, pfDoc.publico, { proyectos: estado.opciones.portafolioProyectos });
+  }
 };
 
 export const guardarAhora = () => {

@@ -77,6 +77,106 @@
   }
 }
 
+// Proyectos del portfolio que van en la propuesta (casillas y orden).
+.pf-elegir {
+  margin-top: 0.7rem;
+
+  &[hidden] { display: none; }
+
+  &__cabecera {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin: 0 0 0.35rem;
+
+    .campo__etiqueta { margin: 0; }
+  }
+
+  &__cuenta {
+    font-size: 0.75rem;
+    color: var(--marfil-apagado);
+  }
+
+  &__lista {
+    display: grid;
+    gap: 0.3rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.45rem;
+    border: 1px solid var(--dorado-tenue);
+    border-radius: var(--radio-s);
+    background: var(--fondo, transparent);
+    opacity: 0.7;
+
+    &--elegido { opacity: 1; }
+  }
+
+  &__dato {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    cursor: pointer;
+
+    input { flex-shrink: 0; }
+  }
+
+  &__mini {
+    flex-shrink: 0;
+    width: 2.6rem;
+    height: 1.9rem;
+    border-radius: 4px;
+    object-fit: cover;
+
+    &--vacia { background: var(--dorado-tenue); }
+  }
+
+  &__texto {
+    display: grid;
+    min-width: 0;
+  }
+
+  &__titulo,
+  &__cat {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__titulo {
+    font-size: 0.84rem;
+    color: var(--marfil);
+  }
+
+  &__cat {
+    font-size: 0.72rem;
+    color: var(--marfil-apagado);
+  }
+
+  &__orden {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.15rem;
+
+    .icono-boton {
+      width: 1.9rem;
+      height: 1.9rem;
+      font-size: 0.9rem;
+    }
+
+    .icono-boton:disabled { opacity: 0.3; }
+  }
+}
+
 .proyecto-imagen__vista {
   max-width: 9rem;
   max-height: 4.5rem;

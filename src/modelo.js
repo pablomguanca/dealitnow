@@ -1123,6 +1123,11 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
   n.inversion.pagos.forEach(p => { p.concepto = texto(p.concepto); });
   if (n.opciones && typeof n.opciones === 'object') {
     if ('portafolioId' in n.opciones) n.opciones.portafolioId = texto(n.opciones.portafolioId).trim();
+    if ('portafolioProyectos' in n.opciones) {
+      const seleccion = normalizarSeleccionProyectos(n.opciones.portafolioProyectos);
+      if (seleccion) n.opciones.portafolioProyectos = seleccion;
+      else delete n.opciones.portafolioProyectos;
+    }
     if ('portafolio' in n.opciones) {
       n.opciones.portafolio = n.opciones.portafolio ? normalizarResumenPortafolio(n.opciones.portafolio, { logoValido }) : null;
     }
@@ -1769,6 +1774,7 @@ export const normalizarResumenPortafolio = (datos, { logoValido = logo => /^data
     : [];
   return {
     id: texto(datos.id),
+    nombre: texto(datos.nombre),
     titulo: texto(datos.titulo),
     subtitulo: texto(datos.subtitulo),
     insignia: texto(datos.insignia) || 'Portfolio & Página Web',
@@ -1888,15 +1894,36 @@ export const normalizarPortafolio = (datos, { logoValido = logo => /^data:image\
   return n;
 };
 
-export const resumenPortafolio = (portafolio, id = '', publico = false) => {
+// Proyectos del portfolio que se pueden mostrar en una propuesta (los que tienen algo).
+export const proyectosConContenido = proyectos =>
+  proyectos.filter(p => p.titulo.trim() || p.descripcion.trim() || p.imagen || (p.galeria && p.galeria.length));
+
+// Proyectos elegidos para una propuesta (opciones.portafolioProyectos): ids en el orden en
+// que se muestran. Sin lista, van todos (como las propuestas de antes de poder elegir).
+export const PORTAFOLIO_PROYECTOS_MAX = 50;
+export const normalizarSeleccionProyectos = ids => {
+  if (!Array.isArray(ids)) return null;
+  const vistos = new Set();
+  return ids
+    .filter(id => typeof id === 'string' && id.trim() && id.length <= 64 && !vistos.has(id) && vistos.add(id))
+    .slice(0, PORTAFOLIO_PROYECTOS_MAX);
+};
+
+export const resumenPortafolio = (portafolio, id = '', publico = false, { proyectos: elegidos = null } = {}) => {
   const norm = normalizarPortafolio(portafolio, { logoValido: () => true });
+  const conContenido = proyectosConContenido(norm.proyectos);
+  const seleccion = normalizarSeleccionProyectos(elegidos);
+  const proyectos = seleccion
+    ? seleccion.map(pid => conContenido.find(p => p.id === pid)).filter(Boolean)
+    : conContenido;
   return {
     id: texto(id),
+    nombre: norm.portafolio.nombreInterno.trim(),
     titulo: norm.portafolio.titulo.trim() || norm.portafolio.nombreInterno.trim() || 'Portfolio de proyectos',
     subtitulo: norm.portafolio.subtitulo.trim(),
     insignia: norm.portafolio.insignia.trim() || 'Portfolio & Página Web',
     publico: !!publico,
-    proyectos: norm.proyectos.filter(p => p.titulo.trim() || p.descripcion.trim() || p.imagen || (p.galeria && p.galeria.length)),
+    proyectos,
     galeria: norm.galeria.filter(g => g.imagen)
   };
 };
@@ -1904,7 +1931,7 @@ export const resumenPortafolio = (portafolio, id = '', publico = false) => {
 // La copia del portfolio que va en la propuesta (opciones.portafolio) se arma solo cuando el
 // dueño lo elige o pide traer los cambios: así lo que ve el cliente no cambia porque se editó
 // el portfolio. Esto dice si el portfolio cambió desde esa copia (sin mirar los id internos).
-export const copiaPortafolioDesactualizada = (copia, pfDoc, { logoValido = () => true } = {}) => {
+export const copiaPortafolioDesactualizada = (copia, pfDoc, { logoValido = () => true, proyectos = null } = {}) => {
   if (!copia || !pfDoc) return false;
   const firma = r => {
     const n = normalizarResumenPortafolio(r, { logoValido });
@@ -1914,5 +1941,5 @@ export const copiaPortafolioDesactualizada = (copia, pfDoc, { logoValido = () =>
       galeria: n.galeria.map(({ id, ...resto }) => resto)
     });
   };
-  return firma(copia) !== firma(resumenPortafolio(pfDoc.payload, pfDoc.id, pfDoc.publico));
+  return firma(copia) !== firma(resumenPortafolio(pfDoc.payload, pfDoc.id, pfDoc.publico, { proyectos }));
 };

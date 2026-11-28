@@ -8,6 +8,7 @@ import {
   normalizarPortafolio,
   resumenPortafolio,
   copiaPortafolioDesactualizada,
+  normalizarSeleccionProyectos,
   PORTADAS,
   TEMAS,
   calcularTotales,
@@ -169,6 +170,49 @@ describe('normalizarPortafolio', () => {
     expect(prop.opciones.portafolioId).toBe('pf123');
     expect(prop.opciones.portafolio.proyectos.length).toBe(pf.proyectos.length);
     expect(normalizarPropuesta(prop)).toEqual(prop);
+  });
+
+  it('arma la copia solo con los proyectos elegidos y en ese orden', () => {
+    const pf = normalizarPortafolio(ejemploPortafolio());
+    const [a, b, c] = pf.proyectos.map(p => p.id);
+    const res = resumenPortafolio(pf, 'pf123', true, { proyectos: [c, 'no-existe', a, c] });
+    expect(res.proyectos.map(p => p.id)).toEqual([c, a]);
+    expect(res.nombre).toBe(pf.portafolio.nombreInterno.trim());
+    // Sin lista van todos; con la lista vacía, ninguno.
+    expect(resumenPortafolio(pf, 'pf123', true).proyectos.map(p => p.id)).toEqual(pf.proyectos.map(p => p.id));
+    expect(resumenPortafolio(pf, 'pf123', true, { proyectos: [] }).proyectos).toEqual([]);
+    expect(b).toBeTruthy();
+  });
+
+  it('valida la selección de proyectos de la propuesta', () => {
+    const base = { ...ejemplo(), opciones: { firmas: true, credito: true, portafolioId: 'pf1' } };
+    expect(normalizarSeleccionProyectos(['a', 'b', 'a', 7, '', 'x'.repeat(65)])).toEqual(['a', 'b']);
+    expect(normalizarSeleccionProyectos('a')).toBeNull();
+    expect(normalizarSeleccionProyectos(Array.from({ length: 80 }, (_, i) => `p${i}`))).toHaveLength(50);
+    const conLista = normalizarPropuesta({ ...base, opciones: { ...base.opciones, portafolioProyectos: ['b', 'a', 'b'] } });
+    expect(conLista.opciones.portafolioProyectos).toEqual(['b', 'a']);
+    const invalida = normalizarPropuesta({ ...base, opciones: { ...base.opciones, portafolioProyectos: 'b' } });
+    expect('portafolioProyectos' in invalida.opciones).toBe(false);
+    expect('portafolioProyectos' in normalizarPropuesta(base).opciones).toBe(false);
+    expect(normalizarPropuesta(conLista)).toEqual(conLista);
+  });
+
+  it('compara la copia con el portfolio respetando la selección', () => {
+    const pf = normalizarPortafolio(ejemploPortafolio());
+    const pfDoc = { id: 'pf123', publico: true, payload: pf };
+    const ids = [pf.proyectos[1].id];
+    const copia = resumenPortafolio(pf, 'pf123', true, { proyectos: ids });
+    expect(copiaPortafolioDesactualizada(copia, pfDoc, { proyectos: ids })).toBe(false);
+    // Un cambio en un proyecto que no se eligió no afecta la propuesta.
+    const editado = structuredClone(pf);
+    editado.proyectos[0].titulo = 'Otro';
+    expect(copiaPortafolioDesactualizada(copia, { ...pfDoc, payload: editado }, { proyectos: ids })).toBe(false);
+    editado.proyectos[1].titulo = 'Otro';
+    expect(copiaPortafolioDesactualizada(copia, { ...pfDoc, payload: editado }, { proyectos: ids })).toBe(true);
+    // Las copias de antes no tenían «nombre»: no cuenta como cambio.
+    const { nombre, ...vieja } = resumenPortafolio(pf, 'pf123', true);
+    expect(nombre).toBeTruthy();
+    expect(copiaPortafolioDesactualizada(vieja, pfDoc)).toBe(false);
   });
 
   it('dice si el portfolio cambió desde la copia que tiene la propuesta', () => {

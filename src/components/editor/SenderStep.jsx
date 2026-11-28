@@ -140,6 +140,7 @@ export function SenderStep() {
               <span id="portafolio-aviso-texto"></span>
               <button type="button" className="boton boton--texto boton--chico" id="portafolio-aviso-boton" data-accion="actualizar-portafolio-propuesta">Traer los cambios</button>
             </div>
+            <div className="pf-elegir" id="portafolio-proyectos" hidden></div>
             <p className="campo__ayuda">Elegí qué portfolio querés mostrarle a este cliente dentro de la propuesta (por ejemplo, tu portfolio de diseño, de software o de casos conceptuales).</p>
           </div>
         </div>

@@ -12,8 +12,8 @@ import {
   dinero,
   cantidadTexto
 } from '../lib/formato.js';
-import { MODALIDADES, LISTAS, LISTAS_PORTAFOLIO, totalServicio, copiaPortafolioDesactualizada } from '../modelo.js';
-import { ctx, docActivo, esLogoValido } from './contexto.js';
+import { MODALIDADES, LISTAS, LISTAS_PORTAFOLIO, totalServicio, copiaPortafolioDesactualizada, proyectosConContenido } from '../modelo.js';
+import { ctx, docActivo, esLogoValido, normalizarPf } from './contexto.js';
 import { ofrecerDeshacer } from './historial.js';
 import { registrarAcciones } from './acciones.js';
 import { copiarPortafolioEnPropuesta } from './guardado.js';
@@ -159,7 +159,7 @@ const pintarAvisoPortafolio = () => {
   let conBoton = false;
   if (copia && !ctx.portafoliosCargando && !ctx.portafoliosError) {
     if (!pfDoc) mensaje = 'El portfolio original ya no está en tus portfolios. La propuesta sigue mostrando los proyectos que tenía.';
-    else if (copiaPortafolioDesactualizada(copia, pfDoc, { logoValido: esLogoValido })) {
+    else if (copiaPortafolioDesactualizada(copia, pfDoc, { logoValido: esLogoValido, proyectos: estado.opciones.portafolioProyectos })) {
       mensaje = 'Este portfolio cambió desde que lo sumaste. La propuesta muestra la versión anterior.';
       conBoton = true;
     }
@@ -168,6 +168,86 @@ const pintarAvisoPortafolio = () => {
   $('#portafolio-aviso-texto').textContent = mensaje;
   $('#portafolio-aviso-boton').hidden = !conBoton;
 };
+
+// ---------- Proyectos del portfolio que van en la propuesta ----------
+// opciones.portafolioProyectos: ids elegidos, en el orden en que se muestran. Sin lista, van
+// todos. Elegir o reordenar arma de nuevo la copia con el portfolio actual.
+
+const proyectosDelPortafolio = () => {
+  const pfId = ctx.estado.opciones?.portafolioId || '';
+  const pfDoc = pfId ? ctx.portafolios.find(pf => pf.id === pfId) : null;
+  return pfDoc ? proyectosConContenido(normalizarPf(pfDoc.payload).proyectos) : null;
+};
+
+const proyectosElegidos = proyectos => {
+  const ids = new Set(proyectos.map(p => p.id));
+  const seleccion = ctx.estado.opciones?.portafolioProyectos;
+  return Array.isArray(seleccion) ? seleccion.filter(id => ids.has(id)) : proyectos.map(p => p.id);
+};
+
+const pintarProyectosPortafolio = () => {
+  const caja = $('#portafolio-proyectos');
+  if (!caja) return;
+  const proyectos = proyectosDelPortafolio();
+  caja.hidden = !proyectos?.length;
+  if (!proyectos?.length) {
+    caja.innerHTML = '';
+    return;
+  }
+  const elegidos = proyectosElegidos(proyectos);
+  const porId = new Map(proyectos.map(p => [p.id, p]));
+  const orden = [...elegidos.map(id => porId.get(id)), ...proyectos.filter(p => !elegidos.includes(p.id))];
+  const fila = p => {
+    const pos = elegidos.indexOf(p.id);
+    const elegido = pos >= 0;
+    const titulo = p.titulo.trim() || 'Proyecto sin título';
+    return `
+      <li class="pf-elegir__item${elegido ? ' pf-elegir__item--elegido' : ''}">
+        <label class="pf-elegir__dato">
+          <input type="checkbox" data-pf-proyecto="${esc(p.id)}"${elegido ? ' checked' : ''}>
+          ${p.imagen ? `<img class="pf-elegir__mini" src="${esc(p.imagen)}" alt="">` : '<span class="pf-elegir__mini pf-elegir__mini--vacia" aria-hidden="true"></span>'}
+          <span class="pf-elegir__texto">
+            <span class="pf-elegir__titulo">${esc(titulo)}</span>
+            ${p.categoria.trim() ? `<span class="pf-elegir__cat">${esc(p.categoria.trim())}</span>` : ''}
+          </span>
+        </label>
+        ${elegido ? `
+          <span class="pf-elegir__orden">
+            <button type="button" class="icono-boton" data-accion="pf-proyecto-subir" data-id="${esc(p.id)}" aria-label="Subir «${esc(titulo)}»"${pos === 0 ? ' disabled' : ''}>↑</button>
+            <button type="button" class="icono-boton" data-accion="pf-proyecto-bajar" data-id="${esc(p.id)}" aria-label="Bajar «${esc(titulo)}»"${pos === elegidos.length - 1 ? ' disabled' : ''}>↓</button>
+          </span>` : ''}
+      </li>`;
+  };
+  caja.innerHTML = `
+    <p class="pf-elegir__cabecera">
+      <span class="campo__etiqueta">Proyectos que ve tu cliente</span>
+      <span class="pf-elegir__cuenta">${elegidos.length} de ${proyectos.length}</span>
+    </p>
+    <ul class="pf-elegir__lista">${orden.map(fila).join('')}</ul>`;
+};
+
+const pintarPortafolioPropuesta = () => {
+  pintarAvisoPortafolio();
+  pintarProyectosPortafolio();
+};
+
+const cambiarProyectosElegidos = cambiar => {
+  const proyectos = proyectosDelPortafolio();
+  if (!proyectos) return;
+  ctx.estado.opciones.portafolioProyectos = cambiar(proyectosElegidos(proyectos));
+  copiarPortafolioEnPropuesta();
+  pintarPortafolioPropuesta();
+  actualizar();
+};
+
+const moverProyectoElegido = (id, paso) => cambiarProyectosElegidos(lista => {
+  const i = lista.indexOf(id);
+  const j = i + paso;
+  if (i < 0 || j < 0 || j >= lista.length) return lista;
+  const nueva = [...lista];
+  [nueva[i], nueva[j]] = [nueva[j], nueva[i]];
+  return nueva;
+});
 
 export const actualizarSelectorPortafolio = () => {
   const sel = $('#propuesta-portafolio-select');
@@ -187,14 +267,14 @@ export const actualizarSelectorPortafolio = () => {
   // Un portfolio borrado: la propuesta conserva su copia y el selector la sigue mostrando.
   const copia = valorActual ? estado.opciones?.portafolio : null;
   if (valorActual && !existe && copia) {
-    const nombre = texto(copia.titulo).trim() || 'Portfolio';
+    const nombre = texto(copia.nombre).trim() || texto(copia.titulo).trim() || 'Portfolio';
     opcionesHTML.push(`<option value="${esc(valorActual)}">${esc(nombre)} (copia guardada en la propuesta)</option>`);
   } else if (valorActual && !existe && !ctx.portafoliosCargando) {
     estado.opciones.portafolioId = '';
   }
   sel.innerHTML = opcionesHTML.join('');
   sel.value = existe || copia ? valorActual : '';
-  pintarAvisoPortafolio();
+  pintarPortafolioPropuesta();
 };
 
 export const actualizarImagenProyectoItem = (nodo, item) => {
@@ -339,6 +419,13 @@ const leerValor = el => {
 
 const alEditar = ev => {
   const el = ev.target;
+  // Casilla de un proyecto del portfolio (solo en «change»: la casilla también avisa «input»).
+  if (el.dataset.pfProyecto !== undefined) {
+    if (ev.type !== 'change') return;
+    const id = el.dataset.pfProyecto;
+    cambiarProyectosElegidos(lista => (el.checked ? [...lista.filter(x => x !== id), id] : lista.filter(x => x !== id)));
+    return;
+  }
   if (ctx.modoEditor === 'portafolio') {
     const { estadoPortafolio } = ctx;
     if (el.dataset.campo && el.dataset.campo.startsWith('emisor.')) {
@@ -368,8 +455,9 @@ const alEditar = ev => {
   if (el.dataset.campo) {
     asignar(ctx.estado, el.dataset.campo, leerValor(el));
     if (el.dataset.campo === 'opciones.portafolioId') {
+      delete ctx.estado.opciones.portafolioProyectos;
       copiarPortafolioEnPropuesta();
-      pintarAvisoPortafolio();
+      pintarPortafolioPropuesta();
     }
     if (el.dataset.campo === 'propuesta.opacidadPortada') actualizarLogo();
     if (el.dataset.campo === 'opciones.formato') aplicarFormatoEditor();
@@ -507,9 +595,11 @@ export const instalarFormulario = () => {
     // El portfolio de la propuesta cambió: el dueño trae sus cambios a la copia.
     'actualizar-portafolio-propuesta': () => {
       copiarPortafolioEnPropuesta();
-      pintarAvisoPortafolio();
+      pintarPortafolioPropuesta();
       actualizar();
     },
+    'pf-proyecto-subir': boton => moverProyectoElegido(boton.dataset.id, -1),
+    'pf-proyecto-bajar': boton => moverProyectoElegido(boton.dataset.id, 1),
     'quitar-img-galeria': boton => quitarImagenItem(boton, { propuesta: 'galeria', portafolio: 'galeria', prefijo: 'data-gal-img' }),
     'quitar-img-servicio': boton => quitarImagenItem(boton, { propuesta: 'servicios', prefijo: 'data-srv-img' }),
     'quitar-img-sweb': boton => quitarImagenItem(boton, { portafolio: 'serviciosWeb', prefijo: 'data-sweb-img' }),
