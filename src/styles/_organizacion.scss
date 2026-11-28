@@ -532,3 +532,26 @@ body.vista-previa-completa {
 .panel-pestanas[hidden] {
   display: none;
 }
+
+/* ---------- Link: la barra del total se fija abajo recién cuando el cliente decide ---------- */
+// La maneja controlador/barra-cliente.js. Sin la clase queda al final del documento.
+
+.barra-cliente--fija {
+  position: sticky;
+  bottom: 0;
+  box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.16);
+  animation: barra-fija-entra 0.35s var(--ease-out-expo) both;
+}
+
+@keyframes barra-fija-entra {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .barra-cliente--fija {
+    animation: none;
+  }
+}

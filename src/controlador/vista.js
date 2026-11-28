@@ -18,6 +18,7 @@ import { ctx, aceptada } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { avisar } from './avisos.js';
 import { montarMarcasMp } from '../lib/mp-marca.js';
+import { prepararBarraCliente, marcarBarraAlcanzada } from './barra-cliente.js';
 
 // Después de dibujar la propuesta en el editor (tocar-documento.js vuelve a resaltar el
 // bloque del campo que se está editando; vista-previa.js pone el título en la barra).
@@ -51,6 +52,8 @@ const prepararDocumento = tema => {
 const terminarDocumento = (doc, web) => {
   if (web) observarElementos(doc, ctx.esCliente);
   marcarAnimacionInicial(doc, web);
+  // La barra del total se fija abajo recién cuando el cliente está decidiendo (barra-cliente.js).
+  prepararBarraCliente(web ? doc : null);
 };
 
 // En Gratis el pie lleva siempre «Propuesta creada con Dealit»: en el editor (ctx.marcaObligatoria,
@@ -177,6 +180,7 @@ export const instalarVista = () => {
       const id = boton.dataset.id;
       if (ctx.seleccion.has(id)) ctx.seleccion.delete(id);
       else ctx.seleccion.add(id);
+      marcarBarraAlcanzada();
       renderDocumento();
       const nuevo = $(`.servicio__sumar[data-id="${CSS.escape(id)}"]`);
       if (nuevo) nuevo.focus({ preventScroll: true });

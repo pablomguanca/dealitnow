@@ -45,6 +45,7 @@ export const ctx = {
   vista: 'escritorio',
   imprimiendo: false,
   vistaPrevia: false, // documento a pantalla completa, sin editar (controlador/vista-previa.js)
+  clienteVolvio: false, // el cliente ya había abierto este link en este navegador (barra-cliente.js)
   perfil: null,
   plan: null, // planes/{uid}: tipo, estado, vence, envios por mes (lo escribe el servidor)
 

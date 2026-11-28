@@ -15,6 +15,7 @@ import {
 } from './contexto.js';
 import { renderDocumento, renderPortafolio } from './vista.js';
 import { registrarVisita, verificarVueltaDePago } from './aceptar.js';
+import { registrarVueltaDelCliente } from './barra-cliente.js';
 
 const LINK_INCOMPLETO = 'El link llegó incompleto o se cortó al copiarlo. Pedile a quien te lo mandó que lo comparta de nuevo.';
 const SIN_CONEXION = 'Hubo un problema al conectar. Revisá tu conexión y recargá la página.';
@@ -75,6 +76,8 @@ const iniciarClienteCorto = async id => {
     const datos = await AteneaDB.proposals.obtenerPublica(id);
     if (datos) {
       ctx.compartida = { id, aceptacion: datos.aceptacion, marca: datos.marca === true, respuesta: datos.respuesta || null, pago: datos.pago || null };
+      // Si ya la había abierto, viene a decidir: la barra del total va fija desde el principio.
+      ctx.clienteVolvio = registrarVueltaDelCliente(id);
       // Aceptada: se muestra la versión que se aceptó, con los opcionales elegidos.
       if (datos.aceptacion) ctx.seleccion = new Set((datos.aceptacion.opcionales || []).map(o => o.id));
       mostrarCliente(datos.aceptacion?.contenido || datos.payload);
