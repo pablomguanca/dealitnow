@@ -9,9 +9,9 @@ import { ctx, docActivo } from './contexto.js';
 import { registrarAcciones } from './acciones.js';
 import { esAppNativa, imprimirNativo } from '../nativo.js';
 import { avisar, avisarError } from './avisos.js';
-import { guardarLuego, sincronizarPortafolioEnPropuesta } from './guardado.js';
+import { guardarLuego } from './guardado.js';
 import { actualizarSubtotales, actualizarAvisoPagos } from './formulario.js';
-import { renderDocumento, alPrepararPropuesta } from './vista.js';
+import { renderDocumento } from './vista.js';
 import { abrirRegistro } from './sesion.js';
 
 // Se llama en cada cambio que hace quien edita (no en la carga inicial).
@@ -119,9 +119,6 @@ export const descargarPDF = () => {
 };
 
 export const instalarDocumento = () => {
-  // En el editor, el portfolio adjunto se toma siempre de la lista actualizada del dueño.
-  alPrepararPropuesta(sincronizarPortafolioEnPropuesta);
-
   registrarAcciones({
     'vista': boton => cambiarVista(boton.dataset.vista),
     'pdf': () => {

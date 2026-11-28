@@ -14,7 +14,6 @@ import {
   guardarPortafoliosLocales,
   crearPortafolioEnCuentaOLocal,
   registrarEscritura,
-  sincronizarPortafolioEnPropuesta,
   mostrarEstadoGuardado
 } from './guardado.js';
 import { llenarFormulario, actualizarSelectorPortafolio } from './formulario.js';
@@ -70,10 +69,9 @@ export const escucharPortafoliosNube = () => {
     ctx.portafolios = docs.sort((a, b) => (fechaDe(b.updatedAt) || 0) - (fechaDe(a.updatedAt) || 0));
     ctx.portafoliosCargando = false;
     ctx.portafoliosError = false;
-    sincronizarPortafolioEnPropuesta();
     renderPanelPortafolios();
+    // La propuesta abierta no cambia: solo se avisa si su portfolio tiene cambios.
     actualizarSelectorPortafolio();
-    if (ctx.editando && ctx.modoEditor === 'propuesta') renderDocumento();
   }, () => {
     ctx.portafolios = [];
     ctx.portafoliosCargando = false;

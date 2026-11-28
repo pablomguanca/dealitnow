@@ -7,6 +7,7 @@ import {
   ejemploPortafolio,
   normalizarPortafolio,
   resumenPortafolio,
+  copiaPortafolioDesactualizada,
   PORTADAS,
   TEMAS,
   calcularTotales,
@@ -168,6 +169,31 @@ describe('normalizarPortafolio', () => {
     expect(prop.opciones.portafolioId).toBe('pf123');
     expect(prop.opciones.portafolio.proyectos.length).toBe(pf.proyectos.length);
     expect(normalizarPropuesta(prop)).toEqual(prop);
+  });
+
+  it('dice si el portfolio cambió desde la copia que tiene la propuesta', () => {
+    const pf = normalizarPortafolio(ejemploPortafolio());
+    const pfDoc = { id: 'pf123', publico: true, payload: pf };
+    // La copia guardada en la propuesta, ya normalizada (como vuelve de Firestore).
+    const copia = normalizarPropuesta({
+      ...ejemplo(),
+      opciones: { portafolioId: 'pf123', portafolio: resumenPortafolio(pf, 'pf123', true) }
+    }).opciones.portafolio;
+    expect(copiaPortafolioDesactualizada(copia, pfDoc)).toBe(false);
+
+    const editado = structuredClone(pf);
+    editado.proyectos[0].descripcion = 'Otro texto';
+    expect(copiaPortafolioDesactualizada(copia, { ...pfDoc, payload: editado })).toBe(true);
+
+    const sinUno = structuredClone(pf);
+    sinUno.proyectos.pop();
+    expect(copiaPortafolioDesactualizada(copia, { ...pfDoc, payload: sinUno })).toBe(true);
+
+    // Se desactivó el link del portfolio: cambia si se ofrece «Ver página completa».
+    expect(copiaPortafolioDesactualizada(copia, { ...pfDoc, publico: false })).toBe(true);
+    // Sin copia o sin portfolio (borrado) no hay nada que comparar.
+    expect(copiaPortafolioDesactualizada(null, pfDoc)).toBe(false);
+    expect(copiaPortafolioDesactualizada(copia, null)).toBe(false);
   });
 
   it('soporta fotos de perfil, portada hero, galería libre, galería por proyecto, testimonios y FAQs', () => {

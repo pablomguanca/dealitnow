@@ -19,11 +19,6 @@ import { registrarAcciones } from './acciones.js';
 import { avisar } from './avisos.js';
 import { montarMarcasMp } from '../lib/mp-marca.js';
 
-// En el editor, antes de dibujar la propuesta se actualiza el portfolio adjunto con la
-// lista del dueño. El cliente no tiene esa lista: usa el resumen guardado en la propuesta.
-let prepararPropuesta = () => { };
-export const alPrepararPropuesta = fn => { prepararPropuesta = fn; };
-
 // Después de dibujar la propuesta en el editor (tocar-documento.js vuelve a resaltar el
 // bloque del campo que se está editando). La vista del cliente no lo usa.
 let despuesDeDibujar = () => { };
@@ -102,7 +97,6 @@ export const renderDocumento = () => {
   document.body.classList.remove('editando-portafolio');
   const { doc, web, tipoDecoracion, tipoPortada } = prepararDocumento(ctx.estado.tema);
   doc.classList.remove('doc--portafolio');
-  prepararPropuesta();
   doc.innerHTML = generarPropuestaHTML(conMarca(ctx.estado), {
     web,
     seleccion: ctx.seleccion,

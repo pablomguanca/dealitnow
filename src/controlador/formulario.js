@@ -12,11 +12,11 @@ import {
   dinero,
   cantidadTexto
 } from '../lib/formato.js';
-import { MODALIDADES, LISTAS, LISTAS_PORTAFOLIO, totalServicio } from '../modelo.js';
-import { ctx, docActivo } from './contexto.js';
+import { MODALIDADES, LISTAS, LISTAS_PORTAFOLIO, totalServicio, copiaPortafolioDesactualizada } from '../modelo.js';
+import { ctx, docActivo, esLogoValido } from './contexto.js';
 import { ofrecerDeshacer } from './historial.js';
 import { registrarAcciones } from './acciones.js';
-import { sincronizarPortafolioEnPropuesta } from './guardado.js';
+import { copiarPortafolioEnPropuesta } from './guardado.js';
 import { actualizar } from './documento.js';
 import { llenarTemaEditor } from './diseno.js';
 import { actualizarSeccionesHoja } from './hoja.js';
@@ -146,6 +146,29 @@ export const actualizarLogo = () => {
   });
 };
 
+// Si el portfolio de la propuesta cambió desde que se copió, o ya no existe. La copia que ve
+// el cliente no se toca sola: el dueño decide si trae los cambios.
+const pintarAvisoPortafolio = () => {
+  const aviso = $('#portafolio-aviso');
+  if (!aviso) return;
+  const { estado, portafolios } = ctx;
+  const pfId = estado.opciones?.portafolioId || '';
+  const copia = pfId ? estado.opciones?.portafolio : null;
+  const pfDoc = portafolios.find(pf => pf.id === pfId);
+  let mensaje = '';
+  let conBoton = false;
+  if (copia && !ctx.portafoliosCargando && !ctx.portafoliosError) {
+    if (!pfDoc) mensaje = 'El portfolio original ya no está en tus portfolios. La propuesta sigue mostrando los proyectos que tenía.';
+    else if (copiaPortafolioDesactualizada(copia, pfDoc, { logoValido: esLogoValido })) {
+      mensaje = 'Este portfolio cambió desde que lo sumaste. La propuesta muestra la versión anterior.';
+      conBoton = true;
+    }
+  }
+  aviso.hidden = !mensaje;
+  $('#portafolio-aviso-texto').textContent = mensaje;
+  $('#portafolio-aviso-boton').hidden = !conBoton;
+};
+
 export const actualizarSelectorPortafolio = () => {
   const sel = $('#propuesta-portafolio-select');
   if (!sel) return;
@@ -161,12 +184,17 @@ export const actualizarSelectorPortafolio = () => {
     })
   ];
   const existe = portafolios.some(pf => pf.id === valorActual);
-  if (valorActual && !existe && !ctx.portafoliosCargando) {
+  // Un portfolio borrado: la propuesta conserva su copia y el selector la sigue mostrando.
+  const copia = valorActual ? estado.opciones?.portafolio : null;
+  if (valorActual && !existe && copia) {
+    const nombre = texto(copia.titulo).trim() || 'Portfolio';
+    opcionesHTML.push(`<option value="${esc(valorActual)}">${esc(nombre)} (copia guardada en la propuesta)</option>`);
+  } else if (valorActual && !existe && !ctx.portafoliosCargando) {
     estado.opciones.portafolioId = '';
-    delete estado.opciones.portafolio;
   }
   sel.innerHTML = opcionesHTML.join('');
-  sel.value = existe ? valorActual : '';
+  sel.value = existe || copia ? valorActual : '';
+  pintarAvisoPortafolio();
 };
 
 export const actualizarImagenProyectoItem = (nodo, item) => {
@@ -339,7 +367,10 @@ const alEditar = ev => {
   }
   if (el.dataset.campo) {
     asignar(ctx.estado, el.dataset.campo, leerValor(el));
-    if (el.dataset.campo === 'opciones.portafolioId') sincronizarPortafolioEnPropuesta();
+    if (el.dataset.campo === 'opciones.portafolioId') {
+      copiarPortafolioEnPropuesta();
+      pintarAvisoPortafolio();
+    }
     if (el.dataset.campo === 'propuesta.opacidadPortada') actualizarLogo();
     if (el.dataset.campo === 'opciones.formato') aplicarFormatoEditor();
     actualizar();
@@ -471,6 +502,12 @@ export const instalarFormulario = () => {
       if (!itemPf || !Array.isArray(itemPf.galeria)) return;
       itemPf.galeria.splice(idxFoto, 1);
       actualizarImagenProyectoItem(nodoPf, itemPf);
+      actualizar();
+    },
+    // El portfolio de la propuesta cambió: el dueño trae sus cambios a la copia.
+    'actualizar-portafolio-propuesta': () => {
+      copiarPortafolioEnPropuesta();
+      pintarAvisoPortafolio();
       actualizar();
     },
     'quitar-img-galeria': boton => quitarImagenItem(boton, { propuesta: 'galeria', portafolio: 'galeria', prefijo: 'data-gal-img' }),

@@ -1900,3 +1900,19 @@ export const resumenPortafolio = (portafolio, id = '', publico = false) => {
     galeria: norm.galeria.filter(g => g.imagen)
   };
 };
+
+// La copia del portfolio que va en la propuesta (opciones.portafolio) se arma solo cuando el
+// dueño lo elige o pide traer los cambios: así lo que ve el cliente no cambia porque se editó
+// el portfolio. Esto dice si el portfolio cambió desde esa copia (sin mirar los id internos).
+export const copiaPortafolioDesactualizada = (copia, pfDoc, { logoValido = () => true } = {}) => {
+  if (!copia || !pfDoc) return false;
+  const firma = r => {
+    const n = normalizarResumenPortafolio(r, { logoValido });
+    return JSON.stringify({
+      titulo: n.titulo, subtitulo: n.subtitulo, insignia: n.insignia, publico: n.publico,
+      proyectos: n.proyectos.map(({ id, ...resto }) => resto),
+      galeria: n.galeria.map(({ id, ...resto }) => resto)
+    });
+  };
+  return firma(copia) !== firma(resumenPortafolio(pfDoc.payload, pfDoc.id, pfDoc.publico));
+};

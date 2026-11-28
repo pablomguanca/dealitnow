@@ -50,6 +50,21 @@
     }
   }
 
+  &__aviso {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem 0.6rem;
+    margin: 0.55rem 0 0;
+
+    &[hidden] { display: none; }
+
+    .boton {
+      padding: 0.2rem 0.45rem;
+      color: var(--dorado-papel);
+    }
+  }
+
   &__links {
     display: flex;
     gap: 0.35rem;

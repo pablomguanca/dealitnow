@@ -165,7 +165,10 @@ export const limpiarAlmacenamientoLocal = ({ conservarInvitado = false } = {}) =
   } catch { }
 };
 
-export const sincronizarPortafolioEnPropuesta = () => {
+// Arma la copia del portfolio elegido dentro de la propuesta. Solo se llama cuando el dueño
+// lo elige o pide traer los cambios: editar el portfolio después no cambia lo que ve el
+// cliente. Si el portfolio ya no está (se borró), la copia que había se conserva.
+export const copiarPortafolioEnPropuesta = () => {
   const { estado } = ctx;
   const pfId = estado.opciones?.portafolioId || '';
   if (!pfId) {
@@ -173,12 +176,7 @@ export const sincronizarPortafolioEnPropuesta = () => {
     return;
   }
   const pfDoc = ctx.portafolios.find(x => x.id === pfId);
-  if (pfDoc) {
-    estado.opciones.portafolio = resumenPortafolio(pfDoc.payload, pfDoc.id, pfDoc.publico);
-  } else if (!ctx.portafoliosCargando) {
-    estado.opciones.portafolioId = '';
-    if (estado.opciones) delete estado.opciones.portafolio;
-  }
+  if (pfDoc) estado.opciones.portafolio = resumenPortafolio(pfDoc.payload, pfDoc.id, pfDoc.publico);
 };
 
 export const guardarAhora = () => {
@@ -215,7 +213,6 @@ export const guardarAhora = () => {
       'No se pudieron guardar los últimos cambios del portfolio en tu cuenta.'
     );
   }
-  sincronizarPortafolioEnPropuesta();
   if (!db) return guardarLocal();
   if (!ctx.propuestaId) return;
   const datos = datosParaGuardar(ctx.estado);
