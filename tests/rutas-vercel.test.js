@@ -26,7 +26,7 @@ describe('rutas de vercel.json', () => {
   });
 
   it('las puertas de entrada y las rutas de la app van a la app', () => {
-    for (const ruta of ['/empezar', '/ingresar', '/cuenta', '/resultados', '/p/DEMO0000000000000001', '/portafolio/abc', '/propuesta/abc', '/editar-portafolio/abc', '/accion']) {
+    for (const ruta of ['/empezar', '/ingresar', '/cuenta', '/resultados', '/clientes', '/plantillas', '/p/DEMO0000000000000001', '/portafolio/abc', '/propuesta/abc', '/editar-portafolio/abc', '/accion']) {
       expect(ir(ruta)).toEqual({ destino: '/app' });
     }
   });

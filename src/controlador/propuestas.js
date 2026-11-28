@@ -1,7 +1,7 @@
 // Panel «Mis propuestas» (lista en tiempo real, métricas, filtros y avisos de visitas
 // o aceptaciones) y apertura, creación, duplicado y borrado de propuestas.
 
-import { $, esc, texto, fechaLarga, dinero } from '../lib/formato.js';
+import { $, $$, esc, texto, fechaLarga, dinero } from '../lib/formato.js';
 import { MOTIVOS_RECHAZO } from '../respuestas.js';
 import { vacio, ejemplo } from '../modelo.js';
 import { fechaDeAceptacion } from '../lib/render.js';
@@ -30,6 +30,7 @@ import { restriccionesActivas } from './plan.js';
 import { hayDatosDeCobro, mpVinculado } from './cobro.js';
 import { guiaPrimeraPropuesta, pintarGuia } from './guia.js';
 import { actualizarPagosEditor } from './pagos.js';
+import { renderClientes, cantidadClientes, instalarClientes } from './clientes.js';
 
 // La lista se escucha en tiempo real toda la sesión: refleja al instante lo que se
 // edita, se duplica o se borra, también sin conexión.
@@ -40,14 +41,28 @@ let filtroEstado = 'todas';
 let seguimientoAnterior = null;
 let pestana = 'propuestas';
 
+// «Mis propuestas» y «Clientes» son pestañas del panel; «Plantillas» usa el mismo lugar pero
+// es una sección propia (en la barra de arriba), sin las pestañas.
+const PESTANAS = {
+  propuestas: { titulo: 'Mis propuestas', ruta: '/' },
+  clientes: { titulo: 'Clientes', ruta: '/clientes' },
+  plantillas: { titulo: 'Plantillas', ruta: '/plantillas' }
+};
 const mostrarPestana = nombre => {
-  pestana = nombre === 'plantillas' ? 'plantillas' : 'propuestas';
-  ['propuestas', 'plantillas'].forEach(n => {
-    $(`#pestana-${n}`).setAttribute('aria-selected', String(n === pestana));
+  pestana = PESTANAS[nombre] ? nombre : 'propuestas';
+  Object.keys(PESTANAS).forEach(n => {
+    $(`#pestana-${n}`)?.setAttribute('aria-selected', String(n === pestana));
     $(`#panel-${n}`).hidden = n !== pestana;
   });
-  $('#panel-titulo').textContent = pestana === 'plantillas' ? 'Plantillas' : 'Mis propuestas';
-  document.title = `${pestana === 'plantillas' ? 'Plantillas' : 'Mis propuestas'} | Dealit`;
+  $('#panel-pestanas').hidden = pestana === 'plantillas';
+  $('#panel-titulo').textContent = PESTANAS[pestana].titulo;
+  document.title = `${PESTANAS[pestana].titulo} | Dealit`;
+  // En la barra de arriba, Plantillas tiene su propio link.
+  const seccion = pestana === 'plantillas' ? 'plantillas' : 'panel';
+  $$('.barra__nav-link, .menu__opcion[data-seccion]').forEach(a => {
+    if (a.dataset.seccion === seccion) a.setAttribute('aria-current', 'page');
+    else a.removeAttribute('aria-current');
+  });
   if (pestana === 'plantillas') renderGaleriaPlantillas();
 };
 
@@ -92,6 +107,9 @@ export const renderPanel = () => {
     ? esqueletoFilasHTML()
     : visibles.map(p => propuestaHTML(p, { conSeguimiento })).join('');
   $('#pestana-propuestas-cuenta').textContent = hay ? String(propuestas.length) : '';
+  const clientes = hay ? cantidadClientes() : 0;
+  $('#pestana-clientes-cuenta').textContent = clientes ? String(clientes) : '';
+  renderClientes({ cargando: panelCargando && !panelError });
   new Set(visibles.map(p => p.payload?.tema?.fuenteTitulos).filter(Boolean)).forEach(cargarFuente);
 };
 
@@ -190,7 +208,7 @@ export const reiniciarPanel = () => {
 
 export const irAlPanel = ({ historial = true, pestana: destino = 'propuestas' } = {}) => {
   cerrarEdicion();
-  const ruta = destino === 'plantillas' ? '/plantillas' : '/';
+  const ruta = PESTANAS[destino]?.ruta || '/';
   if (historial && (location.pathname !== ruta || location.search)) irRuta(ruta);
   mostrarVista('panel');
   mostrarPestana(destino);
@@ -316,6 +334,7 @@ export const volverAEditorPropuestaInvitado = nuevaBase => {
 
 export const instalarPropuestas = () => {
   $('#panel-buscar').addEventListener('input', renderPanel);
+  instalarClientes(nuevaPropuesta);
 
   registrarAcciones({
     'filtrar': boton => {

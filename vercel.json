@@ -119,6 +119,10 @@
       "destination": "/app"
     },
     {
+      "source": "/clientes",
+      "destination": "/app"
+    },
+    {
       "source": "/portafolios",
       "destination": "/app"
     },

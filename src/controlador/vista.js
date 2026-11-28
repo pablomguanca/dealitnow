@@ -20,9 +20,11 @@ import { avisar } from './avisos.js';
 import { montarMarcasMp } from '../lib/mp-marca.js';
 
 // Después de dibujar la propuesta en el editor (tocar-documento.js vuelve a resaltar el
-// bloque del campo que se está editando). La vista del cliente no lo usa.
-let despuesDeDibujar = () => { };
-export const alDibujarPropuesta = fn => { despuesDeDibujar = fn; };
+// bloque del campo que se está editando; vista-previa.js pone el título en la barra).
+// La vista del cliente no lo usa.
+const alDibujar = [];
+const despuesDeDibujar = () => alDibujar.forEach(fn => fn());
+export const alDibujarPropuesta = fn => { alDibujar.push(fn); };
 
 // La primera vez que se dibuja, el documento entra con animación; después queda estático.
 const marcarAnimacionInicial = (doc, web) => {
@@ -84,7 +86,7 @@ export const renderPortafolio = () => {
     web,
     tipoPortada,
     // Tocar el documento para editar, como en las propuestas: solo en el editor.
-    editable: !ctx.esCliente && !ctx.imprimiendo
+    editable: !ctx.esCliente && !ctx.imprimiendo && !ctx.vistaPrevia
   });
   doc.classList.add('doc--portafolio');
   terminarDocumento(doc, web);
@@ -104,7 +106,7 @@ export const renderDocumento = () => {
     tipoDecoracion,
     tipoPortada,
     // Tocar el documento para editar: solo en el editor, nunca en el link ni al imprimir.
-    editable: !ctx.esCliente && !ctx.imprimiendo
+    editable: !ctx.esCliente && !ctx.imprimiendo && !ctx.vistaPrevia
   });
   terminarDocumento(doc, web);
   ajustarTextosSiempre(doc);

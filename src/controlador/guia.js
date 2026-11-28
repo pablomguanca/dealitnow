@@ -149,6 +149,7 @@ export const instalarGuia = () => {
     if (!objetivo) return;
     const vista = objetivo.closest('[data-accion="vista"]');
     if (vista && vista.dataset.vista !== 'escritorio') marcarPasoGuia('ver');
+    if (objetivo.closest('[data-accion="vista-previa"]')) marcarPasoGuia('ver');
     if (objetivo.closest('#documento [data-editar]')) verTip();
   }, true);
   new MutationObserver(() => {

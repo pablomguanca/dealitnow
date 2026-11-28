@@ -44,6 +44,7 @@ export const ctx = {
   compartida: null,
   vista: 'escritorio',
   imprimiendo: false,
+  vistaPrevia: false, // documento a pantalla completa, sin editar (controlador/vista-previa.js)
   perfil: null,
   plan: null, // planes/{uid}: tipo, estado, vence, envios por mes (lo escribe el servidor)
 

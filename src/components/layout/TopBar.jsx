@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { IconoIA } from '../IconoIA.jsx';
+import { SelectorModo } from '../SelectorModo.jsx';
 // Barra superior de navegación, selector de secciones, acciones de compartir/PDF y menú hamburguesa.
 
 export function TopBar() {
@@ -8,13 +9,22 @@ export function TopBar() {
       <header className="barra">
         <div className="barra__marca">
           <Link className="barra__logo" to="/" data-accion="ir-panel" aria-label="Dealit, ir a Mis propuestas">Dealit</Link>
-          <span className="barra__producto solo-editor" id="barra-subtitulo">Generá tu propuesta</span>
+          {/* En el editor: de dónde viene y qué se está editando (controlador/vista-previa.js). */}
+          <nav className="barra__migas solo-editor" aria-label="Ubicación">
+            <a className="barra__migas-volver solo-cuenta" id="barra-volver" href="/" data-accion="ir-panel">
+              <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10 3.5L5.5 8l4.5 4.5" /></svg>
+              <span id="barra-volver-texto">Mis propuestas</span>
+            </a>
+            <span className="barra__migas-separador solo-cuenta" aria-hidden="true">/</span>
+            <span className="barra__migas-actual" id="barra-documento" aria-current="page"></span>
+          </nav>
         </div>
         <nav className="barra__nav solo-inicio" aria-label="Secciones">
           <Link className="barra__nav-link" to="/" data-accion="ir-panel" data-seccion="panel">Propuestas</Link>
           <Link className="barra__nav-link solo-cuenta" to="/resultados" data-accion="ir-resultados" data-seccion="resultados">Resultados</Link>
           <Link className="barra__nav-link" to="/portafolios" data-accion="ir-portafolios" data-seccion="portafolios">Portfolios</Link>
-          <Link className="barra__nav-link solo-cuenta" to="/cuenta" data-accion="ir-cuenta" data-seccion="cuenta">Mi cuenta</Link>
+          <Link className="barra__nav-link solo-cuenta" to="/plantillas" data-accion="panel-pestana" data-pestana="plantillas" data-seccion="plantillas">Plantillas</Link>
+          {/* Mi cuenta: el avatar de la derecha. */}
         </nav>
         <div className="barra__acciones">
           <button type="button" className="boton boton--secundario boton--ia solo-invitado" data-accion="abrir-ia" title="Armá tu propuesta con IA">
@@ -31,6 +41,11 @@ export function TopBar() {
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M10.25 3.5 13.5 6.75 10.25 10" /><path d="M13.25 6.75h-6.5a3.75 3.75 0 0 0 0 7.5H8.5" /></svg>
             </button>
           </div>
+          {/* Vista previa: el documento a pantalla completa, como lo ve el cliente (controlador/vista-previa.js). */}
+          <button type="button" className="barra__ver solo-editor" data-accion="vista-previa" aria-label="Vista previa: verla como tu cliente" title="Vista previa">
+            <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1.6 8.35a.9.9 0 0 1 0-.7C2.75 5.2 5.2 3.5 8 3.5s5.25 1.7 6.4 4.15a.9.9 0 0 1 0 .7C13.25 10.8 10.8 12.5 8 12.5S2.75 10.8 1.6 8.35z" /><circle cx="8" cy="8" r="2.1" /></svg>
+            <span className="barra__ver-texto">Vista previa</span>
+          </button>
           <button type="button" className="boton boton--secundario barra__pdf solo-editor" data-accion="pdf" title="Descargar PDF">
             <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2.5v7.5M5 7.5l3 3 3-3M3 12.5h10" /></svg>
             <span className="boton__extra">Descargar</span><span>PDF</span>
@@ -71,6 +86,10 @@ export function TopBar() {
                   <button type="button" className="boton boton--texto menu__opcion" data-accion="ir-portafolios" data-seccion="portafolios">
                     <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="4.75" width="12" height="9" rx="1.75" /><path d="M5.75 4.75v-1A1.5 1.5 0 0 1 7.25 2.25h1.5a1.5 1.5 0 0 1 1.5 1.5v1M2 9h12M7 9v1.25h2V9" /></svg>
                     <span>Portfolios</span>
+                  </button>
+                  <button type="button" className="boton boton--texto menu__opcion solo-cuenta" data-accion="panel-pestana" data-pestana="plantillas" data-seccion="plantillas">
+                    <svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2.25" y="2.25" width="4.75" height="4.75" rx="1" /><rect x="9" y="2.25" width="4.75" height="4.75" rx="1" /><rect x="2.25" y="9" width="4.75" height="4.75" rx="1" /><rect x="9" y="9" width="4.75" height="4.75" rx="1" /></svg>
+                    <span>Plantillas</span>
                   </button>
                   <button type="button" className="boton boton--texto menu__opcion solo-cuenta" data-accion="ir-cuenta" data-seccion="cuenta">
                     <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.25" /><circle cx="8" cy="6.6" r="2.1" /><path d="M4.1 12.85a4.4 4.4 0 0 1 7.8 0" /></svg>
@@ -113,11 +132,8 @@ export function TopBar() {
                 </div>
               </div>
               <div className="menu__grupo menu__grupo--ajustes">
-                <button type="button" className="boton boton--texto menu__opcion menu__interruptor" data-accion="alternar-modo" role="switch" aria-checked="false" id="menu-modo-oscuro">
-                  <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13 9.6A5.5 5.5 0 0 1 6.4 3a5.5 5.5 0 1 0 6.6 6.6z" /></svg>
-                  <span>Modo oscuro</span>
-                  <span className="interruptor" aria-hidden="true"></span>
-                </button>
+                <span className="menu__ajuste-titulo" aria-hidden="true">Apariencia</span>
+                <SelectorModo compacto />
               </div>
               <div className="menu__pie solo-cuenta">
                 <button type="button" className="boton boton--texto menu__opcion menu__opcion--salir solo-cuenta" data-accion="cerrar-sesion">

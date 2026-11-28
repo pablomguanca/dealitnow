@@ -5,7 +5,7 @@ import { $, $$ } from '../lib/formato.js';
 import { ctx, nube } from './contexto.js';
 import { registrarAcciones, ejecutarAccion } from './acciones.js';
 import { avisar, elegir } from './avisos.js';
-import { esModoOscuro, guardarModoApp } from '../lib/modo-app.js';
+import { guardarModoApp, modoGuardado } from '../lib/modo-app.js';
 import { hayCambiosSinEnviar, guardarAhora } from './guardado.js';
 import { irAlPanel, abrirPropuesta, volverAEditorPropuestaInvitado } from './propuestas.js';
 import { irAPortafolios, abrirPortafolio } from './portafolios.js';
@@ -13,6 +13,7 @@ import { irACuenta } from './cuenta.js';
 import { cerrarExplorador } from './explorador-plantillas.js';
 import { irAResultados } from './resultados.js';
 import { pintarGuia } from './guia.js';
+import { salirVistaPrevia } from './vista-previa.js';
 
 let navegarReactRouter = null;
 
@@ -48,6 +49,7 @@ export const idPortafolioEnUrl = () => {
 };
 export const seccionEnUrl = () => {
   if (location.pathname === '/plantillas' || location.pathname === '/plantillas/') return 'plantillas';
+  if (location.pathname === '/clientes' || location.pathname === '/clientes/') return 'clientes';
   if (location.pathname === '/portafolios' || location.pathname === '/portafolios/') return 'portafolios';
   if (location.pathname === '/cuenta' || location.pathname === '/cuenta/') return 'cuenta';
   if (location.pathname === '/resultados' || location.pathname === '/resultados/') return 'resultados';
@@ -62,7 +64,7 @@ export const pideIngresarEnUrl = () => /^\/ingresar\/?$/.test(location.pathname)
 // Pantallas que solo existen con la sesión iniciada (Mi cuenta, Resultados, Mis portfolios,
 // Plantillas, o una propuesta o un portfolio de la cuenta). Sin sesión abren el login en lugar
 // de la bienvenida, y al entrar se va a esa pantalla.
-const SECCIONES_CON_CUENTA = ['cuenta', 'resultados', 'portafolios', 'plantillas'];
+const SECCIONES_CON_CUENTA = ['cuenta', 'resultados', 'portafolios', 'plantillas', 'clientes'];
 export const pideCuentaEnUrl = () =>
   SECCIONES_CON_CUENTA.includes(seccionEnUrl()) || !!idEnUrl() || !!idPortafolioEnUrl();
 
@@ -127,7 +129,10 @@ export const mostrarVista = vista => {
   if (elPortafolios) elPortafolios.hidden = vista !== 'portafolios';
   $('#cuenta').hidden = vista !== 'cuenta';
   $('#app').hidden = inicio;
-  if (inicio) cerrarExplorador();
+  if (inicio) {
+    cerrarExplorador();
+    salirVistaPrevia({ redibujar: false });
+  }
   $$('.barra__nav-link, .menu__opcion[data-seccion], .tabbar__item').forEach(a => {
     if (a.dataset.seccion === vista) a.setAttribute('aria-current', 'page');
     else a.removeAttribute('aria-current');
@@ -155,13 +160,14 @@ const conLink = fn => (boton, ev) => {
   fn();
 };
 
-const pintarInterruptorModo = (oscuro = esModoOscuro()) => {
-  $$('[data-accion="alternar-modo"][role="switch"]').forEach(b => b.setAttribute('aria-checked', String(oscuro)));
+// Apariencia (components/SelectorModo.jsx): en el menú y en Mi cuenta, la opción elegida marcada.
+const pintarSelectorModo = (modo = modoGuardado()) => {
+  $$('[data-accion="modo-app"]').forEach(b => b.setAttribute('aria-checked', String(b.dataset.modo === modo)));
 };
 
 // En el celular no hay menú lateral (como en las apps): las secciones están en la barra de
-// abajo, el modo oscuro y la sesión en Mi cuenta, y en el editor el botón «⋯» abre esta hoja
-// con las acciones de la propuesta o el portfolio.
+// abajo, la apariencia y la sesión en Mi cuenta, y en el editor el botón «⋯» abre esta hoja
+// con las acciones de la propuesta o el portfolio (solo eso: la apariencia no es de acá).
 const esCelular = () => typeof matchMedia === 'function' && matchMedia('(max-width: 768px)').matches;
 const abrirAccionesEditor = async () => {
   const conCuenta = !!nube();
@@ -177,7 +183,6 @@ const abrirAccionesEditor = async () => {
       ...(conCuenta && !esPf && document.body.classList.contains('ia-disponible') ? [{ valor: 'editar-con-ia', texto: 'Editar con IA', icono: 'ia' }] : []),
       { valor: 'nueva', texto: 'Nueva propuesta' },
       { valor: 'nuevo-portafolio', texto: 'Nuevo portfolio' },
-      { valor: 'alternar-modo', texto: esModoOscuro() ? 'Pasar a modo claro' : 'Pasar a modo oscuro' },
       { valor: null, texto: 'Cancelar', estilo: 'texto' }
     ]
   });
@@ -185,7 +190,7 @@ const abrirAccionesEditor = async () => {
 };
 
 export const instalarNavegacion = () => {
-  pintarInterruptorModo();
+  pintarSelectorModo();
 
   // Clic fuera del menú lo cierra, y elegir una de sus opciones también (abrirlo y
   // cerrarlo tienen su propia acción). Corre antes de que se despache la acción.
@@ -193,7 +198,7 @@ export const instalarNavegacion = () => {
     if (!menuAbierto()) return;
     const accion = ev.target.closest('[data-accion]')?.dataset.accion;
     const dentro = ev.target.closest('#menu-panel');
-    const quedaAbierto = ['menu', 'cerrar-menu', 'alternar-modo'].includes(accion);
+    const quedaAbierto = ['menu', 'cerrar-menu', 'modo-app'].includes(accion);
     if ((!dentro && !ev.target.closest('[data-accion="menu"]')) || (dentro && accion && !quedaAbierto)) abrirMenu(false);
   });
 
@@ -246,24 +251,29 @@ export const instalarNavegacion = () => {
       if (!nube()) return;
       conLink(() => irACuenta())(boton, ev);
     },
-    'alternar-modo': () => {
-      const oscuro = !esModoOscuro();
-      guardarModoApp(oscuro ? 'oscuro' : 'claro');
-      pintarInterruptorModo(oscuro);
+    'modo-app': boton => {
+      const modo = boton.dataset.modo;
+      guardarModoApp(modo);
+      pintarSelectorModo(modo);
     },
-    // Botón «+» de la barra de abajo: qué crear, como la hoja de acciones de una app.
-    'crear-nuevo': async () => {
+    // «+ Nueva»: un solo lugar para crear, como la hoja de acciones de una app. Desde el
+    // panel («Nueva propuesta», data-tipo="propuesta") ofrece las tres formas de arrancar una
+    // propuesta; desde el «+» de la barra de abajo, también un portfolio.
+    'crear-nuevo': async boton => {
       const conIA = document.body.classList.contains('ia-disponible');
+      const soloPropuesta = boton?.dataset?.tipo === 'propuesta';
       const accion = await elegir({
-        titulo: '¿Qué querés crear?',
+        titulo: soloPropuesta ? 'Nueva propuesta' : '¿Qué querés crear?',
         opciones: [
-          ...(conIA ? [{ valor: 'abrir-ia', texto: 'Armá tu propuesta con IA', estilo: 'primario', icono: 'ia' }] : []),
-          { valor: 'nueva', texto: 'Nueva propuesta', estilo: conIA ? 'secundario' : 'primario' },
-          { valor: 'nuevo-portafolio', texto: 'Nuevo portfolio', estilo: 'secundario' },
+          ...(conIA ? [{ valor: 'abrir-ia', texto: 'Contásela a la IA', estilo: 'primario', icono: 'ia' }] : []),
+          { valor: 'nueva', texto: soloPropuesta ? 'En blanco' : 'Propuesta en blanco', estilo: conIA ? 'secundario' : 'primario' },
+          ...(nube() ? [{ valor: 'desde-plantilla', texto: 'Desde una plantilla', estilo: 'secundario' }] : []),
+          ...(soloPropuesta ? [] : [{ valor: 'nuevo-portafolio', texto: 'Nuevo portfolio', estilo: 'secundario' }]),
           { valor: null, texto: 'Cancelar', estilo: 'texto' }
         ]
       });
-      if (accion) ejecutarAccion(accion);
+      if (accion === 'desde-plantilla') irAlPanel({ pestana: 'plantillas' });
+      else if (accion) ejecutarAccion(accion);
     },
     'contacto-demo': () => avisar('En tu portfolio compartido, este botón abre WhatsApp o email directo para contratarte.')
   });

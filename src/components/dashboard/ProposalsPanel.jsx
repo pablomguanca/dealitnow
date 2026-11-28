@@ -1,5 +1,6 @@
-// Dashboard del dueño con dos pestañas: «Plantillas» (catálogo con vista previa para
-// arrancar una propuesta) y «Mis propuestas» (métricas, filtros y grilla en tiempo real).
+// Dashboard del dueño: «Mis propuestas» (métricas, filtros y grilla en tiempo real) y
+// «Clientes» (las mismas propuestas agrupadas por cliente) como pestañas, y «Plantillas»
+// (catálogo con vista previa para arrancar una propuesta), que es su propia sección.
 
 import { IconoIA } from '../IconoIA.jsx';
 
@@ -14,13 +15,10 @@ export function ProposalsPanel() {
             <p className="panel__bajada" id="panel-resumen"></p>
           </div>
           <div className="panel__acciones">
-            <button type="button" className="boton boton--secundario" data-accion="nueva">
+            {/* Un solo «+ Nueva»: con IA, en blanco, desde una plantilla o un portfolio (navegacion.js). */}
+            <button type="button" className="boton boton--primario" data-accion="crear-nuevo" data-tipo="propuesta" aria-haspopup="dialog">
               <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" /></svg>
-              Propuesta en blanco
-            </button>
-            <button type="button" className="boton boton--primario boton--ia" data-accion="abrir-ia">
-              Armá tu propuesta con IA
-              <IconoIA />
+              Nueva propuesta
             </button>
           </div>
         </div>
@@ -38,12 +36,12 @@ export function ProposalsPanel() {
           </button>
         </aside>
 
-        <div className="panel-pestanas" role="tablist" aria-label="Secciones del panel">
+        <div className="panel-pestanas" id="panel-pestanas" role="tablist" aria-label="Secciones del panel">
           <a className="panel-pestana" role="tab" id="pestana-propuestas" href="/" data-accion="panel-pestana" data-pestana="propuestas" aria-controls="panel-propuestas" aria-selected="true">
             Mis propuestas <span className="panel-pestana__cuenta" id="pestana-propuestas-cuenta"></span>
           </a>
-          <a className="panel-pestana" role="tab" id="pestana-plantillas" href="/plantillas" data-accion="panel-pestana" data-pestana="plantillas" aria-controls="panel-plantillas" aria-selected="false">
-            Plantillas
+          <a className="panel-pestana" role="tab" id="pestana-clientes" href="/clientes" data-accion="panel-pestana" data-pestana="clientes" aria-controls="panel-clientes" aria-selected="false">
+            Clientes <span className="panel-pestana__cuenta" id="pestana-clientes-cuenta"></span>
           </a>
         </div>
 
@@ -97,7 +95,18 @@ export function ProposalsPanel() {
           </div>
         </section>
 
-        <section id="panel-plantillas" role="tabpanel" aria-labelledby="pestana-plantillas" hidden>
+        {/* Clientes: las propuestas agrupadas por cliente (src/clientes.js, controlador/clientes.js). */}
+        <section id="panel-clientes" role="tabpanel" aria-labelledby="pestana-clientes" hidden>
+          <div className="panel__herramientas" id="clientes-herramientas" hidden>
+            <label className="visualmente-oculto" htmlFor="clientes-buscar">Buscar clientes</label>
+            <input className="control panel__buscar" id="clientes-buscar" type="search" placeholder="Buscar cliente" autoComplete="off" />
+          </div>
+          <p className="panel__estado" id="clientes-estado" role="status" aria-live="polite"></p>
+          <ul className="clientes" id="lista-clientes" aria-label="Clientes"></ul>
+        </section>
+
+        {/* Plantillas: sección propia (barra de arriba y «+ Nueva»), sin las pestañas. */}
+        <section id="panel-plantillas" aria-label="Plantillas" hidden>
           <p className="panel__bajada galeria-plantillas__bajada">Elegí una plantilla para arrancar: trae textos, servicios y diseño pensados para tu rubro. Después cambiás todo lo que quieras.</p>
           <div className="galeria-filtros">
             <label className="galeria-buscar">

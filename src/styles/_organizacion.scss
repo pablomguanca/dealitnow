@@ -1,0 +1,534 @@
+// Organización de la app del dueño: migas y «ojito» del editor, vista previa a pantalla
+// completa, selector de apariencia y la pestaña Clientes del panel.
+
+/* ---------- Editor: migas «‹ Mis propuestas / Título» en la barra de arriba ---------- */
+
+.barra__migas {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+  font-size: 0.88rem;
+
+  &-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    padding: 0.35rem 0.55rem 0.35rem 0.35rem;
+    border-radius: var(--radio-s);
+    color: var(--marfil-apagado);
+    font-weight: 500;
+    text-decoration: none;
+    transition: background-color var(--transicion), color var(--transicion);
+
+    &:hover {
+      background: var(--superficie-borde);
+      color: var(--marfil);
+    }
+
+    svg {
+      width: 0.95rem;
+      height: 0.95rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: var(--icono-trazo);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  }
+
+  &-separador {
+    color: var(--marfil-tenue);
+  }
+
+  &-actual {
+    overflow: hidden;
+    max-width: 26rem;
+    color: var(--marfil);
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.barra__marca {
+  min-width: 0;
+}
+
+// Con la barra angosta, las migas se van: el editor tiene su propio «‹ Mis propuestas».
+@media (max-width: 1100px) {
+  .barra__migas {
+    display: none !important;
+  }
+}
+
+// Con las migas en la barra, el «‹ Mis propuestas» del editor sobra.
+@media (min-width: 1101px) {
+  body:not(.sin-cuenta):not(.invitado) .editor__migas .editor__volver {
+    display: none;
+  }
+}
+
+/* ---------- Editor: el ojito de la vista previa ---------- */
+
+.barra__ver {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  min-height: 2.3rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--superficie-borde);
+  border-radius: var(--radio-s);
+  background: none;
+  color: var(--marfil);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transicion), color var(--transicion);
+
+  &:hover {
+    background: var(--dorado-fondo);
+    color: var(--dorado-claro);
+  }
+
+  svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: var(--icono-trazo);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+// En pantallas medianas queda solo el ojo.
+@media (max-width: 1280px) {
+  .barra__ver {
+    width: 2.35rem;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .barra__ver-texto {
+    display: none;
+  }
+}
+
+/* ---------- Vista previa a pantalla completa ---------- */
+
+.previa-control {
+  display: none;
+}
+
+body.vista-previa-completa {
+  // El documento tapa todo (barra, editor u hoja, pestañas) y scrollea solo.
+  .visor {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    padding: 0 2rem 6.5rem;
+    overflow: auto;
+    background: var(--negro-2);
+    overscroll-behavior: contain;
+  }
+
+  .visor__barra,
+  .guia-tip,
+  .tabbar {
+    display: none !important;
+  }
+
+  .previa-control {
+    position: fixed;
+    left: 50%;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    z-index: 81;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    max-width: calc(100vw - 1.5rem);
+    padding: 0.45rem 0.45rem 0.45rem 1rem;
+    border: 1px solid var(--superficie-borde);
+    border-radius: 999px;
+    background: var(--superficie);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    transform: translateX(-50%);
+    animation: previa-entra 0.28s var(--ease-out-expo, ease-out);
+  }
+
+  .previa-control__etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--marfil-apagado);
+    font-size: 0.82rem;
+    font-weight: 500;
+    white-space: nowrap;
+
+    svg {
+      width: 1.05rem;
+      height: 1.05rem;
+      fill: none;
+      stroke: var(--dorado);
+      stroke-width: var(--icono-trazo);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  }
+
+  .previa-control__segmentos {
+    border-radius: 999px;
+
+    .segmento {
+      border-radius: 999px;
+    }
+  }
+
+  .previa-control__salir {
+    border-radius: 999px;
+    white-space: nowrap;
+
+    svg {
+      width: 0.85rem;
+      height: 0.85rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+    }
+  }
+}
+
+@keyframes previa-entra {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 0.75rem);
+  }
+}
+
+// En el celular ya es «celular»: queda solo el botón para volver.
+@media (max-width: 768px) {
+  body.vista-previa-completa {
+    .visor {
+      padding: 0 0 6rem;
+    }
+
+    .previa-control__segmentos,
+    .previa-control__etiqueta {
+      display: none;
+    }
+
+    .previa-control {
+      padding: 0.35rem;
+    }
+  }
+
+  .barra__ver {
+    width: 2.35rem;
+    padding: 0;
+    justify-content: center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.vista-previa-completa .previa-control {
+    animation: none;
+  }
+}
+
+/* ---------- Apariencia: Claro · Oscuro · Automático ---------- */
+
+.selector-modo {
+  display: inline-flex;
+  gap: 0.2rem;
+  padding: 0.2rem;
+  border: 1px solid var(--superficie-borde);
+  border-radius: var(--radio-m);
+
+  &__opcion {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.85rem;
+    border: 0;
+    border-radius: var(--radio-s);
+    background: none;
+    color: var(--marfil-apagado);
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color var(--transicion), color var(--transicion);
+
+    &:hover {
+      color: var(--marfil);
+    }
+
+    &[aria-checked="true"] {
+      background: var(--superficie-borde);
+      color: var(--marfil);
+    }
+
+    svg {
+      width: 1rem;
+      height: 1rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: var(--icono-trazo);
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+  }
+
+  // En el menú: tres íconos en una fila, al lado del título.
+  &--compacto {
+    margin-left: auto;
+
+    .selector-modo__opcion {
+      padding: 0.42rem 0.6rem;
+    }
+
+    .selector-modo__texto {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+  }
+}
+
+.menu__grupo--ajustes {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.menu__ajuste-titulo {
+  padding-left: 0.65rem;
+  color: var(--marfil-apagado);
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+@media (max-width: 420px) {
+  .cuenta .selector-modo {
+    display: flex;
+
+    .selector-modo__opcion {
+      flex: 1;
+      padding-inline: 0.5rem;
+    }
+  }
+}
+
+/* ---------- Panel: pestaña Clientes ---------- */
+
+.clientes {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cliente__detalle {
+  border: 1px solid var(--superficie-borde);
+  border-radius: var(--radio-m);
+  background: var(--superficie);
+  transition: border-color var(--transicion), box-shadow var(--transicion);
+
+  &[open] {
+    border-color: var(--dorado-tenue);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.cliente__fila {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1.4fr) minmax(0, 1fr) auto 6.5rem auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-radius: var(--radio-m);
+  list-style: none;
+  cursor: pointer;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &:hover {
+    background: var(--superficie-borde);
+  }
+}
+
+.cliente__avatar {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+
+  &--0 { background: #E8DDC7; color: #5C4A26; }
+  &--1 { background: #D7E6DB; color: #24513A; }
+  &--2 { background: #DCE3F2; color: #2B3F6B; }
+  &--3 { background: #F2DCDC; color: #6B2B2B; }
+  &--4 { background: #E9DDF0; color: #4F2E63; }
+  &--5 { background: #DDEEEE; color: #245656; }
+}
+
+.cliente__datos {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cliente__nombre {
+  overflow: hidden;
+  color: var(--marfil);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cliente__contacto,
+.cliente__resumen {
+  overflow: hidden;
+  color: var(--marfil-apagado);
+  font-size: 0.83rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cliente__ganado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+
+  strong {
+    color: var(--marfil);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  small {
+    color: var(--marfil-tenue);
+    font-size: 0.75rem;
+  }
+}
+
+.cliente__fecha {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+  color: var(--marfil-apagado);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.cliente__retomar {
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--dorado-fondo);
+  color: var(--dorado-papel);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.cliente__chevron {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: var(--marfil-apagado);
+  stroke-width: var(--icono-trazo);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform var(--transicion);
+
+  .cliente__detalle[open] & {
+    transform: rotate(180deg);
+  }
+}
+
+.cliente__cuerpo {
+  padding: 0.25rem 1rem 1rem;
+  border-top: 1px solid var(--superficie-borde);
+}
+
+.cliente__barra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.75rem 0 1rem;
+
+  &-texto {
+    margin: 0;
+    color: var(--marfil-apagado);
+    font-size: 0.85rem;
+  }
+
+  .boton svg {
+    width: 0.9rem;
+    height: 0.9rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+}
+
+.clientes__propuestas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 900px) {
+  .cliente__fila {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    gap: 0.75rem;
+  }
+
+  .cliente__resumen,
+  .cliente__fecha {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .cliente__fila {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    padding: 0.75rem;
+  }
+
+  .cliente__chevron {
+    display: none;
+  }
+
+  .cliente__cuerpo {
+    padding: 0.25rem 0.75rem 0.75rem;
+  }
+}
+
+// En Plantillas (sección propia) no van las pestañas de propuestas y clientes.
+.panel-pestanas[hidden] {
+  display: none;
+}

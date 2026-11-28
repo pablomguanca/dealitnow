@@ -39,6 +39,7 @@ export function App() {
     <Routes>
       <Route path="/" element={<DealitWorkspace seccion="panel" />} />
       <Route path="/plantillas" element={<DealitWorkspace seccion="plantillas" />} />
+      <Route path="/clientes" element={<DealitWorkspace seccion="clientes" />} />
       <Route path="/portafolios" element={<DealitWorkspace seccion="portafolios" />} />
       <Route path="/resultados" element={<DealitWorkspace seccion="resultados" />} />
       <Route path="/cuenta" element={<DealitWorkspace seccion="cuenta" />} />

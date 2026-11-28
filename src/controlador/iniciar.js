@@ -24,6 +24,7 @@ import { instalarExplorador } from './explorador-plantillas.js';
 import { instalarSubidas } from './subidas.js';
 import { instalarVersiones } from './versiones.js';
 import { instalarDocumento } from './documento.js';
+import { instalarVistaPrevia } from './vista-previa.js';
 import { instalarCompartir } from './compartir.js';
 import { instalarAceptar } from './aceptar.js';
 import { instalarPropuestas } from './propuestas.js';
@@ -66,6 +67,7 @@ export const inicializarControladorDealit = () => {
   instalarTocarDocumento();
   instalarGestos();
   instalarVista();
+  instalarVistaPrevia();
   instalarVideos();
   instalarAcciones();
   instalarPropuestas();

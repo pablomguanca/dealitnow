@@ -223,6 +223,11 @@ const cerrarDialogoAbierto = () => {
 const alTocarAtras = App => {
   const body = document.body;
   if (cerrarDialogoAbierto()) return;
+  // La vista previa a pantalla completa (vista-previa.js) vuelve al editor.
+  if (body.classList.contains('vista-previa-completa')) {
+    document.querySelector('#previa-salir')?.click();
+    return;
+  }
   // El editor en modo foco (un solo campo, tocar-documento.js) vuelve al documento.
   if (body.dataset.hoja === 'foco') {
     document.querySelector('#hoja-foco-listo')?.click();
