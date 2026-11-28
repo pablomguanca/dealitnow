@@ -141,6 +141,16 @@ export function SenderStep() {
               <button type="button" className="boton boton--texto boton--chico" id="portafolio-aviso-boton" data-accion="actualizar-portafolio-propuesta">Traer los cambios</button>
             </div>
             <div className="pf-elegir" id="portafolio-proyectos" hidden></div>
+            <div className="pf-extra" id="portafolio-extra" hidden>
+              <label className="campo campo--ancho">
+                <span className="campo__etiqueta">Introducción (opcional)</span>
+                <textarea className="control" rows="3" maxLength="800" data-campo="opciones.portafolioIntro" placeholder="Ej.: Estos son proyectos parecidos al tuyo: tiendas que pasaron a vender online con una identidad renovada."></textarea>
+              </label>
+              <label className="casilla campo--ancho" id="portafolio-galeria-casilla">
+                <input type="checkbox" data-campo="opciones.portafolioSinGaleria" data-invertido />
+                <span>Sumar también la galería de fotos del portfolio</span>
+              </label>
+            </div>
             <p className="campo__ayuda">Elegí qué portfolio querés mostrarle a este cliente dentro de la propuesta (por ejemplo, tu portfolio de diseño, de software o de casos conceptuales).</p>
           </div>
         </div>

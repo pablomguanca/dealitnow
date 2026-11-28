@@ -77,6 +77,17 @@
   }
 }
 
+// Introducción y galería de los casos, debajo de los proyectos elegidos.
+.pf-extra {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 0.8rem;
+
+  &[hidden] { display: none; }
+
+  .casilla[hidden] { display: none; }
+}
+
 // Proyectos del portfolio que van en la propuesta (casillas y orden).
 .pf-elegir {
   margin-top: 0.7rem;
@@ -485,6 +496,15 @@
   justify-content: space-between;
   gap: 0.6em 1.2em;
   margin-bottom: 1.2em;
+}
+
+.portafolio-embebido__intro {
+  max-width: 46em;
+  margin-bottom: 1.4em;
+  line-height: 1.6;
+
+  p { margin: 0 0 0.7em; }
+  p:last-child { margin-bottom: 0; }
 }
 
 .portafolio-embebido__sub {

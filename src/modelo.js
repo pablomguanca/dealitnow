@@ -1128,6 +1128,9 @@ export const normalizarPropuesta = (datos, { logoValido = logo => /^data:image\/
       if (seleccion) n.opciones.portafolioProyectos = seleccion;
       else delete n.opciones.portafolioProyectos;
     }
+    // Introducción de los casos y si se saca la galería general del portfolio (por defecto va).
+    if ('portafolioIntro' in n.opciones) n.opciones.portafolioIntro = texto(n.opciones.portafolioIntro).slice(0, PORTAFOLIO_INTRO_MAX);
+    if ('portafolioSinGaleria' in n.opciones) n.opciones.portafolioSinGaleria = n.opciones.portafolioSinGaleria === true;
     if ('portafolio' in n.opciones) {
       n.opciones.portafolio = n.opciones.portafolio ? normalizarResumenPortafolio(n.opciones.portafolio, { logoValido }) : null;
     }
@@ -1901,6 +1904,7 @@ export const proyectosConContenido = proyectos =>
 // Proyectos elegidos para una propuesta (opciones.portafolioProyectos): ids en el orden en
 // que se muestran. Sin lista, van todos (como las propuestas de antes de poder elegir).
 export const PORTAFOLIO_PROYECTOS_MAX = 50;
+export const PORTAFOLIO_INTRO_MAX = 800;
 export const normalizarSeleccionProyectos = ids => {
   if (!Array.isArray(ids)) return null;
   const vistos = new Set();
@@ -1931,14 +1935,14 @@ export const resumenPortafolio = (portafolio, id = '', publico = false, { proyec
 // La copia del portfolio que va en la propuesta (opciones.portafolio) se arma solo cuando el
 // dueño lo elige o pide traer los cambios: así lo que ve el cliente no cambia porque se editó
 // el portfolio. Esto dice si el portfolio cambió desde esa copia (sin mirar los id internos).
-export const copiaPortafolioDesactualizada = (copia, pfDoc, { logoValido = () => true, proyectos = null } = {}) => {
+export const copiaPortafolioDesactualizada = (copia, pfDoc, { logoValido = () => true, proyectos = null, galeria = true } = {}) => {
   if (!copia || !pfDoc) return false;
   const firma = r => {
     const n = normalizarResumenPortafolio(r, { logoValido });
     return JSON.stringify({
       titulo: n.titulo, subtitulo: n.subtitulo, insignia: n.insignia, publico: n.publico,
       proyectos: n.proyectos.map(({ id, ...resto }) => resto),
-      galeria: n.galeria.map(({ id, ...resto }) => resto)
+      galeria: galeria ? n.galeria.map(({ id, ...resto }) => resto) : []
     });
   };
   return firma(copia) !== firma(resumenPortafolio(pfDoc.payload, pfDoc.id, pfDoc.publico, { proyectos }));

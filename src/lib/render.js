@@ -298,15 +298,19 @@ export const proyectoCardHTML = (p, idx, web, lightbox = true) => {
     </article>`;
 };
 
-export const bloquePortafolioEnPropuestaHTML = (pfResumen, web, lightbox = true) => {
+// intro: texto propio de la propuesta arriba de los casos. sinGaleria: no muestra la galería
+// general del portfolio (solo los proyectos elegidos).
+export const bloquePortafolioEnPropuestaHTML = (pfResumen, web, lightbox = true, { intro = '', sinGaleria = false, ed = () => '' } = {}) => {
   const proyectos = (pfResumen?.proyectos || []).filter(proyectoConContenido);
-  const galeriaPf = (pfResumen?.galeria || []).filter(g => g && g.imagen);
+  const galeriaPf = sinGaleria ? [] : (pfResumen?.galeria || []).filter(g => g && g.imagen);
   if (!proyectos.length && !galeriaPf.length) return '';
+  const textoIntro = texto(intro).trim();
   const origen = typeof location !== 'undefined' ? location.origin : '';
   const linkPublico = pfResumen.publico && pfResumen.id && /^[A-Za-z0-9]{20}$/.test(pfResumen.id)
     ? `${origen}/portafolio/${pfResumen.id}`
     : '';
   return `
+    ${textoIntro ? `<div class="portafolio-embebido__intro"${ed('opciones.portafolioIntro')}>${parrafos(textoIntro)}</div>` : ''}
     ${(pfResumen.subtitulo || linkPublico) ? `
       <div class="portafolio-embebido__cabecera">
         ${pfResumen.subtitulo ? `<p class="portafolio-embebido__sub">${esc(pfResumen.subtitulo)}</p>` : '<span></span>'}
@@ -876,10 +880,16 @@ export const generarPropuestaHTML = (
   }
 
   const pfAdjunto = s.opciones?.portafolioId ? s.opciones?.portafolio : null;
-  if (pfAdjunto && ((Array.isArray(pfAdjunto.proyectos) && pfAdjunto.proyectos.some(proyectoConContenido)) || (Array.isArray(pfAdjunto.galeria) && pfAdjunto.galeria.some(g => g?.imagen)))) {
-    const htmlPf = bloquePortafolioEnPropuestaHTML(pfAdjunto, web, usaLightbox);
+  if (pfAdjunto) {
+    const htmlPf = bloquePortafolioEnPropuestaHTML(pfAdjunto, web, usaLightbox, {
+      intro: s.opciones.portafolioIntro,
+      sinGaleria: s.opciones.portafolioSinGaleria === true,
+      ed
+    });
     if (htmlPf) {
       bloques.push({
+        id: 'sec-prop-casos',
+        nav: 'Casos',
         editar: 'opciones.portafolioId',
         titulo: pfAdjunto.titulo?.trim() || 'Trabajos y casos destacados',
         html: htmlPf

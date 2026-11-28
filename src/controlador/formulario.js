@@ -159,7 +159,7 @@ const pintarAvisoPortafolio = () => {
   let conBoton = false;
   if (copia && !ctx.portafoliosCargando && !ctx.portafoliosError) {
     if (!pfDoc) mensaje = 'El portfolio original ya no está en tus portfolios. La propuesta sigue mostrando los proyectos que tenía.';
-    else if (copiaPortafolioDesactualizada(copia, pfDoc, { logoValido: esLogoValido, proyectos: estado.opciones.portafolioProyectos })) {
+    else if (copiaPortafolioDesactualizada(copia, pfDoc, { logoValido: esLogoValido, proyectos: estado.opciones.portafolioProyectos, galeria: estado.opciones.portafolioSinGaleria !== true })) {
       mensaje = 'Este portfolio cambió desde que lo sumaste. La propuesta muestra la versión anterior.';
       conBoton = true;
     }
@@ -226,9 +226,22 @@ const pintarProyectosPortafolio = () => {
     <ul class="pf-elegir__lista">${orden.map(fila).join('')}</ul>`;
 };
 
+// Introducción y galería: se ven con un portfolio en la propuesta; la casilla de la galería,
+// solo si el portfolio tiene fotos en su galería general.
+const pintarExtraPortafolio = () => {
+  const extra = $('#portafolio-extra');
+  if (!extra) return;
+  const opciones = ctx.estado.opciones || {};
+  const copia = opciones.portafolioId ? opciones.portafolio : null;
+  extra.hidden = !copia;
+  const casilla = $('#portafolio-galeria-casilla');
+  if (casilla) casilla.hidden = !(copia?.galeria || []).some(g => g?.imagen);
+};
+
 const pintarPortafolioPropuesta = () => {
   pintarAvisoPortafolio();
   pintarProyectosPortafolio();
+  pintarExtraPortafolio();
 };
 
 const cambiarProyectosElegidos = cambiar => {
@@ -394,7 +407,7 @@ export const llenarFormulario = () => {
   actualizarSelectorPortafolio();
   $$('[data-campo]').forEach(el => {
     const v = obtener(ctx.estado, el.dataset.campo);
-    if (el.type === 'checkbox') el.checked = !!v;
+    if (el.type === 'checkbox') el.checked = el.dataset.invertido !== undefined ? !v : !!v;
     else el.value = v ?? '';
   });
   actualizarLogo();
@@ -411,8 +424,10 @@ export const reemplazarEstado = nuevo => {
   actualizar();
 };
 
+// data-invertido: la casilla dice lo contrario del campo (ej.: «Sumar la galería» guarda
+// portafolioSinGaleria), así el valor por defecto de las propuestas de antes sigue siendo «no».
 const leerValor = el => {
-  if (el.type === 'checkbox') return el.checked;
+  if (el.type === 'checkbox') return el.dataset.invertido !== undefined ? !el.checked : el.checked;
   if (el.dataset.tipo === 'numero') return numero(el.value);
   return el.value;
 };
@@ -459,6 +474,7 @@ const alEditar = ev => {
       copiarPortafolioEnPropuesta();
       pintarPortafolioPropuesta();
     }
+    if (el.dataset.campo === 'opciones.portafolioSinGaleria') pintarPortafolioPropuesta();
     if (el.dataset.campo === 'propuesta.opacidadPortada') actualizarLogo();
     if (el.dataset.campo === 'opciones.formato') aplicarFormatoEditor();
     actualizar();

@@ -290,6 +290,49 @@ describe('módulos de render, tema, imágenes y decoraciones', () => {
     expect(FOTO_MAX_ARCHIVO).toBeGreaterThanOrEqual(50 * 1024 * 1024);
   });
 
+  it('muestra los casos con su introducción y, si se pide, sin la galería del portfolio', () => {
+    const pf = normalizarPortafolio(ejemploPortafolio());
+    const copia = { ...resumenPortafolio(pf, 'pf123', false), galeria: [{ id: 'g1', imagen: 'https://ejemplo.test/foto.jpg', titulo: 'FotoDeGaleria' }] };
+    const prop = opciones => normalizarPropuesta({ ...ejemplo(), opciones: { firmas: true, credito: true, portafolioId: 'pf123', portafolio: copia, ...opciones } }, { logoValido: () => true });
+
+    const conTodo = generarPropuestaHTML(prop({ portafolioIntro: 'Casos parecidos al tuyo.', barraNav: true }));
+    expect(conTodo).toContain('id="sec-prop-casos"');
+    expect(conTodo).toContain('>Casos</a>');
+    expect(conTodo).toContain('Casos parecidos al tuyo.');
+    expect(conTodo).toContain('https://ejemplo.test/foto.jpg');
+
+    const sinGaleria = generarPropuestaHTML(prop({ portafolioSinGaleria: true }));
+    expect(sinGaleria).not.toContain('https://ejemplo.test/foto.jpg');
+    expect(sinGaleria).not.toContain('portafolio-embebido__intro');
+    expect(sinGaleria).toContain(pf.proyectos[0].titulo);
+
+    // Sin proyectos elegidos y sin galería, el bloque no aparece.
+    const vacio = generarPropuestaHTML(prop({ portafolio: { ...copia, proyectos: [] }, portafolioSinGaleria: true }));
+    expect(vacio).not.toContain('sec-prop-casos');
+
+    // En el editor, la introducción se puede tocar para editarla.
+    expect(generarPropuestaHTML(prop({ portafolioIntro: 'Hola' }), { editable: true })).toContain('data-editar="opciones.portafolioIntro"');
+  });
+
+  it('normaliza la introducción y la galería de los casos', () => {
+    const base = { ...ejemplo(), opciones: { firmas: true, credito: true } };
+    const n = normalizarPropuesta({ ...base, opciones: { ...base.opciones, portafolioIntro: 'x'.repeat(900), portafolioSinGaleria: 'si' } });
+    expect(n.opciones.portafolioIntro).toHaveLength(800);
+    expect(n.opciones.portafolioSinGaleria).toBe(false);
+    expect(normalizarPropuesta(n)).toEqual(n);
+    expect('portafolioSinGaleria' in normalizarPropuesta(base).opciones).toBe(false);
+  });
+
+  it('con la galería oculta, sus cambios no marcan la copia como vieja', () => {
+    const pf = normalizarPortafolio(ejemploPortafolio());
+    const copia = resumenPortafolio(pf, 'pf123', true);
+    const conFoto = structuredClone(pf);
+    conFoto.galeria.push({ id: 'g9', imagen: 'https://ejemplo.test/nueva.jpg', titulo: '', descripcion: '', proporcion: 'panoramica', encuadre: 'centro' });
+    const pfDoc = { id: 'pf123', publico: true, payload: conFoto };
+    expect(copiaPortafolioDesactualizada(copia, pfDoc)).toBe(true);
+    expect(copiaPortafolioDesactualizada(copia, pfDoc, { galeria: false })).toBe(false);
+  });
+
   it('genera decoraciones SVG con color e intensidad personalizados y IDs únicos', () => {
     const svg1 = decoracionPortadaSVG('aurora', 150, '#FF5500');
     const svg2 = decoracionPortadaSVG('aurora', 80, '#00AAFF');
